@@ -6,6 +6,7 @@ Visual Graphics is an Open Source, Cross-Platform Application and Game Framework
 It is aimed at both application as well as game developers.
 
 Developers can choose from a wide collection of various Layouts and Widgets to create professional applications for every platform including the Web, all based on one source code. As Visual Graphics is drawing all Widgets itself using Styles and Skins, it can completely control it's own look and feel for every platform it is running on. For example the Visual Graphics Website is actually not a Website, but an Visual Graphics application utilizing WebGL. 
+
 V-IDE is the Integrated Development Environment for Visual Graphics, allowing direct deployment of apps to the Web and into the up-coming Visual Graphics App Store (and every other platform specific App Store). Native Desktop and Mobile versions for each Visual Graphics application will be automatically created on Deployment and made available for Download. 
 
 ##How it Works
