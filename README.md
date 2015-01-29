@@ -1,7 +1,7 @@
 Visual Graphics
 ===============
  
-Visual Graphics is an Open Source, Cross-Platform Application and Game Framework written completely in Javascript and WebGL / OpenGL to achieve complete platform independence and maximum performance. 
+Visual Graphics is an Open Source, Cross-Platform Application and Game Framework written completely in Javascript and WebGL / OpenGL to achieve complete platform independence and maximum graphics performance. 
 
 It is aimed at both application as well as game developers.
 
