@@ -27,7 +27,7 @@ Note that the Desktop versions are functional, however integration into the nati
 
 ##Mobile Deployment of your applications
 
-This is currently work in progress. The sdl2_host template does currently not yet compile on iOS and Android, we also do not yet have touch event support. However these can be added quickly, we just prioritize the core functionality of Visual Graphics at the moment over working out every platform at the moment.
+This is currently work in progress. The sdl2_host template does currently not yet compile on iOS and Android, we also do not yet have touch event support. However these can be added quickly, we just prioritize the core functionality of Visual Graphics over working out every platform at the moment.
 
 
 ##Documentation
