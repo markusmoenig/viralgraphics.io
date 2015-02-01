@@ -184,7 +184,25 @@ VG.Docs.Database.prototype.buildHtml=function( text )
 		{
 			if( text.indexOf( "this." ) === 0 )
 			{
-				var member=text.substring( 5, text.indexOf( " " ) );
+				var firstSpace = text.indexOf(" ");
+				var firstEquals = text.indexOf("=");
+
+				if( firstSpace >= 0 && firstEquals >= 0 )
+				{
+					memberEndIndex = Math.min( firstSpace, firstEquals );
+				}
+				else
+				{
+					memberEndIndex = firstSpace >= 0 ? firstSpace : firstEquals;
+					memberEndIndex = memberEndIndex >= 0 ? memberEndIndex : 5;
+				}
+
+				var member=text.substring( 5, memberEndIndex );
+
+				// Strip out leading underscore.
+				if( member.indexOf("_") === 0 )
+					member = member.substring(1);
+
 				docText = member + " - "  + docText;
 			}
 		}
