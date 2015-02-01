@@ -58,7 +58,6 @@ VG.UI.HtmlView=function( html )
         "bgColor" : VG.context.style.skin.WidgetBackgroundColor,
         "color" : VG.context.style.skin.WidgetTextColor,
         "margin" : VG.Core.Margin( 20, 25, 20, 25 ),
-        "blankLineHeight" : 15,
         "spacing" : 10,
         "noframe" : false
     };
@@ -141,20 +140,25 @@ VG.UI.HtmlView=function( html )
         "underlineHeight" : 1
     };
 
+    this.br={
+        "lineHeight" : 10
+    };
+
     this.p={
         "margin" : VG.Core.Margin( 20, 10, 20, 10 )
-    }
+    };
 
     this.font={
-        "bgColor" : VG.context.style.skin.WidgetBackgroundColor
-    }
+        "bgColor" : VG.context.style.skin.WidgetBackgroundColor,
+        "override" : false
+    };
 
     this.code={
         "font" : VG.Font.Font( VG.context.style.DefaultFontName, 15 ),
         "margin" : VG.Core.Margin( 20, 10, 20, 10 ),
         "verticalExpanding" : true,
         "maxHeight" : 100
-    }
+    };
 
     this.elements={};
 
@@ -170,6 +174,7 @@ VG.UI.HtmlView=function( html )
     this.elements.b=this.b;
     this.elements.i=this.i;
     this.elements.a=this.a;
+    this.elements.br=this.br;
     this.elements.font=this.font;
     this.elements.p=this.p;
     this.elements.code=this.code;
@@ -251,7 +256,7 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
 
             var tagName=tag.substring( 0, tag.length );
 
-            if( tagName === "li" || tagName === "p" && textGroup ) {
+            if( tagName === "li" || tagName === "p" || tagName === "code" && textGroup ) {
 
                 this.textGroupArray.push( textGroup );
                 textGroup=null;
@@ -316,15 +321,15 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
             }
             if(tagName === "br") 
             {
-                if( !textGroup ) textGroup=VG.UI.TextGroup();
+                if( !textGroup ) textGroup=VG.UI.HtmlView.TextGroup();
 
                 // Handle Line breaks
                 var options={ "font" : this.elements.body.font,
                               "color" : this.elements.body.color };
 
-                var formattedText=VG.UI.FormattedText("", options );
+                var formattedText=VG.UI.HtmlView.FormattedText("", options );
 
-                formattedText.addModifier( VG.UI.TextModifiers( "br" ) );
+                formattedText.addModifier( VG.UI.HtmlView.TextModifiers( "br" ) );
 
                 textGroup.formattedTextArray.push( formattedText );
             }
@@ -333,25 +338,26 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
                 // End current textGroup if exists.
                 if( textGroup ) this.textGroupArray.push( textGroup );
 
-                textGroup=VG.UI.TextGroup( VG.UI.TextGroupNames[ tagName ] );
+                textGroup=VG.UI.HtmlView.TextGroup( VG.UI.HtmlView.TextGroupNames[ tagName ] );
             } 
             else
                 openedTags.push( { tag : tagName, attribs : attribs } );
         }
         else if( html.indexOf("&vg") == 0 )
         {
-            if( !textGroup ) textGroup=VG.UI.TextGroup();
+            if( !textGroup ) textGroup=VG.UI.HtmlView.TextGroup();
 
-            var options={ "font" : VG.Font.Font("Visual Graphics", this.elements.body.font.size) ,
+            var options={ "font" : VG.Font.Font("Visual Graphics", this.elements.body.font.size),
                           "color" : this.elements.body.color };
-            var formattedText=VG.UI.FormattedText("a", options);
+
+            var formattedText=VG.UI.HtmlView.FormattedText("a", options);
 
             for( var i=0; i < openedTags.length; ++i ) {
 
                 if( openedTags[i].tag.indexOf("b") < 0 
                         && openedTags[i].tag.indexOf("i") < 0 )
                         
-                    formattedText.addModifier( VG.UI.TextModifiers( openedTags[i].tag, openedTags[i].attribs ), this.elements[openedTags[i].tag] );
+                    formattedText.addModifier( VG.UI.HtmlView.TextModifiers( openedTags[i].tag, openedTags[i].attribs ), this.elements[openedTags[i].tag] );
             }
 
             textGroup.formattedTextArray.push( formattedText );
@@ -361,7 +367,7 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
         else
         {
             // Create a text group if it doesnt already exist.
-            if( !textGroup ) textGroup=VG.UI.TextGroup();
+            if( !textGroup ) textGroup=VG.UI.HtmlView.TextGroup();
 
             index=html.indexOf( "<" );
             indexSpecial=html.indexOf( "&vg" );
@@ -376,11 +382,11 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
 
             var options={ "font" : this.elements.body.font,
                           "color" : this.elements.body.color };
-            var formattedText=VG.UI.FormattedText(text, options);
+            var formattedText=VG.UI.HtmlView.FormattedText(text, options);
             
             // Apply modifiers for all open tags
             for( var i=0; i < openedTags.length; ++i )
-                formattedText.addModifier( VG.UI.TextModifiers( openedTags[i].tag, openedTags[i].attribs ), this.elements[ openedTags[i].tag ] );
+                formattedText.addModifier( VG.UI.HtmlView.TextModifiers( openedTags[i].tag, openedTags[i].attribs ), this.elements[ openedTags[i].tag ] );
 
             textGroup.formattedTextArray.push( formattedText );
         }
@@ -422,40 +428,40 @@ VG.UI.HtmlView.prototype.verifyText=function()
                 break;
         }
 
+        var currentGroupItem=this.textGroupArray[gIndex];
+        var currentArrayItem=currentGroupItem.formattedTextArray[aIndex];
+
         if( this.textGroupArray[gIndex].groupModifier === "Code") {
 
-            var codeTextArray=this.textGroupArray[gIndex].formattedTextArray[aIndex].text.split(/\r\n|\r|\n/);
+            var codeTextArray=currentArrayItem.text.split(/\r\n|\r|\n/);
             var rect = VG.Core.Rect();
 
-            VG.context.workspace.canvas.pushFont( this.textGroupArray[gIndex].codeEdit.font );
+            VG.context.workspace.canvas.pushFont( currentGroupItem.codeEdit.font );
 
             // CodeEdits textLineRect only has its height.
             rect.height=this.elements.code.verticalExpanding ? 
                             codeTextArray.length * VG.context.workspace.canvas.getLineHeight() + 10 : 
                             Math.min( this.elements.code.maxHeight, codeTextArray.length * VG.context.workspace.canvas.getLineHeight());
 
-            VG.context.workspace.canvas.popFont( this.textGroupArray[gIndex].codeEdit.font );
+            VG.context.workspace.canvas.popFont( currentGroupItem.codeEdit.font );
 
-            this.textGroupArray[gIndex].formattedTextArray[aIndex].textLineRects.push(rect);
+            currentArrayItem.textLineRects.push(rect);
 
             ++tIndex;
             continue;
         }
 
-        var fontModifier=this.textGroupArray[gIndex].formattedTextArray[aIndex].getModifier("Font");
-        if ( fontModifier ) 
-            VG.context.workspace.canvas.pushFont( fontModifier.face );
-        else
-            VG.context.workspace.canvas.pushFont( this.textGroupArray[gIndex].formattedTextArray[aIndex].font )
+        VG.context.workspace.canvas.pushFont( currentArrayItem.font )
 
         var size=VG.Core.Size();
         var rect=VG.Core.Rect();
-        VG.context.workspace.canvas.getTextSize( this.textGroupArray[gIndex].formattedTextArray[aIndex].textLines[tIndex], size );
 
-        if ( fontModifier ) 
-            VG.context.workspace.canvas.popFont( fontModifier.face );
+        if(currentArrayItem.getModifier("LineBreak") )
+            size.height=this.elements.br.lineHeight;
         else
-            VG.context.workspace.canvas.popFont( this.textGroupArray[gIndex].formattedTextArray[aIndex].font )
+            VG.context.workspace.canvas.getTextSize( currentArrayItem.textLines[tIndex], size );
+
+        VG.context.workspace.canvas.popFont( currentArrayItem.font )
         
         if( size.width > this.maxTextLineSize.width ) this.maxTextLineSize.width=size.width;
         if ( size.height > this.maxTextLineSize.height ) this.maxTextLineSize.height=size.height;
@@ -463,7 +469,7 @@ VG.UI.HtmlView.prototype.verifyText=function()
         rect.width=size.width;
         rect.height=size.height;
 
-        if( tIndex === 0 && this.textGroupArray[gIndex].formattedTextArray[aIndex].continueLine ) {
+        if( tIndex === 0 && currentArrayItem.continueLine ) {
 
             var j=aIndex-1;
             var k=gIndex;
@@ -512,7 +518,7 @@ VG.UI.HtmlView.prototype.verifyText=function()
             }
         }
 
-        this.textGroupArray[gIndex].formattedTextArray[aIndex].textLineRects.push(rect);
+        currentArrayItem.textLineRects.push(rect);
 
         ++tIndex;
 
@@ -567,14 +573,37 @@ VG.UI.HtmlView.prototype.processHtml=function()
 
             var font=this.elements.body.font;
             var fontModifier=textGroup.formattedTextArray[i].getModifier( "Font" );
-            if( fontModifier ) 
-            {
-                if(textGroup.formattedTextArray[i].font.name.indexOf("Visual Graphics") >= 0 )
-                    fontModifier.face = VG.Font.Font("Visual Graphics", fontModifier.face.size );
+            if( fontModifier ) {
 
-                font=fontModifier.face;
+                if( fontModifier.size )
+                    textGroup.formattedTextArray[i].setSize( fontModifier.size );
+
+                if( fontModifier.color )
+                    textGroup.formattedTextArray[i].color = fontModifier.color;
+
+                if( this.elements.font.override && fontModifier.fontName )
+                    textGroup.formattedTextArray[i].font = VG.Font.Font( fontModifier.fontName, textGroup.formattedTextArray[i].size );
             }
-            else font=textGroup.formattedTextArray[i].font;
+
+            var boldModifier=textGroup.formattedTextArray[i].getModifier( "Bold" );
+            if( boldModifier ) {
+                
+                var fontName=textGroup.formattedTextArray[i].font.triFont.face.familyName.indexOf("Bold") < 0 ?  
+                    textGroup.formattedTextArray[i].font.triFont.face.familyName + " Bold" : 
+                        textGroup.formattedTextArray[i].font.triFont.face.familyName;
+
+                textGroup.formattedTextArray[i].font=VG.Font.Font( fontName, textGroup.formattedTextArray[i].size );
+            }
+
+            var italicModifier=textGroup.formattedTextArray[i].getModifier( "Italic" );
+            if( italicModifier ) {
+                
+                var fontName=textGroup.formattedTextArray[i].font.triFont.name.indexOf("Italic") < 0 ? 
+                        textGroup.formattedTextArray[i].font.triFont.name + " Italic" : 
+                            textGroup.formattedTextArray[i].font.triFont.name;
+
+                textGroup.formattedTextArray[i].font=VG.Font.Font( fontName, textGroup.formattedTextArray[i].size );
+            }
 
             if( forceNextLine ) nextStart=0;
 
@@ -626,28 +655,18 @@ VG.UI.HtmlView.prototype.processHtml=function()
 
                 rectWidth -= this.elements[headingModifier.id].margin.left + this.elements[headingModifier.id].margin.right;
 
-                if(fontModifier && headingModifier) {
-
-                    fontModifier.setAttribs([ { attrib : "size", value : VG.UI.HeadingFontSizes[headingModifier.id] } ] );
-                    
-                    if( fontModifier.hasAttrib ( "face" ) && fontModifier.face.name != "Visual Graphics" )
-                        textGroup.formattedTextArray[i].addModifier( VG.UI.TextModifiers( "b" ) );
-                }
+                textGroup.formattedTextArray[i].setSize( this.elements[headingModifier.id].font.size );
             }
 
-            textGroup.formattedTextArray[i].resetTextLines();
+            font=textGroup.formattedTextArray[i].font;
 
-            if( fontModifier ) 
-                VG.context.workspace.canvas.pushFont( fontModifier.face );
-            else
-                VG.context.workspace.canvas.pushFont( textGroup.formattedTextArray[i].font );
+            textGroup.formattedTextArray[i].resetTextLines();
+            
+            VG.context.workspace.canvas.pushFont( textGroup.formattedTextArray[i].font );
 
             var ret=VG.context.workspace.canvas.wordWrap( textGroup.formattedTextArray[i].text, nextStart, rectWidth, textGroup.formattedTextArray[i].textLines );
 
-            if( fontModifier ) 
-                VG.context.workspace.canvas.popFont( fontModifier.face );
-            else
-                VG.context.workspace.canvas.popFont( textGroup.formattedTextArray[i].font );
+            VG.context.workspace.canvas.popFont( textGroup.formattedTextArray[i].font );
 
             textGroup.formattedTextArray[i].textStartPos=ret.forceStartNewLine || forceNextLine ? 0 : nextStart;
             textGroup.formattedTextArray[i].continueLine=textGroup.formattedTextArray[i].textStartPos === 0 ? false: true;
@@ -745,9 +764,6 @@ VG.UI.HtmlView.prototype.verifyScrollbar=function()
             ++tIndex;
             continue;
         }
-
-        if( this.textGroupArray[gIndex].formattedTextArray[aIndex].textLineRects[tIndex].height === 0 )
-            this.textGroupArray[gIndex].formattedTextArray[aIndex].textLineRects[tIndex].height=this.elements.body.blankLineHeight;
 
         if( this.textGroupArray[gIndex].formattedTextArray[aIndex].hasHeadings() ) {
 
@@ -917,20 +933,14 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
                 this.visibleHeight-=paintRect.height + this.elements.body.spacing;
             }
 
-            var fontModifier=currentArrayItem.getModifier("Font");
+            //var fontModifier=currentArrayItem.getModifier("Font");
             var textColor=VG.context.style.skin.HtmlViewTextColor;
             var bgColor=VG.context.style.skin.WidgetBackgroundColor;
             var font=this.elements.body.font;
 
-            if( fontModifier ) {
-                font=fontModifier.face;
-                textColor=fontModifier.color;
-            }
-            else {
-                font=currentArrayItem.font;
-                textColor=currentArrayItem.color;
-                bgColor=currentArrayItem.bgColor ? currentArrayItem.bgColor : bgColor;
-            }
+            font=currentArrayItem.font;
+            textColor=currentArrayItem.color;
+            bgColor=currentArrayItem.bgColor ? currentArrayItem.bgColor : bgColor;
 
             VG.context.workspace.canvas.pushFont( font );
         
@@ -963,8 +973,6 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
                 
             currentArrayItem.textLineRects[tIndex].x = paintRect.x;
             currentArrayItem.textLineRects[tIndex].y = paintRect.y;
-
-            //canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, currentArrayItem.textLineRects[tIndex], bgColor);
             canvas.drawTextRect( text, paintRect , textColor, this.hAlignment, 1);
             
             VG.context.workspace.canvas.popFont( font );
@@ -1163,7 +1171,7 @@ VG.UI.HtmlView.prototype.setVScrollbarDimensions=function( canvas )
 // ----------------------------------------------------------------- VG.UI.HtmlView.TextGroup
 // Groups text based on a common charasteristic
 
-VG.UI.TextGroupNames={
+VG.UI.HtmlView.TextGroupNames={
 
     "None" : "None",
     "li" : "ListItem",
@@ -1171,9 +1179,9 @@ VG.UI.TextGroupNames={
     "code" : "Code"
 }
 
-VG.UI.TextGroup=function( groupModifier )
+VG.UI.HtmlView.TextGroup=function( groupModifier )
 {
-    if ( !(this instanceof VG.UI.TextGroup) ) return new VG.UI.TextGroup( groupModifier );
+    if ( !(this instanceof VG.UI.HtmlView.TextGroup) ) return new VG.UI.HtmlView.TextGroup( groupModifier );
 
     this.formattedTextArray=[];
 
@@ -1181,20 +1189,20 @@ VG.UI.TextGroup=function( groupModifier )
     this.numTextLines=0;
     this.numContinueLines=0;
 
-    this.groupModifier=VG.UI.TextGroupNames.None;
+    this.groupModifier=VG.UI.HtmlView.TextGroupNames.None;
 
     if ( arguments.length && arguments[0])
         this.groupModifier=arguments[0];  
 }
 
-VG.UI.TextGroup.prototype=VG.UI.TextGroup();
+VG.UI.HtmlView.TextGroup.prototype=VG.UI.HtmlView.TextGroup();
 
 // ----------------------------------------------------------------- VG.UI.HtmlView.FormattedText
 // Contains format info for a string.
 
-VG.UI.FormattedText=function( text, options )
+VG.UI.HtmlView.FormattedText=function( text, options )
 {
-    if ( !(this instanceof VG.UI.FormattedText) ) return new VG.UI.FormattedText( text, options);
+    if ( !(this instanceof VG.UI.HtmlView.FormattedText) ) return new VG.UI.HtmlView.FormattedText( text, options);
 
     if ( !options ) options="";
 
@@ -1217,9 +1225,15 @@ VG.UI.FormattedText=function( text, options )
     else this.text="";
 };
 
-VG.UI.FormattedText.prototype=VG.UI.FormattedText();
+VG.UI.HtmlView.FormattedText.prototype.setSize=function( size )
+{
+    this.size = size;
+    this.font = VG.Font.Font( this.font.name, this.size );
+}
 
-VG.UI.FormattedText.prototype.hasModifier=function( name )
+VG.UI.HtmlView.FormattedText.prototype=VG.UI.HtmlView.FormattedText();
+
+VG.UI.HtmlView.FormattedText.prototype.hasModifier=function( name )
 {
     for ( var i=0; i < this.textModifiers.length; ++i )
         if ( this.textModifiers[i].name === name ) return true;
@@ -1227,7 +1241,7 @@ VG.UI.FormattedText.prototype.hasModifier=function( name )
     return false;
 };
 
-VG.UI.FormattedText.prototype.hasHeadings=function()
+VG.UI.HtmlView.FormattedText.prototype.hasHeadings=function()
 {
     for ( var i=0; i < this.textModifiers.length; ++i )
         if ( this.textModifiers[i].name.indexOf("Heading") >= 0 ) return true;
@@ -1235,14 +1249,14 @@ VG.UI.FormattedText.prototype.hasHeadings=function()
     return false;
 }
 
-VG.UI.FormattedText.prototype.hasListModifiers=function()
+VG.UI.HtmlView.FormattedText.prototype.hasListModifiers=function()
 {
     // Check for unordered, ordered, list item modifiers
     for( var i=0; i < this.textModifiers.length; ++i )
         if( this.textModifiers[i].name.indexOf("List") >= 0 ) return true;
 }
 
-VG.UI.FormattedText.prototype.getHeading=function()
+VG.UI.HtmlView.FormattedText.prototype.getHeading=function()
 {
     for ( var i=0; i < this.textModifiers.length; ++i )
         if ( this.textModifiers[i].name.indexOf("Heading") >= 0 ) return this.textModifiers[i];
@@ -1250,13 +1264,13 @@ VG.UI.FormattedText.prototype.getHeading=function()
     return null;
 }
 
-VG.UI.FormattedText.prototype.getModifier=function( name )
+VG.UI.HtmlView.FormattedText.prototype.getModifier=function( name )
 {
     for ( var i=0; i < this.textModifiers.length; ++i )
         if ( this.textModifiers[i].name === name ) return this.textModifiers[i];
 };
 
-VG.UI.FormattedText.prototype.addModifier=function( modifier, options )
+VG.UI.HtmlView.FormattedText.prototype.addModifier=function( modifier, options )
 {
     this.textModifiers.push(modifier);
 
@@ -1275,61 +1289,9 @@ VG.UI.FormattedText.prototype.addModifier=function( modifier, options )
         this.color=options.color ? options.color : this.color;
         this.bgColor=options.bgColor ? options.bgColor : this.bgColor;
     }
-
-    this.verifyFont();
 };
 
-VG.UI.FormattedText.prototype.verifyFont=function()
-{
-    if( this.hasModifier("Bold") ) {
-
-        var font=this.getModifier("Font");
-        if( font ) {
-
-            var fontName=font.face.triFont.face.familyName.indexOf("Bold") < 0 ?  font.face.triFont.face.familyName + " Bold" : font.face.triFont.face.familyName;
-            var size=font.size;
-
-            if( this.hasModifier("Italic") ) {
-                // @TODO: Change this when 'Bold Italic' fonts are added.    
-            }
-
-            font.face=VG.Font.Font(fontName, size);
-            this.font=VG.Font.Font( fontName, size );    
-        }
-        else {
-
-            var fontName=this.font.triFont.face.familyName.indexOf("Bold") < 0 ? this.font.triFont.face.familyName + " Bold": this.font.triFont.face.familyName;
-            var size=this.font.size;
-
-            if( this.hasModifier("Italic") ) {
-                // @TODO: Change this when 'Bold Italic' fonts are added.    
-            }
-
-            this.font=VG.Font.Font( fontName, size );
-        }
-    }
-    else if( this.hasModifier("Italic") ) {
-
-        var font=this.getModifier("Font");
-
-        if( font ) {
-            var fontName=font.face.name.indexOf("Italic") < 0 ? font.face.name + " Italic" : font.face.name;
-            var size=font.size;
-
-            font.face=VG.Font.Font(fontName, size);
-            this.font=VG.Font.Font( fontName, size );    
-        }
-        else {
-
-            var fontName=this.font.triFont.name.indexOf("Italic") < 0 ? this.font.triFont.name + " Italic" : this.font.triFont.name;
-            var size=this.font.size;
-
-            this.font=VG.Font.Font( fontName, size );
-        }
-    }
-}
-
-VG.UI.FormattedText.prototype.resetTextLines=function()
+VG.UI.HtmlView.FormattedText.prototype.resetTextLines=function()
 {
     this.textLines=[];
     this.textLineRects=[];
@@ -1339,7 +1301,7 @@ VG.UI.FormattedText.prototype.resetTextLines=function()
 // ----------------------------------------------------------------- VG.UI.HtmlView.TextModifiers
 // Contains modifier info
 
-VG.UI.ModifierNames={
+VG.UI.HtmlView.ModifierNames={
 
     "b" : "Bold",
     "i" : "Italic",
@@ -1356,7 +1318,7 @@ VG.UI.ModifierNames={
     "a" : "Link"
 };
 
-VG.UI.HtmlColors={
+VG.UI.HtmlView.HtmlColors={
 
     "aqua" : VG.Core.Color( 0, 255, 255 ),
     "black" : VG.Core.Color( 0, 0, 0 ),
@@ -1378,12 +1340,12 @@ VG.UI.HtmlColors={
 
 };
 
-VG.UI.TextModifiers=function( id, attribs )
+VG.UI.HtmlView.TextModifiers=function( id, attribs )
 {
-    if ( !(this instanceof VG.UI.TextModifiers) ) return new VG.UI.TextModifiers( id, attribs );
+    if ( !(this instanceof VG.UI.HtmlView.TextModifiers) ) return new VG.UI.HtmlView.TextModifiers( id, attribs );
 
     this.id=id;
-    this.name=VG.UI.ModifierNames[id];
+    this.name=VG.UI.HtmlView.ModifierNames[id];
 
     
     if(!attribs) {
@@ -1398,44 +1360,40 @@ VG.UI.TextModifiers=function( id, attribs )
     if(attribs) this.setAttribs(attribs);
 };
 
-VG.UI.TextModifiers.prototype=VG.UI.TextModifiers();
+VG.UI.HtmlView.TextModifiers.prototype=VG.UI.HtmlView.TextModifiers();
 
-VG.UI.TextModifiers.prototype.setAttribs=function( attribs )
+VG.UI.HtmlView.TextModifiers.prototype.setAttribs=function( attribs )
 {
     // Font tag
     switch( this.name ) {
 
         case "Font":
-        if( !this.color ) this.color=VG.context.style.skin.HtmlViewTextColor;
-        if( !this.size ) this.size=VG.context.style.skin.HtmlViewDefaultFont.size;
-        if( !this.fontName ) this.fontName=VG.context.style.skin.HtmlViewDefaultFont.name;
 
-        if( !attribs ) return;
+            if( !attribs ) return;
 
-        for ( var i=0; i < attribs.length; ++i ) {
+            for ( var i=0; i < attribs.length; ++i ) {
 
-            if( attribs[i].attrib === "color" ) this.color=VG.UI.HtmlColors[ attribs[i].value ];
-            if( attribs[i].attrib === "size" ) this.size=parseInt( attribs[i].value );
-            if( attribs[i].attrib === "face" ) this.fontName=attribs[i].value;
-        }
+                if( attribs[i].attrib === "color" ) this.color=VG.UI.HtmlView.HtmlColors[ attribs[i].value ];
+                if( attribs[i].attrib === "size" ) this.size=parseInt( attribs[i].value );
+                if( attribs[i].attrib === "face" ) this.fontName=attribs[i].value;
+            }
 
-        this.face=VG.Font.Font( this.fontName, this.size );
-        break;
+            break;
 
         case "Link":
 
-        if( !attribs ) return;
+            if( !attribs ) return;
 
-        for( var i=0; i < attribs.length; ++i ) {
+            for( var i=0; i < attribs.length; ++i ) {
 
-            if( attribs[i].attrib === "href" ) this.link=attribs[i].value;
-        }
-        break;
+                if( attribs[i].attrib === "href" ) this.link=attribs[i].value;
+            }
+            break;
     }
 
 };
 
-VG.UI.TextModifiers.prototype.hasAttrib=function( attrib )
+VG.UI.HtmlView.TextModifiers.prototype.hasAttrib=function( attrib )
 {
     if ( this.hasOwnProperty( attrib ) ) return true;
 
