@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * (C) Copyright 2014, 2015 Krishnakanth Mallik <krishnakanthmallikc@gmail.com>.
  *
  * This file is part of Visual Graphics.
  *
@@ -20,6 +20,9 @@
 
 VG.UI.HtmlView=function( html )
 {
+    /**Creates a new HtmlView widget that can render HTML source text.
+    * @constructor
+    */
 
     if ( !(this instanceof VG.UI.HtmlView) ) return new VG.UI.HtmlView( html );
 
@@ -179,8 +182,12 @@ VG.UI.HtmlView=function( html )
     this.elements.p=this.p;
     this.elements.code=this.code;
         
-    if ( arguments.length ) this.html=arguments[0];
-    else this.html="";
+    if ( arguments.length ) this._html=arguments[0];
+    else
+    /** The HTML source text.
+     * @member {string}
+     */
+        this._html="";
 };
 
 VG.UI.HtmlView.prototype=VG.UI.Widget();
@@ -188,7 +195,7 @@ VG.UI.HtmlView.prototype=VG.UI.Widget();
 Object.defineProperty( VG.UI.HtmlView.prototype, "html", {
     get: function() {
         // @TODO: Reconstruct the html from formatted text and modifiers.
-        return this.html;
+        return this._html;
     },
     set: function( newHtml ) {
 
@@ -586,24 +593,12 @@ VG.UI.HtmlView.prototype.processHtml=function()
             }
 
             var boldModifier=textGroup.formattedTextArray[i].getModifier( "Bold" );
-            if( boldModifier ) {
-                
-                var fontName=textGroup.formattedTextArray[i].font.triFont.face.familyName.indexOf("Bold") < 0 ?  
-                    textGroup.formattedTextArray[i].font.triFont.face.familyName + " Bold" : 
-                        textGroup.formattedTextArray[i].font.triFont.face.familyName;
-
-                textGroup.formattedTextArray[i].font=VG.Font.Font( fontName, textGroup.formattedTextArray[i].size );
-            }
+            if( boldModifier )
+                textGroup.formattedTextArray[i].font=this.elements.b.font;
 
             var italicModifier=textGroup.formattedTextArray[i].getModifier( "Italic" );
-            if( italicModifier ) {
-                
-                var fontName=textGroup.formattedTextArray[i].font.triFont.name.indexOf("Italic") < 0 ? 
-                        textGroup.formattedTextArray[i].font.triFont.name + " Italic" : 
-                            textGroup.formattedTextArray[i].font.triFont.name;
-
-                textGroup.formattedTextArray[i].font=VG.Font.Font( fontName, textGroup.formattedTextArray[i].size );
-            }
+            if( italicModifier )
+                textGroup.formattedTextArray[i].font=this.elements.i.font;
 
             if( forceNextLine ) nextStart=0;
 
@@ -1373,7 +1368,13 @@ VG.UI.HtmlView.TextModifiers.prototype.setAttribs=function( attribs )
 
             for ( var i=0; i < attribs.length; ++i ) {
 
-                if( attribs[i].attrib === "color" ) this.color=VG.UI.HtmlView.HtmlColors[ attribs[i].value ];
+                if( attribs[i].attrib === "color" ) {
+
+                    if( attribs[i].value.indexOf("#") === 0 )
+                        this.color=VG.Core.Color( attribs[i].value );
+                    else
+                        this.color=VG.UI.HtmlView.HtmlColors[ attribs[i].value ];
+                }
                 if( attribs[i].attrib === "size" ) this.size=parseInt( attribs[i].value );
                 if( attribs[i].attrib === "face" ) this.fontName=attribs[i].value;
             }

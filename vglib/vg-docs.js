@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Krishnakanth Mallik <krishnakanthmallikc@gmail.com>.
  *
  * This file is part of Visual Graphics.
  *
@@ -66,7 +66,38 @@ VG.Docs.Database=function()
 
 	this.helpObjects.sort( function(a, b) {
   		return a.text == b.text ? 0 : +(a.text > b.text) || -1;
-	});		
+	});
+
+	this.elements={};
+
+	this.elements.classDetail={
+		"heading" : "h2"
+	};
+
+	this.elements.constructor={
+		"heading" : "h4"
+	};
+
+	this.elements.method={
+		"heading" : "h2"
+	}
+
+	this.elements.members={
+		"heading" : "h4",
+		"hexColor" : "#000000"
+	};
+
+	this.elements.parameters={
+		"heading" : "h4"
+	};
+
+	this.elements.returns={
+		"heading" : "h4"
+	};
+
+	this.elements.links={
+		"hexColor" : "#808080"
+	};		
 };
 
 VG.Docs.Database.prototype.addHelpObject=function( name, func, isObject ) 
@@ -203,7 +234,10 @@ VG.Docs.Database.prototype.buildHtml=function( text )
 				if( member.indexOf("_") === 0 )
 					member = member.substring(1);
 
-				docText = member + " - "  + docText;
+				docText = "<font color=" + "\"" + this.elements.members.hexColor + "\"" + ">"
+							+ member
+							+ "</font>"
+							+ " - "  + docText;
 			}
 		}
 
@@ -231,6 +265,12 @@ VG.Docs.Database.prototype.jsDoc2Html=function( jsdoc )
 		// Strip out excess spaces in between
 		jsdoc[i]=jsdoc[i].replace( /\s{2,}/g, " " );
 
+		// Strip out spaces between tags "> <"
+		jsdoc[i]=jsdoc[i].replace( />\s</g, "><" );
+
+		// Strip out leading spaces after a <br> tag
+		jsdoc[i]=jsdoc[i].replace( /<br>\s/g, "<br>" );
+
 		// Function Desc
 		var descEnd=jsdoc[i].indexOf( "@" );
 		descEnd = descEnd >= 0 ? descEnd : jsdoc[i].length;
@@ -239,10 +279,19 @@ VG.Docs.Database.prototype.jsDoc2Html=function( jsdoc )
 		jsdoc[i]=jsdoc[i].substring(descEnd);
 		
 		if( jsdoc[i].indexOf("@constructor") === 0 )
-		 	html += "<h2>Class Detail</h2><h4>Constructor</h4>" + desc;
+		 	html += "<" + this.elements.classDetail.heading + ">"
+		 			+ "Class Detail"
+		 			+ "</" + this.elements.classDetail.heading + ">"
+		 			+ "<" + this.elements.constructor.heading + ">"
+		 			+ "Constructor"
+		 			+ "</" + this.elements.constructor.heading + ">"
+		 			+ desc;
 
 		else if( jsdoc[i].indexOf("@param") === 0 || jsdoc[i].indexOf("@returns") === 0 || jsdoc[i].indexOf("@") < 0 )
-			html += "<h4>Method Detail</h4>" + desc;
+			html += "<" + this.elements.method.heading + ">"
+					+ "Method Detail"
+					+ "</" + this.elements.method.heading + ">" 
+					+ desc;
 
 		while( jsdoc[i] ) {
 
@@ -260,7 +309,9 @@ VG.Docs.Database.prototype.jsDoc2Html=function( jsdoc )
 				var tagDetails = jsdoc[i].substring( 0,  index);
 
 				// Add italics and custom font to types.
-				tagDetails=tagDetails.replace(/\{(.*?)\}/g, "<font color=\"gray\">{" + "$1" + "}</font>");
+				tagDetails=tagDetails.replace(/\{(.*?)\}/g, "<font color=\"" 
+												+ this.elements.links.hexColor 
+												+ "\">{" + "$1" + "}</font>");
 				
 				switch( tag.toLowerCase() ) {
 
@@ -284,7 +335,10 @@ VG.Docs.Database.prototype.jsDoc2Html=function( jsdoc )
 
 	if( params.length ) {
 
-		html += "<h4>Parameters</h4><ul>";
+		html += "<" + this.elements.parameters.heading + ">" 
+				+ "Parameters"
+				+ "</" + this.elements.parameters.heading + ">" 
+				+ "<ul>";
 
 		for( var j=0; j < params.length; ++j )
 			html += "<li>" + params[j] + "</li>";
@@ -294,7 +348,11 @@ VG.Docs.Database.prototype.jsDoc2Html=function( jsdoc )
 
 	if( members.length ) {
 
-		html += "<h4>Members</h4><ul>";
+		html += "<" + this.elements.members.heading + ">"
+				+ "Members"
+				+ "</" + this.elements.members.heading + ">"
+				+ "<ul>";
+
 		for( var j=0; j < members.length; ++j )
 			html += "<li>" + members[j] + "</li>";
 
@@ -303,7 +361,12 @@ VG.Docs.Database.prototype.jsDoc2Html=function( jsdoc )
 
 	if( returns.length ) {
 
-		html += "<h4>Returns</h4><ul>" + returns + "</ul>";
+		html += "<" + this.elements.returns.heading + ">"
+		+ "Returns"
+		+ "</" + this.elements.returns.heading + ">"
+		+ "<ul>" 
+		+ returns 
+		+ "</ul>";
 	}
 
 	html = this.insertLinks(html);
