@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -29,11 +29,35 @@ VG.UI.MenuItem=function( text, iconName, clicked, shortcut )
     this.clicked=clicked;
     this.shortcut=shortcut;
 
-    this.disabled=false;
+    this._disabled=false;
     this.exclusions=[];
     this.checkable=false;
-    this.checked=false;
+    this._checked=false;
+
+    this.id=-1;
 };
+
+Object.defineProperty( VG.UI.MenuItem.prototype, "disabled", 
+{
+    get: function() {
+        return this._disabled;
+    },
+    set: function( disabled ) {
+        this._disabled=disabled;
+        if ( VG.setNativeMenuItemState ) VG.setNativeMenuItemState( this.id, disabled, this._checked );
+    }    
+});
+
+Object.defineProperty( VG.UI.MenuItem.prototype, "checked", 
+{
+    get: function() {
+        return this._checked;
+    },
+    set: function( checked ) {
+        this._checked=checked;
+        if ( VG.setNativeMenuItemState ) VG.setNativeMenuItemState( this.id, this._disabled, checked );
+    }    
+});
 
 VG.UI.MenuItem.prototype.addExclusions=function()
 {
@@ -69,6 +93,8 @@ VG.UI.Menubar=function()
 
     this.items=[];
     this.active=null;
+
+    this.itemIdCounter=1;
 };
 
 VG.UI.Menubar.prototype=VG.UI.Widget();
@@ -76,6 +102,8 @@ VG.UI.Menubar.prototype=VG.UI.Widget();
 VG.UI.Menubar.prototype.addMenu=function( text, callback )
 {
     var menu=new VG.UI.Menu( text, callback, this );
+
+    if ( VG.addNativeMenu ) VG.addNativeMenu( menu );
 
     this.items.push( menu );
 
@@ -130,6 +158,45 @@ VG.UI.Menubar.prototype.mouseUp=function( event )
 {  
 };
 
+VG.UI.Menubar.prototype.menuItemById=function( id )
+{
+    for( var i=0; i < this.items.length; ++i )
+    {
+        var menu=this.items[i];
+
+        for( var m=0; m < menu.items.length; ++m )
+        {
+            var menuItem=menu.items[m];
+
+            if ( menuItem.id !== -1 && menuItem.id === id )
+                return menuItem;
+        }
+    }
+    return -1;
+};
+
+VG.UI.Menubar.prototype.clickMenuItemById=function( id )
+{
+    for( var i=0; i < this.items.length; ++i )
+    {
+        var menu=this.items[i];
+
+        for( var m=0; m < menu.items.length; ++m )
+        {
+            var menuItem=menu.items[m];
+
+            if ( menuItem.id !== -1 && menuItem.id === id )
+            {
+                menu.externalClickItem=menuItem;
+                menu.externalClickTime=Date.now();
+
+                menu.clickItem( menuItem );
+            }
+        }
+    }
+    return -1;
+};
+
 VG.UI.Menubar.prototype.calcSize=function()
 {
     var size=VG.Core.Size( VG.UI.MaxLayoutSize, 26 );
@@ -180,7 +247,7 @@ VG.UI.Menu.prototype=VG.UI.Widget();
 VG.UI.Menu.prototype.addItem=function( text, icon, callback, shortcut )
 {
     var item=VG.UI.MenuItem( text, icon, callback, shortcut );
-    this.items.push( item );
+    this.addMenuItem( item );
 
     return item;
 };
@@ -188,6 +255,10 @@ VG.UI.Menu.prototype.addItem=function( text, icon, callback, shortcut )
 VG.UI.Menu.prototype.addMenuItem=function( menuItem )
 {
     this.items.push( menuItem );
+
+    if ( this.parent) menuItem.id=this.parent.itemIdCounter++;
+    if ( VG.addNativeMenuItem ) VG.addNativeMenuItem( this, menuItem );
+
     return menuItem;
 };
 
@@ -198,7 +269,24 @@ VG.UI.Menu.prototype.addSeparator=function()
     ++this.separatorCount;
     this.items.push( item );
 
+    if ( VG.addNativeMenuItem ) VG.addNativeMenuItem( this, item );
+
     return item;
+};
+
+VG.UI.Menu.prototype.clickItem=function( item )
+{
+    if ( item.clicked ) item.clicked();            
+
+    // --- Apply checkable state ?
+
+    if ( item.checkable )
+    {
+        item.checked=true;
+
+        for ( var i=0; i < item.exclusions.length; ++i ) 
+                item.exclusions[i].checked=false;
+    }    
 };
 
 VG.UI.Menu.prototype.calcSize=function()

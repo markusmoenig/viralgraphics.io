@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -22,7 +22,7 @@
 
 VG.downloadRequest=function( url, parameters, method ) 
 { 
-	var serverUrl="http://visualgraphics.tv";
+	var serverUrl="https://visualgraphics.tv";
 
     method=method || "POST"; 
 
@@ -53,7 +53,7 @@ VG.sendBackendRequest=function( url, parameters, callback, type, error_callback 
     request.onreadystatechange = function() {
         if (request.readyState == 4) {
             if ( request.status == 200 || window.location.href.indexOf("http") ==-1 ) {
-                //console.log( parameters, request.responseText );
+                //VG.log( parameters, request.responseText );
 
                 if ( callback ) callback.call( this, request.responseText );
             } else {
@@ -64,7 +64,7 @@ VG.sendBackendRequest=function( url, parameters, callback, type, error_callback 
         }
     };
 
-    var serverUrl="http://visualgraphics.tv";
+    var serverUrl="https://visualgraphics.tv";
     /*var serverUrl="http://localhost:3002";*/
     var requestType="POST";
 
@@ -135,6 +135,9 @@ VG.getHostProperty=function( property )
         }
         break;
 
+        case VG.HostProperty.DrawMenus :
+            return true;
+        break;
     }
 };
 
@@ -143,21 +146,23 @@ VG.setHostProperty=function( property, value )
 
 };
 
-VG.remoteOpenFile=function( path, callback )
+VG.remoteOpenFile=function( fileName, callback )
 {
     var parameters={};
 
-    var string="/upload/" + VG.Utils.decompressFromBase64( VG.App.url ) + "/" + path;
+    var string="/upload/" + VG.context.workspace.appId + "/" + fileName;
     VG.sendBackendRequest( string, JSON.stringify( parameters ), callback, "GET" );
 };
 
-VG.remoteSaveFile=function( path, data )
+VG.remoteSaveFile=function( fileName, data )
 {
-    var parameters={ files : {} };
-    parameters.files[path]=data;
+    var parameters={};
+    parameters[fileName]=data;
 
-    var string="/upload/" + VG.Utils.decompressFromBase64( VG.App.url );
-    VG.sendBackendRequest( string, JSON.stringify( parameters ), null, "POST" );
+    var string="/upload/" + VG.context.workspace.appId;
+    VG.sendBackendRequest( string, JSON.stringify( parameters ), function( responseText ) {
+        console.log( responseText );
+    }.bind( this ), "POST" );
 };
 
 VG.decompressImageData=function( data, image )

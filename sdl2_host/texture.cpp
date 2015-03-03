@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -124,7 +124,7 @@ JSClass TextureClass =
 
 bool TextureConstructor( JSContext *cx, unsigned argc, jsval *vp )
 {
-    printf( "Texture Constructor!%d\n", argc );
+    //printf( "Texture Constructor!%d\n", argc );
 
     JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
 

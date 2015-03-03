@@ -59,9 +59,41 @@ elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
     endif()
 endif()
 
+## JSHost Platform Dependencies
+
+if (${APPLE})
+
+    set_property(SOURCE "jshost_funcs_cocoa.m" PROPERTY COMPILE_FLAGS "-x objective-c++")
+    set( JSHOST "jshost_funcs_cocoa.m" )
+
+elseif(${UNIX})
+
+elseif(${WIN32})
+    
+endif()
+
+## Native File Dialogs
+
+include_directories( "deps/nativefiledialog/src" "deps/nativefiledialog/src/include" )
+
+if (${APPLE})
+
+    set_property(SOURCE "deps/nativefiledialog/src/nfd_cocoa.m" PROPERTY COMPILE_FLAGS "-x objective-c++")
+    set( NFD_SOURCES "deps/nativefiledialog/src/nfd_common.c" "deps/nativefiledialog/src/nfd_cocoa.m" )
+
+elseif(${UNIX})
+
+    set( NFD_SOURCES "deps/nativefiledialog/src/nfd_common.c" "deps/nativefiledialog/src/nfd_gtk.cpp" )
+
+elseif(${WIN32})
+
+    set( NFD_SOURCES "deps/nativefiledialog/src/nfd_common.c" "deps/nativefiledialog/src/nfd_win.cpp" )
+    
+endif()
+
 ## Sources
  
-set ( SOURCES main.cpp image_loader.cpp jshost.cpp jshost_funcs.cpp shader.cpp gpubuffer.cpp rendertarget.cpp texture.cpp )
+set ( SOURCES main.cpp image_loader.cpp jshost.cpp jshost_funcs.cpp jshost_funcs_utils.cpp shader.cpp gpubuffer.cpp rendertarget.cpp texture.cpp base64.cpp ${JSHOST} ${NFD_SOURCES} )
 
 # So the compiler knows when to re-compile on header change
 set ( HEADERS gl.hpp image_loader.hpp jshost.hpp shader.hpp gpubuffer.hpp rendertarget.hpp texture.hpp )

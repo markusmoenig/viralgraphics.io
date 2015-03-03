@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -38,6 +38,8 @@ VG.Shortcut.Item.prototype.createText=function()
 {
     this.text="";
 
+    if ( !this.key ) return;
+
     if ( this.modifierOptional === VG.Events.KeyCodes.Shift )
         this.text+="SHIFT+";
 
@@ -61,7 +63,7 @@ VG.Shortcut.Manager=function()
     if ( !(this instanceof VG.Shortcut.Manager ) ) return new VG.Shortcut.Manager();
 };
 
-VG.Shortcut.Defaults={ "Cut" : 0, "Copy" : 1, "Paste" : 2, "SelectAll" : 3, "InsertText" : 4, "InsertEncodedText" : 5, "Undo" : 6, "Redo" : 7 };
+VG.Shortcut.Defaults={ "Cut" : 0, "Copy" : 1, "Paste" : 2, "SelectAll" : 3, "InsertText" : 4, "InsertEncodedText" : 5, "Undo" : 6, "Redo" : 7, "Open" : 8, "SaveAs" : 9 };
 
 VG.Shortcut.Manager.prototype.createDefault=function( def )
 {
@@ -69,22 +71,59 @@ VG.Shortcut.Manager.prototype.createDefault=function( def )
 
     switch( def )
     {
+        case VG.Shortcut.Defaults.Open:
+        {
+            if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac && VG.context.workspace.platform === VG.HostProperty.PlatformDesktop ) {
+                item.key="O";
+                item.modifier=VG.Events.KeyCodes.AppleLeft;
+            }
+        }
+        break;
+
+        case VG.Shortcut.Defaults.Save:
+        {
+            if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac && VG.context.workspace.platform === VG.HostProperty.PlatformDesktop ) {
+                item.key="S";
+                item.modifier=VG.Events.KeyCodes.AppleLeft;
+            }
+        }
+        break;
+
+        case VG.Shortcut.Defaults.SaveAs:
+        {
+            if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac && VG.context.workspace.platform === VG.HostProperty.PlatformDesktop ) {
+                item.key="S";
+                item.modifier=VG.Events.KeyCodes.AppleLeft;
+                item.modifierOptional=VG.Events.KeyCodes.Shift;                
+            }
+        }
+        break;
+
         case VG.Shortcut.Defaults.Undo:
         {
-            if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac ) {
+            if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac && VG.context.workspace.platform === VG.HostProperty.PlatformWeb ) {
                 item.key="Z";
                 item.modifier=VG.Events.KeyCodes.Alt;
-            }
+            } else
+            if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac && VG.context.workspace.platform === VG.HostProperty.PlatformDesktop ) {
+                item.key="Z";
+                item.modifier=VG.Events.KeyCodes.AppleLeft;
+            }            
         }
         break;
 
         case VG.Shortcut.Defaults.Redo:
         {
-            if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac ) {
+            if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac && VG.context.workspace.platform === VG.HostProperty.PlatformWeb ) {
                 item.key="Z";
                 item.modifier=VG.Events.KeyCodes.Alt;
                 item.modifierOptional=VG.Events.KeyCodes.Shift;
-            }
+            } else
+            if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac && VG.context.workspace.platform === VG.HostProperty.PlatformDesktop ) {
+                item.key="Z";
+                item.modifier=VG.Events.KeyCodes.AppleLeft;
+                item.modifierOptional=VG.Events.KeyCodes.Shift;                                
+            }                
         }
         break;
 
@@ -155,9 +194,18 @@ VG.Shortcut.Manager.prototype.verifyMenubar=function( text, keysDown, menubar )
 
 VG.Shortcut.Manager.prototype.verifyMenu=function( text, keysDown, menu )
 {
+    this.duplicateFromHost=false;
+
     for ( var mi=0; mi < menu.items.length; ++mi )
     {
         var menuItem=menu.items[mi];
+
+        if ( menu.externalClickItem === menuItem && ( Date.now() - menu.externalClickTime ) < 200 ) 
+        {
+            this.duplicateFromHost=true;
+            return true;
+        }
+
         if ( menuItem.shortcut && !menuItem.disabled )
         {
             if ( this.verifyShortcut( text, keysDown, menuItem.shortcut ) )
@@ -166,7 +214,8 @@ VG.Shortcut.Manager.prototype.verifyMenu=function( text, keysDown, menu )
                 return true;
             }
         }
-    }    
+    }
+    return false;
 };
 
 VG.Shortcut.Manager.prototype.verifyShortcut=function( text, keysDown, shortcut )

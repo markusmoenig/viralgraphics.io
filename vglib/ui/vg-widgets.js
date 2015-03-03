@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -390,6 +390,9 @@ VG.UI.Image.prototype.calcSize=function()
     }
 
     this.checkSizeDimensionsMinMax( size );
+
+    this.minimumSize.width=size.width/10;
+    this.minimumSize.height=size.height/10;
 
     return size;
 };
@@ -1044,19 +1047,23 @@ VG.UI.Statusbar=function()
 
 VG.UI.Statusbar.prototype=VG.UI.Widget();
 
-VG.UI.Statusbar.prototype.message=function( message )
+VG.UI.Statusbar.prototype.message=function( message, timeout )
 {
     this.label.text=message;
+    if ( timeout ) this.messageTimeOutTime=Date.now() + timeout;
+    else this.messageTimeOutTime=0;
 }
 
 VG.UI.Statusbar.prototype.paintWidget=function( canvas )
 {
     VG.context.style.drawStatusbar( canvas, this );
-        
+
+    if ( this.messageTimeOutTime && this.messageTimeOutTime < Date.now() )
+        this.label.text="";
+
     this.layout.rect.set( this.rect );
     this.layout.layout( canvas );
 };
-
 
 // ----------------------------------------------------------------- VG.UI.TabWidget
 

@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -174,7 +174,7 @@ bool GetRenderTargetProperty( JSContext *cx, Handle<JSObject *> object, Handle<j
 {
     RootedValue val(cx); JS_IdToValue( cx, id, MutableHandleValue(&val) );
     JSString *propertyString = val.toString(); const char *propertyName=JS_EncodeString(cx, propertyString);   
-    printf("GetRenderTargetProperty: %s\n", propertyName ); 
+    //printf("GetRenderTargetProperty: %s\n", propertyName ); 
     
     RenderTarget *target=(RenderTarget *) JS_GetPrivate( object );
 
@@ -198,7 +198,7 @@ bool SetRenderTargetProperty( JSContext *cx, Handle<JSObject *> object, Handle<j
 {
     RootedValue val(cx); JS_IdToValue( cx, id, MutableHandleValue(&val) );
     JSString *propertyString = val.toString(); const char *propertyName=JS_EncodeString(cx, propertyString);    
-    printf("SetRenderTargetProperty: %s\n", propertyName ); 
+    //printf("SetRenderTargetProperty: %s\n", propertyName ); 
 
     RenderTarget *target=(RenderTarget *) JS_GetPrivate( object );
 
@@ -244,7 +244,7 @@ JSClass RenderTargetClass =
 
 bool RenderTargetConstructor( JSContext *cx, unsigned argc, jsval *vp )
 {
-    printf( "RenderTarget Constructor!%d\n", argc );
+    //printf( "RenderTarget Constructor!%d\n", argc );
 
     JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
 

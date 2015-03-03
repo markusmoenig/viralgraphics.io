@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -33,7 +33,8 @@ VG.UI.BaseText=function()
     this.maxTextLineSize=VG.Core.Size();  
     this.textArray=[];
     this.textLines=0;
-    this.textHasChanged=false;
+    this._textHasChanged=false;
+    this.lastTextChangeTime=0;
     this.maxTextLine=0;
 
     this.cursorPosition=VG.Core.Point();
@@ -58,8 +59,6 @@ VG.UI.BaseText=function()
     this.verified=false;
     this.spacing=0;
     this.readOnly=false;
-
-    this.nextUndoEventAt=0;
 };
 
 VG.UI.BaseText.prototype=VG.UI.Frame();
@@ -83,6 +82,16 @@ Object.defineProperty( VG.UI.BaseText.prototype, "text", {
             this.checkCursorBounds();
         }
         this.selectionIsValid=false;
+    }    
+});
+
+Object.defineProperty( VG.UI.BaseText.prototype, "textHasChanged", {
+    get: function() {
+        return this._textHasChanged;
+    },
+    set: function( textHasChanged ) {
+        this._textHasChanged=textHasChanged;
+        this.lastTextChangeTime=Date.now();
     }    
 });
 
@@ -110,8 +119,10 @@ VG.UI.BaseText.prototype.clipboardPasteIsAvailableForType=function( type )
 
 VG.UI.BaseText.prototype.clipboardCut=function( type )
 {
+    if ( !this.selectionIsValid ) return;
+
     VG.copyToClipboard( "Text", this.copySelection() );
-    if ( this.selectionIsValid ) this.deleteSelection();
+    this.deleteSelection();
     this.textHasChanged=true;
     this.focusOut();      
 }
@@ -126,9 +137,7 @@ VG.UI.BaseText.prototype.clipboardPaste=function( type )
     if ( this.selectionIsValid ) this.deleteSelection( true );
     this.insertText( VG.clipboardPasteDataForType( "Text" ) );
     this.textHasChanged=true;
-    this.focusOut();   
-
-
+    this.focusOut();
 };
 
 VG.UI.BaseText.prototype.clipboardDeleteSelection=function( type )
@@ -158,7 +167,6 @@ VG.UI.BaseText.prototype.selectAll=function()
 VG.UI.BaseText.prototype.verifyText=function()
 {
     this.textLines=this.textArray.length;
-
     if ( this.font ) VG.context.workspace.canvas.pushFont( this.font );
 
     this.maxTextLineSize.set(0, 0);
@@ -182,6 +190,27 @@ VG.UI.BaseText.prototype.verifyText=function()
 
     if ( this.font ) VG.context.workspace.canvas.popFont();
 };
+
+VG.UI.BaseText.prototype.verifyTextForLineChange=function( line )
+{
+    //if ( line === this.maxTextLine ) { this.verifyText(); return }
+
+    if ( this.font ) VG.context.workspace.canvas.pushFont( this.font );
+
+    var size=VG.Core.Size();
+
+    VG.context.workspace.canvas.getTextSize( this.textArray[line], size );
+    if ( size.width > this.maxTextLineSize.width ) {
+        this.maxTextLineSize.width=size.width;
+        this.maxTextLine=line;
+    }
+
+    size=this.calcSize( VG.context.workspace.canvas );
+    this.verified=false;
+
+    if ( this.font ) VG.context.workspace.canvas.popFont();
+};
+
 
 VG.UI.BaseText.prototype.vHandleMoved=function( offsetInScrollbarSpace )
 {
@@ -346,6 +375,7 @@ VG.UI.BaseText.prototype.mouseMove=function( event )
             this.sortSelection();
             this.selectionIsValid=true;
             VG.update();
+            //VG.Utils.ensureRedrawWithinMs( 50 );
         }
     }
 };
@@ -366,7 +396,7 @@ VG.UI.BaseText.prototype.mouseDown=function( event )
         return;
     }
 
-    if ( this.lastDClickTime && ( ( new Date().getTime() ) - this.lastDClickTime  < 300 ) )
+    if ( this.lastDClickTime && ( ( Date.now() ) - this.lastDClickTime  < 300 ) )
     {
         this.selectionStart.x=0
         this.selectionEnd.x=this.textArray[this.cursorPosition.y].length;
@@ -406,9 +436,11 @@ VG.UI.BaseText.prototype.mouseDoubleClick=function( event )
     this.selectionEnd.x=this.textBoundry( text, false, boundryItems, this.selectionEnd.x );
 
     if ( !this.selectionStart.equals( this.selectionEnd ) )  {
-        this.lastDClickTime=new Date().getTime();    
+        this.lastDClickTime=Date.now();    
         this.sortSelection();
         this.selectionIsValid=true;
+
+        VG.Utils.scheduleRedrawInMs( 30 )
         VG.update();
     }
 
@@ -447,6 +479,7 @@ VG.UI.BaseText.prototype.keyDown=function( keyCode, keysDown )
 {
     //console.log( "BaseText:" + keyCode );
     var recognized=false;
+    var hasChanged=false;
     
     if ( keyCode == VG.Events.KeyCodes.ArrowLeft )
     {
@@ -642,7 +675,8 @@ VG.UI.BaseText.prototype.keyDown=function( keyCode, keysDown )
                 this.textArray[this.cursorPosition.y]=newText + oldText.slice( this.cursorPosition.x+1 )
             }
 
-            this.textHasChanged=true;            
+            this.textHasChanged=true;   
+            hasChanged=true;         
         } else
         if ( this.cursorPosition.y > 0 )
         {
@@ -657,10 +691,9 @@ VG.UI.BaseText.prototype.keyDown=function( keyCode, keysDown )
             var newText=this.textArray[this.cursorPosition.y] + oldText;
             this.textArray[this.cursorPosition.y]=newText;
 
-            this.textHasChanged=true;                
+            this.verifyText();
+            this.textHasChanged=true;
         }     
-
-        this.verifyText();
 
         if ( this.needsHScrollbar )
             this.ensureCursorIsVisible();
@@ -671,7 +704,7 @@ VG.UI.BaseText.prototype.keyDown=function( keyCode, keysDown )
     if ( recognized )
     {
         this.selectionIsValid=false;
-        if ( this.textHasChanged ) this.verifyText();
+        if ( hasChanged ) this.verifyTextForLineChange( this.cursorPosition.y );
         this.resetBlinkState();
         VG.update();
     }
@@ -731,7 +764,7 @@ VG.UI.BaseText.prototype.blink=function( canvas, cursorYPos, cursorHeight )
 {    
     if ( this.visualState === VG.UI.Widget.VisualState.Focus ) {
         
-        var time=new Date().getTime();
+        var time=Date.now();
         
         if ( time > this.nextAnimationEventAt ) {
             if ( this.blinkState ) this.blinkState=0;
@@ -739,15 +772,8 @@ VG.UI.BaseText.prototype.blink=function( canvas, cursorYPos, cursorHeight )
             
             this.nextAnimationEventAt=time + 500;
             VG.context.workspace.redrawList.push( this.nextAnimationEventAt );
-        }
-        
-        if ( time > this.nextUndoEventAt ) {
-            if ( !(this instanceof VG.UI.TextLineEdit) ) {
-                this.focusOut();
-            
-                this.nextUndoEventAt=time + 5 * 1000;
-                VG.context.workspace.redrawList.push( this.nextUndoEventAt );
-            }
+
+            if ( this._textHasChanged && !(this instanceof VG.UI.TextLineEdit) && (Date.now() - this.lastTextChangeTime) > 1000 ) this.focusOut();
         }
 
         if ( this.blinkState )
@@ -971,6 +997,7 @@ VG.UI.BaseText.prototype.drawSearchTerm=function( canvas, y, paintRect, text, co
 VG.UI.BaseText.prototype.autoScroll=function()
 {
     var pos=VG.context.workspace.mousePos;
+    var yPos=this.textOffset.y
 
     if ( /*this.selectionEnd.y > this.startSel.y &&*/ pos.y > this.contentRect.bottom() - this.contentRect.height / 5 )
     {
@@ -983,12 +1010,15 @@ VG.UI.BaseText.prototype.autoScroll=function()
         this.mouseWheel( 1 );
     }          
 
-    this.applyCursorPos( pos );
-    this.selectionEnd.set( this.cursorPosition );
-    this.sortSelection();
+    if ( yPos != this.textOffset.y ) 
+    {
+        this.applyCursorPos( pos );
+        this.selectionEnd.set( this.cursorPosition );
+        this.sortSelection();
 
-    var time=new Date().getTime();
-    VG.context.workspace.redrawList.push( time + 1000/30 );    
+        //VG.Utils.ensureRedrawWithinMs( 10 );
+        VG.context.workspace.redrawList.push( Date.now() + 10 );
+    }
 };
 
 VG.UI.BaseText.prototype.gotoLine=function( lineNr )
@@ -1490,7 +1520,7 @@ VG.UI.TextEdit=function( text )
 
     this.insertMenuItem=this.contextMenu.addItem( "Insert Text...", null, function() { 
 
-        this.fileDialog=VG.FileDialog( VG.UI.FileDialog.Text, function( name, content ) {
+        this.fileDialog=VG.OpenFileDialog( VG.UI.FileDialog.Text, function( name, content ) {
             this.insertText( content );
             if ( this.collection && this.path )
                 this.collection.storeDataForPath( this.path, this.text );
@@ -1575,9 +1605,25 @@ VG.UI.TextEdit.prototype.keyDown=function( keyCode, keysDown )
             }
         }
 
+        if ( this.needsHScrollbar )
+            this.ensureCursorIsVisible();        
+
         recognized=true;
         this.textHasChanged=true;     
-    }  
+    } else
+    if ( keyCode == VG.Events.KeyCodes.Tab )
+    {
+        if ( this.selectionIsValid ) this.deleteSelection();
+
+        var text="\t";
+
+        var oldText=this.textArray[this.cursorPosition.y];
+        this.textArray[this.cursorPosition.y]=oldText.slice(0, this.cursorPosition.x) + text + oldText.slice( this.cursorPosition.x );
+        this.cursorPosition.x+=text.length;
+
+        recognized=true;
+        this.textHasChanged=true;     
+    };
 
     if ( recognized )
     {
@@ -1601,7 +1647,7 @@ VG.UI.TextEdit.prototype.textInput=function( text )
     this.cursorPosition.x+=text.length;
     this.textHasChanged=true;
 
-    this.verifyText();
+    this.verifyTextForLineChange( this.cursorPosition.y );
     this.verifyScrollbar();
 
     if ( this.needsHScrollbar )
@@ -1769,7 +1815,7 @@ VG.UI.CodeEdit=function( text )
 
     this.insertMenuItem=this.contextMenu.addItem( "Insert Text...", null, function() { 
 
-        this.fileDialog=VG.FileDialog( VG.UI.FileDialog.Text, function( name, content ) {
+        this.fileDialog=VG.OpenFileDialog( VG.UI.FileDialog.Text, function( name, content ) {
             this.insertText( content );
             if ( this.collection && this.path )
                 this.collection.storeDataForPath( this.path, this.text );
@@ -1780,7 +1826,7 @@ VG.UI.CodeEdit=function( text )
 
     this.insertEncodedMenuItem=this.contextMenu.addItem( "Insert Encoded Text...", null, function() { 
 
-        this.fileDialog=VG.FileDialog( VG.UI.FileDialog.Text, function( name, content ) {
+        this.fileDialog=VG.OpenFileDialog( VG.UI.FileDialog.Text, function( name, content ) {
 
             var oname=name; 
             if ( name.indexOf( "." ) ) oname=name.slice( 0, name.indexOf( "." ) );
@@ -1880,6 +1926,7 @@ VG.UI.CodeEdit.prototype.keyDown=function( keyCode, keysDown )
         return;
 
     var recognized=false;
+    var hasChanged=false;
 
     if ( keyCode == VG.Events.KeyCodes.Enter )
     {
@@ -1940,6 +1987,8 @@ VG.UI.CodeEdit.prototype.keyDown=function( keyCode, keysDown )
 
         recognized=true;
         this.textHasChanged=true;
+
+        this.verifyText();        
     } else
     if ( keyCode == VG.Events.KeyCodes.Tab )
     {
@@ -1954,12 +2003,13 @@ VG.UI.CodeEdit.prototype.keyDown=function( keyCode, keysDown )
         this.cursorPosition.x+=text.length;
 
         recognized=true;
-        this.textHasChanged=true;        
+        this.textHasChanged=true;     
+        hasChanged=true;   
     };
 
     if ( recognized )
     {
-        this.verifyText();
+        if ( hasChanged ) this.verifyTextForLineChange( this.cursorPosition.y );
         this.resetBlinkState();
         VG.update();
     }
@@ -1981,7 +2031,7 @@ VG.UI.CodeEdit.prototype.textInput=function( text )
     this.cursorPosition.x+=text.length;
     this.textHasChanged=true;
 
-    this.verifyText();
+    this.verifyTextForLineChange( this.cursorPosition.y );
     this.verifyScrollbar();
 
     if ( this.needsHScrollbar )

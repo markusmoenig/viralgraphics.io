@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -40,25 +40,70 @@ VG.Docs.Database=function()
 {
     if ( !(this instanceof VG.Docs.Database) ) return new VG.Docs.Database();
 
+    function enumHelpObject( )
+    {
+    	if( arguments.length < 2 ) return;
+
+    	var obj = arguments[0];
+    	var objName = arguments[1];
+
+    	var enumText = "/** " + objName + "<ul>";
+    	for( var property in obj )
+    	{
+    		if( property.indexOf( "Docs.Enum" ) < 0 )
+    		{
+    			enumText += "<li>" + property + " : " + obj[property] + "</li>";
+    		}
+    	}
+
+    	enumText += "</ul> @enum */";
+
+    	this.addHelpObject( objName, enumText, false );
+    }
+
+    var addEnumHelpObject = enumHelpObject.bind( this );
+
 	this.helpObjects=[];
 
-	var exclusions=["dropZone", "context", "WebGL"];
+	var exclusions=["dropZone", "context", "WebGL", "Docs"];
 
 	for ( var item in VG ) 
 	{
+		if( exclusions.indexOf(item) >= 0 )
+			continue;
+
 		if ( typeof VG[item] === "function" && exclusions.indexOf( item ) === -1 ) 
 		{
 			var func=VG[item].toString();			
 			this.addHelpObject( "VG." + item, func, item[0] === item[0].toUpperCase() );
-		} else
-		if ( typeof VG[item] === "object" ) 
+		} 
+		else if ( typeof VG[item] === "object" ) 
 		{
 			for (var subItem in VG[item] ) 
 			{
-				if ( typeof VG[item][subItem] === "function" && exclusions.indexOf( item ) === -1 ) 
+				if( subItem.indexOf( "Docs.Enum") === 0 )
+				{
+					addEnumHelpObject( VG[item] )
+				}
+				else if ( typeof VG[item][subItem] === "function" ) 
 				{
 					var func=VG[item][subItem].toString();			
-					this.addHelpObject( "VG." + item + "." + subItem, func, item[0] === item[0].toUpperCase() );					
+					this.addHelpObject( "VG." + item + "." + subItem, func, subItem[0] === subItem[0].toUpperCase() );
+				}
+				else if( typeof VG[item][subItem] === "object" )
+				{
+					for( var subSubItem in VG[item][subItem] )
+					{
+						if( subSubItem.indexOf( "Docs.Enum" ) === 0 )
+						{
+							addEnumHelpObject( VG[item][subItem], "VG." + item + "." + subItem )
+						}
+						else if( typeof VG[item][subItem][subSubItem] === "function" )
+						{
+							var func=VG[item][subItem].toString();			
+							this.addHelpObject( "VG." + item + "." + subItem + "." + subSubItem, func, subItem[0] === subItem[0].toUpperCase() );
+						}
+					}
 				}
 			}
 		}
@@ -81,6 +126,10 @@ VG.Docs.Database=function()
 	this.elements.method={
 		"heading" : "h2"
 	}
+
+	this.elements.enum={
+		"heading" : "h2"
+	};
 
 	this.elements.members={
 		"heading" : "h4",
@@ -133,24 +182,27 @@ VG.Docs.Database.prototype.getHtml=function( helpObject, treeController )
 		{
 			var object=eval( helpObject.text );
 
-			Object.getOwnPropertyNames( object.prototype ).filter( function( property ) {
-				if(typeof object.prototype[property] === 'function')
-				{
-					//console.log( property );//objectName, property, object.prototype[property] );
-						//items.push("VG." + item + "." + property);
-
-					if ( property !== "constructor" && property !== "bind" )
+			if( object.prototype )
+			{
+				Object.getOwnPropertyNames( object.prototype ).filter( function( property ) {
+					if(typeof object.prototype[property] === 'function')
 					{
-						var childObject=new VG.Docs.HelpObject( property, object.prototype[property].toString(), false );
+						//console.log( property );//objectName, property, object.prototype[property] );
+							//items.push("VG." + item + "." + property);
 
-						if(childObject.func.indexOf( "/**" ) >= 0 ) {
+						if ( property !== "constructor" && property !== "bind" )
+						{
+							var childObject=new VG.Docs.HelpObject( property, object.prototype[property].toString(), false );
 
-							childObject.parent=helpObject;
-							treeController.add( treeController.indexOf( helpObject ), childObject, true );
+							if(childObject.func.indexOf( "/**" ) >= 0 ) {
+
+								childObject.parent=helpObject;
+								treeController.add( treeController.indexOf( helpObject ), childObject, true );
+							}
 						}
 					}
-				}
-			});
+				});
+			}
 
 			helpObject.html=this.buildHtml( helpObject.func );			
 		}		
@@ -192,7 +244,7 @@ VG.Docs.Database.prototype.insertLinks=function( html )
 
 VG.Docs.Database.prototype.buildHtml=function( text ) 
 {
-	console.log( "buildHtml", text );
+	//console.log( "buildHtml", text );
 	var startIndex=text.indexOf( "/**" );
 	var jsdoc=[];
 
@@ -286,6 +338,12 @@ VG.Docs.Database.prototype.jsDoc2Html=function( jsdoc )
 		 			+ "Constructor"
 		 			+ "</" + this.elements.constructor.heading + ">"
 		 			+ desc;
+
+		else if( jsdoc[i].indexOf("@enum") === 0 )
+			html += "<" + this.elements.enum.heading + ">"
+					+ "Enum"
+					+ "</" + this.elements.enum.heading + ">"
+					+ desc;
 
 		else if( jsdoc[i].indexOf("@param") === 0 || jsdoc[i].indexOf("@returns") === 0 || jsdoc[i].indexOf("@") < 0 )
 			html += "<" + this.elements.method.heading + ">"

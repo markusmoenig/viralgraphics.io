@@ -13,14 +13,38 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
 #include <iostream>
-
 #include "gpubuffer.hpp"
+
+std::vector<int> GPUBuffer::enabledAttribs;
+
+void GPUBuffer::enableAttrib(int index)
+{
+    enabledAttribs.push_back(index);
+    glEnableVertexAttribArray(index);
+}
+
+void GPUBuffer::purgeAttribs()
+{ 
+    for (size_t i = 0; i < enabledAttribs.size(); i++)
+    {
+        int index = enabledAttribs[i];
+
+        if (index == 0) continue;
+
+        glDisableVertexAttribArray(index);
+    } 
+
+    enabledAttribs.clear();
+}
+
+
+
 
 // --------------------------------------------------------------- Member Functions
 
@@ -62,6 +86,44 @@ bool GPUBuffer_setBuffer(JSContext *cx, unsigned argc, jsval *vp)
         GLuint offset; JS::ToUint32( cx, args[0], &offset );
         buffer->setBuffer( offset, args[1].toNumber() );
     }
+    return true;
+}
+
+bool GPUBuffer_getBuffer(JSContext *cx, unsigned argc, jsval *vp)
+{
+    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+
+    if ( argc == 1 )
+    {
+        GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( &value.toObject() );
+
+        GLuint offset; JS::ToUint32( cx, args[0], &offset );
+
+        buffer->setBuffer( offset, args[1].toNumber() );
+
+        switch ( buffer->type )
+        {
+            case 0://VG.Type.Float:
+            {
+                GLfloat *buf=(GLfloat*) buffer->data;
+                args.rval().set( JS_NumberValue( buf[offset] ) );
+                break;
+            }
+            case 1://VG.Type.Uint8:
+            {
+                args.rval().set( INT_TO_JSVAL( buffer->data[offset] ) );
+                break;
+            }
+            case 2://VG.Type.Uint16:
+            {
+                GLushort *buf=(GLushort*)buffer->data;
+                args.rval().set( INT_TO_JSVAL( buf[offset] ) );
+                break;
+            }
+        }
+        
+    }
+
     return true;
 }
 
@@ -157,17 +219,17 @@ bool GPUBuffer_drawIndexed(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
 
-    if ( argc >= 5 )
+    if ( argc >= 4 )
     {
         GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( &value.toObject() );
 
         GLint primType=args[0].toInt32(), offset=args[1].toInt32(), count=args[2].toInt32();
-        GLint indexType=args[3].toInt32();
+        //GLint indexType=args[3].toInt32();
 
         bool nobind=false;
-        if ( argc >= 6 ) nobind=args[5].toBoolean();
+        if ( argc >= 5 ) nobind=args[4].toBoolean();
         // TODO 4
-        buffer->drawIndexed( primType, offset, count, indexType, 0, nobind );
+        buffer->drawIndexed( primType, offset, count, 0, nobind );
     }
     return true;
 }
@@ -239,6 +301,7 @@ static JSFunctionSpec gpubuffer_functions[] = {
     JS_FS( "getStride", GPUBuffer_getStride, 0, 0 ),
     JS_FS( "create", GPUBuffer_create, 0, 0 ),
     JS_FS( "setBuffer", GPUBuffer_setBuffer, 0, 0 ),
+    JS_FS( "getBuffer", GPUBuffer_getBuffer, 0, 0 ),
     JS_FS( "bind", GPUBuffer_bind, 0, 0 ),
     JS_FS( "update", GPUBuffer_update, 0, 0 ),
     JS_FS( "release", GPUBuffer_release, 0, 0 ),
@@ -261,7 +324,7 @@ JSClass GPUBufferClass =
 
 bool GPUBufferConstructor( JSContext *cx, unsigned argc, jsval *vp )
 {
-    printf( "GPUBuffer Constructor!%d\n", argc );
+    //printf( "GPUBuffer Constructor!%d\n", argc );
 
     JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
 

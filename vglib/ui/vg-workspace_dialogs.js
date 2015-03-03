@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -62,6 +62,8 @@ VG.UI.Workspace.prototype.showLoginDialog_finished=function( responseText )
     if ( response.status === "ok" && response.user.username && response.user.username.length )
     {
         this.userName=response.user.username;
+
+        this.modelLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName );
 
         if ( this.callbackForLoggedStateChanged )
             this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName );           
@@ -184,14 +186,17 @@ VG.RemoteFileDialog=function( fileType, callback, title, buttonText, allowDownlo
     // --- Request list of files
 
     var parameters={};
-    var url="/upload/" + VG.Utils.decompressFromBase64( VG.App.url );
+    var url="/upload/" + VG.context.workspace.appId;
 
     VG.sendBackendRequest( url, JSON.stringify( parameters ), function( responseText ) {
         var response=JSON.parse( responseText );
-        for( var key in response.files ) {
+        for ( var i =0; i < response.files.length; ++i )
+        {
+            var item=response.files[i];
+            
             var fileItem=new VG.RemoteFileDialogItem();
-            fileItem.fileName=key;
-            fileItem.size=VG.Utils.bytesToSize(response.files[key]);            
+            fileItem.fileName=item.name;
+            fileItem.size=VG.Utils.bytesToSize(item.size);
             this.fileListController.add( fileItem );
         }
         this.label.text="";

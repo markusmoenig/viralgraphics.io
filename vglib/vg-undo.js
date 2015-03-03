@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -252,7 +252,17 @@ VG.Data.Undo.prototype.updateUndoRedoWidgets=function()
 
     this.saveIsAvailable=this.newIsAvailable;
     for( var i=0; i < this.saveWidgets.length; ++i ) {
-        this.saveWidgets[i].disabled=!this.saveIsAvailable;        
+        if ( this.saveWidgets[i].role === VG.UI.ActionItemRole.Save )
+        {
+            // --- Save
+            if ( this.saveIsAvailable && VG.context.workspace.filePath )
+                this.saveWidgets[i].disabled=false;
+            else this.saveWidgets[i].disabled=true;
+        } else
+        {
+            // --- SaveAs
+            this.saveWidgets[i].disabled=!this.saveIsAvailable;
+        }
     } 
 
     VG.setHostProperty( VG.HostProperty.ProjectChangedState, this.newIsAvailable );

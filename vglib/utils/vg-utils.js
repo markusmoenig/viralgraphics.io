@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -112,6 +112,18 @@ VG.Utils.getImageByName=function( name )
     return null;
 };
 
+VG.Utils.getTextByName=function( name, split )
+{
+    if ( VG.App.texts[name] )
+    {
+        var text=VG.Utils.decompressFromBase64( VG.App.texts[name] );
+        if ( !split ) return text;
+        else return text.split( ":::" );
+    }
+
+    return null;
+};
+
 VG.Utils.addDefaultFileMenu=function( menubar )
 {
     var fileMenu=menubar.addMenu( "File" );
@@ -126,6 +138,7 @@ VG.Utils.addDefaultFileMenu=function( menubar )
 
     fileMenu.addSeparator();
     VG.context.workspace.addMenuItemRole( fileMenu, VG.UI.ActionItemRole.Save );
+    VG.context.workspace.addMenuItemRole( fileMenu, VG.UI.ActionItemRole.SaveAs );
 
     return fileMenu;
 };
@@ -172,3 +185,30 @@ VG.Utils.addDefaultViewMenu=function( menubar )
     return viewMenu;
 };
 
+VG.Utils.dumpObject=function( object )
+{
+    VG.log( JSON.stringify( object, null, 4) );
+};
+
+VG.Utils.scheduleRedrawInMs=function( ms )
+{
+    VG.context.workspace.redrawList.push( Date.now() + ms );
+};
+
+VG.Utils.ensureRedrawWithinMs=function( ms )
+{
+    var redrawList=VG.context.workspace.redrawList;
+    var time=Date.now();
+
+    for( var i=0; i < redrawList.length; ++i ) 
+    {            
+        if ( ( redrawList[i] + 1000.0/60.0 ) >= time && redrawList[i] < ( time + ms ) )
+            return;
+    }
+    redrawList.push( time + ms - 1000.0/60.0 );    
+};
+
+VG.Utils.fileNameFromPath=function( path )
+{
+    return path.replace(/^.*(\\|\/|\:)/, '' );
+};

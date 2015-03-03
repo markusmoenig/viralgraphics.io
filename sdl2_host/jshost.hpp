@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -30,14 +30,14 @@ public:
 	JSHost( JSContext *cx, RootedObject *global, const char *path );
 	~JSHost();
 
-	bool addVGLibSourceFile( const char * );
+	bool addVGLibSourceFile( const char *, bool absolutePath=false );
 	Rooted<Value>* executeScript( const char *, const char *fileName="unknown" );
 
 	bool setupVG( void );
 
 protected:
 
-private:
+public:
 
 	JSContext                *cx; 	
 	RootedObject             *global;

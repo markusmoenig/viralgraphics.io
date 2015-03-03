@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -77,6 +77,7 @@ VG.Styles.VisualGraphics=function( desktopStyle )
             "WindowFocusHeaderColor" : VG.Core.Color( 108, 121, 196 ),
             "DialogBorderColor" : VG.Core.Color( 193, 197, 203 ),
             "DialogBackgroundColor" : VG.Core.Color( 221, 224, 229 ),
+            //"DialogBackgroundColor" : VG.Core.Color( "#40475c" ),
             "DialogTitleColor1" : VG.Core.Color( 233, 233, 233 ),
             "DialogTitleColor2" : VG.Core.Color( 193, 197, 205 ),
             "DialogTitleBorderColor" : VG.Core.Color( 193, 197, 203 ),
@@ -1357,9 +1358,9 @@ VG.Styles.VisualGraphics.prototype.drawSplitHandle=function( canvas, layout, pos
 
     if ( dragging ) {
         itemRect[layout.primaryCoord]=pos + childRect[layout.primarySize];
-        itemRect[layout.secondaryCoord]=layout.rect[layout.secondaryCoord];
+        itemRect[layout.secondaryCoord]=layout.margin[layout.secondaryLesserMargin] + layout.rect[layout.secondaryCoord];
         itemRect[layout.primarySize]=layout.spacing;
-        itemRect[layout.secondarySize]=layout.rect[layout.secondarySize];     
+        itemRect[layout.secondarySize]=layout.rect[layout.secondarySize] - layout.margin[layout.secondaryLesserMargin] - layout.margin[layout.secondaryGreaterMargin]  
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, color );
 
         // --- Left - Right Arrows
@@ -1378,9 +1379,9 @@ VG.Styles.VisualGraphics.prototype.drawSplitHandle=function( canvas, layout, pos
     } else
     {
         itemRect[layout.primaryCoord]=pos + childRect[layout.primarySize];
-        itemRect[layout.secondaryCoord]=layout.rect[layout.secondaryCoord];
+        itemRect[layout.secondaryCoord]=layout.margin[layout.secondaryLesserMargin] + layout.rect[layout.secondaryCoord];
         itemRect[layout.primarySize]=layout.spacing;
-        itemRect[layout.secondarySize]=layout.rect[layout.secondarySize] / 2 - 10;   
+        itemRect[layout.secondarySize]=layout.rect[layout.secondarySize] / 2 - 10 - layout.margin[layout.secondaryLesserMargin];   
         itemRect.round();  
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, color );
 
@@ -1400,7 +1401,7 @@ VG.Styles.VisualGraphics.prototype.drawSplitHandle=function( canvas, layout, pos
         itemRect[layout.primaryCoord]=pos + childRect[layout.primarySize];
         itemRect[layout.secondaryCoord]=layout.rect[layout.secondaryCoord] + layout.rect[layout.secondarySize] / 2 + 10;
         itemRect[layout.primarySize]=layout.spacing;
-        itemRect[layout.secondarySize]=layout.rect[layout.secondarySize] - layout.rect[layout.secondarySize] / 2 - 10;     
+        itemRect[layout.secondarySize]=layout.rect[layout.secondarySize] - layout.rect[layout.secondarySize] / 2 - 10 - layout.margin[layout.secondaryGreaterMargin];     
         itemRect.round();  
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, color );
     }

@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -32,6 +32,8 @@ VG.HostProperty={
 	"OSMac" : 7,
 	"OSUnix" : 8,
 	"OSLinux" : 9,
+
+	"DrawMenus" : 12,
 
 	"ProjectChangedState" : 20
 };
@@ -54,10 +56,17 @@ VG.update=function()
 
 VG.log=function()
 {
-	/** Prints the arguments on the console. V-IDE replaces this function and prints the arguments in its Runtime Window.
+	/** Prints the arguments on the native console. If V-IDE is running also prints the arguments in V-IDEs Runtime Log.
 	**/
 
-	console.log( arguments );
+	var string="";
+
+	for( var i=0; i < arguments.length; ++i ) string+=String( arguments[i] ) + " ";
+
+	if ( typeof console == "object" ) console.log( string );
+	else if ( VG.print ) VG.print( string );
+
+	if ( VG.globalVIDEInstance ) VG.globalVIDEInstance.addToRuntimeLog( string );
 };
 
 VG.error=function()
@@ -65,5 +74,12 @@ VG.error=function()
 	/** Prints the arguments on the console. V-IDE replaces this function and prints the arguments in its Runtime Window.
 	**/
 
-	console.log( arguments );
+	var string="Error: ";
+
+	for( var i=0; i < arguments.length; ++i ) string+=String( arguments[i] ) + " ";
+
+	if ( typeof console == "object" ) console.log( string );
+	else if ( VG.print ) VG.print( string );
+
+	if ( VG.globalVIDEInstance ) VG.globalVIDEInstance.addToRuntimeLog( string );	
 };

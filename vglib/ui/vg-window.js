@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -177,6 +177,8 @@ VG.UI.Dialog=function( title )
     this.buttonLayout.addChild( this.label );
 
     this.minimumSize=VG.Core.Size( 200, 0 );
+    this.maximumSize=VG.Core.Size( 800, 600 );
+
     this.buttonLayoutSize=VG.Core.Size();
 };
 
@@ -184,7 +186,11 @@ VG.UI.Dialog.prototype=VG.UI.Window();
 
 VG.UI.Dialog.prototype.calcSize=function( canvas )
 {
-    if ( this.layout ) this.layout.margin.set( 15, 12, 15, 6 );
+    if ( this.layout ) 
+    {
+        this.layout.margin.set( 15, 12, 15, 6 );
+        this.layout.maximumSize.set( this.maximumSize.width, this.maximumSize.height );
+    }
 
     var size=VG.UI.Window.prototype.calcSize.call( this );
 

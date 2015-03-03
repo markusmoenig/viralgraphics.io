@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
+ * (C) Copyright 2014, 2015 Markus Moenig Luis Jimenez <kuko@kvbits.com>.
  *
  * This file is part of Visual Graphics.
  *
@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -128,7 +128,7 @@ static bool decompressJPG(const uint8_t* data, uint32_t size, VImage& out)
         jpeg_read_scanlines(&cinfo, buffer, 1);
 
         uint8_t* dp = (uint8_t*)(out.data + y * (4 * out.width));
-        uint8_t* sp = (uint8_t*)buffer;
+        uint8_t* sp = (uint8_t*)buffer[0];
 
         for (int w = 0; w < out.width; w++)
         {

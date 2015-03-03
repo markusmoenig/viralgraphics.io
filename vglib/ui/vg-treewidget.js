@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -191,7 +191,7 @@ VG.UI.TreeWidget.prototype.paintWidget=function( canvas )
     VG.context.style.drawTreeWidgetBorder( canvas, this );
     canvas.setClipRect( this.contentRect );
 
-    if ( !this.controller.length ) return;
+    if ( !this.controller.length ) { canvas.setClipRect(); return; }
 
     this.contentRect=this.contentRect.shrink( VG.context.style.skin.TreeWidgetContentBorderSize.width, VG.context.style.skin.TreeWidgetContentBorderSize.height );
 
@@ -257,7 +257,7 @@ VG.UI.TreeWidget.prototype.paintWidget=function( canvas )
     }    
 
     this.previousRect.set( this.rect );
-    canvas.setClipRect( false );    
+    canvas.setClipRect( false );
 };
 
 VG.UI.TreeWidget.prototype.drawItemChildren=function( canvas, paintRect, item, selBackgroundRect )

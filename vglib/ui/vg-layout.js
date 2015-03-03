@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -122,6 +122,7 @@ VG.UI.Layout=function()
         this.rect=VG.Core.Rect();
         this.margin=VG.Core.Margin( 8, 8, 8, 8 );
         this.minimumSize=VG.Core.Size( 100, 100 );
+        this.maximumSize=VG.Core.Size( VG.UI.MaxLayoutSize, VG.UI.MaxLayoutSize );
 
         this.isWidget=false;
         this.isLayout=true;
@@ -315,6 +316,9 @@ VG.UI.Layout.prototype.calcSize=function( canvas )
     {
         size[this.secondarySize]+=this.margin[this.secondaryLesserMargin] + this.margin[this.secondaryGreaterMargin];
     }
+
+    if ( size[this.primarySize] > this.maximumSize[this.primarySize] ) size[this.primarySize]=this.maximumSize[this.primarySize];
+    if ( size[this.secondarySize] > this.maximumSize[this.secondarySize] ) size[this.secondarySize]=this.maximumSize[this.secondarySize];
 
     this.layout( canvas, true );
 
@@ -648,6 +652,10 @@ VG.UI.SplitLayout.prototype.calcSize=function( canvas )
     var size=VG.Core.Size();
     size.width=VG.UI.MaxLayoutSize;
     size.height=VG.UI.MaxLayoutSize;
+
+    if ( size[this.primarySize] > this.maximumSize[this.primarySize] ) size[this.primarySize]=this.maximumSize[this.primarySize];
+    if ( size[this.secondarySize] > this.maximumSize[this.secondarySize] ) size[this.secondarySize]=this.maximumSize[this.secondarySize];
+
     return size;
 }
 
@@ -816,7 +824,7 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
 
     var rect=this.rect;
     var totalSpacing=(this.items.length-1) * this.spacing;
-    
+
     var availableSpace=rect[this.primarySize] - totalSpacing - this.margin[this.primaryLesserMargin] - this.margin[this.primaryGreaterMargin];
     var expandingChilds=0;
         
@@ -965,12 +973,13 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
                 drawSplitbar=false;
 
             if ( drawSplitbar ) {
+
                 VG.context.style.drawSplitHandle( canvas, this, pos, item.rect, childRect, this.dragOp && this.dragOpItemIndex === i );
 
                 item.rect[this.primaryCoord]=pos + childRect[this.primarySize];
-                item.rect[this.secondaryCoord]=rect[this.secondaryCoord];
+                item.rect[this.secondaryCoord]=this.margin[this.secondaryLesserMargin] + rect[this.secondaryCoord];
                 item.rect[this.primarySize]=this.spacing;
-                item.rect[this.secondarySize]=rect[this.secondarySize] / 2;
+                item.rect[this.secondarySize]=rect[this.secondarySize] - this.margin[this.secondaryLesserMargin] - this.margin[this.secondaryGreaterMargin];
                 item.canDrag=true;
             } else
             {

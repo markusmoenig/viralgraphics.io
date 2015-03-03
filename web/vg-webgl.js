@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -29,7 +29,33 @@ VG.init=function()
 { 
     VG.WebGL.canvas=document.getElementById( 'webgl' );
     VG.WebGL.gl=WebGLUtils.setupWebGL( VG.WebGL.canvas );
+
+    var enabledAttrs = [];
+
+    VG.WebGL.enableAttrib = function(index)
+    {
+        if (!enabledAttrs[index])
+        {
+            VG.WebGL.gl.enableVertexAttribArray(index);
+            enabledAttrs[index] = true;
+        }
+    }
+
+    VG.WebGL.purgeAttrs = function()
+    {
+        //skip attrib 0 it should be always enabled
+        for (var i = 1; i < enabledAttrs.length; i++)
+        {
+            if (enabledAttrs[i])
+            {
+                VG.WebGL.gl.disableVertexAttribArray(i);
+                enabledAttrs[i] = false;
+            }
+        }
+    }
 }
+
+
 
 VG.GPUBuffer = function(type, size, dynamic, isIndexBuffer)
 {
@@ -50,11 +76,15 @@ VG.GPUBuffer = function(type, size, dynamic, isIndexBuffer)
 
     this.target = isIndexBuffer ? gl.ELEMENT_ARRAY_BUFFER : gl.ARRAY_BUFFER;
 
-    /* The internal data in native code must be in bytes so it should allocated like this:
-     * int stride = (value from a type switch) ie case TYPE_FLOAT: stride = sizeof(float);
-     * char* pData = new char[stride * size);
-     * */
+    /** The byte array, null 
+     *  @member {ArrayBuffer} */
+    this.byteArray = null;
+
     this.data = null;
+
+    /** The array type
+     *  @member {VG.Type} */
+    this.type = type;
 
 
     //TODO add more type cases (this are enough for common and advanced usages)
@@ -71,6 +101,10 @@ VG.GPUBuffer = function(type, size, dynamic, isIndexBuffer)
     case VG.Type.Uint16:
         this.elemType = gl.UNSIGNED_SHORT;
         this.data = new Uint16Array(size); 
+        break;
+    case VG.Type.Uint32:
+        this.elemType = gl.UNSIGNED_INT;
+        this.data = new Uint32Array(size); 
         break;
     }
 
@@ -103,6 +137,14 @@ VG.GPUBuffer.prototype.setBuffer = function(index, value)
      *  @param {number} index - The index in the buffer, must be < size 
      *  @param {*} */
     this.data[index] = value;
+}
+
+VG.GPUBuffer.prototype.getBuffer = function(index)
+{
+    /** Gets the buffer data by index
+     *  @param {number} index - The index in the buffer, must be < size 
+     *  @return {*} */
+    return this.data[index];
 }
 
 VG.GPUBuffer.prototype.bind = function()
@@ -204,8 +246,8 @@ VG.GPUBuffer.prototype.vertexAttrib = function(index, size, norm, stride, offset
 
     var gl = VG.WebGL.gl;
 
+    VG.WebGL.enableAttrib(index);
     gl.vertexAttribPointer(index, size, this.elemType, norm, stride, offset);
-    gl.enableVertexAttribArray(index);
 } 
 
 VG.GPUBuffer.prototype.draw = function(primType, offset, count, nobind)
@@ -232,10 +274,11 @@ VG.GPUBuffer.prototype.draw = function(primType, offset, count, nobind)
     case VG.Renderer.Primitive.TriangleStrip: mode = gl.TRIANGLE_STRIP; break;
     }
 
-    gl.drawArrays(mode, offset, count);
+    gl.drawArrays(mode, offset, count); 
+    VG.WebGL.purgeAttrs();
 }
 
-VG.GPUBuffer.prototype.drawIndexed = function(primType, offset, count, indexType, indexBuffer, nobind)
+VG.GPUBuffer.prototype.drawIndexed = function(primType, offset, count, indexBuffer, nobind)
 {
     /** Draws indexed primitives
      *  @param {enum} primType - Primitive type VG.Primitive.Triangles, VG.Primitive.Lines VG.Primitive.TriangleStip VG.Primitive.LineStrip 
@@ -262,9 +305,8 @@ VG.GPUBuffer.prototype.drawIndexed = function(primType, offset, count, indexType
     case VG.Renderer.Primitive.TriangleStrip: mode = gl.TRIANGLE_STRIP; break;
     }
 
-    var glType = indexType == VG.Type.Uint8 ? gl.UNSIGNED_BYTE : gl.UNSIGNED_SHORT;
-
-    gl.drawElements(mode, count, glType, offset);
+    gl.drawElements(mode, count, indexBuffer.elemType, offset);
+    VG.WebGL.purgeAttrs();
 }
 
 

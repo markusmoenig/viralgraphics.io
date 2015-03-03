@@ -3,9 +3,9 @@ Desktop / Mobile Host
 
 This directory contains the sources of the cross platform host application for Visual Graphics, it provides the runtime environment for Visual Graphics applications for all platforms except the Web.
 
-Simply put, it executes an .vide project and you can use it to run your Visual Graphics projects on every possible platform. It provides abstractions for Visual Graphics modules like the OpenGL Abstraction layer as well as platform specific functionality like native menus, toolbars or access to the camera and so on. (Currently work in progress).
+Simply put, it executes an .vide project and you can use it to run your Visual Graphics projects on every supported platform. It provides abstractions for Visual Graphics modules like the OpenGL Abstraction layer as well as platform specific functionality like native menus, toolbars or access to the camera and so on. (Currently work in progress).
 
-This Visual Graphics application template is based on cmake, SDL2 and SpiderMonkey.
+This Visual Graphics application runtime is based on cmake, SDL2 and SpiderMonkey.
 
 ##Compiling
 
@@ -33,7 +33,7 @@ Support for iOS and Android will be implemented soon.
 
 ##Download
 
-Compiled and ready to use versions of the host application are available here: (COMING SOON).
+Compiled and ready to use versions of the host application are available here on the Downloads page on www.visualgraphics.tv
 
 ##Contact
 

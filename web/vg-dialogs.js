@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -67,9 +67,9 @@ VG.handleDragOver=function( event )
     event.dataTransfer.dropEffect='copy';
 }
 
-VG.FileDialog=function( fileType, callback )
+VG.OpenFileDialog=function( fileType, callback )
 {
-    if ( !(this instanceof VG.FileDialog) ) return new VG.FileDialog( fileType, callback );
+    if ( !(this instanceof VG.OpenFileDialog) ) return new VG.OpenFileDialog( fileType, callback );
 
     VG.UI.Dialog.call( this, "File Dialog" );
 
@@ -150,9 +150,9 @@ VG.FileDialog=function( fileType, callback )
     VG.context.workspace.showWindow( this );
 };
 
-VG.FileDialog.prototype=VG.UI.Dialog();
+VG.OpenFileDialog.prototype=VG.UI.Dialog();
 
-VG.FileDialog.prototype.paintWidget=function( canvas )
+VG.OpenFileDialog.prototype.paintWidget=function( canvas )
 {
     if ( !this.visible ) return;
 
@@ -166,7 +166,7 @@ VG.FileDialog.prototype.paintWidget=function( canvas )
     }
 };
 
-VG.FileDialog.prototype.fileSelected=function( name, data )
+VG.OpenFileDialog.prototype.fileSelected=function( name, data )
 {
     if ( this.fileType === VG.UI.FileDialog.Image )
     {    
@@ -182,7 +182,7 @@ VG.FileDialog.prototype.fileSelected=function( name, data )
     VG.update();
 };
 
-VG.FileDialog.prototype.mouseMove=function( event )
+VG.OpenFileDialog.prototype.mouseMove=function( event )
 {
     var oldDragOp=this.dragOp;
 
@@ -192,7 +192,7 @@ VG.FileDialog.prototype.mouseMove=function( event )
         VG.dropZone.style.display="none";
 };
 
-VG.FileDialog.prototype.mouseUp=function( event )
+VG.OpenFileDialog.prototype.mouseUp=function( event )
 {
     var oldDragOp=this.dragOp;
 

@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -61,6 +61,8 @@ VG.UI.Workspace=function()
 
     this.keysDown=[];
 
+    this.filePath=undefined;
+
     this.menubars=[];
     this.toolbars=[];
     this.windows=[];
@@ -100,14 +102,13 @@ VG.UI.Workspace=function()
 
         if ( response.status == "ok" && response.loggedIn == true )   
         {
-            this.userName=response.username;
+            this.userName=response.username;          
 
-            this.userNamePopup.clear();
-            this.userNamePopup.addItems( this.userName, "Settings", "Logout" );            
+            this.modelLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName );
 
             if ( this.callbackForLoggedStateChanged )
                 this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName );        
-            VG.update();
+            VG.update();           
         }    
     }.bind(this), "GET" );
 
@@ -152,6 +153,8 @@ VG.UI.Workspace.prototype.resize=function( width, height )
      */
 
     this.rect.setSize( width, height );
+    this.contentRect.set( this.rect );
+
     VG.context.workspace.needsRedraw=true;   
     VG.context.workspace.canvas.hasBeenResized=true;   
 
@@ -259,7 +262,7 @@ VG.UI.Workspace.prototype.addMenubar=function( menubar )
      * @param {VG.UI.Menubar} menubar - The Menubar to add. Several Toolbars can be added to each Workspace
      */      
     this.menubars.push( menubar );
-    this.paintMenubar=true;
+    this.paintMenubar=VG.getHostProperty( VG.HostProperty.DrawMenus );
 };
 
 VG.UI.Workspace.prototype.enableEmbeddedMode=function( callback )
@@ -307,11 +310,13 @@ VG.UI.Workspace.prototype.paintWidget=function()
     {
         var toolbar=this.toolbars[i];
 
+        var showLoginArea=(this.platform === VG.HostProperty.PlatformWeb || this.platform === VG.HostProperty.PlatformDesktop ) && !this.noLoginInToolbar;
+
         if ( i === 0 )  {
             // --- VG logo on first toolbar
             toolbar.layout.margin.left=VG.context.style.skin.ToolbarLeftMargin;
 
-            if ( this.platform === VG.HostProperty.PlatformWeb || this.userName.length > 0 ) 
+            if ( showLoginArea || this.userName.length > 0 ) 
             {
                 this.canvas.pushFont( this.canvas.style.skin.LoginFont );
                 if ( !this.userName.length ) {
@@ -352,7 +357,7 @@ VG.UI.Workspace.prototype.paintWidget=function()
             this.canvas.drawTextRect( "a", this.logoRect, VG.context.style.skin.ToolbarLogoColor, 1, 1 ); 
             this.canvas.popFont();
 
-            if ( this.platform === VG.HostProperty.PlatformWeb || this.userName.length > 0 ) 
+            if ( showLoginArea || this.userName.length > 0 ) 
             {
                 this.canvas.pushFont( this.canvas.style.skin.LoginFont );
 
@@ -467,8 +472,6 @@ VG.UI.Workspace.prototype.paintWidget=function()
 
 VG.UI.Workspace.prototype.mouseMove=function( x, y )
 {
-    //print( "mouseMove( " + x + ", " + y + " );");
-
     var event=VG.Events.MouseMoveEvent();
     event.pos.set( x, y );
 
@@ -504,7 +507,10 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
                 var found=this.findLayoutItemAtMousePos( windowUnderMouse.layout, event.pos );
                 if ( found && found.isWidget ) {
                     widgetUnderMouse=found;            
-                }                   
+                } else 
+                if ( found && found.isLayout ) {
+                    layoutUnderMouse=found;
+                }
             }
 
             // --- Search the buttonLayout (Dialogs Only)
@@ -600,7 +606,7 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
     // --- If we have a modal dialog and it is currently not under the mouse, ignore this event
 
     if ( this.modalDialog && windowUnderMouse !== this.modalDialog )
-        return;
+        { this.mousePos.set( x, y ); return; }
 
     // --- Evalutate the layout under the mouse
     
@@ -726,7 +732,7 @@ VG.UI.Workspace.prototype.mouseDown=function( button )
     if ( this.mouseDownWidget && this.mouseDownWidget.mouseDown && !this.mouseDownWidget.supportsFocus )
         this.mouseDownWidget.mouseDown( event );   
     else
-    if ( this.focusWidget && this.focusWidget.mouseDown )
+    if ( this.focusWidget && this.focusWidget.mouseDown && this.focusWidget.rect.contains( this.mousePos ) )
         this.focusWidget.mouseDown( event );   
 
     this.canvas.update();    
@@ -823,11 +829,20 @@ VG.UI.Workspace.prototype.keyDown=function( keyCode )
 {
     // --- Test for Keyboard Shortcuts
 
+    var shortCutFound=false;
+
     if ( this.keysDown.length && this.menubars.length )  {
-        this.ignoreTextInput=this.shortcutManager.verifyMenubar( String.fromCharCode( keyCode ), this.keysDown, this.menubars[0] );    
+        if ( this.shortcutManager.verifyMenubar( String.fromCharCode( keyCode ), this.keysDown, this.menubars[0] ) )
+        {
+            shortCutFound=true;
+
+            // --- Check if the click was originated from a native menu bar / shortcut outside of VG
+            // --- If yes, dont block the next text input
+            this.ignoreTextInput=!this.shortcutManager.duplicateFromHost;
+        }
     }
 
-    if ( !this.ignoreTextInput && this.keysDown.length && this.focusWidget && this.focusWidget.contextMenu ) {
+    if ( !shortCutFound && this.keysDown.length && this.focusWidget && this.focusWidget.contextMenu ) {
         this.ignoreTextInput=this.shortcutManager.verifyMenu( String.fromCharCode( keyCode ), this.keysDown, this.focusWidget.contextMenu );    
     }
 
@@ -937,34 +952,29 @@ VG.UI.Workspace.prototype.tick=function( needsRedraw )
             
             if ( time <= current ) {
                 redraw=true;
-                //console.log( "redraw timer triggered")
-
-                // --- Create a new array only containing the none-expired redraw requests
-        
-                if ( this.redrawList.length ) 
-                {
-                    current = new Date().getTime();
-            
-                    var array=new Array();
-                    for( var i=0; i < this.redrawList.length; ++i ) {
-                
-                        var time=this.redrawList[i];
-                
-                        if ( time > current )
-                            array.push( time );
-                    }
-                    
-                    // --- Replace the redrawList array
-                    this.redrawList=array;
-                }                
+                break;
             }
         }
+                    
+        if ( redraw && this.redrawList.length ) 
+        {
+            // --- Create a new array only containing the none-expired redraw requests
+            var array=[];
+
+            for( var i=0; i < this.redrawList.length; ++i ) {    
+                var time=this.redrawList[i];
+                
+                if ( time > current ) array.push( time );
+            }
+                    
+            // --- Replace the redrawList array
+            this.redrawList=array;
+        } 
     }
 
     var rt=VG.Renderer().mainRT;
     
     if ( redraw ) { 
-
         rt.clear(true, true);
         rt.setViewport(this.rect);
 
@@ -974,7 +984,7 @@ VG.UI.Workspace.prototype.tick=function( needsRedraw )
 
         this.lastRedrawTime=current;
     }
-    
+
     return redraw;
 };
 
@@ -998,7 +1008,7 @@ VG.UI.Workspace.prototype.findLayoutItemAtMousePos=function( layout, pos )
                     while ( child instanceof VG.UI.StackedLayout )
                         child=child.current;
 
-                    if ( child === null ) continue;
+                    if ( child === undefined || child === null ) continue;
                 }
 
                 // --- Check for StackedLayout Forwarding for child layouts of widgets
@@ -1047,11 +1057,30 @@ VG.UI.Workspace.prototype.modelNewCallback=function()
         this.dataCollectionForUndoRedo.clearUndo();
         this.dataCollectionForUndoRedo.updateTopLevelBindings();
     }
+    this.filePath=undefined;
+
+    if ( this.platform === VG.HostProperty.PlatformDesktop )
+        VG.setWindowTitle( "", "" );
 };
 
 VG.UI.Workspace.prototype.modelOpenCallback=function()
 {
     if ( this.dataCollectionForLoadSave || this.callbackForOpen ) {
+
+        if ( !this.appId ) {
+
+            // --- Show Error Message when no appId (either not logged in or app does not yet exist )
+
+            var message;
+
+            if ( !this.userName ) message="Please login to Visual Graphics first!";
+            else message="Application was not yet created @ Visual Graphics.\nPlease create the application first.";
+    
+            var dialog=VG.UI.StatusDialog( VG.UI.StatusDialog.Type.Error, "Cannot Open File Dialog", message );
+            this.showWindow( dialog );
+            return;
+        }
+
         var fileDialog=VG.RemoteFileDialog( this.modelFileType, this.modelOpen.bind( this ), "Select File", "Open" );
         this.showWindow( fileDialog );
     }
@@ -1067,7 +1096,7 @@ VG.UI.Workspace.prototype.modelOpen=function( callbackObject )
             if ( this.dataCollectionForLoadSave ) 
             {
                 var data=JSON.parse( responseText );
-                data=VG.Utils.decompressFromBase64( data.data );
+                data=VG.Utils.decompressFromBase64( data.file );
 
                 // --- Clear Undo History
                 this.dataCollectionForUndoRedo.clearUndo();
@@ -1085,20 +1114,21 @@ VG.UI.Workspace.prototype.modelOpen=function( callbackObject )
             if ( this.callbackForOpen ) 
             {
                 var data=JSON.parse( responseText );
-                this.callbackForOpen( data.data );
+                this.callbackForOpen( data.file );
             }
 
             // --- Update the model            
             this.dataCollectionForUndoRedo.updateTopLevelBindings();        
         }.bind( this ) );
     }    
+
+    this.filePath=path;    
     VG.update();
 };
 
 VG.UI.Workspace.prototype.modelOpenLocalCallback=function()
 {
-    var fileDialog=VG.FileDialog( VG.UI.FileDialog.Project, function( name, data ) {
-
+    var fileDialog=VG.OpenFileDialog( VG.UI.FileDialog.Project, function( path, data ) {
         if ( this.dataCollectionForLoadSave ) 
         {
             data=VG.Utils.decompressFromBase64( data );
@@ -1120,20 +1150,66 @@ VG.UI.Workspace.prototype.modelOpenLocalCallback=function()
         {
             this.callbackForOpen( data );
         }
-        VG.update();
 
+        this.filePath=path;
+
+        if ( this.platform === VG.HostProperty.PlatformDesktop )
+            VG.setWindowTitle( this.filePath.replace(/^.*(\\|\/|\:)/, ''), this.filePath );
+
+        VG.update();
     }.bind( this ) );
 };
 
 VG.UI.Workspace.prototype.modelSaveCallback=function()
+{   
+    if ( !this.filePath ) return;
+
+    var data;
+    if ( this.dataCollectionForLoadSave ) data=VG.Utils.compressToBase64( JSON.stringify( this.dataCollectionForLoadSave ) );
+    else if ( this.callbackForSave ) data=this.callbackForSave();
+
+    VG.remoteSaveFile( this.filePath, data );
+};
+
+VG.UI.Workspace.prototype.modelSaveLocalCallback=function()
+{
+    if ( !this.filePath ) return;
+
+    var data;
+    if ( this.dataCollectionForLoadSave ) data=VG.Utils.compressToBase64( JSON.stringify( this.dataCollectionForLoadSave ) );
+    else if ( this.callbackForSave ) data=this.callbackForSave();
+
+    var success=VG.saveFile( this.filePath, data );
+
+    if ( this.statusbar ) {
+        if ( success ) this.statusbar.message( VG.Utils.fileNameFromPath( this.filePath ) + " has been saved successfully.", 2000 )
+    }
+};
+
+VG.UI.Workspace.prototype.modelSaveAsCallback=function()
 {    
     if ( this.dataCollectionForLoadSave || this.callbackForSave ) {
-        var fileDialog=VG.RemoteFileDialog( this.modelFileType, this.modelSave.bind( this ), "Select File to Save", "Save", true );
+
+        if ( !this.appId ) {
+
+            // --- Show Error Message when no appId (either not logged in or app does not yet exist )
+
+            var message;
+
+            if ( !this.userName ) message="Please login to Visual Graphics first!";
+            else message="Application was not yet created @ Visual Graphics.\nPlease create the application first.";
+    
+            var dialog=VG.UI.StatusDialog( VG.UI.StatusDialog.Type.Error, "Cannot Open File Dialog", message );
+            this.showWindow( dialog );
+            return;
+        }
+
+        var fileDialog=VG.RemoteFileDialog( this.modelFileType, this.modelSaveAs.bind( this ), "Select File to Save", "Save", true );
         this.showWindow( fileDialog );
     } 
 };
 
-VG.UI.Workspace.prototype.modelSave=function( callbackObject )
+VG.UI.Workspace.prototype.modelSaveAs=function( callbackObject )
 {
     var path=callbackObject.filePath;
 
@@ -1142,6 +1218,8 @@ VG.UI.Workspace.prototype.modelSave=function( callbackObject )
 
         if ( this.dataCollectionForLoadSave ) data=VG.Utils.compressToBase64( JSON.stringify( this.dataCollectionForLoadSave ) );
         else if ( this.callbackForSave ) data=this.callbackForSave();
+
+        this.filePath=path;
 
         if ( !callbackObject.download ) VG.remoteSaveFile( path, data );
         else
@@ -1154,6 +1232,29 @@ VG.UI.Workspace.prototype.modelSave=function( callbackObject )
         }
         return data;
     }    
+};
+
+VG.UI.Workspace.prototype.modelSaveAsLocalCallback=function()
+{
+    var data;
+
+    if ( this.dataCollectionForLoadSave ) data=VG.Utils.compressToBase64( JSON.stringify( this.dataCollectionForLoadSave ) );
+    else if ( this.callbackForSave ) data=this.callbackForSave();    
+
+    var path=VG.SaveFileDialog( VG.UI.FileDialog.Project, "name", data );
+
+    if ( path && path.length )
+    {
+        this.filePath=path;
+
+        if ( this.statusbar )
+            this.statusbar.message( VG.Utils.fileNameFromPath( this.filePath ) + " has been saved successfully.", 2000 );
+
+        if ( this.platform === VG.HostProperty.PlatformDesktop )
+            VG.setWindowTitle( this.filePath.replace(/^.*(\\|\/|\:)/, ''), this.filePath );
+
+        if ( this.dataCollectionForUndoRedo.__vgUndo ) this.dataCollectionForUndoRedo.__vgUndo.updateUndoRedoWidgets();
+    }
 };
 
 VG.UI.Workspace.prototype.modelCutCallback=function()
@@ -1183,6 +1284,37 @@ VG.UI.Workspace.prototype.modelSelectAllCallback=function()
 {   
     if ( this.focusWidget && this.focusWidget.selectAll ) 
         this.focusWidget.selectAll();
+};
+
+VG.UI.Workspace.prototype.modelLoggedStateChanged=function( logged, userName )
+{
+    if ( !logged ) return;
+
+    this.userNamePopup.clear();
+    this.userNamePopup.addItems( userName, "Settings", "Logout" );  
+
+    // --- Try to get the appid of the current application
+
+    if ( VG.App && VG.App.url ) 
+    {
+        var url="/app/check/?url=" + VG.Utils.decompressFromBase64( VG.App.url );// + "&domain=" + project.getChildOfName( "Settings" ).domain;
+
+        VG.sendBackendRequest( url, "", function( responseText ) {
+
+            var response=JSON.parse( responseText );
+            var array=response.check;
+                
+            for( var i=0; i < array.length; ++i )
+            {
+                if ( array[i].name === "url" ) {
+                    if ( array[i].exists ) {
+                        this.appId=array[i].appid;
+                    }
+                }
+            }
+
+        }.bind( this ), "GET" );
+    } 
 };
 
 /* 
@@ -1318,7 +1450,11 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
         case VG.UI.ActionItemRole.Open: 
             object.text="Open..."; 
             object.iconName="open.png"; 
-            object.clicked=this.modelOpenCallback.bind( this );
+            if ( this.platform === VG.HostProperty.PlatformWeb ) object.clicked=this.modelOpenCallback.bind( this );
+            else object.clicked=this.modelOpenLocalCallback.bind( this );
+
+            if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Open );            
+
         break;     
 
         case VG.UI.ActionItemRole.Open_Local: 
@@ -1328,11 +1464,29 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
         break;           
 
         case VG.UI.ActionItemRole.Save: 
-            object.text="Save..."; 
-            object.iconName="save.png"; 
-            object.clicked=this.modelSaveCallback.bind( this );
+            object.text="Save"; 
+            //object.iconName="save.png"; 
+
+            if ( this.platform === VG.HostProperty.PlatformWeb ) object.clicked=this.modelSaveCallback.bind( this );
+            else object.clicked=this.modelSaveLocalCallback.bind( this );
+
             if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.addSaveWidget( object );
-        break;        
+
+            if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Save );            
+
+        break;    
+
+        case VG.UI.ActionItemRole.SaveAs: 
+            object.text="Save As..."; 
+            object.iconName="save.png"; 
+
+            if ( this.platform === VG.HostProperty.PlatformWeb ) object.clicked=this.modelSaveAsCallback.bind( this );
+            else object.clicked=this.modelSaveAsLocalCallback.bind( this );
+            if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.addSaveWidget( object );
+
+            if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.SaveAs );            
+
+        break;               
 
         case VG.UI.ActionItemRole.Undo: 
             object.text="Undo"; 
@@ -1396,7 +1550,7 @@ VG.UI.Workspace.prototype.showWindow=function( window )
     window.calcSize( this.canvas );
 
     window.rect.x=(this.contentRect.width - window.rect.width) / 2;
-    window.rect.y=250;//(this.contentRect.height - window.rect.height) / 2;
+    window.rect.y=100;//(this.contentRect.height - window.rect.height) / 2;
 
     window.visible=true;
     window.setFocus();

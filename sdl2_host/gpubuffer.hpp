@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -25,9 +25,22 @@
 #include <jsapi.h>
 using namespace JS;
 
+
+#include <vector>
+
+
+
 class GPUBuffer 
 {
+private:
+    
+    static std::vector<int> enabledAttribs;
+
 public:
+
+    static void enableAttrib(int index);
+    static void purgeAttribs();
+
     GPUBuffer( int type, GLuint size, int dynamic, bool isIndexBuffer ) 
     {
         /** Creates a new buffer
@@ -67,6 +80,10 @@ public:
             case 2://VG.Type.Uint16:
                 elemType=GL_UNSIGNED_SHORT;
                 stride=sizeof(GLushort);
+            break;
+            case 3://VG.Type.Uint32:
+                elemType=GL_UNSIGNED_INT;
+                stride=sizeof(GLuint);
             break;
         }
 
@@ -210,7 +227,7 @@ public:
          *  @param {number} stride - Vertex stride in bytes 
          *  @param {number} offset - Vertex offset */
 
-        glEnableVertexAttribArray( index );
+        enableAttrib(index);
 
         //odd OpenGL behavior, it doesn't need to be a "real" pointer.
         size_t ptrOffset=offset;
@@ -241,10 +258,11 @@ public:
             case 2: mode = GL_TRIANGLE_STRIP; break;
         }
 
-        glDrawArrays(mode, offset, count);      
+        glDrawArrays(mode, offset, count);
+        purgeAttribs(); 
     }
 
-    void drawIndexed( GLint primType, GLuint offset, GLuint count, GLint indexType, GPUBuffer *indexBuffer, bool nobind )
+    void drawIndexed( GLint primType, GLuint offset, GLuint count, GPUBuffer *indexBuffer, bool nobind )
     {
         /** Draws indexed primitives
          *  @param {enum} primType - Primitive type VG.Primitive.Triangles, VG.Primitive.Lines VG.Primitive.TriangleStip VG.Primitive.LineStrip 
@@ -269,11 +287,10 @@ public:
             case 3: mode = GL_LINE_STRIP; break;
             case 2: mode = GL_TRIANGLE_STRIP; break;
         }
-
-        GLuint glType = indexType == /*VG.Type.Uint8*/1 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT;
     
         size_t ptrOffset=offset;
-        glDrawElements( mode, count, glType, (const void*)ptrOffset );    
+        glDrawElements( mode, count, indexBuffer->elemType, (const void*)ptrOffset );    
+        purgeAttribs(); 
     }
 
     // ---

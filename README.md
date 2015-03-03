@@ -22,6 +22,6 @@ Support the App with Backend User Management, Database Access and Cloud Storage.
 
 ##Status
 
-The current version is v0.2 with new features being implemented daily.  Visual Graphics is already in a usable state, however APIs can change without notice and documentation is quite minimal at the moment. 
+The current version is v0.25 with new features being implemented daily.  Visual Graphics is already in a usable state, however APIs can change without notice and documentation is quite minimal at the moment. 
 
 For more information please visit the Visual Graphics Homepage at http://www.visualgraphics.tv.

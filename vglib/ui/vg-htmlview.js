@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -163,6 +163,10 @@ VG.UI.HtmlView=function( html )
         "maxHeight" : 100
     };
 
+    this.image={
+        "margin" : VG.Core.Margin( 20, 10, 20, 10 )
+    };
+
     this.elements={};
 
     this.elements.body=this.body;
@@ -181,6 +185,7 @@ VG.UI.HtmlView=function( html )
     this.elements.font=this.font;
     this.elements.p=this.p;
     this.elements.code=this.code;
+    this.elements.image=this.image;
         
     if ( arguments.length ) this._html=arguments[0];
     else
@@ -248,6 +253,37 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
     this.textGroupArray=[];
     var textGroup;
 
+    var parseTagAndAttribs=function( text )
+    {
+        //Parse attributes
+        var attribs=[];
+        tagName=text.split(" ")[0];
+        text=text.substring(tagName.length+1, text.length);
+
+        for( var i=0; i < text.length; ++i ) {
+
+            if(text[i] === "=") {
+
+                var attribName=text.substring( 0, i ).trim().toLowerCase();
+                text=text.substring( i+1 ).trim();
+                text=text.substring( 1 );
+
+                var i1=text.indexOf( "'" );
+                var i2=text.indexOf( "\"")
+                var valueEnd= i1 < 0 ? i2 : ( i2 < 0 ? i1 : ( i1 < i2 ? i1 : i2 ) );
+                
+                var attribValue=text.substring( 0, valueEnd );
+                text=text.substring( valueEnd+1 ).trim()
+
+                attribs.push( { attrib : attribName, value : attribValue } );
+
+                i=0;
+            }
+        }
+
+        return { name : tagName, attribs : attribs }
+    }
+
     while(html)
     {
         if( html.indexOf( "</" ) == 0)
@@ -296,31 +332,9 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
 
             if(tagAndAttrib.search( " " ) > 0) {
 
-                //Parse attributes
-                tagName=tagAndAttrib.split(" ")[0];
-                tagAndAttrib=tagAndAttrib.substring(tagName.length+1, tagAndAttrib.length);
-
-                for( var i=0; i < tagAndAttrib.length; ++i ) {
-
-                    if(tagAndAttrib[i] === "=") {
-
-                        var attribName=tagAndAttrib.substring( 0, i ).trim().toLowerCase();
-                        tagAndAttrib=tagAndAttrib.substring( i+1 ).trim();
-                        tagAndAttrib=tagAndAttrib.substring( 1 );
-
-                        var i1=tagAndAttrib.indexOf( "'" );
-                        var i2=tagAndAttrib.indexOf( "\"")
-                        var valueEnd= i1 < 0 ? i2 : ( i2 < 0 ? i1 : ( i1 < i2 ? i1 : i2 ) );
-                        
-                        var attribValue=tagAndAttrib.substring( 0, valueEnd );
-                        tagAndAttrib=tagAndAttrib.substring( valueEnd+1 ).trim()
-
-                        attribs.push( { attrib : attribName, value : attribValue } );
-
-                        i=0;
-                    }
-                }
-
+                var ret=parseTagAndAttribs(tagAndAttrib);
+                tagName=ret.name;
+                attribs=ret.attribs;
             }
             else
             {
@@ -340,12 +354,41 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
 
                 textGroup.formattedTextArray.push( formattedText );
             }
-            else if( tagName === "li" || tagName === "p" || tagName === "code" )
+            else if( tagName === "li" || tagName === "p" || tagName === "code" || tagName === "img" )
             {
                 // End current textGroup if exists.
                 if( textGroup ) this.textGroupArray.push( textGroup );
 
                 textGroup=VG.UI.HtmlView.TextGroup( VG.UI.HtmlView.TextGroupNames[ tagName ] );
+
+                if( tagName === "img" )
+                {
+                    for( var i=0; i < attribs.length; ++i )
+                    {
+                        if( attribs[i].attrib === "src" )
+                        {
+
+                            var formattedText=VG.UI.HtmlView.FormattedText( "" );
+                            formattedText.image=attribs[i].value;
+
+                            for( var i=0; i < openedTags.length; ++i ) {
+
+                                if( openedTags[i].tag.indexOf("b") < 0 
+                                        && openedTags[i].tag.indexOf("i") < 0 )
+                                        
+                                    formattedText.addModifier( VG.UI.HtmlView.TextModifiers( openedTags[i].tag, openedTags[i].attribs ), this.elements[openedTags[i].tag] );
+                            }
+
+                            textGroup.formattedTextArray.push( formattedText );
+
+                            this.textGroupArray.push( textGroup );
+                            textGroup=null;
+
+                            break;
+                        }
+                    }
+                    
+                }
             } 
             else
                 openedTags.push( { tag : tagName, attribs : attribs } );
@@ -438,10 +481,10 @@ VG.UI.HtmlView.prototype.verifyText=function()
         var currentGroupItem=this.textGroupArray[gIndex];
         var currentArrayItem=currentGroupItem.formattedTextArray[aIndex];
 
-        if( this.textGroupArray[gIndex].groupModifier === "Code") {
+        if( this.textGroupArray[gIndex].groupModifier === "Code" ) {
 
             var codeTextArray=currentArrayItem.text.split(/\r\n|\r|\n/);
-            var rect = VG.Core.Rect();
+            var rect=VG.Core.Rect();
 
             VG.context.workspace.canvas.pushFont( currentGroupItem.codeEdit.font );
 
@@ -451,6 +494,18 @@ VG.UI.HtmlView.prototype.verifyText=function()
                             Math.min( this.elements.code.maxHeight, codeTextArray.length * VG.context.workspace.canvas.getLineHeight());
 
             VG.context.workspace.canvas.popFont( currentGroupItem.codeEdit.font );
+
+            currentArrayItem.textLineRects.push(rect);
+
+            ++tIndex;
+            continue;
+        }
+
+        if( this.textGroupArray[gIndex].groupModifier === "Image" ) {
+
+            var rect=VG.Core.Rect();
+            rect.height=this.textGroupArray[gIndex].image ? this.textGroupArray[gIndex].image.height : 0;
+            rect.width=this.textGroupArray[gIndex].image ? this.textGroupArray[gIndex].image.width : 0;
 
             currentArrayItem.textLineRects.push(rect);
 
@@ -558,17 +613,24 @@ VG.UI.HtmlView.prototype.processHtml=function()
         var textGroup=this.textGroupArray[j];
         textGroup.numTextLines=0;
 
-        if( textGroup.groupModifier === "Code" )
+        if( textGroup.groupModifier === "Code" || textGroup.groupModifier === "Image" )
         {
             // Html formatting is not allowed inside code.
-            if(textGroup.numFormattedTexts > 1) throw 'Html Error, Html Formatting is not allowed inside code tags.';
+            if(textGroup.numFormattedTexts > 1) throw 'Html Error, Html Formatting is not allowed inside code tags or image tags.';
 
             textGroup.formattedTextArray[0].textLines.push(textGroup.formattedTextArray[0].text)
 
-            textGroup.codeEdit = VG.UI.CodeEdit( textGroup.formattedTextArray[0].text );
-            textGroup.codeEdit.font=this.code.font;
+            if( textGroup.groupModifier === "Code" )
+            {
+                textGroup.codeEdit = VG.UI.CodeEdit( textGroup.formattedTextArray[0].text );
+                textGroup.codeEdit.font=this.code.font;
 
-            this.childWidgets.push(textGroup.codeEdit);
+                this.childWidgets.push(textGroup.codeEdit);
+            }
+            else if( textGroup.groupModifier === "Image" )
+            {
+                textGroup.image = VG.Utils.getImageByName(textGroup.formattedTextArray[0].image);
+            }
 
             textGroup.numTextLines=textGroup.formattedTextArray[0].textLines.length;
             numTextLines+=textGroup.numTextLines;
@@ -724,13 +786,24 @@ VG.UI.HtmlView.prototype.verifyScrollbar=function()
 
         }
 
-        if( this.textGroupArray[gIndex].groupModifier === "Code")
+        if( this.textGroupArray[gIndex].groupModifier === "Code" )
         {
             this.totalItemHeight+=this.textGroupArray[gIndex].formattedTextArray[aIndex].textLineRects[tIndex].height 
                                     + this.elements.code.margin.top + this.elements.code.margin.bottom;
 
             ++tIndex;
+            continue;
+        }
 
+        if( this.textGroupArray[gIndex].groupModifier === "Image" )
+        {
+            if( this.textGroupArray[gIndex].image )
+            {
+                this.totalItemHeight+=this.textGroupArray[gIndex].image.height
+                                        + this.elements.image.margin.top + this.elements.image.margin.bottom;
+            }
+
+            ++tIndex
             continue;
         }
 
@@ -791,6 +864,7 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
     if ( !this.rect.equals( this.previousRect ) ) 
         this.verified=false;
 
+    this.rect.round(); // --- Make sure rect is integer only
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, this.body.bgColor );
 
     if( !this.elements.body.noframe )
@@ -889,12 +963,15 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
 
             paintRect.x+=this.elements.code.margin.left;
             paintRect.y+=this.elements.code.margin.top;
-            paintRect.height=currentArrayItem.textLineRects[tIndex].height;
         }
-        else
-        {   
-            paintRect.height=currentArrayItem.textLineRects[tIndex].height;
+
+        if( currentGroupItem.groupModifier === "Image" && currentGroupItem.image ) {
+
+            paintRect.x+=this.elements.image.margin.left;
+            paintRect.y+=this.elements.image.margin.top;
         }
+        
+        paintRect.height=currentArrayItem.textLineRects[tIndex].height;
 
         if ( paintRect.y + paintRect.height >= this.contentRect.y || paintRect.y < this.contentRect.bottom() ) {
             
@@ -912,6 +989,29 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
                 canvas.setClipRect( this.contentRect );
                 ++tIndex;
                 continue;
+            }
+
+            if ( currentGroupItem.groupModifier === "Image" ) {
+
+                if( currentGroupItem.image )
+                {
+                    var maxImgWidth=this.contentRect.width - this.elements.body.margin.right
+                                        - this.elements.body.margin.left - this.elements.image.margin.left 
+                                        - this.elements.image.margin.right;
+
+                    var imgWidth=Math.min( maxImgWidth, currentGroupItem.image.width );
+                    currentArrayItem.textLineRects[0].width=imgWidth;
+
+                    // Centre image
+                    var imgX=this.contentRect.width / 2 - ( imgWidth / 2 );
+
+                    canvas.drawImage( VG.Core.Point( imgX, paintRect.y), currentGroupItem.image, VG.Core.Size( imgWidth, currentGroupItem.image.height ));
+
+                    paintRect.y+=paintRect.height + this.elements.image.margin.bottom;
+
+                    ++tIndex;
+                    continue;
+                }
             }
 
             // Make sure the next formatted text starts immediately
@@ -1003,7 +1103,6 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
 
                         paintRect.y+=this.elements.ol.margin.bottom;
                 }
-                
             }
             
         } else break;
@@ -1171,7 +1270,8 @@ VG.UI.HtmlView.TextGroupNames={
     "None" : "None",
     "li" : "ListItem",
     "p" : "Paragraph",
-    "code" : "Code"
+    "code" : "Code",
+    "img" : "Image"
 }
 
 VG.UI.HtmlView.TextGroup=function( groupModifier )

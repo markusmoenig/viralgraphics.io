@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -56,10 +56,6 @@ public:
          * @member {enum}*/
         filtering = 0;//VG.Texture.Filter.None;
 
-        /* if true flippes the Y cordinate
-         * @member {bool}*/
-        flipY = true;
-
         RootedObject imagesObject( cx, images );
 
         unsigned int length;
@@ -71,6 +67,7 @@ public:
             RootedObject image0Obj(cx, &image0.toObject() );
             RootedValue imageRealWidth(cx); JS_GetProperty( cx, HandleObject( &image0Obj ), "realWidth", MutableHandleValue(&imageRealWidth) );
             RootedValue imageRealHeight(cx); JS_GetProperty( cx, HandleObject( &image0Obj ), "realHeight", MutableHandleValue(&imageRealHeight) );
+
             initW = imageRealWidth.toInt32();
             initH = imageRealHeight.toInt32();
         }
@@ -105,6 +102,7 @@ public:
             {
                 needsUpdate.setBoolean( false );
                 JS_SetProperty( cx, HandleObject( &image0Obj ), "needsUpdate", MutableHandleValue(&needsUpdate) );
+                this->initW=0; this->initH=0;
 
                 update( 0, 0, -1, -1 );
             }
@@ -131,11 +129,6 @@ public:
             glGenerateMipmap( target );
         }
 #endif
-
-        if ( flipY )
-        {
-            //??glPixelStorei( GL_UNPACK_FLIP_Y_WEBGL, 1);
-        }
 
         GLuint minFilter = mipmaps ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST;
         GLuint magFilter = GL_NEAREST;

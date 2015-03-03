@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -21,6 +21,8 @@
 #include <iostream>
 
 #include "jshost.hpp"
+
+JSHost *g_host=0;
 
 // --- Externals
 
@@ -37,26 +39,29 @@ JSHost::JSHost( JSContext *cx, RootedObject *global, const char *path ) : rcValu
 {
     this->cx=cx;
     this->global=global;
-    this->vgPath=path;   
+    this->vgPath=path;  
+    g_host=this; 
 }
 
 JSHost::~JSHost()
 {
 }
 
-bool JSHost::addVGLibSourceFile( const char *libSourceFile )
+bool JSHost::addVGLibSourceFile( const char *libSourceFile, bool absolutePath )
 {
     static char path[1024];
 
-    strcpy( path, vgPath );
+    if ( !absolutePath ) strcpy( path, vgPath );
+    else path[0]=0;
+
     strcat( path, libSourceFile );
 
     // --- Read the file
 
-    FILE* file = fopen( path, "rb");
+    FILE* file = fopen( path, "rb" );
     if (file == NULL)
     {
-        printf("JSHost::addVGLibSourceFile - File %s not found", path);
+        printf("JSHost::addVGLibSourceFile - File %s not found\n", path);
         return false;
     }
 
@@ -77,8 +82,6 @@ bool JSHost::addVGLibSourceFile( const char *libSourceFile )
 
     RootedValue *value=this->executeScript( chars, libSourceFile );
     delete chars;
-
-    //printf( "%s\n", path );
 
     return true;
 }
@@ -131,6 +134,13 @@ bool JSHost::setupVG( void )
     success=addVGLibSourceFile( "vglib/ui/vg-dockwidget.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/vg-workspace.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/vg-workspace_dialogs.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/ui/vg-scroller.js" ); if ( !success ) return false;
+
+    success=addVGLibSourceFile( "vglib/render/vg-material.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/render/vg-pipeline.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/render/vg-scene.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/render/vg-camera.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/render/vg-mesh.js" ); if ( !success ) return false;
 
     success=addVGLibSourceFile( "vglib/utils/vg-compressor.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/utils/vg-utils.js" ); if ( !success ) return false;

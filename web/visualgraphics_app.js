@@ -13,7 +13,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
@@ -159,7 +159,12 @@ function main()
 
     // ---
 
-    vgMain.call( VG.context, VG.context.workspace );
+    var arg=[];
+
+    var path=window.location.pathname.split( '/' ).pop();
+    if ( path && path.length ) arg.push( path );
+
+    vgMain.call( VG.context, VG.context.workspace, arg.length, arg );
 
     tick();
 
@@ -208,7 +213,7 @@ function contextMenuRelay( event ) {
     event.preventDefault();
 }
 
-function wheelRelay( event ) {
+function wheelRelay( e ) {
 
     var e = window.event || e;
     var step = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));

@@ -13,13 +13,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
 /* Type enum */
-VG.Type = { Float: 0, Uint8: 1, Uint16: 2 };
+VG.Type = { Float: 0, Uint8: 1, Uint16: 2, Uint32: 3 };
 
 
 
@@ -220,4 +220,64 @@ VG.Renderer.prototype.drawQuad = function(texture, w, h, x, y, alpha)
     b.draw(VG.Renderer.Primitive.TriangleStrip, 0, 4, true); 
 }
 
+VG.Renderer.prototype.drawMesh = function(mesh, element, shader)
+{
+    /** Draw a mesh element(s) with a shader 
+     *  @param {VG.Render.Mesh} mesh - The mesh, must be valid 
+     *  @param {Number} element - The element index, -1 to draw all elements 
+     *  @param {VG.Shader} shader - The shader to use */
+
+    if (mesh.isValid() == false) return;
+
+    for (var i = 0; i < mesh.vBuffers.length; i++)
+    {
+        var vb = mesh.vBuffers[i].vb;
+        var layout = mesh.vBuffers[i].layout;
+
+        //byte stride
+        var tStride = vb.getStride();
+
+        var vStride = tStride * mesh.vBuffers[i].stride;
+
+        vb.bind();
+
+        for (var j = 0; j < layout.length; j++)
+        {
+            var vL = layout[j];
+            vb.vertexAttrib(shader.getAttrib(vL.name), vL.stride, false, vStride, tStride * vL.offset);
+        }
+    }
+
+    var eOffset = 0;
+    var eSize = 0;
+
+    if (element == -1 || mesh.elements[element] === undefined)
+    {
+        eOffset = 0;
+        eSize = mesh.isIndexed() ? mesh.indexCount : mesh.vertexCount;
+    }
+    else
+    {
+        eOffset = mesh.elements[element].offset;
+        eSize = mesh.elements[element].size;
+    }
+
+    //TODO add draw/drawIndexed to the renderer insted
+    if (mesh.isIndexed())
+    {
+        mesh.iBuffer.bind();
+        vb.drawIndexed(VG.Renderer.Primitive.Triangles, eOffset, eSize, mesh.iBuffer.type, mesh.iBuffer, true);
+    }
+    else
+    {
+        vb.draw(VG.Renderer.Primitive.Triangles, eOffset, eSize, true);
+    }
+}
+
 VG.Renderer.Primitive = { Triangles: 0, Lines: 1, TriangleStrip: 2, LineStrip: 3 };
+
+
+// The render namespace
+VG.Render = {};
+
+
