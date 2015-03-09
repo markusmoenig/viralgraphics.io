@@ -106,7 +106,8 @@ VG.Styles.VisualGraphics=function( desktopStyle )
             "ToolbarColor" : VG.Core.Color( 75, 78, 87 ),
             "ToolbarHeight" : 52,
             "ToolbarLeftMargin" : 60,
-            "ToolbarLogoColor" : VG.Core.Color(),
+            "ToolbarLogoColor" : VG.Core.Color( 248, 248, 248 ),
+            "ToolbarLogoBackgroundColor" : VG.Core.Color( 131, 146, 236 ),
             "ToolbarLogoSize" : 35,
 
             "ToolPanelColor" : VG.Core.Color( 143, 149, 159 ),

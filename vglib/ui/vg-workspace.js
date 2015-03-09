@@ -353,6 +353,8 @@ VG.UI.Workspace.prototype.paintWidget=function()
                 this.logoRect.width=VG.context.style.skin.ToolbarLeftMargin;                
             }
 
+            this.canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.logoRect, VG.context.style.skin.ToolbarLogoBackgroundColor );
+
             this.canvas.pushFont( this.vgFont );            
             this.canvas.drawTextRect( "a", this.logoRect, VG.context.style.skin.ToolbarLogoColor, 1, 1 ); 
             this.canvas.popFont();
