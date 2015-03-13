@@ -314,7 +314,7 @@ VG.UI.Workspace.prototype.paintWidget=function()
 
         if ( i === 0 )  {
             // --- VG logo on first toolbar
-            toolbar.layout.margin.left=VG.context.style.skin.ToolbarLeftMargin;
+            toolbar.layout.margin.left=VG.context.style.skin.ToolbarLeftMargin + 25;
 
             if ( showLoginArea || this.userName.length > 0 ) 
             {
@@ -373,7 +373,7 @@ VG.UI.Workspace.prototype.paintWidget=function()
 
                     // --- Draw Login Button
 
-                    this.loginButton.rect.x=toolbar.rect.x + toolbar.rect.width - loginButtonSize.width - textSize.width - signupButtonSize.width - 2;     
+                    this.loginButton.rect.x=toolbar.rect.x + toolbar.rect.width - loginButtonSize.width - textSize.width - signupButtonSize.width - 2 - 15;     
                     this.loginButton.rect.y=toolbar.rect.y + (toolbar.rect.height - loginButtonSize.height) / 2;
                     this.loginButton.rect.width=loginButtonSize.width;    
                     this.loginButton.rect.height=loginButtonSize.height;
@@ -390,7 +390,7 @@ VG.UI.Workspace.prototype.paintWidget=function()
 
                     // --- Draw Signin Button
 
-                    this.signupButton.rect.x=toolbar.rect.x + toolbar.rect.width - signupButtonSize.width - 2;     
+                    this.signupButton.rect.x=toolbar.rect.x + toolbar.rect.width - signupButtonSize.width - 2 - 15;     
                     this.signupButton.rect.y=toolbar.rect.y + (toolbar.rect.height - signupButtonSize.height) / 2;
                     this.signupButton.rect.width=signupButtonSize.width;    
                     this.signupButton.rect.height=signupButtonSize.height;
