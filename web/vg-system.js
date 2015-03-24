@@ -253,7 +253,9 @@ VG.loadStyleImage=function( style, imageName, callback )
         if (callback) callback(im);
      }
 
-    image.src="vglib/ui/styles/" + style + "/icons/" + imageName;
+    if ( VG.localVGLibPrefix ) image.src=VG.localVGLibPrefix + "vglib/ui/styles/" + style + "/icons/" + imageName;
+    else image.src="vglib/ui/styles/" + style + "/icons/" + imageName;
+
     image.name=imageName;
 };
 

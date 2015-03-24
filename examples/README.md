@@ -7,4 +7,4 @@ However, as these examples are not V-IDE projects, they cannot contain any image
 
 To load any of these examples into V-IDE, simply right-click inside the Code Editor of V-IDE and select "Insert Text..." and select the .js source file of the example.
 
-There are some more complex examples in the apps folder (like the AddressBook) which are V-IDE projects and habe to be opened from within V-IDE.
+There are some more complex examples in the apps folder (like the AddressBook) which are V-IDE projects and have to be opened from within V-IDE.
