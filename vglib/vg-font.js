@@ -570,25 +570,8 @@ VG.Font.Triangulator.generatePolygons=function(face, char, seg)
 
     var outline = glyph.cached_o ? glyph.cached_o : glyph.cached_o = glyph.o.split(' ');
 
-    function bezierCubic(t, p0, p1, p2, p3)
-    {   
-        function Bp0(t, p) { var k = 1 - t; return k * k * k * p; }
-        function Bp1(t, p) { var k = 1 - t; return 3 * k * k * t * p; }
-        function Bp2(t, p) { var k = 1 - t; return 3 * k * t * t * p; }
-
-        function Bp3(t, p) { return t * t * t * p; }
-
-        return Bp0(t, p0) + Bp1(t, p1) + Bp2(t, p2) + Bp3(t, p3);
-    }
-
-    function bezier(t, p0, p1, p2)
-    {
-        function Bp0(t, p) { var k = 1 - t; return k * k * p; }
-        function Bp1(t, p) { return 2 * (1 - t) * t * p; }
-        function Bp2(t, p) { return t * t * p; }
-
-        return Bp0(t, p0) + Bp1(t, p1) + Bp2(t, p2);
-    }
+    var bezierCubic = VG.Math.bezierCubic;
+    var bezier = VG.Math.bezier;
 
     function vX(x)
     {

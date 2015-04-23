@@ -322,6 +322,17 @@ VG.Core.Rect.prototype.set=function( rect )
     }
 };
 
+VG.Core.Rect.prototype.copy=function( rect )
+{
+    /** Copies the values of the given rectangle.
+     *
+     *  @param {VG.Core.Rect} rect - The VG.Core.Rect object to copy
+     */
+
+    this.x=rect.x; this.y=rect.y;
+    this.width=rect.width; this.height=rect.height;
+};
+
 VG.Core.Rect.prototype.upperLeft=function()
 {
     /** Returns the upper left position as a VG.Core.Point class.
@@ -508,6 +519,14 @@ VG.Core.Margin.prototype.set=function( left, top, right, bottom )
         this.left=arguments[0].left; this.top=arguments[0].top;
         this.right=arguments[0].right; this.bottom=arguments[0].bottom;
     }    
+};
+
+VG.Core.Margin.prototype.clear=function()
+{
+    /** Sets all values of the Margin to 0.*/
+
+    this.left=0; this.top=0;
+    this.right=0; this.bottom=0;    
 };
 
 VG.Core.Margin.prototype.toString=function()
@@ -795,7 +814,11 @@ VG.Core.Image=function()
 
     /** The modulo of the image data, i.e. the distance between lines in bytes.
      *  @member {Number} */      
-    this.modulo=0;       
+    this.modulo=0;
+
+    /** Determines if the image is forced power of two
+     *  @member {Bool} */
+    this.forcePowerOfTwo = true;
 
     if ( !(this instanceof VG.Core.Image ) ) return VG.Core.Image.creator( arguments );    
 
@@ -823,13 +846,36 @@ VG.Core.Image.prototype.alloc=function()
 
     if ( this.width && this.height ) 
     {
-        this.realWidth=this.powerOfTwo( this.width );
-        this.realHeight=this.powerOfTwo( this.height );
+        if (this.forcePowerOfTwo)
+        {
+            this.realWidth=this.powerOfTwo( this.width );
+            this.realHeight=this.powerOfTwo( this.height );
+        }
+        else
+        {
+            this.realWidth=this.width;
+            this.realHeight=this.height;
+        }
+
         this.modulo=this.realWidth * 4;
 
         this.data=new Uint8Array( this.realWidth * 4 * this.realHeight);   
     }
 }
+
+VG.Core.Image.prototype.getPixel=function( x, y, color )
+{
+    /**Gets a pixel color at position x, y.
+     * @param {number} position x coordinate
+     * @param {number} position y coordinate
+     * @param {VG.Core.Color} The color class to store the pixel data.
+     */
+    var offset=y * this.modulo + x * 4;
+    color.r=this.data[offset] / 255;
+    color.g=this.data[offset+1] / 255;
+    color.b=this.data[offset+2] / 255;
+    color.a=this.data[offset+3] / 255;
+};
 
 VG.Core.Image.prototype.setPixel=function( x, y, r, g, b, a )
 {
@@ -887,6 +933,15 @@ VG.Core.Image.prototype.set=function( image )
 
     this.data=null;
     this.data=new Uint8Array( image.data );    
+};
+
+VG.Core.Image.prototype.copy=function( image )
+{
+    /** Copies the values of the given image using a new data array.
+     * @param {VG.Core.Image} image - The image to copy  
+     */
+
+    this.set( image );   
 };
 
 VG.Core.Image.prototype.mul=function( color )
@@ -957,6 +1012,13 @@ VG.Core.ImagePool.prototype.getImageByName=function( name )
     /** Returns an image from the pool based on its name.
      * @returns {VG.Core.Image} or null if no image with the given name was found.
      */
+
+    for( var i=0; i < this.images.length; ++i ) {
+        if ( this.images[i].name == name )
+            return this.images[i];
+    }
+
+    name=VG.context.style.iconPrefix + name;
 
     for( var i=0; i < this.images.length; ++i ) {
         if ( this.images[i].name == name )

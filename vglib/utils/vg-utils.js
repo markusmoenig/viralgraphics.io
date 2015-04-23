@@ -109,6 +109,13 @@ VG.Utils.getImageByName=function( name )
         if ( VG.context.imagePool.images[i].name == name )
             return VG.context.imagePool.images[i];
     }
+
+    name=VG.context.style.iconPrefix + name;
+    for( var i=0; i < VG.context.imagePool.images.length; ++i ) {
+        if ( VG.context.imagePool.images[i].name == name )
+            return VG.context.imagePool.images[i];
+    }
+
     return null;
 };
 
@@ -163,6 +170,25 @@ VG.Utils.addDefaultViewMenu=function( menubar )
 {
     var viewMenu=menubar.addMenu( "View" );
 
+    for( var i=0; i < VG.Styles.pool.length; ++i ) {
+        var style=VG.Styles.pool[i];
+
+        var menuItem=new VG.UI.MenuItem( style.name + " Style", null, function() {
+
+            VG.context.workspace.switchToStyle( this.style );
+        } );
+
+        menuItem.style=style;
+
+        if ( style === VG.context.style )
+            menuItem.checked=menuItem.checkable=true;
+
+        for ( var ex=0; ex < viewMenu.items.length; ++ex )
+            menuItem.addExclusions( viewMenu.items[ex] );
+
+        viewMenu.addMenuItem( menuItem );
+    }
+/*
     for( var i=0; i < VG.context.style.skins.length; ++i ) {
         var skin=VG.context.style.skins[i];
 
@@ -180,7 +206,7 @@ VG.Utils.addDefaultViewMenu=function( menubar )
             menuItem.addExclusions( viewMenu.items[ex] );
 
         viewMenu.addMenuItem( menuItem );
-    }
+    }*/
 
     return viewMenu;
 };
@@ -212,3 +238,10 @@ VG.Utils.fileNameFromPath=function( path )
 {
     return path.replace(/^.*(\\|\/|\:)/, '' );
 };
+
+VG.Utils.createMaterial=function()
+{
+    var graph=VG.Nodes.Graph();
+    var materialNode=graph.createNode( "NodeMaterial" );
+    return materialNode.getTerminal( "out" );
+}

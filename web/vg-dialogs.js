@@ -201,3 +201,29 @@ VG.OpenFileDialog.prototype.mouseUp=function( event )
     if ( oldDragOp !== this.dragOp )
         this.makeVisible=true; 
 }
+
+VG.SaveFileDialog=function( fileType, name, data )
+{       
+    var fileDialog=VG.RemoteFileDialog( fileType, function( callbackObject ) {
+        var path=callbackObject.filePath;
+        if ( path.length > 0 ) {
+
+            if ( !callbackObject.download ) VG.remoteSaveFile( path, data );
+            else
+            {
+                var params = {};
+                params.filename = path;
+                params.content = data;
+
+                var url="/api/download";
+
+                if ( fileType === VG.UI.FileDialog.Image )
+                    url+="?binary=true";
+
+                VG.downloadRequest( url, params, "POST");
+            }
+            return data;
+        }
+    }.bind( VG.context ), "Select", "Save", true );
+    VG.context.workspace.showWindow( fileDialog );
+};

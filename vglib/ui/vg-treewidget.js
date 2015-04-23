@@ -46,8 +46,6 @@ VG.UI.TreeWidget=function()
     this.needsVScrollbar=false;
     this.verified=false;
     this.previousRect=VG.Core.Rect();
-
-    this.itemHeight=VG.context.style.skin.TreeWidgetItemFont.size + 4;
 };
 
 VG.UI.TreeWidget.prototype=VG.UI.Widget();
@@ -143,6 +141,10 @@ VG.UI.TreeWidget.prototype.mouseDown=function( event )
     this.verified=false;    
 };
 
+VG.UI.TreeWidget.prototype.mouseDoubleClicked=function( event )
+{
+};
+
 VG.UI.TreeWidget.prototype.vHandleMoved=function( offsetInScrollbarSpace )
 {
     this.offset=offsetInScrollbarSpace * this.vScrollbar.totalSize / this.vScrollbar.visibleSize;
@@ -193,7 +195,8 @@ VG.UI.TreeWidget.prototype.paintWidget=function( canvas )
 
     if ( !this.controller.length ) { canvas.setClipRect(); return; }
 
-    this.contentRect=this.contentRect.shrink( VG.context.style.skin.TreeWidgetContentBorderSize.width, VG.context.style.skin.TreeWidgetContentBorderSize.height );
+    this.itemHeight=canvas.style.skin.TreeWidget.ItemFont.size + canvas.style.skin.TreeWidget.ItemHeightAdder;
+    this.contentRect=this.contentRect.shrink( VG.context.style.skin.TreeWidget.ContentBorderSize.width, VG.context.style.skin.TreeWidget.ContentBorderSize.height );
 
     if ( !this.verified || canvas.hasBeenResized )
         this.verifyScrollbar();
@@ -206,7 +209,7 @@ VG.UI.TreeWidget.prototype.paintWidget=function( canvas )
     
     var selBackgroundRect=VG.Core.Rect( this.contentRect );
     if ( this.needsVScrollbar )
-        selBackgroundRect=selBackgroundRect.add( 0, 0, -VG.context.style.skin.ScrollbarSize -3, 0 );
+        selBackgroundRect=selBackgroundRect.add( 0, 0, -VG.context.style.skin.Scrollbar.Size -3, 0 );
 
     // ---
 
@@ -214,7 +217,7 @@ VG.UI.TreeWidget.prototype.paintWidget=function( canvas )
     paintRect.height=this.itemHeight;
 
     if ( this.needsVScrollbar )
-        paintRect.width-=VG.context.style.skin.ScrollbarSize;
+        paintRect.width-=VG.context.style.skin.Scrollbar.Size;
 
     var oldWidth=paintRect.width;
     paintRect.y=this.contentRect.y - this.offset;
@@ -246,7 +249,7 @@ VG.UI.TreeWidget.prototype.paintWidget=function( canvas )
     }
 
     if ( this.needsVScrollbar ) {
-        this.vScrollbar.rect=VG.Core.Rect( this.rect.right() - VG.context.style.skin.ScrollbarSize - 3, this.contentRect.y, VG.context.style.skin.ScrollbarSize, this.contentRect.height );
+        this.vScrollbar.rect=VG.Core.Rect( this.rect.right() - VG.context.style.skin.Scrollbar.Size - 3, this.contentRect.y, VG.context.style.skin.Scrollbar.Size, this.contentRect.height );
 
         // this.totalItemHeight == Total height of all Items in the list widget including spacing
         // visibleHeight == Total height of all currently visible items
@@ -267,8 +270,8 @@ VG.UI.TreeWidget.prototype.drawItemChildren=function( canvas, paintRect, item, s
         var oldXOffset=paintRect.x;
         var oldWidth=paintRect.width;
 
-        paintRect.x+=VG.context.style.skin.TreeWidgetItemHierarchyOffset
-        paintRect.width-=VG.context.style.skin.TreeWidgetItemHierarchyOffset
+        paintRect.x+=VG.context.style.skin.TreeWidget.ItemHierarchyOffset
+        paintRect.width-=VG.context.style.skin.TreeWidget.ItemHierarchyOffset
 
         // --- Draw all childs
 

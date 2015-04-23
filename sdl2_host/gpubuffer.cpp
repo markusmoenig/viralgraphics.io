@@ -20,6 +20,9 @@
 
 #include <iostream>
 #include "gpubuffer.hpp"
+#include "jshost.hpp"
+
+extern JSHost *g_host;
 
 std::vector<int> GPUBuffer::enabledAttribs;
 
@@ -27,6 +30,7 @@ void GPUBuffer::enableAttrib(int index)
 {
     enabledAttribs.push_back(index);
     glEnableVertexAttribArray(index);
+	GL_ASSERT();
 }
 
 void GPUBuffer::purgeAttribs()
@@ -38,13 +42,11 @@ void GPUBuffer::purgeAttribs()
         if (index == 0) continue;
 
         glDisableVertexAttribArray(index);
+		GL_ASSERT();
     } 
 
     enabledAttribs.clear();
 }
-
-
-
 
 // --------------------------------------------------------------- Member Functions
 
@@ -99,8 +101,6 @@ bool GPUBuffer_getBuffer(JSContext *cx, unsigned argc, jsval *vp)
 
         GLuint offset; JS::ToUint32( cx, args[0], &offset );
 
-        buffer->setBuffer( offset, args[1].toNumber() );
-
         switch ( buffer->type )
         {
             case 0://VG.Type.Float:
@@ -152,12 +152,12 @@ bool GPUBuffer_update(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-bool GPUBuffer_release(JSContext *cx, unsigned argc, jsval *vp)
+bool GPUBuffer_destroy(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
 
     GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( &value.toObject() );
-    buffer->release();
+    buffer->destroy();
     return true;
 }
 
@@ -168,8 +168,16 @@ bool GPUBuffer_dispose(JSContext *cx, unsigned argc, jsval *vp)
     GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( &value.toObject() );
     buffer->dispose();
 
-    //TODO VG.Renderer().removeResource(this);
-    
+    // --- VG.Renderer().removeResource(this);
+        
+    RootedValue *renderer=g_host->executeScript( "VG.Renderer()" );
+    RootedObject rendererObject( cx, &renderer->toObject() );
+
+    RootedValue rc( cx );
+    RootedValue thisValue( cx, value );
+
+    bool ok=Call( cx, HandleObject( rendererObject ), "removeResource", HandleValueArray( thisValue ), MutableHandleValue( &rc ) );
+
     return true;
 }
 
@@ -228,6 +236,7 @@ bool GPUBuffer_drawIndexed(JSContext *cx, unsigned argc, jsval *vp)
 
         bool nobind=false;
         if ( argc >= 5 ) nobind=args[4].toBoolean();
+        
         // TODO 4
         buffer->drawIndexed( primType, offset, count, 0, nobind );
     }
@@ -304,7 +313,7 @@ static JSFunctionSpec gpubuffer_functions[] = {
     JS_FS( "getBuffer", GPUBuffer_getBuffer, 0, 0 ),
     JS_FS( "bind", GPUBuffer_bind, 0, 0 ),
     JS_FS( "update", GPUBuffer_update, 0, 0 ),
-    JS_FS( "release", GPUBuffer_release, 0, 0 ),
+    JS_FS( "destroy", GPUBuffer_destroy, 0, 0 ),
     JS_FS( "dispose", GPUBuffer_dispose, 0, 0 ),
     JS_FS( "vertexAttrib", GPUBuffer_vertexAttrib, 0, 0 ),
     JS_FS( "draw", GPUBuffer_draw, 0, 0 ),

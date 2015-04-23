@@ -869,6 +869,25 @@ VG.Math.testTri=function(ts, v0, v1, v2)
     return (sign0 && sign1 && sign2) ? -1 : 0;
 }
 
+VG.Math.bezierCubic=function(t, p0, p1, p2, p3)
+{   
+    function Bp0(t, p) { var k = 1 - t; return k * k * k * p; }
+    function Bp1(t, p) { var k = 1 - t; return 3 * k * k * t * p; }
+    function Bp2(t, p) { var k = 1 - t; return 3 * k * t * t * p; }
+
+    function Bp3(t, p) { return t * t * t * p; }
+
+    return Bp0(t, p0) + Bp1(t, p1) + Bp2(t, p2) + Bp3(t, p3);
+}
+
+VG.Math.bezier=function(t, p0, p1, p2)
+{
+    function Bp0(t, p) { var k = 1 - t; return k * k * p; }
+    function Bp1(t, p) { return 2 * (1 - t) * t * p; }
+    function Bp2(t, p) { return t * t * p; }
+
+    return Bp0(t, p0) + Bp1(t, p1) + Bp2(t, p2);
+}
 
 
 
@@ -885,6 +904,28 @@ VG.Math.Vector2=function(x, y)
     this.x = x ? x : 0.0;
     this.y = y ? y : 0.0;
 
+}
+
+VG.Math.Vector2.prototype.set=function(x, y)
+{
+    /** Sets the vector from individual components 
+     *  @param {Number} x - The x component
+     *  @param {Number} y - The y component */
+
+    this.x = x;
+    this.y = y;
+}
+
+VG.Math.Vector2.prototype.copy=function(other)
+{
+    /** Copies the vector 
+     *  @param {VG.Math.Vector2} other - The vector to copy from
+     *  @returns this */
+
+    this.x = other.x;
+    this.y = other.y;
+
+    return this;
 }
 
 VG.Math.Vector2.prototype.clone=function()
@@ -1100,6 +1141,18 @@ VG.Math.Vector2.prototype.round=function()
     this.y = Math.round(this.y);
 
     return this;
+}
+
+VG.Math.Vector2.prototype.setPerpendicular=function()
+{
+    /** Sets this vector (direction) to its perpendicular form */
+    var invX = -this.y;
+    var invY = this.x;
+
+    var length = this.length();
+
+    this.x = invX / length;
+    this.y = invY / length;
 }
 
 VG.Math.Vector2.Zero = new VG.Math.Vector2(0, 0);
@@ -1444,6 +1497,20 @@ VG.Math.Vector4.prototype.set=function(x, y, z, w)
     this.y = y;
     this.z = z;
     this.w = w;
+}
+
+VG.Math.Vector4.prototype.copy=function(other)
+{
+    /** Copies the vector 
+     *  @param {VG.Math.Vector4} other - The vector to copy from
+     *  @returns this */
+
+    this.x = other.x;
+    this.y = other.y;
+    this.z = other.z;
+    this.w = other.w;
+
+    return this;
 }
 
 VG.Math.Vector4.prototype.transform=function(m)

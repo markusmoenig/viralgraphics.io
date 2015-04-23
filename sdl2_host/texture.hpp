@@ -109,8 +109,7 @@ public:
         }
 
         glBindTexture( target, id );
-
-        GL_ASSERT();
+		GL_ASSERT();
     }
 
     void create()
@@ -191,10 +190,12 @@ public:
                 JS_GetObjectAsUint8Array( &data.toObject(), &length, &ptr );
 
                 glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, ptr );
-            }
 
-            GL_ASSERT();
+				GL_ASSERT();
+            }
         }
+
+		GL_ASSERT();
     }
 
     void update( GLint x, GLint y, GLint w, GLint h)
@@ -220,7 +221,7 @@ public:
         //if the dimmension has changed, recreate the texture from scratch
         if (imW != this->initW || imH != this->initH)
         {
-            release();
+            destroy();
             create();
 
             return;
@@ -233,10 +234,12 @@ public:
 
         glBindTexture( target, id );
 
+		GL_ASSERT();
+
         //gl.texSubImage2D(this.target, 0, x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, image.data);
     }
 
-    void release()
+    void destroy()
     {
         /** Releases the texture from gpu */
         if (id == 0) return;
@@ -252,7 +255,7 @@ public:
         RemoveObjectRoot( cx, heapImages );
         delete heapImages;
 
-        release();
+        destroy();
     }
 
     //VG.Texture.Wrap = { Clamp: 0, Repeat: 1 };

@@ -21,6 +21,9 @@
 #include <iostream>
 
 #include "texture.hpp"
+#include "jshost.hpp"
+
+extern JSHost *g_host;
 
 // --------------------------------------------------------------- Member Functions
 
@@ -58,12 +61,13 @@ bool Texture_update(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-bool Texture_release(JSContext *cx, unsigned argc, jsval *vp)
+bool Texture_destroy(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
 
     Texture *texture=(Texture *) JS_GetPrivate( &value.toObject() );
-    texture->release();
+    texture->destroy();
+
     return true;
 }
 
@@ -74,7 +78,15 @@ bool Texture_dispose(JSContext *cx, unsigned argc, jsval *vp)
     Texture *texture=(Texture *) JS_GetPrivate( &value.toObject() );
     texture->dispose();
 
-    //TODO VG.Renderer().removeResource(this);
+    // --- VG.Renderer().removeResource(this);
+
+    RootedValue *renderer=g_host->executeScript( "VG.Renderer()" );
+    RootedObject rendererObject( cx, &renderer->toObject() );
+
+    RootedValue rc( cx );
+    RootedValue thisValue( cx, value );
+
+    bool ok=Call( cx, HandleObject( rendererObject ), "removeResource", HandleValueArray( thisValue ), MutableHandleValue( &rc ) );
 
     return true;
 }
@@ -107,7 +119,7 @@ static JSFunctionSpec texture_functions[] = {
     JS_FS( "create", Texture_create, 0, 0 ),
     JS_FS( "bind", Texture_bind, 0, 0 ),
     JS_FS( "update", Texture_update, 0, 0 ),
-    JS_FS( "release", Texture_release, 0, 0 ),
+    JS_FS( "destroy", Texture_destroy, 0, 0 ),
     JS_FS( "dispose", Texture_dispose, 0, 0 ),
 
     JS_FS_END

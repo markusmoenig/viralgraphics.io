@@ -117,7 +117,7 @@ VG.UI.BaseText.prototype.clipboardPasteIsAvailableForType=function( type )
     return false;
 };
 
-VG.UI.BaseText.prototype.clipboardCut=function( type )
+VG.UI.BaseText.prototype.clipboardCut=function()
 {
     if ( !this.selectionIsValid ) return;
 
@@ -127,12 +127,12 @@ VG.UI.BaseText.prototype.clipboardCut=function( type )
     this.focusOut();      
 }
 
-VG.UI.BaseText.prototype.clipboardCopy=function( type )
+VG.UI.BaseText.prototype.clipboardCopy=function()
 {
     VG.copyToClipboard( "Text", this.copySelection() );
 }
 
-VG.UI.BaseText.prototype.clipboardPaste=function( type )
+VG.UI.BaseText.prototype.clipboardPaste=function()
 {
     if ( this.selectionIsValid ) this.deleteSelection( true );
     this.insertText( VG.clipboardPasteDataForType( "Text" ) );
@@ -140,7 +140,7 @@ VG.UI.BaseText.prototype.clipboardPaste=function( type )
     this.focusOut();
 };
 
-VG.UI.BaseText.prototype.clipboardDeleteSelection=function( type )
+VG.UI.BaseText.prototype.clipboardDeleteSelection=function()
 {
     if ( this.selectionIsValid ) this.deleteSelection( true );
     this.textHasChanged=true;
@@ -792,7 +792,10 @@ VG.UI.BaseText.prototype.blink=function( canvas, cursorYPos, cursorHeight )
 
             cursorRect.width=1;
 
-            var color=VG.context.style.skin.WidgetTextColor;
+            if ( this.password )
+                cursorRect.x=this.contentRect.x + (this.cursorPosition.x /*- this.textOffset.x*/) * (10+2);
+
+            var color=VG.context.style.skin.Widget.TextColor;
             if ( this.blinkColor ) color=this.blinkColor;
 
             canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, cursorRect, color );
@@ -1182,7 +1185,7 @@ VG.UI.Label.prototype.valueFromModel=function( value )
     else this.text=value;
 
     if ( this.textChanged )
-        this.textChanged.call( VG.context );    
+        this.textChanged.call( VG.context, value );    
 };
 
 VG.UI.Label.prototype.calcSize=function()
@@ -1204,6 +1207,7 @@ VG.UI.Label.prototype.paintWidget=function( canvas )
 {
     VG.UI.Frame.prototype.paintWidget.call( this, canvas );
 
+    this.font=VG.context.style.skin.DefaultFont;
     canvas.pushFont(this.font);
 
     var rect=VG.Core.Rect( this.contentRect );
@@ -1230,10 +1234,10 @@ VG.UI.Label.prototype.paintWidget=function( canvas )
 
     if ( !this.disabled ) {
         if ( this.customColor ) textColor=this.customColor;
-        else textColor=VG.context.style.skin.TextEditTextColor;
-    } else textColor=VG.context.style.skin.WidgetDisabledTextColor;
+        else textColor=VG.context.style.skin.Widget.TextColor;
+    } else textColor=VG.context.style.skin.Widget.DisabledTextColor;
 
-    if ( this.embedded && this.embeddedSelection ) textColor=canvas.style.skin.WidgetEmbeddedTextColor;
+    if ( this.embedded && this.embeddedSelection ) textColor=canvas.style.skin.Widget.EmbeddedTextColor;
 
     for ( var i=0; i < this.textLines; ++i ) {
 
@@ -1253,7 +1257,7 @@ VG.UI.TextLineEdit=function( text )
     VG.UI.BaseText.call( this );
     this.name="TextLineEdit";
     
-    this.font=VG.context.style.skin.DefaultFont;
+    this.font=VG.context.style.skin.TextEdit.Font;
 
     this.supportsFocus=true;
     this.minimumSize.width=40;
@@ -1309,7 +1313,7 @@ VG.UI.TextLineEdit.prototype.valueFromModel=function( value )
     else this.text=value;
 
     if ( this.textChanged )
-        this.textChanged.call( VG.context );    
+        this.textChanged.call( VG.context, this.text, true, this );    
 
     this.verifyScrollbar();
 };
@@ -1318,6 +1322,7 @@ VG.UI.TextLineEdit.prototype.calcSize=function( canvas )
 {
     var size=VG.Core.Size();
 
+    this.font=VG.context.style.skin.TextEdit.Font;
     canvas.pushFont(this.font);
 
     VG.context.workspace.canvas.getTextSize( this.text, size );
@@ -1347,13 +1352,23 @@ VG.UI.TextLineEdit.prototype.focusOut=function()
 { 
     if ( this.textHasChanged ) 
     {
-        if ( this.textChanged )
-            this.textChanged.call( VG.context, this.text, false );
+        if ( VG.UI.NumberEdit && this instanceof VG.UI.NumberEdit ) 
+        {
+            if ( this.changed )
+                this.changed.call( VG.context, this.value, false, this );
 
-        if ( this.collection && this.path )
-            this.collection.storeDataForPath( this.path, this.text );
+            if ( this.collection && this.path )
+                this.collection.storeDataForPath( this.path, this.value );
 
-        this.textHasChanged=false;
+        } else
+        {
+            if ( this.textChanged )
+                this.textChanged.call( VG.context, this.text, false, this );
+
+            if ( this.collection && this.path )
+                this.collection.storeDataForPath( this.path, this.text );
+        }
+        this.textHasChanged=false;        
     }    
 };
 
@@ -1368,11 +1383,25 @@ VG.UI.TextLineEdit.prototype.keyDown=function( keyCode, keysDown )
 
     if ( keyCode == VG.Events.KeyCodes.Enter || keyCode == VG.Events.KeyCodes.Tab )
     {
-        if ( this.collection && this.path )
-            this.collection.storeDataForPath( this.path, this.text );
+        if ( this.textHasChanged )
+        {
+            if (  VG.UI.NumberEdit && this instanceof VG.UI.NumberEdit ) 
+            {
+                if ( this.collection && this.path )
+                    this.collection.storeDataForPath( this.path, this.value );
 
-        if ( this.textChanged )
-            this.textChanged( this.text, true );
+                if ( this.changed )
+                    this.changed( this.value, true, this );            
+            } else
+            {
+                if ( this.collection && this.path )
+                    this.collection.storeDataForPath( this.path, this.text );
+
+                if ( this.textChanged )
+                    this.textChanged( this.text, true, this );
+            }
+            this.textHasChanged=false;
+        }
 
         if ( keyCode == VG.Events.KeyCodes.Tab )
             VG.context.workspace.cycleFocus( this );
@@ -1393,6 +1422,7 @@ VG.UI.TextLineEdit.prototype.keyDown=function( keyCode, keysDown )
 VG.UI.TextLineEdit.prototype.textInput=function( text )
 {
     if ( this.selectionIsValid ) this.deleteSelection( true );
+    if ( this.inputFilter ) text=this.inputFilter( text );
 
     var oldText=this.textArray[this.cursorPosition.y];
     this.textArray[this.cursorPosition.y]=oldText.slice(0, this.cursorPosition.x) + text + oldText.slice( this.cursorPosition.x );
@@ -1405,7 +1435,7 @@ VG.UI.TextLineEdit.prototype.textInput=function( text )
 
     this.resetBlinkState();
     VG.update();
-}
+};
 
 VG.UI.TextLineEdit.prototype.paintWidget=function( canvas )
 {
@@ -1416,12 +1446,13 @@ VG.UI.TextLineEdit.prototype.paintWidget=function( canvas )
     this.contentRect=this.contentRect.shrink( 4, 0 );
     var textLine;
 
+    this.font=VG.context.style.skin.TextEdit.Font;
     canvas.pushFont(this.font);
 
     if ( !this.textLines || ( this.textArray && !this.textArray[0].length ) && this.visualState !== VG.UI.Widget.VisualState.Focus )
     {
         if ( this.defaultText ) {
-            canvas.drawTextRect( this.defaultText, this.contentRect, canvas.style.skin.TextEditDefaultTextColor, 0, 1 );   
+            canvas.drawTextRect( this.defaultText, this.contentRect, canvas.style.skin.TextEdit.DefaultTextColor, 0, 1 );   
         }
         canvas.popFont();
         return;
@@ -1429,10 +1460,14 @@ VG.UI.TextLineEdit.prototype.paintWidget=function( canvas )
 
     var textColor;
 
-    if ( this.embedded && this.embeddedSelection && !this.disabled ) textColor=VG.context.style.skin.TextEditEmbeddedTextColor;
+    if ( this.embedded && this.embeddedSelection && !this.disabled ) textColor=VG.context.style.skin.TextEdit.EmbeddedTextColor;
     else
-    if ( !this.disabled ) textColor=VG.context.style.skin.TextEditTextColor;
-    else textColor=VG.context.style.skin.WidgetDisabledTextColor;
+    if ( !this.disabled )
+    {
+        if ( this.visualState === VG.UI.Widget.VisualState.Focus )
+            textColor=VG.context.style.skin.TextEdit.FocusTextColor;
+        else textColor=VG.context.style.skin.TextEdit.TextColor;
+    } else textColor=VG.context.style.skin.TextEdit.DisabledTextColor;
 
     this.textOffset.x=0;
     if ( textLine !== undefined ) {
@@ -1451,9 +1486,27 @@ VG.UI.TextLineEdit.prototype.paintWidget=function( canvas )
         }
     
         if ( this.selectionIsValid )
-            this.drawSelectionForLine( canvas, 0, this.contentRect, text, canvas.style.skin.TextEditSelectionBackgroundColor );        
+            this.drawSelectionForLine( canvas, 0, this.contentRect, text, canvas.style.skin.TextEdit.SelectionBackgroundColor );        
 
-        canvas.drawTextRect( text, this.contentRect, textColor, 0, 1 );
+        if ( !this.password )
+            canvas.drawTextRect( text, this.contentRect, textColor, 0, 1 );
+        else 
+        {
+            canvas.setClipRect( this.contentRect );
+
+            var circleSize=10;
+            var rect=VG.Core.Rect( this.contentRect );
+            rect.y=rect.y + ( this.contentRect.height - circleSize ) /2;
+            rect.width=circleSize; rect.height=circleSize;
+
+            for ( var i=0; i < text.length; ++i )
+            {
+                canvas.draw2DShape( VG.Canvas.Shape2D.Circle, rect, textColor );
+                rect.x+=circleSize + 2;
+            }
+
+            canvas.setClipRect();            
+        }
     }
     
     this.blink( canvas, this.contentRect.y+2, this.contentRect.height-4 ); 
@@ -1469,7 +1522,7 @@ VG.UI.TextEdit=function( text )
     VG.UI.BaseText.call( this );
     this.name="TextEdit";
 
-    this.font=VG.context.style.skin.DefaultFont;
+    this.font=VG.context.style.skin.TextEdit.Font;
 
     this.supportsScrollbars=true;
     this.frameType=VG.UI.Frame.Type.None;
@@ -1526,7 +1579,6 @@ VG.UI.TextEdit=function( text )
                 this.collection.storeDataForPath( this.path, this.text );
             
         }.bind( this ) );
-        VG.context.workspace.showWindow( this.fileDialog );
     }.bind( this ));
 
     // --- 
@@ -1667,6 +1719,7 @@ VG.UI.TextEdit.prototype.paintWidget=function( canvas )
 
     if ( !this.textLines ) return;
 
+    this.font=VG.context.style.skin.TextEdit.Font;
     canvas.pushFont(this.font);
 
     canvas.setClipRect( this.contentRect );
@@ -1676,16 +1729,19 @@ VG.UI.TextEdit.prototype.paintWidget=function( canvas )
         this.verifyScrollbar();
 
     if ( this.needsVScrollbar )
-        this.contentRect.width-=canvas.style.skin.ScrollbarSize + 2;
+        this.contentRect.width-=canvas.style.skin.Scrollbar.Size + 2;
 
     if ( this.needsHScrollbar )
-        this.contentRect.height-=canvas.style.skin.ScrollbarSize + 2;
+        this.contentRect.height-=canvas.style.skin.Scrollbar.Size + 2;
 
     // ---
 
     var textColor;
-    if ( !this.disabled ) textColor=VG.context.style.skin.TextEditTextColor;
-    else textColor=VG.context.style.skin.WidgetDisabledTextColor;
+    if ( !this.disabled ) {
+        if ( this.visualState === VG.UI.Widget.VisualState.Focus )
+            textColor=VG.context.style.skin.TextEdit.FocusTextColor;
+        else textColor=VG.context.style.skin.TextEdit.TextColor;
+    } else textColor=VG.context.style.skin.Widget.DisabledTextColor;
 
     var paintRect=VG.Core.Rect();
     paintRect.x=this.contentRect.x - this.textOffset.x;
@@ -1700,7 +1756,7 @@ VG.UI.TextEdit.prototype.paintWidget=function( canvas )
             var text=this.textArray[i];
 
             if ( this.selectionIsValid )
-                this.drawSelectionForLine( canvas, i, paintRect, text, canvas.style.skin.TextEditSelectionBackgroundColor );
+                this.drawSelectionForLine( canvas, i, paintRect, text, canvas.style.skin.TextEdit.SelectionBackgroundColor );
 
             canvas.drawTextRect( text, paintRect, textColor, this.hAlignment, 1 );
 
@@ -1732,7 +1788,7 @@ VG.UI.TextEdit.prototype.paintWidget=function( canvas )
 
 VG.UI.TextEdit.prototype.setVScrollbarDimensions=function( canvas )
 {
-    this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() + 2, this.contentRect.y, canvas.style.skin.ScrollbarSize, this.contentRect.height );
+    this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() + 2, this.contentRect.y, canvas.style.skin.Scrollbar.Size, this.contentRect.height );
 
     // this.totalItemHeight == Total height of all Items in the list widget including spacing
     // visibleHeight == Total height of all currently visible items
@@ -1743,7 +1799,7 @@ VG.UI.TextEdit.prototype.setVScrollbarDimensions=function( canvas )
 
 VG.UI.TextEdit.prototype.setHScrollbarDimensions=function( canvas )
 {
-    this.hScrollbar.rect=VG.Core.Rect( this.contentRect.x, this.contentRect.bottom()  + 1, this.contentRect.width, canvas.style.skin.ScrollbarSize );
+    this.hScrollbar.rect=VG.Core.Rect( this.contentRect.x, this.contentRect.bottom()  + 1, this.contentRect.width, canvas.style.skin.Scrollbar.Size );
 
     // this.totalItemHeight == Total height of all Items in the list widget including spacing
     // visibleHeight == Total height of all currently visible items
@@ -1758,7 +1814,7 @@ VG.UI.CodeEdit=function( text )
 {
     if ( !(this instanceof VG.UI.CodeEdit) ) return new VG.UI.CodeEdit( text );
 
-    this.font=VG.context.style.skin.CodeEditFont;
+    this.font=VG.context.style.skin.CodeEdit.Font;
 
     VG.UI.BaseText.call( this, text );
     this.name="CodeEdit";
@@ -1821,7 +1877,6 @@ VG.UI.CodeEdit=function( text )
                 this.collection.storeDataForPath( this.path, this.text );
             
         }.bind( this ) );
-        VG.context.workspace.showWindow( this.fileDialog );
     }.bind( this ), VG.context.workspace.shortcutManager.createDefault( VG.Shortcut.Defaults.InsertText ) );
 
     this.insertEncodedMenuItem=this.contextMenu.addItem( "Insert Encoded Text...", null, function() { 
@@ -1846,7 +1901,7 @@ VG.UI.CodeEdit=function( text )
                 }
 
                 if ( o < encoded.length )
-                    out+="\"";
+                    out+="\" +";
 
                 out+="\n";
             }
@@ -1857,8 +1912,6 @@ VG.UI.CodeEdit=function( text )
                 this.collection.storeDataForPath( this.path, this.text );
             
         }.bind( this ));        
-
-        VG.context.workspace.showWindow( this.fileDialog );
     }.bind( this ), VG.context.workspace.shortcutManager.createDefault( VG.Shortcut.Defaults.InsertEncodedText ) );
 
     // ---
@@ -2048,6 +2101,8 @@ VG.UI.CodeEdit.prototype.paintWidget=function( canvas )
     if ( this.dragging && this.selectionIsValid )
         this.autoScroll();
 
+    this.rect.round();
+
     if ( !this.rect.equals( this.previousRect ) ) this.verified=false;    
     this.contentRect.set( this.rect );
     canvas.setClipRect( this.contentRect, true );
@@ -2058,17 +2113,17 @@ VG.UI.CodeEdit.prototype.paintWidget=function( canvas )
     var headerColumnWidth=size.width+20;
 
     this.contentRect.height=2;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.contentRect, VG.context.style.skin.CodeEditTopBorderColor ); 
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.contentRect, VG.context.style.skin.CodeEdit.TopBorderColor ); 
 
     this.contentRect.y+=2;
     this.contentRect.width=headerColumnWidth;
     this.contentRect.height=this.rect.height-2;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.contentRect, VG.context.style.skin.CodeEditHeaderColor ); 
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.contentRect, VG.context.style.skin.CodeEdit.HeaderColor ); 
 
     this.contentRect.x+=this.contentRect.width;
     this.contentRect.width=this.rect.width - this.contentRect.width;
     var mainClipRect=VG.Core.Rect( this.contentRect );
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.contentRect, VG.context.style.skin.CodeEditBackgroundColor ); 
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.contentRect, VG.context.style.skin.CodeEdit.BackgroundColor ); 
 
     this.contentRect=this.contentRect.add( 4, 2, -8, -4 );
 
@@ -2077,8 +2132,8 @@ VG.UI.CodeEdit.prototype.paintWidget=function( canvas )
     if ( !this.verified || canvas.hasBeenResized )
         this.verifyScrollbar();
 
-    if ( this.needsVScrollbar ) this.contentRect.width-=canvas.style.skin.ScrollbarSize + 2;
-    if ( this.needsHScrollbar ) this.contentRect.height-=canvas.style.skin.ScrollbarSize + 2;
+    if ( this.needsVScrollbar ) this.contentRect.width-=canvas.style.skin.Scrollbar.Size + 2;
+    if ( this.needsHScrollbar ) this.contentRect.height-=canvas.style.skin.Scrollbar.Size + 2;
 
     // ---
 
@@ -2095,7 +2150,7 @@ VG.UI.CodeEdit.prototype.paintWidget=function( canvas )
         if ( paintRect.y + this.itemHeight >= this.contentRect.y && paintRect.y < this.contentRect.bottom() )
         {
             // --- Text is visible, draw it
-            canvas.drawTextRect( String( i+1 ), paintRect, canvas.style.skin.CodeEditHeaderTextColor, 0, 1 );
+            canvas.drawTextRect( String( i+1 ), paintRect, canvas.style.skin.CodeEdit.HeaderTextColor, 0, 1 );
         }
         paintRect.y+=this.itemHeight;        
     }
@@ -2121,10 +2176,10 @@ VG.UI.CodeEdit.prototype.paintWidget=function( canvas )
             // --- This line is visible
 
             if ( this.selectionIsValid )
-                this.drawSelectionForLine( canvas, i, paintRect, text, canvas.style.skin.CodeEditSelectionBackgroundColor );
+                this.drawSelectionForLine( canvas, i, paintRect, text, canvas.style.skin.CodeEdit.SelectionBackgroundColor );
 
             if ( this.searchTerm && this.searchTerm.length > 0 )
-                this.drawSearchTerm( canvas, i, paintRect, text, canvas.style.skin.CodeEditSearchBackgroundColor );
+                this.drawSearchTerm( canvas, i, paintRect, text, canvas.style.skin.CodeEdit.SearchBackgroundColor );
 
             this.drawJSLine( canvas, 0, text, paintRect );
             this.textOut=0;
@@ -2250,7 +2305,7 @@ VG.UI.CodeEdit.prototype.drawJSLine=function( canvas, textPixelOffset, text, rec
 
             } else
                 // --- Just plain text, no formatting
-                textPixelOffset+=this.drawJSText( canvas, text, rect.add( textPixelOffset, 0, -textPixelOffset, 0), VG.context.style.skin.CodeEditTextColor );
+                textPixelOffset+=this.drawJSText( canvas, text, rect.add( textPixelOffset, 0, -textPixelOffset, 0), VG.context.style.skin.CodeEdit.TextColor );
         }
     } else
     {
@@ -2335,7 +2390,7 @@ VG.UI.CodeEdit.prototype.verifyKeyword=function( text, keyword, index )
 
 VG.UI.CodeEdit.prototype.setVScrollbarDimensions=function( canvas )
 {
-    this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() + 2, this.contentRect.y, VG.context.style.skin.ScrollbarSize, this.contentRect.height );
+    this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() + 2, this.contentRect.y, VG.context.style.skin.Scrollbar.Size, this.contentRect.height );
 
     // this.totalItemHeight == Total height of all Items in the list widget including spacing
     // visibleHeight == Total height of all currently visible items
@@ -2346,7 +2401,7 @@ VG.UI.CodeEdit.prototype.setVScrollbarDimensions=function( canvas )
 
 VG.UI.CodeEdit.prototype.setHScrollbarDimensions=function( canvas )
 {
-    this.hScrollbar.rect=VG.Core.Rect( this.contentRect.x, this.contentRect.bottom() + 1, this.contentRect.width, VG.context.style.skin.ScrollbarSize );
+    this.hScrollbar.rect=VG.Core.Rect( this.contentRect.x, this.contentRect.bottom() + 1, this.contentRect.width, VG.context.style.skin.Scrollbar.Size );
 
     // this.totalItemHeight == Total height of all Items in the list widget including spacing
     // visibleHeight == Total height of all currently visible items
