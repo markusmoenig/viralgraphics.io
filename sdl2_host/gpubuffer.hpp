@@ -137,6 +137,7 @@ public:
         glBindVertexArray( vaid );
 #endif
         glBindBuffer( target, id );
+		GL_ASSERT();
     }
 
     void update( GLuint offset, GLuint count, bool nobind )
@@ -176,7 +177,8 @@ public:
         else
         {
             glBufferSubData( target, offset * stride, count * stride, data );
-        }   
+        }
+		GL_ASSERT();
     }
 
     void create()
@@ -197,10 +199,11 @@ public:
         glGenBuffers( 1, &id );
 
         bind();
-        glBufferData( target, size * stride, data, usage );      
+        glBufferData( target, size * stride, data, usage );
+        GL_ASSERT();
     }    
 
-    void release()
+    void destroy()
     {
         /** Releases the buffer from GPU, it can be send again with buffer.create */
         if ( id == 0) return;
@@ -213,8 +216,7 @@ public:
     {
         /** Disposes this object and becomes invalid for further use */
 
-        release();
-        //VG.Renderer().removeResource(this);
+        destroy();
     }    
 
 
@@ -228,11 +230,11 @@ public:
          *  @param {number} offset - Vertex offset */
 
         enableAttrib(index);
-
+		
         //odd OpenGL behavior, it doesn't need to be a "real" pointer.
         size_t ptrOffset=offset;
-
-        glVertexAttribPointer( index, size, elemType, norm, stride, (const void*) ptrOffset );         
+        glVertexAttribPointer( index, size, elemType, norm, stride, (const void*) ptrOffset );
+        GL_ASSERT();
     } 
 
     void draw( GLint primType, GLuint offset, GLuint count, bool nobind )
@@ -249,7 +251,7 @@ public:
             bind();
         }
 
-        int mode = GL_TRIANGLES;
+        GLenum mode = GL_TRIANGLES;
 
         switch (primType)
         {
@@ -259,6 +261,8 @@ public:
         }
 
         glDrawArrays(mode, offset, count);
+
+        GL_ASSERT();
         purgeAttribs(); 
     }
 
@@ -289,7 +293,8 @@ public:
         }
     
         size_t ptrOffset=offset;
-        glDrawElements( mode, count, indexBuffer->elemType, (const void*)ptrOffset );    
+        glDrawElements( mode, count, indexBuffer->elemType, (const void*)ptrOffset );
+        GL_ASSERT();
         purgeAttribs(); 
     }
 
@@ -298,7 +303,7 @@ public:
     GLuint id;
     GLuint vaid;
     GLuint usage;
-    GLuint target;
+    GLenum target;
     GLuint size;
     GLuint elemType;
     GLuint stride;

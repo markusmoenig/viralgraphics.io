@@ -60,11 +60,58 @@ VG.Render.Pipeline.prototype.drawScene = function(context, scene, delta)
      *  @param {VG.Render.SceneManager} scene - The scene to render 
      *  @param {Number} delta - The delta time */
 
+    //2d dimmensions
+    var w = context.size2D.width;
+    var h = context.size2D.height;
+
     var renderables = scene.findAllVisible(context, true);
 
     for (var i = 0; i < renderables.length; i++)
     {
         renderables[i].onDraw(this, context, delta);
+    }
+
+    
+    if (context.trace)
+    {
+        if (!context.traceContext)
+        {
+            context.traceContext = new VG.Render.TraceContext();
+        }
+
+        var traceCtx = context.traceContext;
+
+        var scaledW = Math.max(Math.round(w * traceCtx.scaleRatio), 2);
+        var scaledH = Math.max(Math.round(h * traceCtx.scaleRatio), 2);
+
+        //update the output size if needed
+        if (traceCtx.output.width != scaledW || traceCtx.output.height != scaledH)
+        {
+            traceCtx.output.clear();
+
+            traceCtx.output.height = scaledH;
+            traceCtx.output.width = scaledW;
+            traceCtx.output.alloc();
+
+            traceCtx.output.needsUpdate = true;
+            traceCtx.resetAccumulation = true;
+        }
+        
+        if (VG.Render.trace)
+        {
+            //this call the native implementation
+            VG.Render.trace(traceCtx, context.camera, scene);
+        }
+        else
+        {
+            //if trace is not defined means it's not available in this platform, call network trace instead
+            VG.Render.networkTrace(traceCtx, context.camera, scene);
+        }
+
+        var alpha = VG.Math.clamp(traceCtx.iterations / (traceCtx.maxIterations / 10), 0.0, 1.0);
+
+        //render the texturw where the trace gets updated to
+        VG.Renderer().drawQuad(traceCtx.texture, w, h, 0, 0, alpha, context.size2D);
     }
 }
 
@@ -79,4 +126,23 @@ VG.Render.Context = function()
     /** Camera to get view and projection matrices 
      *  @member {VG.Render.Camera} */
     this.camera = new VG.Render.Camera();
+
+
+    /** Determines if tracing should be used 
+     *  @member {Bool}[false] trace */
+    this.trace = false;
+
+
+    /** Trace context, automatically set by the pipeline drawScene
+     *  @member {VG.Render.TraceContext}[null] */
+    this.traceContext = null;
+
+
+    /** 2D Dimmensions for post fx / overlay
+     *  @member {VG.Core.Size} */
+    this.size2D = VG.Core.Size();
+
 }
+
+
+

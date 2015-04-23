@@ -165,7 +165,7 @@ VG.remoteSaveFile=function( fileName, data )
     }.bind( this ), "POST" );
 };
 
-VG.decompressImageData=function( data, image )
+VG.decompressImageData=function( data, image, finishedCallback )
 {        
     var im=new Image();
     image.locked=true;
@@ -207,10 +207,41 @@ VG.decompressImageData=function( data, image )
         im=null;
         image.locked=false;
         image.needsUpdate=true;
-        VG.update();  
+        VG.update();
+
+        if ( finishedCallback ) finishedCallback();
     }
     im.src=data;  
-}
+};
+
+VG.compressImage=function( image )
+{
+    var ctx=textureCanvas.getContext('2d');
+        
+    ctx.canvas.width=image.width;
+    ctx.canvas.height=image.height;    
+
+    var id=ctx.getImageData( 0, 0, image.width, image.height );
+    var pixelData=id.data;
+    
+    for ( var h=0; h < image.height; ++h )
+    {
+        for ( var w=0; w < image.width; ++w )
+        {
+            var offset=h * image.width * 4 + w * 4
+            var dOffset=h * image.modulo + w * 4
+                //im.setPixelRGBA( w, h, pixelData[offset], pixelData[offset+1], pixelData[offset+2], pixelData[offset+3] );
+
+            pixelData[offset]=image.data[dOffset];
+            pixelData[offset+1]=image.data[dOffset+1];
+            pixelData[offset+2]=image.data[dOffset+2];
+            pixelData[offset+3]=image.data[dOffset+3];
+        }
+    }
+
+    ctx.putImageData( id, 0, 0 );
+    return ctx.canvas.toDataURL();// "image/jpeg" );
+};
 
 VG.loadStyleImage=function( style, imageName, callback ) 
 {
@@ -257,16 +288,21 @@ VG.loadStyleImage=function( style, imageName, callback )
     else image.src="vglib/ui/styles/" + style + "/icons/" + imageName;
 
     image.name=imageName;
+    image.stylePath=style;
 };
 
 VG.copyToClipboard=function( type, data )
 {
     if ( type === "Text" ) VG.context.workspace.textClipboard=data;
+    else
+    if ( type === "Nodes" ) VG.context.workspace.nodesClipboard=data;
 };
 
 VG.clipboardPasteDataForType=function( type )
 {
-    if ( type === "Text" ) return VG.context.workspace.textClipboard
+    if ( type === "Text" ) return VG.context.workspace.textClipboard;
+    else
+    if ( type === "Nodes" ) return VG.context.workspace.nodesClipboard;
     return null;
 };
 

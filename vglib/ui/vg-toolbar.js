@@ -35,7 +35,7 @@ VG.UI.ToolSeparator.prototype=VG.UI.Widget();
 
 VG.UI.ToolSeparator.prototype.calcSize=function()
 {
-    var size=VG.Core.Size( 2, VG.context.style.skin.ToolbarHeight );
+    var size=VG.Core.Size( 2, VG.context.style.skin.Toolbar.Separator.Size.height );
     return size;
 };
 
@@ -61,7 +61,7 @@ VG.UI.ToolButton=function( text )
     this.verticalExpanding=false;
     
     this.role=VG.UI.ActionItemRole.None;
-    this.minimumSize.width=VG.context.style.skin.ToolButtonMinimumWidth;
+    this.minimumSize.width=VG.context.style.skin.ToolButton.MinimumWidth;
     this._icon=0; 
 };
 
@@ -80,12 +80,18 @@ VG.UI.ToolButton.prototype.calcSize=function()
 {
     var size=VG.Core.Size();
     
+    this.minimumSize.width=VG.context.style.skin.ToolButton.MinimumWidth;
+
     if ( !this.icon ) {
         VG.context.workspace.canvas.getTextSize( this.text, size );
         size.width+=10;
-        size.height=VG.context.style.skin.ToolbarHeight;
+        if ( VG.context.style.skin.ToolButton.ScaleToParentHeight )
+            size.height=VG.context.style.skin.Toolbar.Height;
+        else size.height+=10;
     } else {
-        size.set( 22 + 10, VG.context.style.skin.ToolbarHeight );
+        if ( VG.context.style.skin.ToolButton.ScaleToParentHeight )
+            size.set( 22 + 10, VG.context.style.skin.Toolbar.Height );
+        else size.set( 22 + 10, 22 + 10 );
     }
 
     if ( size.width < this.minimumSize.width )
@@ -145,7 +151,7 @@ VG.UI.Toolbar.prototype.addItems=function()
 
 VG.UI.Toolbar.prototype.paintWidget=function( canvas )
 {
-    this.rect.height=VG.context.style.skin.ToolbarHeight;
+    //this.rect.height=VG.context.style.skin.Toolbar.Height;
 
     VG.context.style.drawToolbar( canvas, this );
         

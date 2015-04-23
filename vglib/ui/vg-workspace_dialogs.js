@@ -18,6 +18,8 @@
  *
  */
  
+// ----------------------------------------------------------------------------------- Login Dialog
+
 VG.UI.Workspace.prototype.showLoginDialog=function()
 {
     if ( !this.loginDialog ) {
@@ -30,8 +32,7 @@ VG.UI.Workspace.prototype.showLoginDialog=function()
 
         this.login_userNameEdit=VG.UI.TextLineEdit( "" );
         this.login_passwordEdit=VG.UI.TextLineEdit( "" );
-        //this.firstNameEdit.bind( this.dc, "contacts.firstName" );
-        //this.firstNameEdit.textChanged=function() { computeSelectedContactItemText.call( this ); };
+        this.login_passwordEdit.password=true;
 
         layout.addChild( "Username", this.login_userNameEdit );
         layout.addChild( "Password", this.login_passwordEdit );
@@ -39,42 +40,29 @@ VG.UI.Workspace.prototype.showLoginDialog=function()
         this.loginDialog.layout=layout;
         this.loginDialog.addButton( "Close", function() { this.close( this ); }.bind( this.loginDialog ) );
         this.loginDialog.addButton( "Login", function() { 
-            VG.context.workspace.showLoginDialog_logIn.call( this ); 
+
+            VG.DB.userLogIn( this.login_userNameEdit.text, this.login_passwordEdit.text, function( success, userName, userId, isAdmin ) {
+                if ( success ) 
+                {
+                    this.userName=userName;
+                    this.userId=userId;
+                    this.userIsAdmin=isAdmin;
+
+                    this.modelLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName, this.userId );
+
+                    if ( this.callbackForLoggedStateChanged )
+                        this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName, this.userId );  
+
+                    this.loginDialog.close( this.loginDialog );
+                } else this.loginDialog.label.text="Login failed";
+            }.bind( this ) );
         }.bind( this ) );
     }
 
     this.showWindow( this.loginDialog );            
 };
 
-VG.UI.Workspace.prototype.showLoginDialog_logIn=function()
-{
-    //var parameters="username=" + this.login_userNameEdit.text + "&password=" + this.login_passwordEdit.text;
-
-    var parameters={username : this.login_userNameEdit.text, password : this.login_passwordEdit.text};
-
-    VG.sendBackendRequest( "/user/login", JSON.stringify( parameters ), this.showLoginDialog_finished.bind( this ), "POST" );
-};
-
-VG.UI.Workspace.prototype.showLoginDialog_finished=function( responseText )
-{
-    var response=JSON.parse( responseText );
-
-    if ( response.status === "ok" && response.user.username && response.user.username.length )
-    {
-        this.userName=response.user.username;
-
-        this.modelLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName );
-
-        if ( this.callbackForLoggedStateChanged )
-            this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName );           
-
-        this.loginDialog.close( this.loginDialog );
-    } else {
-        this.loginDialog.label.text="Login Failed";        
-    }
-
-    VG.update();        
-};
+// ----------------------------------------------------------------------------------- Signup Dialog
 
 VG.UI.Workspace.prototype.showSignupDialog=function()
 {
@@ -91,6 +79,7 @@ VG.UI.Workspace.prototype.showSignupDialog=function()
         this.signup_userNameEdit=VG.UI.TextLineEdit( "" );
         this.signup_eMailEdit=VG.UI.TextLineEdit( "" );
         this.signup_passwordEdit=VG.UI.TextLineEdit( "" );
+        this.signup_passwordEdit.password=true;
         //this.firstNameEdit.bind( this.dc, "contacts.firstName" );
         //this.firstNameEdit.textChanged=function() { computeSelectedContactItemText.call( this ); };
 
@@ -106,7 +95,7 @@ VG.UI.Workspace.prototype.showSignupDialog=function()
         widget.html.elements.body.font=VG.Font.Font( "Open Sans Semibold", 14 );
         widget.html.elements.body.spacing=5;
         widget.html.elements.body.margin.set( 0, 0, 0, 0 );
-        widget.html.elements.body.bgColor=VG.context.workspace.canvas.style.skin.DialogBackgroundColor;
+        widget.html.elements.body.bgColor=VG.context.workspace.canvas.style.skin.Dialog.BackgroundColor;
         widget.html.html="<b>Sign up</b> to Visual Graphics and sign in to all the applications and games using the Visual Graphics Framework. Applications will only have access " +
         "to your username, never to your eMail.";
         widget.paintWidget=function( canvas ) {
@@ -123,7 +112,7 @@ VG.UI.Workspace.prototype.showSignupDialog=function()
             this.html.rect.set( rect );
             this.html.paintWidget( canvas );
 
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y + this.rect.height - 1, this.rect.width, 1 ), canvas.style.skin.TextEditBorderColor );
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y + this.rect.height - 1, this.rect.width, 1 ), canvas.style.skin.TextEdit.BorderColor );
         };
 
         var vlayout=VG.UI.Layout( widget, layout );
@@ -157,8 +146,6 @@ VG.UI.Workspace.prototype.showSignupDialog_finished=function( responseText )
 
     if ( response.status === "ok" && response.user.username && response.user.username.length )
     {
-        this.userName=response.user.username;
-
         if ( this.callbackForLoggedStateChanged )
             this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName );           
 
@@ -168,6 +155,45 @@ VG.UI.Workspace.prototype.showSignupDialog_finished=function( responseText )
     }
 
     VG.update();  
+};
+
+// ----------------------------------------------------------------------------------- User Settings Dialog
+
+VG.UI.Workspace.prototype.showUserSettingsDialog=function()
+{
+    if ( !this.userSettingsDialog ) {
+
+        this.userSettingsDialog=VG.UI.Dialog( "Change Password");
+
+        var layout=VG.UI.LabelLayout();
+        layout.labelSpacing=40;
+        layout.labelAlignment=VG.UI.HAlignment.Left;
+
+        this.userSettings_passwordEdit1=VG.UI.TextLineEdit( "" );
+        this.userSettings_passwordEdit2=VG.UI.TextLineEdit( "" );
+        this.userSettings_passwordEdit1.password=true;
+        this.userSettings_passwordEdit2.password=true;
+
+        layout.addChild( "Password", this.userSettings_passwordEdit1 );
+        layout.addChild( "Repeat", this.userSettings_passwordEdit2 );
+
+        this.userSettingsDialog.layout=layout;
+        this.userSettingsDialog.addButton( "Close", function() { this.close( this ); }.bind( this.userSettingsDialog ) );
+        this.userSettingsDialog.addButton( "Change", function() { 
+            if ( this.userSettings_passwordEdit1.text.length > 0 && this.userSettings_passwordEdit1.text == this.userSettings_passwordEdit2.text ) {
+                VG.DB.userChangePassword( this.userSettings_passwordEdit1.text, function( success ) {
+                    if ( success ) this.userSettingsDialog.close( this.userSettingsDialog );
+                    else this.userSettingsDialog.label.text="Password change failed";
+                }.bind( this ) );
+            } else this.userSettingsDialog.label.text="Invalid Password";
+        }.bind( this ) );
+    }
+
+    this.userSettings_passwordEdit1.text="";
+    this.userSettings_passwordEdit2.text="";
+    this.userSettingsDialog.label.text="";
+
+    this.showWindow( this.userSettingsDialog );            
 };
 
 // ----------------------------------------------------------------------------------- Open / Save Web Dialogs

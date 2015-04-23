@@ -132,6 +132,11 @@ VG.Canvas=function()
     this.cacheC2 = VG.Core.Color();
     this.cacheC3 = VG.Core.Color();
 
+    this.cacheV2A = new VG.Math.Vector2();
+    this.cacheV2B = new VG.Math.Vector2();
+    this.cacheV2C = new VG.Math.Vector2();
+    this.cacheV2D = new VG.Math.Vector2();
+
     //render target
     this.rt = VG.Renderer().mainRT;
 
@@ -498,6 +503,74 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
     }
 };
 
+VG.Canvas.prototype.drawLine=function(x1, y1, x2, y2, t, color)
+{
+     /**Draws a line
+     * @param {Number} x1 - From X coordinate
+     * @param {Number} y1 - From Y coordinate
+     * @param {Number} x2 - To X coordinate
+     * @param {Number} y2 - To Y coordinate
+     * @param {Number} t - The thickness of the line
+     * @param {Number} color - The color of the line
+     */
+
+    var hT = t * 0.5;
+
+    var p0 = this.cacheV2B;
+    p0.set(x1, y1);
+
+    var p1 = this.cacheV2C;
+    p1.set(x2, y2);
+   
+    //direction 
+    var vD = this.cacheV2A;
+    vD.copy(p1);
+    vD.sub(p0);
+    //vD.normalize();
+
+    //perpendicular direction
+    var pD = this.cacheV2D;
+    pD.copy(vD);
+    pD.setPerpendicular();
+    pD.normalize();
+
+    this.addTriangle2D(p0.x + pD.x * hT, p0.y + pD.y * hT, p1.x + pD.x * hT, p1.y + pD.y * hT, 
+                       p1.x + pD.x * -hT, p1.y + pD.y * -hT, color, color, color);
+
+    this.addTriangle2D(p0.x + pD.x * hT, p0.y + pD.y * hT, p1.x + pD.x * -hT, p1.y + pD.y * -hT, 
+                       p0.x + pD.x * -hT, p0.y + pD.y * -hT, color, color, color);
+}
+
+VG.Canvas.prototype.drawCurve=function(x1, y1, x2, y2, x3, y3, x4, y4, t, seg, color)
+{
+    /** Draws a cubic bezier line 
+     *  @param {Number} x1 - The p1 x coordinate
+     *  @param {Number} y1 - The p1 y coordinate
+     *  @param {Number} x2 - The p2 x coordinate
+     *  @param {Number} y2 - The p2 y coordinate
+     *  @param {Number} x3 - The p3 x coordinate
+     *  @param {Number} y3 - The p3 y coordinate
+     *  @param {Number} x4 - The p4 x coordinate
+     *  @param {Number} y4 - The p4 y coordinate
+     *  @param {Number} t - Thickness of the curve
+     *  @param {Number} seg - Segment count the higher the better quality
+     *  @param {Number} color - The line color */
+
+
+    for (var i = 1; i < seg; i++)
+    {
+        var t1 = (i - 1) / seg;
+        var tx1 = VG.Math.bezierCubic(t1, x1, x2, x3, x4);
+        var ty1 = VG.Math.bezierCubic(t1, y1, y2, y3, y4);
+
+        var t2 = i / seg;
+        var tx2 = VG.Math.bezierCubic(t2, x1, x2, x3, x4);
+        var ty2 = VG.Math.bezierCubic(t2, y1, y2, y3, y4);
+
+        this.drawLine(tx1, ty1, tx2, ty2, t, color); 
+    }
+}
+
 var rot=0;
 
 // --------------------------------------------- VG.Canvas.prototype.drawImage
@@ -508,7 +581,8 @@ VG.Canvas.prototype.drawImage=function( pt, image, size )
      * @param {VG.Core.Point} point - The position of the image
      * @param {VG.Core.Image} image - The image to draw.
      * @param {VG.Core.Size} size - The size to scale the image to, optional.
-     */   
+     */
+
 
     this.flush();
 

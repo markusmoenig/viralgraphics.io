@@ -33,6 +33,10 @@ JSObject *registerGPUBuffer( JSContext *cx, JSObject *vgObject );
 JSObject *registerRenderTarget( JSContext *cx, JSObject *vgObject );
 JSObject *registerTexture( JSContext *cx, JSObject *vgObject );
 
+#ifdef __VG_WITH_EMBREE
+void registerTracer(JSContext *cx, JSObject *vgRenderObject);
+#endif
+
 // ---
 
 JSHost::JSHost( JSContext *cx, RootedObject *global, const char *path ) : rcValue( cx )
@@ -116,10 +120,25 @@ bool JSHost::setupVG( void )
 
     registerVGFunctions( cx, vgObject );
 
+    // --- Register Host Render functions
+
+    rc = this->executeScript("VG.Render");
+    JSObject *vgRenderObject = &rc->toObject();
+
+#ifdef __VG_WITH_EMBREE
+    // --- Only register the tracer if we're linking against embree
+    registerTracer(cx, vgRenderObject);
+#endif
+
+
     // ---
+
+    success=addVGLibSourceFile( "vglib/db/vg-db.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/db/vg-folder.js" ); if ( !success ) return false;
 
     success=addVGLibSourceFile( "vglib/ui/vg-defines.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/styles/visualgraphics/vg-style.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/ui/styles/multimedia/vg-style.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/vg-widgets.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/vg-menu.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/vg-listwidget.js" ); if ( !success ) return false;
@@ -135,6 +154,16 @@ bool JSHost::setupVG( void )
     success=addVGLibSourceFile( "vglib/ui/vg-workspace.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/vg-workspace_dialogs.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/vg-scroller.js" ); if ( !success ) return false;
+
+    success=addVGLibSourceFile( "vglib/nodes/vg-controller.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/nodes/vg-parameter.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/nodes/vg-terminal.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/nodes/vg-node.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/nodes/vg-nodes.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/nodes/vg-material.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/nodes/vg-graph.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/nodes/vg-parameteredit.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/nodes/vg-graphedit.js" ); if ( !success ) return false;
 
     success=addVGLibSourceFile( "vglib/render/vg-material.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/render/vg-pipeline.js" ); if ( !success ) return false;

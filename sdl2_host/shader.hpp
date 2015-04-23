@@ -74,9 +74,11 @@ public:
     void create()
     {
         /** Copiles, links and creates the shader program */
-    
+
         vid=glCreateShader( GL_VERTEX_SHADER );
         fid=glCreateShader( GL_FRAGMENT_SHADER );
+
+		GL_ASSERT();
     
         if ( vid && fid )
         {
@@ -111,9 +113,11 @@ public:
                 glDeleteShader( fid );
             }
         }
+
+		GL_ASSERT();
     }
 
-    void release()
+    void destroy()
     {
         /** Releases the shader from gpu */
         if ( id == 0) return;
@@ -125,6 +129,8 @@ public:
         id = 0;
         vid = 0;
         fid = 0;
+
+		GL_ASSERT();
     }
 
     void bind()
@@ -183,6 +189,8 @@ public:
             glEnable( GL_CULL_FACE);
             glCullFace( GL_BACK );
         }
+
+		GL_ASSERT();
     } 
 
     GLuint getUniform( const char *name )
@@ -199,11 +207,10 @@ public:
     {
         /** Disposes this object and becomes invalid for further use */
 
-        release();
-        //VG.Renderer().removeResource(this);
+        destroy();
     }
 
-    GLuint getAttrib( const char *name)
+    GLint getAttrib( const char *name)
     {
         /** Queries the attribute location/index
          *  @param {string} name - The attribute name as set in the source
@@ -257,6 +264,8 @@ public:
         }
     
         glUniform1i( uid, slot );
+
+        GL_ASSERT();
     }
 
     void setColor( GLuint uid, float r, float g, float b, float a )
@@ -334,6 +343,7 @@ public:
 
     bool compileShader( GLuint shaderId, const char * source )
     {
+		GL_ASSERT();
         GLint compiled;
     
         glShaderSource( shaderId, 1, &source, NULL );
@@ -355,6 +365,8 @@ public:
             }
             return false;
         }
+
+		GL_ASSERT();
     
         return true;
     }

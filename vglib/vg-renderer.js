@@ -174,7 +174,7 @@ VG.Renderer.prototype.tick = function()
 
 }
 
-VG.Renderer.prototype.drawQuad = function(texture, w, h, x, y, alpha)
+VG.Renderer.prototype.drawQuad = function(texture, w, h, x, y, alpha, viewportSize)
 {
     /** Draws a textured quad, if rect is null then it render a full screen quad
      *  unless w or h are defined 
@@ -184,10 +184,14 @@ VG.Renderer.prototype.drawQuad = function(texture, w, h, x, y, alpha)
      *  @param {number} x - X offset
      *  @param {number} y - Y offset
      *  @param {number} alpha - The alpha for the blend
+     *  @param {VG.Core.Size} [null] viewportSize - The viewport size
      *  */
 
-    if (!w) w = this.w;
-    if (!h) h = this.h;
+    var vw = viewportSize ? viewportSize.width : this.w;
+    var vh = viewportSize ? viewportSize.height : this.h;
+
+    if (!w) w = vw;
+    if (!h) h = vh;
     if (!x) x = 0;
     if (!y) y = 0;
     if (alpha === undefined) alpha = 1.0;
@@ -199,10 +203,10 @@ VG.Renderer.prototype.drawQuad = function(texture, w, h, x, y, alpha)
     var b = this.texQuadBuffer;
 
 
-    var x1 = (x - this.w / 2) / (this.w / 2);
-    var y1 = (this.h / 2 - y) / (this.h / 2);
-    var x2 = ((x + w) - this.w / 2) / (this.w / 2);
-    var y2 = (this.h / 2 - (y + h)) / (this.h / 2);
+    var x1 = (x - vw / 2) / (vw / 2);
+    var y1 = (vh / 2 - y) / (vh / 2);
+    var x2 = ((x + w) - vw / 2) / (vw / 2);
+    var y2 = (vh / 2 - (y + h)) / (vh / 2);
 
     var i = 0;
 
@@ -244,7 +248,12 @@ VG.Renderer.prototype.drawMesh = function(mesh, element, shader)
         for (var j = 0; j < layout.length; j++)
         {
             var vL = layout[j];
-            vb.vertexAttrib(shader.getAttrib(vL.name), vL.stride, false, vStride, tStride * vL.offset);
+
+            var index = shader.getAttrib(vL.name);
+
+            if (index < 0) continue;
+
+            vb.vertexAttrib(index, vL.stride, false, vStride, tStride * vL.offset);
         }
     }
 
@@ -281,3 +290,50 @@ VG.Renderer.Primitive = { Triangles: 0, Lines: 1, TriangleStrip: 2, LineStrip: 3
 VG.Render = {};
 
 
+VG.Render.TraceContext = function()
+{
+    /** Ray tracing context, used with VG.Render.trace function, holds an image which gets updated
+     *  per pixel/tile asynchronously
+     *
+     *  @constructor */ 
+
+    /** Output image 
+     *  @member {VG.Core.Image} */
+    this.output = new VG.Core.Image(1, 1);
+    this.output.forcePowerOfTwo = false;
+    this.output.alloc();
+
+    /** Internal ID, if set/zero then a new internal context is created 
+     *  @member {Number} */
+    this.id = 0;
+
+    /** Texture to use in real time rendering 
+     *  @member {VG.Texture} */
+    this.texture = new VG.Texture([this.output]);
+    
+    /** If true then the tracing re-starts from zero, usefull when the camera or geometry changes
+     *  to avoid artifacts, otherwise the tracer would continue to trace the scene with the new changes regardless
+     *  
+     *  This gets automatically set to false once processed.
+     *  @member {Bool} */
+    this.resetAccumulation = false;
+
+    /** Set by the tracer, current iterations 
+     *  @member {Number} */
+    this.iterations = 0;
+
+    /** Maximum iterations 
+     *  @member {Number} */
+    this.maxIterations = 512;
+
+    /** Render scale ratio, use low values for faster iteration
+     *  @member {Number} */
+    this.scaleRatio = 0.25;
+
+    this.texture.create();
+}
+
+VG.Render.networkTrace = function()
+{
+    //TODO
+}

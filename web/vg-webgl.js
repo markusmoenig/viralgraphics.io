@@ -108,6 +108,9 @@ VG.GPUBuffer = function(type, size, dynamic, isIndexBuffer)
         break;
     }
 
+
+    if ((this.getStride() * this.getSize()) % 16 != 0) VG.log("Warning: VG.GPUBuffer is not 16-byte alligned");
+
     //This shouldn't happend in native code as the enum is constant
     if (!this.data) throw "Data is null, unkown/invalid type?";
 

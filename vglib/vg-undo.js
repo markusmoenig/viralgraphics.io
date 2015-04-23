@@ -24,7 +24,7 @@ VG.Data.UndoItem=function()
 };
 
 VG.Data.UndoItem.Type={ "ValueBased" : 0, "ControllerBased" : 1 };
-VG.Data.UndoItem.ControllerAction={ "Add" : 0, "Remove" : 1 };
+VG.Data.UndoItem.ControllerAction={ "Add" : 0, "Remove" : 1, "NodeProperty" : 2, "NodeConnect" : 3, "NodeDisconnect" : 4 };
 
 VG.Data.Undo=function()
 {
@@ -92,7 +92,7 @@ VG.Data.Undo.prototype.controllerProcessedItem=function( controller, action, pat
     var undo=VG.Data.UndoItem();
 
     undo.type=VG.Data.UndoItem.Type.ControllerBased;
-    undo.action=action;//VG.Data.UndoItem.ControllerAction.Add;
+    undo.action=action;
 
     undo.controller=controller;
     undo.path=path;   
@@ -141,7 +141,24 @@ VG.Data.Undo.prototype.undo=function( widget )
             var item=JSON.parse( undo.stringifiedItem );
             undo.controller.insert( undo.index, item, true );
             undo.controller.selected=item;   
-        }
+        } else
+        if ( undo.action === VG.Data.UndoItem.ControllerAction.NodeProperty )
+        {
+            // --- Node Property action.
+
+            var item=JSON.parse( undo.stringifiedItem );
+            undo.controller.changeProperty( undo.index, undo.path, item.oldValue, true );
+        } else
+        if ( undo.action === VG.Data.UndoItem.ControllerAction.NodeConnect )
+        {
+            var item=JSON.parse( undo.stringifiedItem );
+            undo.controller.disconnect( undo.index, undo.path, item, true );
+        } else
+        if ( undo.action === VG.Data.UndoItem.ControllerAction.NodeDisconnect )
+        {
+            var item=JSON.parse( undo.stringifiedItem );
+            undo.controller.connect( undo.index, undo.path, item, true );
+        }  
     }
 
     this.updateUndoRedoWidgets();
@@ -177,12 +194,31 @@ VG.Data.Undo.prototype.redo=function( widget )
             undo.controller.insert( undo.index, item, true );
             undo.controller.selected=item;
         } else
+        if ( undo.action === VG.Data.UndoItem.ControllerAction.Remove )
         {
             // --- This was an Remove action, in the redo step we have to remove this item.
 
             var item=undo.controller.at( undo.index );
             undo.controller.remove( item, true );            
-        }
+        } else
+        if ( undo.action === VG.Data.UndoItem.ControllerAction.NodeProperty )
+        {
+            // --- Node Property action.
+
+            var item=JSON.parse( undo.stringifiedItem );
+
+            undo.controller.changeProperty( undo.index, undo.path, item.newValue, true );
+        } else
+        if ( undo.action === VG.Data.UndoItem.ControllerAction.NodeConnect )
+        {
+            var item=JSON.parse( undo.stringifiedItem );
+            undo.controller.connect( undo.index, undo.path, item, true );
+        } else
+        if ( undo.action === VG.Data.UndoItem.ControllerAction.NodeDisconnect )
+        {
+            var item=JSON.parse( undo.stringifiedItem );
+            undo.controller.disconnect( undo.index, undo.path, item, true );
+        }           
     }
     
     this.updateUndoRedoWidgets();

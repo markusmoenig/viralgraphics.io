@@ -30,6 +30,12 @@
 #include "jshost.hpp"
 #include "jsfriendapi.h"
 
+
+#ifdef __VG_WITH_EMBREE
+#include "tracer/tracer.h"
+#endif
+
+
 #ifdef __APPLE__
     const char *getPath_cocoa( int type );
     void init_cocoa( void );
@@ -62,8 +68,8 @@ unsigned int timerCallback(unsigned int interval, void *param);
 int SDLKeyCodeToVG( int code );
  
 bool g_redraw=true;
-int g_width = 1400; 
-int g_height = 1000; 
+int g_width = 1400;
+int g_height = 1000;
  
 const char *g_appNameChars=0;
 const char *g_appVersionChars=0;
@@ -74,6 +80,8 @@ std::string vgDir = "./";
 
 int main(int argc, char** argv)
 {
+	bool rawApp = false;
+
     char cmdbuffer[256];        
     int rc=0;
 
@@ -136,7 +144,7 @@ int main(int argc, char** argv)
  
      // --- Load the app
 
-    std::string appSource = "apps/v-ide.vide";
+    std::string appSource = "apps/view3d.js";
 
     const char *projectPath=0;
 
@@ -155,8 +163,26 @@ int main(int argc, char** argv)
         appSource = argv[2];
     }
 
-    jsHost->addVGLibSourceFile( appSource.c_str(), absolutePath );   
-    
+    //only allow to run js apps in debug builds
+//#ifdef _DEBUG
+    if (appSource.find_last_of(".js") != std::string::npos)
+    {
+	    rawApp = true;
+	    std::cout << "Running raw .js app" << std::endl;
+    }
+//#endif
+
+	//clear any error up to this point
+	
+
+    if (rawApp)
+    {
+	    const char* dummyAppSource = "VG.App = {};";
+	    jsHost->executeScript(dummyAppSource);
+    }
+	
+	jsHost->addVGLibSourceFile(appSource.c_str(), absolutePath);
+	
     // --- Settup SDL2
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -225,8 +251,8 @@ int main(int argc, char** argv)
 
     // ---
 
-    glClearColor( 0, 0, 0, 0 );
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	    
+    //glClearColor( 0, 0, 0, 0 );
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	    
  
     printf("----------------------------------------------------------------\n");
     printf("Graphics Successfully Initialized\n");
@@ -246,6 +272,9 @@ int main(int argc, char** argv)
     }
 #endif
  
+	//clear any gl error
+	while (glGetError() != GL_NO_ERROR) {}
+
     sprintf( cmdbuffer, "VG.context.workspace=VG.UI.Workspace(); VG.context.workspace.resize( %d, %d );", g_width, g_height );
     jsHost->executeScript( cmdbuffer );
 
@@ -344,10 +373,15 @@ int main(int argc, char** argv)
                 
                 case SDL_TEXTINPUT:
                 {
-                    if ( strcmp( event.text.text, "\"" ) ) sprintf( cmdbuffer, "VG.context.workspace.textInput( \"%s\" );", event.text.text );
-                    else sprintf( cmdbuffer, "VG.context.workspace.textInput( '%s' );", event.text.text );
-            
-				    jsHost->executeScript( cmdbuffer );
+                    RootedValue *workspace=jsHost->executeScript( "VG.context.workspace" );
+                    RootedObject workspaceObject( cx, &workspace->toObject() );
+
+                    JSString *input = JS_NewStringCopyN( cx, event.text.text, strlen(event.text.text));
+
+                    RootedValue rc( cx );    
+                    RootedValue inputValue( cx ); inputValue.setString( input );
+
+                    bool ok=Call( cx, HandleObject( workspaceObject ), "textInput", HandleValueArray( inputValue ), MutableHandleValue( &rc ) ); 
                 }
                 break;
                 
@@ -425,7 +459,7 @@ int main(int argc, char** argv)
         g_redraw=false; 
     }    
 
-    JS_free( cx, (void *) g_appNameChars ); JS_free( cx, (void *) g_appVersionChars );    
+    JS_free( cx, (void *) g_appNameChars ); JS_free( cx, (void *) g_appVersionChars );
 
     // --- Cleanup
 
@@ -436,6 +470,10 @@ int main(int argc, char** argv)
     //JS_DestroyContext(cx);
     JS_DestroyRuntime(rt);
     JS_ShutDown();
+
+#ifdef __VG_WITH_EMBREE
+    Tracer::cleanUp();
+#endif
 
 	delete jsHost;
 

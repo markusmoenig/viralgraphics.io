@@ -35,7 +35,7 @@ VG.UI.TableWidgetSeparator.prototype=VG.UI.Widget();
 
 VG.UI.TableWidgetSeparator.prototype.calcSize=function()
 {
-    var size=VG.Core.Size( VG.context.style.skin.TableWidgetSeparatorWidth, 20 );//VG.context.style.skin.ToolPanelHeight );
+    var size=VG.Core.Size( VG.context.style.skin.TableWidget.SeparatorWidth, 20 );//VG.context.style.skin.ToolPanelHeight );
     return size;
 };
 
@@ -53,13 +53,63 @@ VG.UI.TableWidgetColumn=function( binding, type )
     this.type=type;
 };
 
+// ----------------------------------------------------------------- VG.UI.TableWidgetHeaderItem
+
+VG.UI.TableWidgetHeaderItem=function( text )
+{
+    if ( !(this instanceof VG.UI.TableWidgetHeaderItem )) return new VG.UI.TableWidgetHeaderItem( text );
+
+    VG.UI.Widget.call( this );
+    this.name="TableWidgetHeaderItem";
+
+    this.text=text ? text : "";
+
+    this.horizontalExpanding=false;
+    this.verticalExpanding=false;
+};
+
+VG.UI.TableWidgetHeaderItem.prototype=VG.UI.Widget();
+
+VG.UI.TableWidgetHeaderItem.prototype.calcSize=function( canvas )
+{
+    var size=canvas.getTextSize( this.text );
+
+    size.width+=10;
+    size.height=canvas.getLineHeight();
+    if ( size.height < canvas.style.skin.TableWidget.Header.MinHeight )
+        size.height=canvas.style.skin.TableWidget.Header.MinHeight;
+
+    this.checkSizeDimensionsMinMax( size );    
+
+    return size;
+};
+
+VG.UI.TableWidgetHeaderItem.prototype.paintWidget=function( canvas )
+{
+    this.font=VG.context.style.skin.DefaultFont;
+    canvas.pushFont(this.font);
+
+    var textColor;
+
+    if ( !this.disabled ) {
+        if ( this.customColor ) textColor=this.customColor;
+        else textColor=VG.context.style.skin.Widget.TextColor;
+    } else textColor=VG.context.style.skin.Widget.DisabledTextColor;
+
+    if ( this.embedded && this.embeddedSelection ) textColor=canvas.style.skin.Widget.EmbeddedTextColor;
+
+    canvas.drawTextRect( this.text, this.rect.add( canvas.style.skin.TableWidget.Header.TextXOffset, 0, 0, 0 ), textColor, this.hAlignment, 1 );
+
+    canvas.popFont();
+};
+
 // ----------------------------------------------------------------- VG.UI.TableWidget
 
 VG.UI.TableWidget=function()
 {
     if ( !(this instanceof VG.UI.TableWidget) ) return new VG.UI.TableWidget();
     
-    VG.UI.Frame.call( this );
+    VG.UI.Widget.call( this );
     this.name="TableWidget";
 
     this.offset=0;
@@ -72,6 +122,7 @@ VG.UI.TableWidget=function()
     this.verified=false;
 
     this.headerLayout=VG.UI.Layout();
+    this.headerLayout.spacing=0;
     this.headerLayout.margin.set( /*VG.context.workspace.canvas.style.skin.TableWidgetSeparatorWidth*/0, 0, 0, 0 );
     this.footerLayout=VG.UI.Layout();
     this.footerLayout.margin.set( 0, 0, 0, 0 );
@@ -84,8 +135,8 @@ VG.UI.TableWidget=function()
     this.popupButtons=[];
     this.labels=[];
 
-    this.spacing=1;
-    this.itemHeight=VG.context.workspace.canvas.style.skin.TableWidgetRowHeight;
+    this.spacing=VG.context.workspace.canvas.style.skin.TableWidget.Item.Spacing;
+    this.itemHeight=VG.context.workspace.canvas.style.skin.TableWidget.RowHeight;
     this.textLineEditModulo=0;
     this.popupButtonModulo=0;
 
@@ -104,7 +155,7 @@ VG.UI.TableWidget=function()
     }.bind( this ));
 };
 
-VG.UI.TableWidget.prototype=VG.UI.Frame();
+VG.UI.TableWidget.prototype=VG.UI.Widget();
 
 VG.UI.TableWidget.prototype.bind=function( collection, path )
 {
@@ -112,7 +163,7 @@ VG.UI.TableWidget.prototype.bind=function( collection, path )
     if ( !this.controller ) {
         this.controller=VG.Controller.Array( collection, path );
         collection.addControllerForPath( this.controller, path );
-    }
+    } else this.controller=this.controller.object;
 
     this.controller.addObserver( "changed", this.changed, this );    
     this.controller.addObserver( "selectionChanged", this.selectionChanged, this );
@@ -248,7 +299,7 @@ VG.UI.TableWidget.prototype.addColumn=function( binding, text, type, expanding, 
     if ( this.headerLayout.children.length )
         this.headerLayout.addChild( VG.UI.TableWidgetSeparator() );
 
-    var label=VG.UI.Label( text );
+    var label=VG.UI.TableWidgetHeaderItem( text );
 
     if ( expanding === undefined ) expanding=true;
     if ( minimumWidth ) label.minimumSize.width=minimumWidth;
@@ -440,6 +491,9 @@ VG.UI.TableWidget.prototype.verifyScrollbar=function( text )
 
 VG.UI.TableWidget.prototype.paintWidget=function( canvas )
 {
+    this.spacing=VG.context.workspace.canvas.style.skin.TableWidget.Item.Spacing;
+    this.itemHeight=VG.context.workspace.canvas.style.skin.TableWidget.RowHeight;
+
     var oldState=this.visualState;
     if ( this.visualState !== VG.UI.Widget.VisualState.Focus ) 
     {
@@ -450,33 +504,34 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
         }
     }
 
-    VG.UI.Frame.prototype.paintWidget.call( this, canvas );
+    //VG.UI.Frame.prototype.paintWidget.call( this, canvas );
+    VG.context.style.drawGeneralBorder( canvas, this );
     this.visualState=oldState;
 
     this.childWidgets=[];
 
-    this.contentRect.x+=canvas.style.skin.TableWidgetContentMargin.left;
-    this.contentRect.y+=canvas.style.skin.TableWidgetContentMargin.top;
-    this.contentRect.width-=canvas.style.skin.TableWidgetContentMargin.left + canvas.style.skin.TableWidgetContentMargin.right;
-    this.contentRect.height-=canvas.style.skin.TableWidgetContentMargin.top + canvas.style.skin.TableWidgetContentMargin.bottom;
+    this.contentRect.x+=canvas.style.skin.TableWidget.ContentMargin.left;
+    this.contentRect.y+=canvas.style.skin.TableWidget.ContentMargin.top;
+    this.contentRect.width-=canvas.style.skin.TableWidget.ContentMargin.left + canvas.style.skin.TableWidget.ContentMargin.right;
+    this.contentRect.height-=canvas.style.skin.TableWidget.ContentMargin.top + canvas.style.skin.TableWidget.ContentMargin.bottom;
 
     //if ( this.needsVScrollbar )
-        this.contentRect.width-=canvas.style.skin.ScrollbarSize + 4;
+        //this.contentRect.width-=canvas.style.skin.Scrollbar.Size + 4;
 
     // --- Header Layout
 
-    canvas.pushFont( canvas.style.skin.TableWidgetHeaderFont );
+    canvas.pushFont( canvas.style.skin.TableWidget.Header.Font );
 
     for( var i=0; i < this.headerLayout.children.length; ++i ) {
         var child=this.headerLayout.children[i];
         child.disabled=this.disabled;
-        //child.customColor=canvas.style.skin.TableWidgetTextColor;
     }
 
     this.headerLayout.rect.set( this.contentRect );
-    this.headerLayout.rect.height=20;
+    this.headerLayout.rect.height=canvas.style.skin.TableWidget.Header.Height;
     this.headerLayout.rect.round();
 
+    VG.context.style.drawTableWidgetHeaderBackground( canvas, this.headerLayout.rect );
     this.headerLayout.layout( canvas );
 
     VG.context.style.drawTableWidgetHeaderSeparator( canvas, this );
@@ -485,8 +540,8 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
 
     // --- Footer Layout
 
-    this.contentRect.y+=this.headerLayout.rect.height + canvas.style.skin.TableWidgetHeaderSeparatorHeight;
-    this.contentRect.height-=this.headerLayout.rect.height + canvas.style.skin.TableWidgetHeaderSeparatorHeight;
+    this.contentRect.y+=this.headerLayout.rect.height + canvas.style.skin.TableWidget.Header.SeparatorHeight;
+    this.contentRect.height-=this.headerLayout.rect.height + canvas.style.skin.TableWidget.Header.SeparatorHeight;
 
     if ( this.footerLayout.children.length )
     {
@@ -497,12 +552,14 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
             this.childWidgets.push( child );
         }
 
-        this.footerLayout.rect.set( this.contentRect.x, this.contentRect.bottom() - 28, this.contentRect.width, 28 );
+        this.footerLayout.rect.set( this.contentRect.x, this.contentRect.bottom() - canvas.style.skin.TableWidget.Footer.Height, 
+            this.contentRect.width, canvas.style.skin.TableWidget.Footer.Height );
+        this.footerLayout.margin.set( canvas.style.skin.TableWidget.Footer.Margin );
         this.footerLayout.layout( canvas );    
 
         VG.context.style.drawTableWidgetFooterSeparator( canvas, this );
 
-        this.contentRect.height-=this.footerLayout.rect.height + canvas.style.skin.TableWidgetFooterSeparatorHeight;
+        this.contentRect.height-=this.footerLayout.rect.height + canvas.style.skin.TableWidget.Footer.SeparatorHeight;
     }
 
     // ---
@@ -514,10 +571,10 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
 
     // --- Draw the Contents of it all ----------------------------
 
-    canvas.pushFont( canvas.style.skin.TableWidgetFont );
+    canvas.pushFont( canvas.style.skin.TableWidget.Font );
 
     var paintRect=VG.Core.Rect( this.contentRect );
-    paintRect.height=VG.context.style.skin.TableWidgetRowHeight;
+    paintRect.height=VG.context.style.skin.TableWidget.RowHeight;
 
     var textLineEditCounter=this.offset * this.textLineEditModulo, popupButtonCounter=this.offset * this.popupButtonModulo, labelCounter=this.offset * this.labelModulo;
     this.visibleHeight=0;
@@ -526,15 +583,12 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
     {
         var item=this.controller.at( row );
 
-        if ( item === this.controller.selected )
-        {
-            var rect=VG.Core.Rect( paintRect );
-            rect.x=this.rect.x; rect.width=this.rect.width;
+        var rect=VG.Core.Rect( paintRect );
+        rect.x=this.rect.x+1; rect.width=this.rect.width-2;
 
-            if ( this.needsVScrollbar ) rect.width-=canvas.style.skin.ScrollbarSize + 8 + canvas.style.skin.TableWidgetContentMargin.right;
+        if ( this.needsVScrollbar ) rect.width-=canvas.style.skin.Scrollbar.Size + 8 + canvas.style.skin.TableWidget.ContentMargin.right;
 
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect, canvas.style.skin.TableWidgetSelectionColor );
-        }
+        VG.context.style.drawTableWidgetRowBackground( canvas, this, rect, this.headerLayout, item === this.controller.selected );
 
         for ( var i=0; i < this.columns.length; ++i )
         {
@@ -562,11 +616,21 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
             widget.rect.width=this.headerLayout.children[i*2].rect.width;
             widget.rect.height=widgetHeight;
 
-            //widget.rect.x-=canvas.style.skin.TableWidgetSeparatorWidth;
+            if ( column.type === VG.UI.TableWidgetItemType.Label ) {
+                widget.rect.x+=canvas.style.skin.TableWidget.Header.TextXOffset;
+                widget.rect.width-=canvas.style.skin.TableWidget.Header.TextXOffset;
+            }
+
+            if ( !i ) widget.rect.x+=canvas.style.skin.TableWidget.Item.XMargin;
+            if ( i === this.columns.length - 1 ) {
+                widget.rect.width-=2*canvas.style.skin.TableWidget.Item.XMargin;
+
+                if ( this.needsVScrollbar )
+                    widget.rect.width-=canvas.style.skin.Scrollbar.Size + 2;                
+            }
 
             widget.rect.round();
             widget.paintWidget( canvas );
-
             this.childWidgets.push( widget );
         }
         
@@ -584,7 +648,7 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
     canvas.popFont();        
 
     if ( this.needsVScrollbar ) {
-        this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() + 1/*+ VG.context.style.skin.ScrollbarSize + 1*/, this.contentRect.y, VG.context.style.skin.ScrollbarSize, this.contentRect.height );
+        this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() - VG.context.style.skin.Scrollbar.Size - 2, this.contentRect.y, VG.context.style.skin.Scrollbar.Size, this.contentRect.height );
 
         // this.totalItemHeight == Total height of all Items in the list widget including spacing
         // visibleHeight == Total height of all currently visible items

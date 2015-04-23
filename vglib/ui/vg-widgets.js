@@ -214,7 +214,7 @@ VG.UI.Widget.prototype.paintWidget=function( canvas )
      * @param {VG.Canvas} canvas - Canvas object providing convenience 2D draw functions
      */  
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, canvas.style.skin.WidgetBackgroundColor );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, canvas.style.skin.Widget.BackgroundColor );
     
     if ( this.layout ) this.layout.layout( canvas );
 };
@@ -303,7 +303,7 @@ VG.UI.RenderWidget.prototype.render=function(delta)
 
 VG.UI.RenderWidget.prototype.paintWidget=function( canvas )
 {
-    var clearColor = this.clearColor || canvas.style.skin.WidgetBackgroundColor;
+    var clearColor = this.clearColor || canvas.style.skin.Widget.BackgroundColor;
 
     //fakes a hardware clear by rendering a quad as background
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, clearColor );
@@ -513,7 +513,7 @@ VG.UI.Button.prototype.calcSize=function( canvas )
 
     if ( this.big )
     {
-        canvas.pushFont( canvas.style.skin.ButtonFont );
+        canvas.pushFont( canvas.style.skin.Button.Font );
 
         if ( !this.icon ) {
             VG.context.workspace.canvas.getTextSize( this.text, size );
@@ -531,7 +531,7 @@ VG.UI.Button.prototype.calcSize=function( canvas )
         }
     } else
     {
-        canvas.pushFont( canvas.style.skin.ButtonSmallFont );
+        canvas.pushFont( canvas.style.skin.Button.SmallFont );
 
         if ( !this.icon ) {
             VG.context.workspace.canvas.getTextSize( this.text, size );
@@ -579,9 +579,8 @@ VG.UI.Button.prototype.mouseUp=function( event )
                 }
             }
         }
-
-        this.mouseIsDown=false;
     }
+    this.mouseIsDown=false;    
 };
 
 VG.UI.Button.prototype.paintWidget=function( canvas )
@@ -859,7 +858,7 @@ VG.UI.Checkbox.prototype.paintWidget=function( canvas )
 
 VG.UI.PopupButton=function()
 {
-    if ( !(this instanceof VG.UI.PopupButton) ) return new VG.UI.PopupButton();
+    if ( !(this instanceof VG.UI.PopupButton) ) return VG.UI.PopupButton.creator( arguments );
 
     VG.UI.Widget.call( this );
     this.name="PopupButton";
@@ -875,6 +874,9 @@ VG.UI.PopupButton=function()
     this.items=[];
     this.index=-1;
     this.popup=false;
+
+    for( var i=0; i < arguments.length; ++i )
+        if ( String( arguments[i] ).length ) this.addItem( arguments[i] );
 };
 
 VG.UI.PopupButton.prototype=VG.UI.Widget();
@@ -902,7 +904,7 @@ VG.UI.PopupButton.prototype.calcSize=function( canvas )
     var size=VG.Core.Size();
     var minWidth=80;
 
-    VG.context.workspace.canvas.pushFont( canvas.style.skin.PopupButtonFont );
+    VG.context.workspace.canvas.pushFont( canvas.style.skin.PopupButton.Font );
 
     for( var i=0; i < this.items.length; ++i ) {
         VG.context.workspace.canvas.getTextSize( this.items[i], size );
@@ -911,7 +913,7 @@ VG.UI.PopupButton.prototype.calcSize=function( canvas )
 
     size.set( minWidth, VG.context.workspace.canvas.getLineHeight() );
 
-    size=size.add( 30, 4 );
+    size=size.add( 40, 4 );
     this.minimumSize.set( size );
 
     VG.context.workspace.canvas.popFont();
@@ -1002,6 +1004,9 @@ VG.UI.PopupButton.prototype.mouseMove=function( event )
 VG.UI.PopupButton.prototype.mouseDown=function( event )
 {
     if ( this.rect.contains( event.pos ) ) {
+
+        VG.context.workspace.mouseTrackerWidget=this;
+
         this.popup=true;
         this.oldIndex=this.index;
     }
@@ -1010,9 +1015,12 @@ VG.UI.PopupButton.prototype.mouseDown=function( event )
 VG.UI.PopupButton.prototype.mouseUp=function( event )
 {
     this.popup=false;
+    VG.context.workspace.mouseTrackerWidget=null;    
 
     if ( this.index !== this.oldIndex )
         this.applyNewIndex( this.index );
+
+    VG.update();
 };
 
 VG.UI.PopupButton.prototype.paintWidget=function( canvas )
@@ -1071,6 +1079,7 @@ VG.UI.TabWidgetItem=function( text, object )
 {
     this.text=text;
     this.object=object;
+    this.rect=VG.Core.Rect();
 };
 
 VG.UI.TabWidget=function( text )
@@ -1117,7 +1126,7 @@ VG.UI.TabWidget.prototype.mouseMove=function( event )
 
 VG.UI.TabWidget.prototype.mouseDown=function( event )
 {
-    if ( event.pos.y >= this.rect.y && event.pos.y <= this.rect.y + VG.context.style.skin.TabWidgetHeaderHeight )
+    if ( event.pos.y >= this.rect.y && event.pos.y <= this.rect.y + VG.context.style.skin.TabWidget.HeaderHeight )
     {
         for ( var i=0; i < this.items.length; ++i )
         {
@@ -1517,7 +1526,9 @@ VG.UI.ColorPicker.prototype.update=function(c)
     this.toRGBA();
 
     if (this.changed)
-        this.changed.call(VG.context); 
+        this.changed.call(VG.context, this._color, this ); 
+
+    VG.update();
 }
 
 VG.UI.ColorPicker.prototype.mouseUp=function(event)
@@ -1574,7 +1585,7 @@ VG.UI.ColorPicker.prototype.paintWidget=function(canvas)
     var cSize = rect.width;
     var hcSize = cSize / 2;
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect, canvas.style.skin.WidgetBackgroundColor);
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect, canvas.style.skin.Widget.BackgroundColor);
 
     var inRect = this.getLightSatRect(rect);
 

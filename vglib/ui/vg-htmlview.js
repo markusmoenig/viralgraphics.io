@@ -55,11 +55,10 @@ VG.UI.HtmlView=function( html )
 
     this.readOnly=true;
 
-
     this.body={
         "font" : VG.Font.Font( VG.context.style.DefaultFontName, 15 ),
-        "bgColor" : VG.context.style.skin.WidgetBackgroundColor,
-        "color" : VG.context.style.skin.WidgetTextColor,
+        "bgColor" : VG.Core.Color( 0, 0, 0, 0 ),//VG.context.style.skin.Widget.BackgroundColor,
+        "color" : VG.context.style.skin.Widget.TextColor,
         "margin" : VG.Core.Margin( 20, 25, 20, 25 ),
         "spacing" : 10,
         "noframe" : false
@@ -67,50 +66,50 @@ VG.UI.HtmlView=function( html )
 
     this.h1={
         "font" : VG.Font.Font( VG.context.style.DefaultBoldFontName, 24 ),
-        "bgColor" : VG.context.style.skin.WidgetBackgroundColor,
-        "color" : VG.context.style.skin.WidgetTextColor,
+        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
+        "color" : VG.context.style.skin.Widget.TextColor,
         "margin" : VG.Core.Margin( 0, 10, 20, 10 )
     };
 
     this.h2={
         "font" : VG.Font.Font( VG.context.style.DefaultBoldFontName, 22 ),
-        "bgColor" : VG.context.style.skin.WidgetBackgroundColor,
-        "color" : VG.context.style.skin.WidgetTextColor,
+        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
+        "color" : VG.context.style.skin.Widget.TextColor,
         "margin" : VG.Core.Margin( 0, 10, 20, 10 )
     };
 
     this.h3={
         "font" : VG.Font.Font( VG.context.style.DefaultBoldFontName, 18 ),
-        "bgColor" : VG.context.style.skin.WidgetBackgroundColor,
-        "color" : VG.context.style.skin.WidgetTextColor,
+        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
+        "color" : VG.context.style.skin.Widget.TextColor,
         "margin" : VG.Core.Margin( 0, 10, 20, 10 )
     };
 
     this.h4={
         "font" : VG.Font.Font( VG.context.style.DefaultBoldFontName, 16 ),
-        "bgColor" : VG.context.style.skin.WidgetBackgroundColor,
-        "color" : VG.context.style.skin.WidgetTextColor,
+        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
+        "color" : VG.context.style.skin.Widget.TextColor,
         "margin" : VG.Core.Margin( 0, 10, 20, 10 )
     };
 
     this.h5={
         "font" : VG.Font.Font( VG.context.style.DefaultBoldFontName, 12 ),
-        "bgColor" : VG.context.style.skin.WidgetBackgroundColor,
-        "color" : VG.context.style.skin.WidgetTextColor,
+        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
+        "color" : VG.context.style.skin.Widget.TextColor,
         "margin" : VG.Core.Margin( 0, 10, 20, 10 )
     };
 
     this.h6={
         "font" : VG.Font.Font( VG.context.style.DefaultBoldFontName, 10 ),
-        "bgColor" : VG.context.style.skin.WidgetBackgroundColor,
-        "color" : VG.context.style.skin.WidgetTextColor,
+        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
+        "color" : VG.context.style.skin.Widget.TextColor,
         "margin" : VG.Core.Margin( 0, 10, 20, 10 )
     };
 
     this.ul={
         "font" : VG.Font.Font( VG.context.style.DefaultFontName, 15 ),
-        "bgColor" : VG.context.style.skin.WidgetBackgroundColor,
-        "color" : VG.context.style.skin.WidgetTextColor,
+        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
+        "color" : VG.context.style.skin.Widget.TextColor,
         "margin" : VG.Core.Margin( 40, 10, 20, 10 ),
         "bulletStart" : 30,
         "bulletSize" : 0.5,
@@ -119,27 +118,27 @@ VG.UI.HtmlView=function( html )
 
     this.ol={
         "font" : VG.Font.Font( VG.context.style.DefaultFontName, 15 ),
-        "bgColor" : VG.context.style.skin.WidgetBackgroundColor,
-        "color" : VG.context.style.skin.WidgetTextColor,
+        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
+        "color" : VG.context.style.skin.Widget.TextColor,
         "margin" : VG.Core.Margin( 40, 10, 20, 10 )
     };
 
     this.b={
         "font" : VG.Font.Font( VG.context.style.DefaultBoldFontName, 15 ),
-        "bgColor" : VG.context.style.skin.WidgetBackgroundColor,
-        "color" : VG.context.style.skin.WidgetTextColor
+        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
+        "color" : VG.context.style.skin.Widget.TextColor
     };
 
     this.i={
         "font" : VG.Font.Font( VG.context.style.DefaultItalicFontName, 15 ),
-        "bgColor" : VG.context.style.skin.WidgetBackgroundColor,
-        "color" : VG.context.style.skin.WidgetTextColor
+        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
+        "color" : VG.context.style.skin.Widget.TextColor
     };
 
     this.a={
         "font" : VG.Font.Font( VG.context.style.DefaultFontName, 15 ),
-        "bgColor" : VG.context.style.skin.WidgetBackgroundColor,
-        "color" : VG.context.style.skin.WidgetTextColor,
+        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
+        "color" : VG.context.style.skin.Widget.TextColor,
         "underlineHeight" : 1
     };
 
@@ -152,7 +151,7 @@ VG.UI.HtmlView=function( html )
     };
 
     this.font={
-        "bgColor" : VG.context.style.skin.WidgetBackgroundColor,
+        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
         "override" : false
     };
 
@@ -868,7 +867,7 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, this.body.bgColor );
 
     if( !this.elements.body.noframe )
-        VG.context.style.drawTextEditBorder( canvas, this );
+        canvas.style.drawGeneralBorder( canvas, this );
     else
         this.contentRect=this.rect;
 
@@ -881,7 +880,7 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
         this.verifyScrollbar();
 
     if ( this.needsVScrollbar )
-        this.contentRect.width-=canvas.style.skin.ScrollbarSize + 2;
+        this.contentRect.width-=canvas.style.skin.Scrollbar.Size + 2;
 
     var paintRect=VG.Core.Rect( this.contentRect );
     paintRect.x=this.contentRect.x + this.elements.body.margin.left;
@@ -891,8 +890,8 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
     this.visibleHeight=0;
 
     var textColor;
-    if ( !this.disabled ) textColor=VG.context.style.skin.HtmlViewTextColor;
-    else textColor=VG.context.style.skin.HtmlViewTextColor;
+    if ( !this.disabled ) textColor=VG.context.style.skin.HtmlView.TextColor;
+    else textColor=VG.context.style.skin.HtmlView.TextColor;
 
     var tIndex=0;
     var aIndex=0;
@@ -1029,8 +1028,8 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
             }
 
             //var fontModifier=currentArrayItem.getModifier("Font");
-            var textColor=VG.context.style.skin.HtmlViewTextColor;
-            var bgColor=VG.context.style.skin.WidgetBackgroundColor;
+            var textColor=VG.context.style.skin.HtmlView.TextColor;
+            var bgColor=VG.context.style.skin.Widget.BackgroundColor;
             var font=this.elements.body.font;
 
             font=currentArrayItem.font;
@@ -1257,7 +1256,7 @@ VG.UI.HtmlView.prototype.mouseWheel=function( step )
 
 VG.UI.HtmlView.prototype.setVScrollbarDimensions=function( canvas )
 {
-    this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() + 2, this.contentRect.y, canvas.style.skin.ScrollbarSize, this.contentRect.height );
+    this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() + 2, this.contentRect.y, canvas.style.skin.Scrollbar.Size, this.contentRect.height );
     
     this.vScrollbar.setScrollbarContentSize( this.totalItemHeight, this.contentRect.height );
 };
@@ -1301,9 +1300,9 @@ VG.UI.HtmlView.FormattedText=function( text, options )
 
     if ( !options ) options="";
 
-    this.font = options.font ? options.font : VG.context.style.skin.HtmlViewDefaultFont;
+    this.font = options.font ? options.font : VG.context.style.skin.HtmlView.DefaultFont;
     this.size = options.font ? options.font.size : this.font.size;
-    this.color = options.color ? options.color : VG.context.style.skin.HtmlViewTextColor;
+    this.color = options.color ? options.color : VG.context.style.skin.HtmlView.TextColor;
 
     this.textModifiers = options.modifiers ? options.modifiers : [];
 
