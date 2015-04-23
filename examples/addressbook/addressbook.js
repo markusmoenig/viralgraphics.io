@@ -1,4 +1,3 @@
-
 // --- Constructor for our Contact Items. Will be called for each Item to be added to the list.
 
 Contact=function()
@@ -84,7 +83,7 @@ PhoneOrEMail=function()
     var dockWidget=VG.UI.DockWidget( "Contact List" );
 
     var contactsWidgetLayout=VG.UI.Layout( contactsWidget );
-    contactsWidgetLayout.margin.clear();
+    contactsWidgetLayout.margin.top=0;
     var toolPanel=VG.UI.ToolPanel( this.addButton, this.removeButton );
 
     dockWidget.addItems( contactsWidgetLayout, toolPanel );    
@@ -128,7 +127,7 @@ PhoneOrEMail=function()
 
     this.firstNameEdit=VG.UI.TextLineEdit( "" );
     this.firstNameEdit.bind( this.dc, "contacts.firstName" );
-    this.firstNameEdit.textChanged=function() { computeSelectedContactItemText.call( this ); }.bind( this );
+    this.firstNameEdit.textChanged=function() { computeSelectedContactItemText.call( this ); };
 
     this.contactEditLayout.addChild( "First Name:", this.firstNameEdit );
 
@@ -136,7 +135,7 @@ PhoneOrEMail=function()
 
     this.lastNameEdit=VG.UI.TextLineEdit( "" );
     this.lastNameEdit.bind( this.dc, "contacts.lastName" );
-    this.lastNameEdit.textChanged=function() { computeSelectedContactItemText.call( this ); }.bind( this );
+    this.lastNameEdit.textChanged=function() { computeSelectedContactItemText.call( this ); };
 
     this.contactEditLayout.addChild( "Last Name:", this.lastNameEdit );    
 
@@ -364,7 +363,7 @@ function showContentFor( widget )
 
 function addContactImage()
 {
-    var fileDialog=VG.FileDialog( VG.UI.FileDialog.Image, function( image ) {
+    var fileDialog=VG.OpenFileDialog( VG.UI.FileDialog.Image, function( image ) {
         this.imageView.image=image;
         this.imageView.image.needsUpdate=true;
         image=null;

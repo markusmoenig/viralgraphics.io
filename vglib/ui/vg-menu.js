@@ -262,34 +262,12 @@ VG.UI.Menu.prototype.addMenuItem=function( menuItem )
     return menuItem;
 };
 
-VG.UI.Menu.prototype.insertMenuItem=function( index, menuItem )
-{
-    this.items.splice( index, 0, menuItem );
-
-    if ( this.parent) menuItem.id=this.parent.itemIdCounter++;
-    if ( VG.addNativeMenuItem ) VG.addNativeMenuItem( this, menuItem );
-
-    return menuItem;
-};
-
 VG.UI.Menu.prototype.addSeparator=function()
 {
     var item=VG.UI.MenuItem();
     item.isSeparator=true;
     ++this.separatorCount;
     this.items.push( item );
-
-    if ( VG.addNativeMenuItem ) VG.addNativeMenuItem( this, item );
-
-    return item;
-};
-
-VG.UI.Menu.prototype.insertSeparator=function( index )
-{
-    var item=VG.UI.MenuItem();
-    item.isSeparator=true;
-    ++this.separatorCount;
-    this.items.splice( index, 0, item );
 
     if ( VG.addNativeMenuItem ) VG.addNativeMenuItem( this, item );
 
@@ -317,7 +295,7 @@ VG.UI.Menu.prototype.calcSize=function()
     
     var minWidth=80;
 
-    VG.context.workspace.canvas.pushFont( VG.context.style.skin.Menu.Font );
+    VG.context.workspace.canvas.pushFont( VG.context.style.skin.MenuFont );
 
     for( var i=0; i < this.items.length; ++i ) {
         if ( !this.items[i].isSeparator ) {
@@ -566,7 +544,7 @@ VG.UI.ContextMenu.prototype.calcSize=function()
     
     var minWidth=80;
 
-    VG.context.workspace.canvas.pushFont( VG.context.style.skin.ContextMenu.Font );
+    VG.context.workspace.canvas.pushFont( VG.context.style.skin.ContextMenuFont );
 
     for( var i=0; i < this.items.length; ++i ) {
         if ( !this.items[i].isSeparator ) {

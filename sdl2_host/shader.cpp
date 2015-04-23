@@ -21,9 +21,6 @@
 #include <iostream>
 
 #include "shader.hpp"
-#include "jshost.hpp"
-
-extern JSHost *g_host;
 
 // --------------------------------------------------------------- Member Functions
 
@@ -45,12 +42,12 @@ bool Shader_bind(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-bool Shader_destroy(JSContext *cx, unsigned argc, jsval *vp)
+bool Shader_release(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
 
     Shader *shader=(Shader *) JS_GetPrivate( &value.toObject() );
-    shader->destroy();
+    shader->release();
     return true;
 }
 
@@ -61,16 +58,8 @@ bool Shader_dispose(JSContext *cx, unsigned argc, jsval *vp)
     Shader *shader=(Shader *) JS_GetPrivate( &value.toObject() );
     shader->dispose();
 
-    // --- VG.Renderer().removeResource(this);
+    //TODO VG.Renderer().removeResource(this);
     
-    RootedValue *renderer=g_host->executeScript( "VG.Renderer()" );
-    RootedObject rendererObject( cx, &renderer->toObject() );
-
-    RootedValue rc( cx );
-    RootedValue thisValue( cx, value );
-
-    bool ok=Call( cx, HandleObject( rendererObject ), "removeResource", HandleValueArray( thisValue ), MutableHandleValue( &rc ) );
-
     return true;
 }
 
@@ -95,9 +84,9 @@ bool Shader_getAttrib( JSContext *cx, unsigned argc, jsval *vp )
     if ( argc == 1 && args[0].isString() ) {
         Shader *shader=(Shader *) JS_GetPrivate( &value.toObject() );
         JSString *name = args[0].toString();
-        GLint attribute=shader->getAttrib( JS_EncodeString(cx, name) );
+        GLuint attribute=shader->getAttrib( JS_EncodeString(cx, name) );
 
-        args.rval().set( INT_TO_JSVAL( attribute ) );
+        args.rval().set( UINT_TO_JSVAL( attribute ) );
     }
     return true;
 }
@@ -360,7 +349,7 @@ bool SetShaderProperty( JSContext *cx, Handle<JSObject *> object, Handle<jsid> i
 static JSFunctionSpec shader_functions[] = {
     JS_FS( "create", Shader_create, 0, 0 ),
     JS_FS( "bind", Shader_bind, 0, 0 ),
-    JS_FS( "destroy", Shader_destroy, 0, 0 ),
+    JS_FS( "release", Shader_release, 0, 0 ),
     JS_FS( "dispose", Shader_dispose, 0, 0 ),
     JS_FS( "getUniform", Shader_getUniform, 0, 0 ),
     JS_FS( "getAttrib", Shader_getAttrib, 0, 0 ),

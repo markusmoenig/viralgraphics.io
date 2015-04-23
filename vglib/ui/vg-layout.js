@@ -564,11 +564,8 @@ VG.UI.Layout.prototype.animate=function( canvas )
                 sItem.widget.rect.set( dItem.rect );
                 sItem.widget.paintWidget( VG.context.workspace.canvas );    
 
-                if ( sItem.label ) {
-                    canvas.pushFont( VG.context.style.skin.DefaultFont );
-                    VG.context.workspace.canvas.drawTextRect( sItem.label, sItem.labelRect, VG.context.style.skin.Widget.TextColor, 2, sItem.labelVAlignment );
-                    canvas.popFont();
-                }
+                if ( sItem.label )
+                    VG.context.workspace.canvas.drawTextRect( sItem.label, sItem.labelRect, VG.context.style.skin.WidgetTextColor, 2, sItem.labelVAlignment );
             } else
             {
                 var item=dItem;
@@ -594,10 +591,8 @@ VG.UI.Layout.prototype.animate=function( canvas )
                 item.widget.paintWidget( VG.context.workspace.canvas );
 
                 if ( item.label ) {
-                    canvas.pushFont( VG.context.style.skin.DefaultFont );
                     if ( fadeLabel ) canvas.setAlpha( percent / 100.0 );                    
-                    canvas.drawTextRect( item.label, item.labelRect, VG.context.style.skin.Widget.TextColor, 2, item.labelVAlignment );                
-                    canvas.popFont();
+                    canvas.drawTextRect( item.label, item.labelRect, VG.context.style.skin.WidgetTextColor, 2, item.labelVAlignment );                
                 }
             }
         }
@@ -644,7 +639,7 @@ VG.UI.SplitLayout=function()
     this.dragOp=false;
 
     this.items=[];
-    this.spacing=VG.context.style.skin.SplitLayout.Separator.Size;
+    this.spacing=2;
 
     for( var i=0; i < arguments.length; i+=2 )
         this.addChild( arguments[i], arguments[i+1] );    
@@ -764,11 +759,11 @@ VG.UI.SplitLayout.mouseMove=function( event )
             if ( (this.dragOpItemIndex + 1 ) < ( this.items.length - 1 ) ) {
                 // --- There is another item to the right / bottom, use it as the greater border.
                 var rightWidget=this.children[this.dragOpItemIndex + 2];
-                greaterBorder=rightWidget.rect[this.primaryCoord] - VG.context.style.skin.SplitLayout.Separator.Size - nextWidget.minimumSize[this.primarySize];
+                greaterBorder=rightWidget.rect[this.primaryCoord] - this.spacing - nextWidget.minimumSize[this.primarySize];
             } else {
                 // --- greater border is rect
                 greaterBorder=this.rect[this.primaryCoord] + this.rect[this.primarySize] - this.margin[this.primaryGreaterMargin] - 
-                VG.context.style.skin.SplitLayout.Separator.Size - nextWidget.minimumSize[this.primarySize];
+                this.spacing - nextWidget.minimumSize[this.primarySize];
             }
 
             if ( event.pos[this.primaryCoord] > greaterBorder ) {
@@ -798,7 +793,7 @@ VG.UI.SplitLayout.mouseDown=function( event )
 {
     var widget=this.children[this.dragOpItemIndex];
 
-    if ( event.pos[this.primaryCoord] > ( widget.rect[this.primaryCoord] + widget.rect[this.primarySize] - VG.context.style.skin.SplitLayout.Separator.Size ) ) {
+    if ( event.pos[this.primaryCoord] > ( widget.rect[this.primaryCoord] + widget.rect[this.primarySize] - this.spacing ) ) {
 
         this.dragOp=true;
         this.dragOpStart.set( event.pos ); 
@@ -828,7 +823,7 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
     if ( !this.children.length ) return;
 
     var rect=this.rect;
-    var totalSpacing=(this.items.length-1) * VG.context.style.skin.SplitLayout.Separator.Size;
+    var totalSpacing=(this.items.length-1) * this.spacing;
 
     var availableSpace=rect[this.primarySize] - totalSpacing - this.margin[this.primaryLesserMargin] - this.margin[this.primaryGreaterMargin];
     var expandingChilds=0;
@@ -920,7 +915,7 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
                 if ( i < (this.children.length-1) ) {
                     var nextChild=this.children[i+1];
                     if ( nextChild.isWidget && nextChild[this.primaryLayoutExpanding] === false )
-                        primarySize+=VG.context.style.skin.SplitLayout.Separator.Size;
+                        primarySize+=this.spacing;
                 }
 
                 // ---
@@ -956,7 +951,7 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
             if ( i < (this.children.length-1) ) {
                 var nextChild=this.children[i+1];
                 if ( nextChild.isWidget && nextChild[this.primaryLayoutExpanding] === false )
-                    primarySize+=VG.context.style.skin.SplitLayout.Separator.Size;
+                    primarySize+=this.spacing;
             }
 
             childRect[this.primarySize]=primarySize;
@@ -983,7 +978,7 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
 
                 item.rect[this.primaryCoord]=pos + childRect[this.primarySize];
                 item.rect[this.secondaryCoord]=this.margin[this.secondaryLesserMargin] + rect[this.secondaryCoord];
-                item.rect[this.primarySize]=VG.context.style.skin.SplitLayout.Separator.Size;
+                item.rect[this.primarySize]=this.spacing;
                 item.rect[this.secondarySize]=rect[this.secondarySize] - this.margin[this.secondaryLesserMargin] - this.margin[this.secondaryGreaterMargin];
                 item.canDrag=true;
             } else
@@ -993,7 +988,7 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
         }
 
         pos+=childRect[this.primarySize];
-        if ( drawSplitbar ) pos+=VG.context.style.skin.SplitLayout.Separator.Size;
+        if ( drawSplitbar ) pos+=this.spacing
     }
 };
 
@@ -1063,8 +1058,6 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
         this.animate( canvas );
         return;
     }
-
-    canvas.pushFont( VG.context.style.skin.DefaultFont );
 
     var rect=this.rect;
     var rectWidth=rect.width - this.margin.left - this.margin.right;
@@ -1173,8 +1166,8 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
         labelRect.round();
 
         if ( arguments.length === 1 ) {
-            if ( !this.disabled ) canvas.drawTextRect( child.label, labelRect, VG.context.style.skin.Widget.TextColor, this.labelAlignment, textVAlignment );
-            else canvas.drawTextRect( child.label, labelRect, VG.context.style.skin.Widget.DisabledTextColor, this.labelAlignment, textVAlignment );
+            if ( !this.disabled ) canvas.drawTextRect( child.label, labelRect, VG.context.style.skin.WidgetTextColor, this.labelAlignment, textVAlignment );
+            else canvas.drawTextRect( child.label, labelRect, VG.context.style.skin.WidgetDisabledTextColor, this.labelAlignment, textVAlignment );
         }
 
         widget.rect.x=widgetRect.x;
@@ -1211,8 +1204,6 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
         y+=height + this.spacing;
         this.minimumSize.height+=widget.minimumSize.height + this.spacing;
     }
-
-    canvas.popFont();
 }
 
 // ----------------------------------------------------------------- VG.UI.StackedLayout
@@ -1263,9 +1254,6 @@ VG.UI.StackedLayout.prototype.calcSize=function( canvas )
         var size=this.current.calcSize( canvas );
 
         this.minimumSize.set( this.current.minimumSize );
-
-        if ( this.current.horizontalExpanding ) size.width=VG.UI.MaxLayoutSize;
-        if ( this.current.verticalExpanding ) size.height=VG.UI.MaxLayoutSize;
         return size;
     } else {
         var size=VG.Core.Size( 100, 100 );

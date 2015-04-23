@@ -59,7 +59,7 @@ VG.Render.SimpleMaterial = function()
         '#version 100',
         'attribute vec4 position;',
         'attribute vec3 normal;',
-        'attribute vec2 uv;',
+        'attribute vec2 vUV;',
 
         'uniform mat4 viewM;',
         'uniform mat4 projM;',
@@ -98,6 +98,7 @@ VG.Render.SimpleMaterial = function()
     this.shader = new VG.Shader(vSrc, fSrc);
     this.shader.depthTest = true;
     this.shader.depthWrite = true;
+    this.shader.culling = false;
 
     this.shader.create();
 }

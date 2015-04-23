@@ -81,7 +81,7 @@ VG.UI.Window.prototype.calcSize=function( canvas )
         //layoutSize.height+=10;
 
         size.width=layoutSize.width;
-        size.height=VG.context.style.skin.Window.HeaderHeight + layoutSize.height;
+        size.height=VG.context.style.skin.WindowHeaderHeight + layoutSize.height;
 
         this.rect.width=size.width;
         this.rect.height=size.height;
@@ -303,13 +303,13 @@ VG.UI.StatusDialog=function( type, title, message )
     this.text=title;
     this.image=VG.UI.Image();
 
-    var imageName="vgstyle_status_success.png";
+    var imageName="status_success.png";
 
-    if ( type === VG.UI.StatusDialog.Type.Error ) imageName="vgstyle_status_error.png";
+    if ( type === VG.UI.StatusDialog.Type.Error ) imageName="status_error.png";
     else
-    if ( type === VG.UI.StatusDialog.Type.Warning ) imageName="vgstyle_status_warning.png";        
+    if ( type === VG.UI.StatusDialog.Type.Warning ) imageName="status_warning.png";        
     else
-    if ( type === VG.UI.StatusDialog.Type.Question ) imageName="vgstyle_status_question.png";    
+    if ( type === VG.UI.StatusDialog.Type.Question ) imageName="status_question.png";    
 
     this.image.image=VG.Utils.getImageByName( imageName );
     this.image.horizontalExpanding=false;

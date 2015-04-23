@@ -18,42 +18,37 @@
  *
  */
 
-VG.Styles.VisualGraphics=function( dontLoadImages )
+VG.Styles.VisualGraphics=function( desktopStyle )
 {
     this.name="Visual Graphics";
     this.skins=[];
 
-    this.path="visualgraphics";
-    this.iconPrefix="vgstyle_";
+    VG.Styles.pool.push( this );
 
-    if ( !dontLoadImages ) {
-        VG.loadStyleImage( "visualgraphics", "logo.png" );
-        VG.loadStyleImage( "visualgraphics", "vgstyle_new.png" );
-        VG.loadStyleImage( "visualgraphics", "vgstyle_open.png" );
-        VG.loadStyleImage( "visualgraphics", "vgstyle_save.png" );
-        VG.loadStyleImage( "visualgraphics", "vgstyle_undo.png" );
-        VG.loadStyleImage( "visualgraphics", "vgstyle_redo.png" );
-        VG.loadStyleImage( "visualgraphics", "vgstyle_checkmark.png" );
-        VG.loadStyleImage( "visualgraphics", "vgstyle_menu_checkmark.png" );
+    VG.loadStyleImage( "visualgraphics", "logo.png" );
+    VG.loadStyleImage( "visualgraphics", "new.png" );
+    VG.loadStyleImage( "visualgraphics", "open.png" );
+    VG.loadStyleImage( "visualgraphics", "save.png" );
+    VG.loadStyleImage( "visualgraphics", "undo.png" );
+    VG.loadStyleImage( "visualgraphics", "redo.png" );
+    VG.loadStyleImage( "visualgraphics", "checkmark.png" );
+    VG.loadStyleImage( "visualgraphics", "menu_checkmark.png" );
 
-        VG.loadStyleImage( "visualgraphics", "vgstyle_window_close_normal.png" );
-        VG.loadStyleImage( "visualgraphics", "vgstyle_window_close_hover.png" );
-        VG.loadStyleImage( "visualgraphics", "vgstyle_window_close_clicked.png" );
+    VG.loadStyleImage( "visualgraphics", "window_close_normal.png" );
+    VG.loadStyleImage( "visualgraphics", "window_close_hover.png" );
+    VG.loadStyleImage( "visualgraphics", "window_close_clicked.png" );
 
-        VG.loadStyleImage( "visualgraphics", "vgstyle_dock_handle_normal.png" );
-        VG.loadStyleImage( "visualgraphics", "vgstyle_dock_handle_drag.png" );
+    VG.loadStyleImage( "visualgraphics", "dock_handle_normal.png" );
+    VG.loadStyleImage( "visualgraphics", "dock_handle_drag.png" );
 
-        VG.loadStyleImage( "visualgraphics", "vgstyle_status_success.png" );
-        VG.loadStyleImage( "visualgraphics", "vgstyle_status_error.png" );
-        VG.loadStyleImage( "visualgraphics", "vgstyle_status_warning.png" );
-        VG.loadStyleImage( "visualgraphics", "vgstyle_status_question.png" );
+    VG.loadStyleImage( "visualgraphics", "status_success.png" );
+    VG.loadStyleImage( "visualgraphics", "status_error.png" );
+    VG.loadStyleImage( "visualgraphics", "status_warning.png" );
+    VG.loadStyleImage( "visualgraphics", "status_question.png" );
 
-        VG.loadStyleImage( "visualgraphics", "vgstyle_scroller_left.png" );
-        VG.loadStyleImage( "visualgraphics", "vgstyle_scroller_right.png" );
+    VG.loadStyleImage( "visualgraphics", "scroller_left.png" );
+    VG.loadStyleImage( "visualgraphics", "scroller_right.png" );
 
-        VG.loadStyleImage( "visualgraphics", "vgstyle_nodes_bg.jpg" );    
-    }
-    
     if ( 1 )
     {
         this.DefaultFontName="Open Sans Semibold";
@@ -69,374 +64,505 @@ VG.Styles.VisualGraphics=function( dontLoadImages )
             "DefaultItalicFont" : VG.Font.Font( this.DefaultItalicFontName, 15 ),
             "LoginFont" : VG.Font.Font( this.DefaultFontName, 16 ),
 
-            Widget : {
-                BackgroundColor : VG.Core.Color( 209, 214, 220 ),
-                TextColor : VG.Core.Color( 102, 106, 115 ),
-                EmbeddedTextColor : VG.Core.Color( 255, 255, 255 ),
-                DisabledTextColor : VG.Core.Color( 159, 173, 191 ),  
-                SelectionColor : VG.Core.Color( 146, 161, 244 ),
-            },
+            "WidgetBackgroundColor" : VG.Core.Color( 209, 214, 220 ),
+            "WidgetTextColor" : VG.Core.Color( 102, 106, 115 ),
+            "WidgetEmbeddedTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "WidgetDisabledTextColor" : VG.Core.Color( 159, 173, 191 ),
+            "WidgetSelectionColor" : VG.Core.Color( 146, 161, 244 ),
 
-            Window : {
-                FocusHeaderColor : VG.Core.Color( 108, 121, 196 ),
-                BackgroundColor : VG.Core.Color( 240, 243, 248 ),
-                HeaderHeight : 33,
-            },
+            "WindowFocusHeaderColor" : VG.Core.Color( 108, 121, 196 ),
+            "WindowBackgroundColor" : VG.Core.Color( 240, 243, 248 ),
+            "WindowHeaderHeight" : 33,
 
-            Dialog : {
-                BorderColor : VG.Core.Color( 193, 197, 203 ),
-                BackgroundColor : VG.Core.Color( 221, 224, 229 ),
+            "WindowFocusHeaderColor" : VG.Core.Color( 108, 121, 196 ),
+            "DialogBorderColor" : VG.Core.Color( 193, 197, 203 ),
+            "DialogBackgroundColor" : VG.Core.Color( 221, 224, 229 ),
+            //"DialogBackgroundColor" : VG.Core.Color( "#40475c" ),
+            "DialogTitleColor1" : VG.Core.Color( 233, 233, 233 ),
+            "DialogTitleColor2" : VG.Core.Color( 193, 197, 205 ),
+            "DialogTitleBorderColor" : VG.Core.Color( 193, 197, 203 ),
 
-                Header : {
-                    Color1 : VG.Core.Color( 233, 233, 233 ),
-                    Color2 : VG.Core.Color( 193, 197, 205 ),
-                    BorderColor : VG.Core.Color( 193, 197, 203 ),
-                    Font : VG.Font.Font( this.DefaultFontName, 15 ),
-                },
-            },
+            "DockWidgetBackgroundColor" : VG.Core.Color( 217, 220, 225 ),
+            "DockWidgetHeaderTextColor" : VG.Core.Color( 143, 149, 159 ),
+            "DockWidgetHeaderFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "DockWidgetHeaderHeight" : 32,
 
-            DockWidget : {
-                BackgroundColor : VG.Core.Color( 217, 220, 225 ),
-                Header : {
-                    TextColor : VG.Core.Color( 143, 149, 159 ),
-                    Font : VG.Font.Font( this.DefaultFontName, 15 ),
-                    Height : 32,
-                },
-                FloatingBackgroundColor : VG.Core.Color( 244, 247, 252 ),
-                FloatingBorderColor : VG.Core.Color( 185, 188, 193 ),
-                FloatingSelectedBorderColor : VG.Core.Color( 108, 121, 197 ),
-            },
+            "DockWidgetFloatingBackgroundColor" : VG.Core.Color( 244, 247, 252 ),
+            "DockWidgetFloatingBorderColor" : VG.Core.Color( 185, 188, 193 ),
+            "DockWidgetFloatingSelectedBorderColor" : VG.Core.Color( 108, 121, 197 ),
 
-            DockStripWidget : {
-                Font : VG.Font.Font( this.DefaultFontName, 16 ),
-                BorderColor : VG.Core.Color( 80, 83, 92 ),
-                HoverColor : VG.Core.Color( 180, 166, 73 ),
-                TextColor : VG.Core.Color( 255, 255, 255 ),
-                BackgroundColor : VG.Core.Color( 68, 71, 80 ),
-                HeaderHeight : 1,
+            "DockStripWidgetFont" : VG.Font.Font( this.DefaultFontName, 16 ),
+            "DockStripWidgetBorderColor" : VG.Core.Color( 80, 83, 92 ),
+            "DockStripWidgetHoverColor" : VG.Core.Color( 180, 166, 73 ),
+            "DockStripWidgetTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "DockStripWidgetBackgroundColor" : VG.Core.Color( 68, 71, 80 ),
+            "DockStripWidgetHeaderHeight" : 1,
 
-                ButtonMinimumWidth : 55,
+            "DockStripWidgetButtonMinimumWidth" : 55,
 
-                Separator : {
-                    Height : 1,
-                    Color : VG.Core.Color( 86, 89, 97 ),
-                },
-            },
+            "DockStripWidgetSeparatorHeight" : 1,
+            "DockStripWidgetSeparatorColor" : VG.Core.Color( 86, 89, 97 ),
             
-            Toolbar: {
-                BackgroundColor : VG.Core.Color( 75, 78, 87 ),
-                Height : 52,
-                Margin : VG.Core.Margin( 60, 0, 0, 0 ),
-                Logo : {
-                    Color : VG.Core.Color( 248, 248, 248 ),
-                    BackgroundColor : VG.Core.Color( 131, 146, 236 ),
-                    Size : 35,
-                },
-                Separator : {
-                    Color : VG.Core.Color( 70, 73, 82 ),
-                    Size : VG.Core.Size( 2, 52 ), 
-                },
-            },
+            "ToolbarColor" : VG.Core.Color( 75, 78, 87 ),
+            "ToolbarHeight" : 52,
+            "ToolbarLeftMargin" : 60,
+            "ToolbarLogoColor" : VG.Core.Color( 248, 248, 248 ),
+            "ToolbarLogoBackgroundColor" : VG.Core.Color( 131, 146, 236 ),
+            "ToolbarLogoSize" : 35,
 
-            ToolButton : {
-                Font : VG.Font.Font( this.DefaultFontName, 15 ),
-                HoverColor1 : VG.Core.Color( 110, 119, 196 ),
-                HoverColor2 : VG.Core.Color( 62, 65, 72 ),
-                TextColor : VG.Core.Color( 255, 255, 255 ),
-                DisabledTextColor : VG.Core.Color( 98, 101, 108 ),
-                MinimumWidth : 70,
-                ScaleToParentHeight : true,
-            },            
+            "ToolPanelColor" : VG.Core.Color( 143, 149, 159 ),
+            "ToolPanelHeight" : 36,
 
-            ToolPanel : {
-                Color : VG.Core.Color( 143, 149, 159 ),
-                Height : 36,
-                Spacing : 0,
-                Margin : VG.Core.Margin( 0, 0, 0, 0 ),
-                Separator : {
-                    Color : VG.Core.Color( 124, 129, 139 ),   
-                    Size : VG.Core.Size( 1, 36 ), 
-                },                             
-            },
+            "StatusbarBorderColor" : VG.Core.Color( 192, 193, 195 ),
+            "StatusbarColor1" : VG.Core.Color( 225, 226, 228 ),
+            "StatusbarColor2" : VG.Core.Color( 205, 205, 205 ),
+            "StatusbarHeight" : 30,
 
-            Statusbar : {
-                BorderColor : VG.Core.Color( 192, 193, 195 ),
-                GradientColor1 : VG.Core.Color( 225, 226, 228 ),
-                GradientColor2 : VG.Core.Color( 205, 205, 205 ),
-                Height : 30,
-            },
+            "ToolButtonFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "ToolButtonHoverColor1" : VG.Core.Color( 110, 119, 196 ),
+            "ToolButtonHoverColor2" : VG.Core.Color( 62, 65, 72 ),
+            "ToolButtonTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "ToolButtonDisabledTextColor" : VG.Core.Color( 98, 101, 108 ),
+            "ToolButtonMinimumWidth" : 70,
+            "ToolSeparatorColor" : VG.Core.Color( 70, 73, 82 ),
 
-            ToolPanelButton : {
-                HoverColor : VG.Core.Color( 143, 158, 232 ),
-                ClickedColor : VG.Core.Color( 100, 123, 236 ),
-                TextColor : VG.Core.Color( 255, 255, 255 ),
-                DisabledTextColor : VG.Core.Color( 98, 101, 108 ),
-                MinimumWidth : 45,
-                ScaleToParentHeight : true,                
-            },
+            "ToolPanelButtonHoverColor" : VG.Core.Color( 143, 158, 232 ),
+            "ToolPanelButtonClickedColor" : VG.Core.Color( 100, 123, 236 ),
+            "ToolPanelButtonTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "ToolPanelButtonDisabledTextColor" : VG.Core.Color( 98, 101, 108 ),
+            "ToolPanelButtonMinimumWidth" : 45,
+            "ToolPanelSeparatorColor" : VG.Core.Color( 124, 129, 139 ),            
             
-            NumberEdit : {
-                Font : VG.Font.Font( this.DefaultFontName, 15 ),                
-            },
+            "TextEditBorderColor" : VG.Core.Color( 168, 173, 179 ),
+            "TextEditDisabledBorderColor" : VG.Core.Color( 191, 197, 204 ),
+            "TextEditTextColor" : VG.Core.Color( 102, 106, 115 ),
+            "TextEditEmbeddedTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "TextEditDefaultTextColor" : VG.Core.Color( 153, 161, 172 ),
+            "TextEditSelectionBackgroundColor" : VG.Core.Color( 132, 146, 234 ),
 
-            TextEdit : {
-                Font : VG.Font.Font( this.DefaultFontName, 15 ),                
-                BorderColor : VG.Core.Color( 168, 173, 179 ),
-                DisabledBorderColor : VG.Core.Color( 191, 197, 204 ),
-                TextColor : VG.Core.Color( 102, 106, 115 ),
-                DisabledTextColor : VG.Core.Color( 159, 173, 191 ),  
-                FocusTextColor : VG.Core.Color( 102, 106, 115 ),
-                EmbeddedTextColor : VG.Core.Color( 255, 255, 255 ),
-                DefaultTextColor : VG.Core.Color( 153, 161, 172 ),
-                SelectionBackgroundColor : VG.Core.Color( 132, 146, 234 ),
-            },
+            "CodeEditFont" : VG.Font.Font( this.DefaultFontName, 13 ),
+            "CodeEditTopBorderColor" : VG.Core.Color( 59, 65, 86 ),
+            "CodeEditHeaderColor" : VG.Core.Color( 59, 65, 86 ),
+            "CodeEditHeaderTextColor" : VG.Core.Color( 106, 114, 144 ),
+            "CodeEditBackgroundColor" : VG.Core.Color( 64, 70, 93 ),
+            "CodeEditSelectionBackgroundColor" : VG.Core.Color( 255, 255, 255, 120 ),
+            "CodeEditSearchBackgroundColor" : VG.Core.Color( 215, 206, 175 ),
+            "CodeEditTextColor" : VG.Core.Color( 240, 240, 240 ),
+            //"CodeEditTextColor" : VG.Core.Color( 156, 165, 230 ),
 
-            CodeEdit : {
-                Font : VG.Font.Font( this.DefaultFontName, 13 ),
-                TopBorderColor : VG.Core.Color( 59, 65, 86 ),
-                HeaderColor : VG.Core.Color( 59, 65, 86 ),
-                HeaderTextColor : VG.Core.Color( 106, 114, 144 ),
-                BackgroundColor : VG.Core.Color( 64, 70, 93 ),
-                SelectionBackgroundColor : VG.Core.Color( 255, 255, 255, 120 ),
-                SearchBackgroundColor : VG.Core.Color( 215, 206, 175 ),
-                TextColor : VG.Core.Color( 240, 240, 240 ),
-            },
+            "HtmlViewTextColor" : VG.Core.Color( 102, 106, 115 ),
+            "HtmlViewDefaultFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "HtmlViewDefaultBoldFont" : VG.Font.Font( this.DefaultBoldFontName, 15 ),
+            "HtmlViewDefaultItalicFont" : VG.Font.Font( this.DefaultItalicFontName, 15 ),
 
-            HtmlView : {
-                TextColor : VG.Core.Color( 102, 106, 115 ),
-                DefaultFont : VG.Font.Font( this.DefaultFontName, 15 ),
-                DefaultBoldFont : VG.Font.Font( this.DefaultBoldFontName, 15 ),
-                DefaultItalicFont : VG.Font.Font( this.DefaultItalicFontName, 15 ),
-            },
+            "ListWidgetBorderColor" : VG.Core.Color( 187, 190, 197 ),
 
-            ListWidget : {
-                BorderColor : VG.Core.Color( 187, 190, 197 ),
-                Margin : VG.Core.Margin( 4, 4, 4, 4 ),
+            "ListWidgetBigItemHeight" : 39,
+            "ListWidgetBigItemDistance" : 6,
+            "ListWidgetBigItemFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "ListWidgetSmallItemHeight" : 23,
+            "ListWidgetSmallItemDistance" : 4,
+            "ListWidgetSmallItemFont" : VG.Font.Font( this.DefaultFontName, 13 ),
+            "ListWidgetItemXOffset" : 10,     
 
-                BigItemHeight : 39,
-                BigItemDistance : 6,
-                BigItemFont : VG.Font.Font( this.DefaultFontName, 15 ),
-                SmallItemHeight : 23,
-                SmallItemDistance : 4,
-                SmallItemFont : VG.Font.Font( this.DefaultFontName, 13 ),
-                ScrollbarXOffset : 2,
+            "ListWidgetItemBorderColor" : VG.Core.Color( 254, 255, 255 ),
+            "ListWidgetItemTextColor" : VG.Core.Color( 105, 109, 120 ),
+            "ListWidgetItemBackgroundColor" : VG.Core.Color( 238, 239, 243 ),
+            "ListWidgetItemSelectedBorderColor" : VG.Core.Color( 67, 81, 155 ),
+            "ListWidgetItemSelectedTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "ListWidgetItemSelectedBackgroundColor" : VG.Core.Color( 108, 120, 196 ),
 
-                Item : {
-                    XOffset : 10,
-                    BorderColor : VG.Core.Color( 254, 255, 255 ),
-                    TextColor : VG.Core.Color( 105, 109, 120 ),
-                    BackgroundColor : VG.Core.Color( 238, 239, 243 ),
-                    SelectedBorderColor : VG.Core.Color( 67, 81, 155 ),
-                    SelectedTextColor : VG.Core.Color( 255, 255, 255 ),
-                    SelectedBackgroundColor : VG.Core.Color( 108, 120, 196 ),
-                },
-            },
+            "TreeWidgetBorderColor" : VG.Core.Color( 187, 190, 197 ),
+            "TreeWidgetSelectionBorderColor" : VG.Core.Color( 146, 161, 244 ),
+            "TreeWidgetContentBorderSize" : VG.Core.Size( 14, 8 ),
+            "TreeWidgetItemHeight" : 39,//23,            
+            "TreeWidgetItemDistance" : 1,//4,            
+            "TreeWidgetItemXOffset" : 10,
 
-            TreeWidget : {
-                BorderColor : VG.Core.Color( 187, 190, 197 ),
-                SelectionBorderColor : VG.Core.Color( 146, 161, 244 ),
-                ContentBorderSize : VG.Core.Size( 14, 8 ),
+            "TreeWidgetItemFont" : VG.Font.Font( this.DefaultFontName, 13 ),
+            "TreeWidgetItemColor" : VG.Core.Color( 102, 106, 115 ),
+            "TreeWidgetArrowColor" : VG.Core.Color( 177, 182, 191 ),
+            "TreeWidgetSelectedItemColor" : VG.Core.Color( 255, 255, 255 ),
+            "TreeWidgetSelectedItemBackgroundColor" : VG.Core.Color( 132, 146, 234 ),
+            "TreeWidgetSeparatorColor" : VG.Core.Color( 203, 207, 213 ),
+            "TreeWidgetArrowSize" : VG.Core.Size( 6, 12 ),
+            "TreeWidgetItemHierarchyOffset" : 25,
 
-                ItemHeightAdder : 4,
-                //ItemHeight : 39,//23,            
-                ItemDistance : 1,//4,            
-                ItemXOffset : 10,
+            "ScrollbarSize" : 8,    
+            "ScrollbarColor" : VG.Core.Color( 169, 177, 189 ),    
+            "ScrollbarClickedColor" : VG.Core.Color( 138, 153, 238 ),    
+            "ScrollbarHoverColor" : VG.Core.Color( 108, 121, 197 ),    
 
-                ItemFont : VG.Font.Font( this.DefaultFontName, 13 ),
-                ItemColor : VG.Core.Color( 102, 106, 115 ),
-                ArrowColor : VG.Core.Color( 177, 182, 191 ),
-                SelectedItemColor : VG.Core.Color( 255, 255, 255 ),
-                SelectedItemBackgroundColor : VG.Core.Color( 132, 146, 234 ),
-                SeparatorColor : VG.Core.Color( 203, 207, 213 ),
-                ArrowSize : VG.Core.Size( 6, 12 ),
-                ItemHierarchyOffset : 25,
-            },
+            "ButtonFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "ButtonSmallFont" : VG.Font.Font( this.DefaultFontName, 12 ),
+            "ButtonColor" : VG.Core.Color( 143, 149, 159 ),
+            "ButtonTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "ButtonDisabledColor" : VG.Core.Color( 172, 179, 189 ),
+            "ButtonDisabledTextColor" : VG.Core.Color( 192, 198, 206 ),
+            "ButtonClickedColor" : VG.Core.Color( 138, 153, 238 ),
+            "ButtonFocusColor" : VG.Core.Color( 108, 128, 240 ),
+            "ButtonHoverColor" : VG.Core.Color( 108, 121, 197 ),
+            "ButtonCheckedColor" : VG.Core.Color( 108, 125, 198 ),
+            "ButtonUncheckedColor" : VG.Core.Color( 143, 149, 159 ),
 
-            Scrollbar : {
-                Size : 8,    
-                Color : VG.Core.Color( 169, 177, 189 ),    
-                ClickedColor : VG.Core.Color( 138, 153, 238 ),    
-                HoverColor : VG.Core.Color( 108, 121, 197 ),
-            }, 
+            "PopupButtonFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "PopupButtonBorderColor" : VG.Core.Color( 172, 174, 178 ),
+            "PopupButtonDisabledBorderColor" : VG.Core.Color( 180, 192, 206 ),
+            "PopupButtonBackgroundColor" : VG.Core.Color( 187, 192, 199 ),
+            "PopupButtonDisabledBackgroundColor" : VG.Core.Color( 210, 215, 221 ),
+            "PopupButtonHighlightedTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "PopupButtonTextColor" : VG.Core.Color( 102, 106, 118 ),
+            "PopupButtonDisabledTextColor" : VG.Core.Color( 180, 192, 207 ),
+            "PopupButtonEmbeddedSelectioBorderColor" : VG.Core.Color( 255, 255, 255 ),
+            "PopupButtonEmbeddedBackgroundColor" : VG.Core.Color( 133, 148, 231 ),
+            "PopupButtonEmbeddedBorderColor" : VG.Core.Color( 159, 172, 244 ),
 
-            Button : {
-                Font : VG.Font.Font( this.DefaultFontName, 15 ),
-                SmallFont : VG.Font.Font( this.DefaultFontName, 12 ),
-                Color : VG.Core.Color( 143, 149, 159 ),
-                TextColor : VG.Core.Color( 255, 255, 255 ),
-                DisabledColor : VG.Core.Color( 172, 179, 189 ),
-                DisabledTextColor : VG.Core.Color( 192, 198, 206 ),
-                ClickedColor : VG.Core.Color( 138, 153, 238 ),
-                FocusColor : VG.Core.Color( 108, 128, 240 ),
-                HoverColor : VG.Core.Color( 108, 121, 197 ),
-                CheckedColor : VG.Core.Color( 108, 125, 198 ),
-                UncheckedColor : VG.Core.Color( 143, 149, 159 ),
-            },
+            "ToolPanelPopupButtonFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "ToolPanelPopupButtonHighlightedBackgroundColor" : VG.Core.Color( 142, 156, 235 ),
+            "ToolPanelPopupButtonTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "ToolPanelPopupButtonDisabledTextColor" : VG.Core.Color( 180, 192, 207 ),            
+            "ToolPanelPopupButtonBackgroundColor" : VG.Core.Color( 121, 127, 138 ),
 
-            PopupButton : {
-                Font : VG.Font.Font( this.DefaultFontName, 15 ),
-                BorderColor : VG.Core.Color( 172, 174, 178 ),
-                DisabledBorderColor : VG.Core.Color( 180, 192, 206 ),
-                BackgroundColor : VG.Core.Color( 187, 192, 199 ),
-                DisabledBackgroundColor : VG.Core.Color( 210, 215, 221 ),
-                HighlightedTextColor : VG.Core.Color( 255, 255, 255 ),
-                TextColor : VG.Core.Color( 102, 106, 118 ),
-                DisabledTextColor : VG.Core.Color( 180, 192, 207 ),
-                Embedded : {
-                    SelectioBorderColor : VG.Core.Color( 255, 255, 255 ),
-                    BackgroundColor : VG.Core.Color( 133, 148, 231 ),
-                    BorderColor : VG.Core.Color( 159, 172, 244 ),
-                },
-            },
+            "CheckboxBorderColor" : VG.Core.Color( 172, 174, 178 ),
+            "CheckboxDisabledBorderColor" : VG.Core.Color( 180, 192, 206 ),
+            "CheckboxBackgroundColor" : VG.Core.Color( 187, 192, 199 ),
+            "CheckboxDisabledBackgroundColor" : VG.Core.Color( 210, 215, 221 ),       
 
-            ToolPanelPopupButton : {
-                Font : VG.Font.Font( this.DefaultFontName, 15 ),
-                HighlightedBackgroundColor : VG.Core.Color( 142, 156, 235 ),
-                TextColor : VG.Core.Color( 255, 255, 255 ),
-                DisabledTextColor : VG.Core.Color( 180, 192, 207 ),            
-                BackgroundColor : VG.Core.Color( 121, 127, 138 ),
-            },
+            "LayoutSeparatorColor" : VG.Core.Color( 194, 199, 205 ),
+            "LayoutSeparatorSelectedColor" : VG.Core.Color( 136, 152, 245 ),
+            "LayoutSeparatorDecorationColor" : VG.Core.Color( 168, 171, 176 ),
 
-            Checkbox : {
-                BorderColor : VG.Core.Color( 172, 174, 178 ),
-                DisabledBorderColor : VG.Core.Color( 180, 192, 206 ),
-                BackgroundColor : VG.Core.Color( 187, 192, 199 ),
-                DisabledBackgroundColor : VG.Core.Color( 210, 215, 221 ),
-            },   
+            "ContextMenuFont" : VG.Font.Font( "Roboto Regular", 14 ),
+            "ContextMenuShortcutFont" : VG.Font.Font( "Roboto Regular", 11 ),            
+            "ContextMenuBackgroundColor" : VG.Core.Color( 121, 127, 137 ),
+            "ContextMenuHighlightedBackgroundColor" : VG.Core.Color( 159, 172, 246 ),
+            "ContextMenuTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "ContextMenuDisabledTextColor" : VG.Core.Color( 135, 142, 153 ),
+            "ContextMenuHighlightedTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "ContextMenuSeparatorColor" : VG.Core.Color( 135, 142, 153 ),
 
-            SplitLayout : {
-                Separator : {
-                    Color : VG.Core.Color( 194, 199, 205 ),
-                    SelectedColor : VG.Core.Color( 136, 152, 245 ),
-                    DecorationColor : VG.Core.Color( 168, 171, 176 ),
-                    Size : 2,                    
-                },
-            },
+            "MenubarFont" : VG.Font.Font( "Roboto Regular", 15 ),
+            "MenubarHeight" : 26,
+            "MenubarBackgroundColor" : VG.Core.Color( 57, 59, 70 ),
+            "MenubarSelectedBackgroundColor" : VG.Core.Color( 133, 148, 231 ),
+            "MenubarTextColor" : VG.Core.Color( 183, 183, 183 ),
+            "MenubarSelectedTextColor" : VG.Core.Color( 255, 255, 255 ),
 
-            ContextMenu : {
-                Font : VG.Font.Font( "Roboto Regular", 14 ),
-                ShortcutFont : VG.Font.Font( "Roboto Regular", 11 ),            
-                BackgroundColor : VG.Core.Color( 121, 127, 137 ),
-                HighlightedBackgroundColor : VG.Core.Color( 159, 172, 246 ),
-                TextColor : VG.Core.Color( 255, 255, 255 ),
-                DisabledTextColor : VG.Core.Color( 135, 142, 153 ),
-                HighlightedTextColor : VG.Core.Color( 255, 255, 255 ),
-                SeparatorColor : VG.Core.Color( 135, 142, 153 ),
-            },
+            "MenuFont" : VG.Font.Font( "Roboto Regular", 14 ),
+            "MenuShortcutFont" : VG.Font.Font( "Roboto Regular", 11 ),
+            "MenuTopBorderColor" : VG.Core.Color( 40, 41, 48 ),
+            "MenuSeparatorColor" : VG.Core.Color( 88, 89, 99 ),
+            "MenuBackgroundColor" : VG.Core.Color( 76, 78, 89 ),
+            "MenuDisabledTextColor" : VG.Core.Color( 135, 142, 153 ),
+            "MenuHighlightedTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "MenuHighlightedBackgroundColor" : VG.Core.Color( 109, 128, 227 ),
+            "MenuTextColor" : VG.Core.Color( 255, 255, 255 ),            
 
-            Menubar : {
-                Font : VG.Font.Font( "Roboto Regular", 15 ),
-                Height : 26,
-                BackgroundColor : VG.Core.Color( 57, 59, 70 ),
-                SelectedBackgroundColor : VG.Core.Color( 133, 148, 231 ),
-                TextColor : VG.Core.Color( 183, 183, 183 ),
-                SelectedTextColor : VG.Core.Color( 255, 255, 255 ),
-            },
+            "TableWidgetFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "TableWidgetHeaderFont" : VG.Font.Font( this.DefaultFontName, 13 ),
+            "TableWidgetTextColor" : VG.Core.Color( 143, 149, 159 ),            
+            "TableWidgetSeparatorColor" : VG.Core.Color( 168, 173, 179 ),    
+            "TableWidgetDisabledSeparatorColor" : VG.Core.Color( 191, 197, 204 ),                    
+            "TableWidgetSelectionColor" : VG.Core.Color( 133, 148, 232 ),            
+            "TableWidgetSeparatorWidth" : 8,
+            "TableWidgetContentMargin" : VG.Core.Margin( 10, 12, 10, 6 ),
+            "TableWidgetHeaderSeparatorHeight" : 16,
+            "TableWidgetFooterSeparatorHeight" : 16,
+            "TableWidgetRowHeight" : 35,
 
-            Menu : {
-                Font : VG.Font.Font( "Roboto Regular", 14 ),
-                ShortcutFont : VG.Font.Font( "Roboto Regular", 11 ),
-                TopBorderColor : VG.Core.Color( 40, 41, 48 ),
-                SeparatorColor : VG.Core.Color( 88, 89, 99 ),
-                BackgroundColor : VG.Core.Color( 76, 78, 89 ),
-                DisabledTextColor : VG.Core.Color( 135, 142, 153 ),
-                HighlightedTextColor : VG.Core.Color( 255, 255, 255 ),
-                HighlightedBackgroundColor : VG.Core.Color( 109, 128, 227 ),
-                TextColor : VG.Core.Color( 255, 255, 255 ),
-            },
+            "TabWidgetFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "TabWidgetHeaderHeight" : 35,
+            "TabWidgetTextColor" : VG.Core.Color( 255, 255, 255 ),             
+            "TabWidgetBackgroundColor" : VG.Core.Color( 190, 193, 197 ),             
+            "TabWidgetSelectedBackgroundColor" : VG.Core.Color( 145, 158, 235 ),     
 
-            TableWidget : {
-                Font : VG.Font.Font( this.DefaultFontName, 15 ),
-                TextColor : VG.Core.Color( 143, 149, 159 ),            
-                DisabledSeparatorColor : VG.Core.Color( 191, 197, 204 ),                    
-                SelectionColor : VG.Core.Color( 133, 148, 232 ),            
-                SeparatorWidth : 8,
-                ContentMargin : VG.Core.Margin( 10, 12, 10, 6 ),
-                RowHeight : 35,
+            "SliderColor" : VG.Core.Color( 196, 197, 199 ),
+            "SliderSelectionColor" : VG.Core.Color( 129, 147, 230 ),
+            "SliderHandleColor" : VG.Core.Color( 108, 125, 216 ),
+            "SliderFocusColor" : VG.Core.Color( 183, 194, 253 ),
+            "SliderHandleSize" : 13,
+            "SliderFocusSize" : 5,
+            "SliderHeight" : 3,
 
-                Header : {
-                    Font : VG.Font.Font( this.DefaultFontName, 13 ),
-                    SeparatorColor : VG.Core.Color( 168, 173, 179 ),    
-                    SeparatorHeight : 16,
-                    Height : 20,
-                    TextXOffset : 0,
-                },
-                Footer : {
-                    SeparatorHeight : 16,
-                    Margin : VG.Core.Margin( 0, 0, 0, 0 ),
-                    Height : 28,                    
-                },
-
-                Item : {
-                    XMargin : 2,                    
-                    Spacing : 1,
-                },
-            },
-
-            TabWidget : {
-                Font : VG.Font.Font( this.DefaultFontName, 14 ),
-                HeaderHeight : 35,
-                TextColor : VG.Core.Color( 255, 255, 255 ),             
-                BackgroundColor : VG.Core.Color( 190, 193, 197 ),             
-                SelectedBackgroundColor : VG.Core.Color( 145, 158, 235 ),
-            },  
-
-            Slider : {
-                Color : VG.Core.Color( 196, 197, 199 ),
-                SelectionColor : VG.Core.Color( 129, 147, 230 ),
-                HandleColor : VG.Core.Color( 108, 125, 216 ),
-                FocusColor : VG.Core.Color( 183, 194, 253 ),
-                HandleSize : 13,
-                FocusSize : 5,
-                Height : 3,
-            },
-
-            Scroller : {
-                TextItemHeaderFont : VG.Font.Font( this.DefaultBoldFontName, 36 ),
-                TextItemContentFont : VG.Font.Font( this.DefaultFontName, 17 ),
-                ImageItemHeaderFont : VG.Font.Font( this.DefaultBoldFontName, 36 ),
-                BackgroundColor : VG.Core.Color( 255, 255, 255 ),
-                HeaderTextColor : VG.Core.Color( 82, 93, 124 ),
-            },
+            "ScrollerTextItemHeaderFont" : VG.Font.Font( this.DefaultBoldFontName, 36 ),
+            "ScrollerTextItemContentFont" : VG.Font.Font( this.DefaultFontName, 17 ),
+            "ScrollerImageItemHeaderFont" : VG.Font.Font( this.DefaultBoldFontName, 36 ),
+            "ScrollerBackgroundColor" : VG.Core.Color( 255, 255, 255 ),
+            "ScrollerHeaderTextColor" : VG.Core.Color( 82, 93, 124 ),
 
             NewsScroller : {
-                Margin : VG.Core.Margin( 120, 0, 120, 0),
-                BackgroundColor : VG.Core.Color( 255, 255, 255 ),
+                "Margin" : VG.Core.Margin( 120, 0, 120, 0),
+                "BackgroundColor" : VG.Core.Color( 255, 255, 255 ),
                 Header : {
-                    Font : VG.Font.Font( this.DefaultBoldFontName, 30 ),
-                    TextColor : VG.Core.Color( "556088" ),
-                    Height : 77,
-                    SeparatorColor : VG.Core.Color( "#ebeaea" ),
+                    "Font" : VG.Font.Font( this.DefaultBoldFontName, 30 ),
+                    "TextColor" : VG.Core.Color( "556088" ),
+                    "Height" : 77,
+                    "SeparatorColor" : VG.Core.Color( "#ebeaea" ),
                 },
                 Body : {
                     Item : {
                         Header : {
-                            Font : VG.Font.Font( this.DefaultFontName, 20 ),
-                            TextColor : VG.Core.Color( "#5a5c65" ),
+                            "Font" : VG.Font.Font( this.DefaultFontName, 20 ),
+                            "TextColor" : VG.Core.Color( "#5a5c65" ),
                         },
                         Body: {
-                            Font : VG.Font.Font( "Roboto Regular", 14 ),
-                            TextColor : VG.Core.Color( "#898989" ),
+                            "Font" : VG.Font.Font( "Roboto Regular", 14 ),
+                            "TextColor" : VG.Core.Color( "#898989" ),
                         },  
                         Date: {
-                            Font : VG.Font.Font( "Roboto Regular", 12 ),
-                            TextColor : VG.Core.Color( "#e57f56" ),
+                            "Font" : VG.Font.Font( "Roboto Regular", 12 ),
+                            "TextColor" : VG.Core.Color( "#e57f56" ),
                         },
                         Footer: {
-                            Font : VG.Font.Font( "Roboto Regular", 14 ),
-                            ActiveTextColor : VG.Core.Color( "#e57f56" ),
-                            TextColor : VG.Core.Color( "#666666" ),
+                            "Font" : VG.Font.Font( "Roboto Regular", 14 ),
+                            "ActiveTextColor" : VG.Core.Color( "#e57f56" ),
+                            "TextColor" : VG.Core.Color( "#666666" ),
                         },                                                                      
-                        ImageSize : VG.Core.Size( 93, 85 ),
+                        "ImageSize" : VG.Core.Size( 93, 85 ),
                     },
-                    Margin : VG.Core.Margin( 0, 33, 0, 142 ),
-                    Spacing : 40,
+                    "Margin" : VG.Core.Margin( 0, 33, 0, 142 ),
+                    "Spacing" : 40,
                 }
             }
         };
+
+      this.nightcall= {
+
+            "name" : "Night Call (WiP)",
+
+            "DefaultFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "DefaultBoldFont" : VG.Font.Font( this.DefaultBoldFontName, 15 ),
+            "DefaultItalicFont" : VG.Font.Font( this.DefaultItalicFontName, 15 ),
+            "LoginFont" : VG.Font.Font( this.DefaultFontName, 16 ),
+
+            "WidgetBackgroundColor" : VG.Core.Color( 26, 34, 44 ),
+            "WidgetTextColor" : VG.Core.Color( 130, 135, 149 ),
+            "WidgetEmbeddedTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "WidgetDisabledTextColor" : VG.Core.Color( 102, 106, 118 ),
+            "WidgetSelectionColor" : VG.Core.Color( 28, 130, 167 ),
+
+            "WindowFocusHeaderColor" : VG.Core.Color( 108, 121, 196 ),
+            "WindowBackgroundColor" : VG.Core.Color( 240, 243, 248 ),
+            "WindowHeaderHeight" : 33,
+
+            "WindowFocusHeaderColor" : VG.Core.Color( 108, 121, 196 ),
+            "DialogBorderColor" : VG.Core.Color( 193, 197, 203 ),
+            "DialogBackgroundColor" : VG.Core.Color( 221, 224, 229 ),
+            "DialogTitleColor1" : VG.Core.Color( 233, 233, 233 ),
+            "DialogTitleColor2" : VG.Core.Color( 193, 197, 205 ),
+            "DialogTitleBorderColor" : VG.Core.Color( 193, 197, 203 ),
+
+            "DockWidgetBackgroundColor" : VG.Core.Color( 46, 53, 61 ),
+            "DockWidgetHeaderTextColor" : VG.Core.Color( 143, 149, 159 ),
+            "DockWidgetHeaderFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "DockWidgetHeaderHeight" : 32,
+
+            "DockWidgetFloatingBackgroundColor" : VG.Core.Color( 244, 247, 252 ),
+            "DockWidgetFloatingBorderColor" : VG.Core.Color( 185, 188, 193 ),
+            "DockWidgetFloatingSelectedBorderColor" : VG.Core.Color( 108, 121, 197 ),
+
+            "DockStripWidgetFont" : VG.Font.Font( this.DefaultFontName, 16 ),
+            "DockStripWidgetBorderColor" : VG.Core.Color( 80, 83, 92 ),
+            "DockStripWidgetHoverColor" : VG.Core.Color( 180, 166, 73 ),
+            "DockStripWidgetTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "DockStripWidgetBackgroundColor" : VG.Core.Color( 68, 71, 80 ),
+            "DockStripWidgetHeaderHeight" : 1,
+
+            "DockStripWidgetButtonMinimumWidth" : 55,
+
+            "DockStripWidgetSeparatorHeight" : 1,
+            "DockStripWidgetSeparatorColor" : VG.Core.Color( 86, 89, 97 ),
+            
+            "ToolbarColor" : VG.Core.Color( 44, 54, 63 ),
+            "ToolbarHeight" : 52,
+            "ToolbarLeftMargin" : 60,
+            "ToolbarLogoColor" : VG.Core.Color(),
+            "ToolbarLogoSize" : 35,
+
+            "ToolPanelColor" : VG.Core.Color( 143, 149, 159 ),
+            "ToolPanelHeight" : 36,
+
+            "StatusbarBorderColor" : VG.Core.Color( 192, 193, 195 ),
+            "StatusbarColor1" : VG.Core.Color( 225, 226, 228 ),
+            "StatusbarColor2" : VG.Core.Color( 205, 205, 205 ),
+            "StatusbarHeight" : 30,
+
+            "ToolButtonFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "ToolButtonHoverColor1" : VG.Core.Color( 110, 119, 196 ),
+            "ToolButtonHoverColor2" : VG.Core.Color( 62, 65, 72 ),
+            "ToolButtonTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "ToolButtonDisabledTextColor" : VG.Core.Color( 98, 101, 108 ),
+            "ToolButtonMinimumWidth" : 70,
+            "ToolSeparatorColor" : VG.Core.Color( 70, 73, 82 ),
+
+            "ToolPanelButtonHoverColor" : VG.Core.Color( 143, 158, 232 ),
+            "ToolPanelButtonClickedColor" : VG.Core.Color( 100, 123, 236 ),
+            "ToolPanelButtonTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "ToolPanelButtonDisabledTextColor" : VG.Core.Color( 98, 101, 108 ),
+            "ToolPanelButtonMinimumWidth" : 45,
+            "ToolPanelSeparatorColor" : VG.Core.Color( 124, 129, 139 ),            
+            
+            "TextEditBorderColor" : VG.Core.Color( 54, 65, 78 ),
+            "TextEditDisabledBorderColor" : VG.Core.Color( 46, 54, 64 ),
+            "TextEditTextColor" : VG.Core.Color( 99, 106, 116 ),
+            "TextEditEmbeddedTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "TextEditDefaultTextColor" : VG.Core.Color( 153, 161, 172 ),
+            "TextEditSelectionBackgroundColor" : VG.Core.Color( 132, 146, 234 ),
+
+            "CodeEditFont" : VG.Font.Font( this.DefaultFontName, 13 ),
+            "CodeEditTopBorderColor" : VG.Core.Color( 59, 65, 86 ),
+            "CodeEditHeaderColor" : VG.Core.Color( 59, 65, 86 ),
+            "CodeEditHeaderTextColor" : VG.Core.Color( 106, 114, 144 ),
+            "CodeEditBackgroundColor" : VG.Core.Color( 64, 70, 93 ),
+            "CodeEditSelectionBackgroundColor" : VG.Core.Color( 255, 255, 255, 120 ),
+            "CodeEditSearchBackgroundColor" : VG.Core.Color( 215, 206, 175 ),
+            "CodeEditTextColor" : VG.Core.Color( 240, 240, 240 ),
+            //"CodeEditTextColor" : VG.Core.Color( 156, 165, 230 ),
+
+            "HtmlViewTextColor" : VG.Core.Color( 102, 106, 115 ),
+            "HtmlViewDefaultFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "HtmlViewDefaultBoldFont" : VG.Font.Font( this.DefaultBoldFontName, 15 ),
+            "HtmlViewDefaultItalicFont" : VG.Font.Font( this.DefaultItalicFontName, 15 ),
+
+            "ListWidgetBorderColor" : VG.Core.Color( 56, 65, 72 ),
+
+            "ListWidgetBigItemHeight" : 39,
+            "ListWidgetBigItemDistance" : 6,
+            "ListWidgetBigItemFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "ListWidgetSmallItemHeight" : 23,
+            "ListWidgetSmallItemDistance" : 4,
+            "ListWidgetSmallItemFont" : VG.Font.Font( this.DefaultFontName, 13 ),
+            "ListWidgetItemXOffset" : 10,     
+
+            "ListWidgetItemBorderColor" : VG.Core.Color( 254, 255, 255 ),
+            "ListWidgetItemTextColor" : VG.Core.Color( 105, 109, 120 ),
+            "ListWidgetItemBackgroundColor" : VG.Core.Color( 238, 239, 243 ),
+            "ListWidgetItemSelectedBorderColor" : VG.Core.Color( 67, 81, 155 ),
+            "ListWidgetItemSelectedTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "ListWidgetItemSelectedBackgroundColor" : VG.Core.Color( 108, 120, 196 ),
+
+            "TreeWidgetBorderColor" : VG.Core.Color( 187, 190, 197 ),
+            "TreeWidgetContentBorderSize" : VG.Core.Size( 14, 8 ),
+            "TreeWidgetItemHeight" : 39,//23,            
+            "TreeWidgetItemDistance" : 1,//4,            
+            "TreeWidgetItemXOffset" : 10,
+
+            "TreeWidgetItemFont" : VG.Font.Font( this.DefaultFontName, 13 ),
+            "TreeWidgetItemColor" : VG.Core.Color( 102, 106, 115 ),
+            "TreeWidgetArrowColor" : VG.Core.Color( 177, 182, 191 ),
+            "TreeWidgetSelectedItemColor" : VG.Core.Color( 255, 255, 255 ),
+            "TreeWidgetSelectedItemBackgroundColor" : VG.Core.Color( 132, 146, 234 ),
+            "TreeWidgetSeparatorColor" : VG.Core.Color( 203, 207, 213 ),
+            "TreeWidgetArrowSize" : VG.Core.Size( 6, 12 ),
+            "TreeWidgetItemHierarchyOffset" : 25,
+
+            "ScrollbarSize" : 8,    
+            "ScrollbarColor" : VG.Core.Color( 169, 177, 189 ),    
+            "ScrollbarClickedColor" : VG.Core.Color( 138, 153, 238 ),    
+            "ScrollbarHoverColor" : VG.Core.Color( 108, 121, 197 ),    
+
+            "ButtonFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "ButtonSmallFont" : VG.Font.Font( this.DefaultFontName, 12 ),
+            "ButtonColor" : VG.Core.Color( 143, 149, 159 ),
+            "ButtonTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "ButtonDisabledColor" : VG.Core.Color( 172, 179, 189 ),
+            "ButtonDisabledTextColor" : VG.Core.Color( 192, 198, 206 ),
+            "ButtonClickedColor" : VG.Core.Color( 138, 153, 238 ),
+            "ButtonFocusColor" : VG.Core.Color( 108, 128, 240 ),
+            "ButtonHoverColor" : VG.Core.Color( 108, 121, 197 ),
+            "ButtonCheckedColor" : VG.Core.Color( 108, 125, 198 ),
+            "ButtonUncheckedColor" : VG.Core.Color( 143, 149, 159 ),
+
+            "PopupButtonFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "PopupButtonBorderColor" : VG.Core.Color( 82, 92, 102 ),
+            "PopupButtonDisabledBorderColor" : VG.Core.Color( 41, 49, 60 ),
+            "PopupButtonBackgroundColor" : VG.Core.Color( 40, 50, 61 ),
+            "PopupButtonDisabledBackgroundColor" : VG.Core.Color( 42, 54, 68 ),
+            "PopupButtonHighlightedTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "PopupButtonTextColor" : VG.Core.Color( 102, 106, 118 ),
+            "PopupButtonDisabledTextColor" : VG.Core.Color( 180, 192, 207 ),
+            "PopupButtonEmbeddedSelectioBorderColor" : VG.Core.Color( 255, 255, 255 ),
+            "PopupButtonEmbeddedBackgroundColor" : VG.Core.Color( 133, 148, 231 ),
+            "PopupButtonEmbeddedBorderColor" : VG.Core.Color( 159, 172, 244 ),
+
+            "ToolPanelPopupButtonFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "ToolPanelPopupButtonHighlightedBackgroundColor" : VG.Core.Color( 142, 156, 235 ),
+            "ToolPanelPopupButtonTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "ToolPanelPopupButtonDisabledTextColor" : VG.Core.Color( 180, 192, 207 ),            
+            "ToolPanelPopupButtonBackgroundColor" : VG.Core.Color( 121, 127, 138 ),
+
+            "CheckboxBorderColor" : VG.Core.Color( 54, 65, 78 ),
+            "CheckboxDisabledBorderColor" : VG.Core.Color( 46, 54, 64 ),
+            "CheckboxBackgroundColor" : VG.Core.Color( 26, 34, 44 ),
+            "CheckboxDisabledBackgroundColor" : VG.Core.Color( 26, 34, 44 ),       
+
+            "LayoutSeparatorColor" : VG.Core.Color( 52, 63, 74 ),
+            "LayoutSeparatorSelectedColor" : VG.Core.Color( 79, 130, 148 ),
+            "LayoutSeparatorDecorationColor" : VG.Core.Color( 72, 86, 100 ),
+
+            "ContextMenuFont" : VG.Font.Font( "Roboto Regular", 14 ),
+            "ContextMenuShortcutFont" : VG.Font.Font( "Roboto Regular", 11 ),
+            "ContextMenuBackgroundColor" : VG.Core.Color( 121, 127, 137 ),
+            "ContextMenuHighlightedBackgroundColor" : VG.Core.Color( 159, 172, 246 ),
+            "ContextMenuTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "ContextMenuDisabledTextColor" : VG.Core.Color( 135, 142, 153 ),
+            "ContextMenuHighlightedTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "ContextMenuSeparatorColor" : VG.Core.Color( 135, 142, 153 ),
+
+            "MenubarFont" : VG.Font.Font( "Roboto Regular", 15 ),
+            "MenubarHeight" : 26,
+            "MenubarBackgroundColor" : VG.Core.Color( 53, 63, 72 ),
+            "MenubarSelectedBackgroundColor" : VG.Core.Color( 133, 148, 231 ),
+            "MenubarTextColor" : VG.Core.Color( 183, 183, 183 ),
+            "MenubarSelectedTextColor" : VG.Core.Color( 255, 255, 255 ),
+
+            "MenuFont" : VG.Font.Font( "Roboto Regular", 14 ),
+            "MenuShortcutFont" : VG.Font.Font( "Roboto Regular", 11 ),
+            "MenuTopBorderColor" : VG.Core.Color( 40, 41, 48 ),
+            "MenuSeparatorColor" : VG.Core.Color( 88, 89, 99 ),
+            "MenuBackgroundColor" : VG.Core.Color( 76, 78, 89 ),
+            "MenuDisabledTextColor" : VG.Core.Color( 135, 142, 153 ),
+            "MenuHighlightedTextColor" : VG.Core.Color( 255, 255, 255 ),
+            "MenuHighlightedBackgroundColor" : VG.Core.Color( 109, 128, 227 ),
+            "MenuTextColor" : VG.Core.Color( 255, 255, 255 ), 
+
+            "TableWidgetFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "TableWidgetHeaderFont" : VG.Font.Font( this.DefaultFontName, 13 ),
+            "TableWidgetTextColor" : VG.Core.Color( 143, 149, 159 ),            
+            "TableWidgetSeparatorColor" : VG.Core.Color( 168, 173, 179 ),    
+            "TableWidgetDisabledSeparatorColor" : VG.Core.Color( 191, 197, 204 ),                    
+            "TableWidgetSelectionColor" : VG.Core.Color( 133, 148, 232 ),            
+            "TableWidgetSeparatorWidth" : 8,
+            "TableWidgetContentMargin" : VG.Core.Margin( 10, 12, 10, 6 ),
+            "TableWidgetHeaderSeparatorHeight" : 16,
+            "TableWidgetFooterSeparatorHeight" : 16,
+            "TableWidgetRowHeight" : 35,
+
+            "TabWidgetFont" : VG.Font.Font( this.DefaultFontName, 15 ),
+            "TabWidgetHeaderHeight" : 35,
+            "TabWidgetTextColor" : VG.Core.Color( 255, 255, 255 ),             
+            "TabWidgetBackgroundColor" : VG.Core.Color( 190, 193, 197 ),             
+            "TabWidgetSelectedBackgroundColor" : VG.Core.Color( 145, 158, 235 ),     
+
+            "SliderColor" : VG.Core.Color( 196, 197, 199 ),
+            "SliderSelectionColor" : VG.Core.Color( 129, 147, 230 ),
+            "SliderHandleColor" : VG.Core.Color( 108, 125, 216 ),
+            "SliderFocusColor" : VG.Core.Color( 183, 194, 253 ),
+            "SliderHandleSize" : 13,
+            "SliderFocusSize" : 5,
+            "SliderHeight" : 3,
+
+            "ScrollerTextItemHeaderFont" : VG.Font.Font( this.DefaultBoldFontName, 36 ),
+            "ScrollerTextItemContentFont" : VG.Font.Font( this.DefaultFontName, 17 ),
+            "ScrollerImageItemHeaderFont" : VG.Font.Font( this.DefaultBoldFontName, 36 ),
+            "ScrollerBackgroundColor" : VG.Core.Color( 255, 255, 255 ),
+            "ScrollerHeaderTextColor" : VG.Core.Color( 82, 93, 124 )            
+        };
+
     }
 
     this.skins.push( this.bluish );
+    this.skins.push( this.nightcall );
     this.skin=this.bluish;
 };
 
@@ -444,24 +570,24 @@ VG.Styles.VisualGraphics.prototype.drawSlider=function( canvas, slider )
 {
     slider.sliderRect.set( slider.contentRect );
     
-    var leftSpace=Math.ceil( this.skin.Slider.HandleSize / 2 );
+    var leftSpace=Math.ceil( this.skin.SliderHandleSize / 2 );
     slider.sliderRect.x+=leftSpace;
     slider.sliderRect.width-=leftSpace;
-    slider.sliderRect.y=slider.sliderRect.y + (slider.sliderRect.height - this.skin.Slider.Height)/2;
-    slider.sliderRect.height=this.skin.Slider.Height;
+    slider.sliderRect.y=slider.sliderRect.y + (slider.sliderRect.height - this.skin.SliderHeight)/2;
+    slider.sliderRect.height=this.skin.SliderHeight;
 
     var color, textColor, handleColor, selectionColor;
 
     if ( slider.disabled ) {
-        color=this.skin.Widget.DisabledTextColor;
-        textColor=this.skin.Widget.DisabledTextColor;
-        selectionColor=this.skin.Widget.DisabledTextColor;
-        handleColor=this.skin.Widget.DisabledTextColor;
+        color=this.skin.WidgetDisabledTextColor;
+        textColor=this.skin.WidgetDisabledTextColor;
+        selectionColor=this.skin.WidgetDisabledTextColor;
+        handleColor=this.skin.WidgetDisabledTextColor;
     } else { 
-        color=this.skin.Slider.Color;
-        textColor=this.skin.Widget.TextColor;        
-        selectionColor=this.skin.Slider.SelectionColor;
-        handleColor=this.skin.Slider.HandleColor;
+        color=this.skin.SliderColor;
+        textColor=this.skin.WidgetTextColor;        
+        selectionColor=this.skin.SliderSelectionColor;
+        handleColor=this.skin.SliderHandleColor;
     }
 
     var valueTextSize=canvas.getTextSize( slider.max.toString() );
@@ -495,30 +621,30 @@ VG.Styles.VisualGraphics.prototype.drawSlider=function( canvas, slider )
     }
 
     slider.sliderHandleRect.x=slider.sliderRect.x + offset - leftSpace;
-    slider.sliderHandleRect.y=slider.contentRect.y + (slider.contentRect.height - this.skin.Slider.HandleSize)/2;
-    slider.sliderHandleRect.width=this.skin.Slider.HandleSize;
-    slider.sliderHandleRect.height=this.skin.Slider.HandleSize;
+    slider.sliderHandleRect.y=slider.contentRect.y + (slider.contentRect.height - this.skin.SliderHandleSize)/2;
+    slider.sliderHandleRect.width=this.skin.SliderHandleSize;
+    slider.sliderHandleRect.height=this.skin.SliderHandleSize;
 
     canvas.draw2DShape( VG.Canvas.Shape2D.Circle, slider.sliderHandleRect, handleColor );   
 
     if ( slider.visualState === VG.UI.Widget.VisualState.Focus ) {
         var focusRect=VG.Core.Rect();
 
-        focusRect.x=slider.sliderHandleRect.x + (slider.sliderHandleRect.width - this.skin.Slider.FocusSize ) / 2;
-        focusRect.y=slider.sliderHandleRect.y + (slider.sliderHandleRect.height - this.skin.Slider.FocusSize ) / 2;
-        focusRect.width=this.skin.Slider.FocusSize;
-        focusRect.height=this.skin.Slider.FocusSize;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Circle, focusRect, this.skin.Slider.FocusColor );   
+        focusRect.x=slider.sliderHandleRect.x + (slider.sliderHandleRect.width - this.skin.SliderFocusSize ) / 2;
+        focusRect.y=slider.sliderHandleRect.y + (slider.sliderHandleRect.height - this.skin.SliderFocusSize ) / 2;
+        focusRect.width=this.skin.SliderFocusSize;
+        focusRect.height=this.skin.SliderFocusSize;
+        canvas.draw2DShape( VG.Canvas.Shape2D.Circle, focusRect, this.skin.SliderFocusColor );   
     }
 };
 
 VG.Styles.VisualGraphics.prototype.drawTabWidgetHeader=function( canvas, widget )
 {
-    canvas.pushFont( this.skin.TabWidget.Font );
+    canvas.pushFont( this.skin.TabWidgetFont );
 
     widget.contentRect.set( widget.rect );
-    widget.rect.height=this.skin.TabWidget.HeaderHeight;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( widget.rect ), this.skin.TabWidget.BackgroundColor );
+    widget.rect.height=this.skin.TabWidgetHeaderHeight;
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( widget.rect ), this.skin.TabWidgetBackgroundColor );
 
     // ---
 
@@ -531,8 +657,8 @@ VG.Styles.VisualGraphics.prototype.drawTabWidgetHeader=function( canvas, widget 
         widget.rect.width=availableSpacePerItem;
 
         if ( item.object === widget.layout.current )
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( widget.rect ), this.skin.TabWidget.SelectedBackgroundColor );    
-        canvas.drawTextRect( item.text, widget.rect, this.skin.TabWidget.TextColor, 1, 1 );
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( widget.rect ), this.skin.TabWidgetSelectedBackgroundColor );    
+        canvas.drawTextRect( item.text, widget.rect, this.skin.TabWidgetTextColor, 1, 1 );
 
         item.x=widget.rect.x;
         item.width=widget.rect.width;
@@ -544,18 +670,19 @@ VG.Styles.VisualGraphics.prototype.drawTabWidgetHeader=function( canvas, widget 
 
     widget.rect.set( widget.contentRect );
 
-    widget.contentRect.y+=this.skin.TabWidget.HeaderHeight;
-    widget.contentRect.height-=this.skin.TabWidget.HeaderHeight;
+    widget.contentRect.y+=this.skin.TabWidgetHeaderHeight;
+    widget.contentRect.height-=this.skin.TabWidgetHeaderHeight;
 
+    //canvas.drawTextRect( dock.text, rect.add( xBorderOffset, 0, -xBorderOffset, 0), this.skin.DockWidgetHeaderTextColor, 0, 1 );
     canvas.popFont();
 };
 
 VG.Styles.VisualGraphics.prototype.drawMenubar=function( canvas, menu )
 {
     menu.contentRect.set( menu.rect );    
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, menu.contentRect, this.skin.Menubar.BackgroundColor );  
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, menu.contentRect, this.skin.MenubarBackgroundColor );  
 
-    canvas.pushFont( this.skin.Menubar.Font );
+    canvas.pushFont( this.skin.MenubarFont );
 
     var rect=new VG.Core.Rect( menu.rect );
     var size=new VG.Core.Size();
@@ -568,10 +695,10 @@ VG.Styles.VisualGraphics.prototype.drawMenubar=function( canvas, menu )
         rect.width=canvas.getTextSize( item.text, size ).width + 2 * 12;
 
         if ( item === menu.active ) {
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect, this.skin.Menubar.SelectedBackgroundColor );              
-            canvas.drawTextRect( item.text, rect, this.skin.Menubar.SelectedTextColor, 1, 1 );
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect, this.skin.MenubarSelectedBackgroundColor );              
+            canvas.drawTextRect( item.text, rect, this.skin.MenubarSelectedTextColor, 1, 1 );
         } else {
-            canvas.drawTextRect( item.text, rect, this.skin.Menubar.TextColor, 1, 1 );
+            canvas.drawTextRect( item.text, rect, this.skin.MenubarTextColor, 1, 1 );
         }
 
         item.rect.set( rect );
@@ -583,7 +710,7 @@ VG.Styles.VisualGraphics.prototype.drawMenubar=function( canvas, menu )
 
 VG.Styles.VisualGraphics.prototype.drawMenu=function( canvas, menu )
 {
-    canvas.pushFont( this.skin.Menu.Font );
+    canvas.pushFont( this.skin.MenuFont );
 
     menu.contentRect.x=menu.rect.x;
     menu.contentRect.y=menu.parent.rect.bottom();
@@ -592,13 +719,13 @@ VG.Styles.VisualGraphics.prototype.drawMenu=function( canvas, menu )
 
     var oldHeight=menu.contentRect.height;
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, menu.contentRect, this.skin.Menu.BackgroundColor ); 
+    canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, menu.contentRect, this.skin.MenuBackgroundColor ); 
     canvas.draw2DShape( VG.Canvas.Shape2D.DropShadow_NoTop7px, menu.contentRect, VG.Core.Color( 0, 0, 0 ) ); 
 
     menu.contentRect.height=1;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, menu.contentRect, this.skin.Menu.TopBorderColor ); 
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, menu.contentRect, this.skin.MenuTopBorderColor ); 
     menu.contentRect.y+=1;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, menu.contentRect, this.skin.Menu.BackgroundColor ); 
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, menu.contentRect, this.skin.MenuBackgroundColor ); 
 
     menu.contentRect.height=oldHeight;;
 
@@ -615,27 +742,27 @@ VG.Styles.VisualGraphics.prototype.drawMenu=function( canvas, menu )
             var itemRect=VG.Core.Rect( rect.x, y, rect.width, itemHeight ).round();
 
             if ( item.disabled ) {
-                canvas.drawTextRect( item.text, itemRect.add( 10, 0, -10, 0), this.skin.Menu.DisabledTextColor, 0, 1 );                
+                canvas.drawTextRect( item.text, itemRect.add( 10, 0, -10, 0), this.skin.MenuDisabledTextColor, 0, 1 );                
             } else
             if ( item === menu.selected )  {
-                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, this.skin.Menu.HighlightedBackgroundColor ); 
-                canvas.drawTextRect( item.text, itemRect.add( 10, 0, -10, 0), this.skin.ContextMenu.HighlightedTextColor, 0, 1 );
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, this.skin.MenuHighlightedBackgroundColor ); 
+                canvas.drawTextRect( item.text, itemRect.add( 10, 0, -10, 0), this.skin.ContextMenuHighlightedTextColor, 0, 1 );
             } else {
-                canvas.drawTextRect( item.text, itemRect.add( 10, 0, -10, 0), this.skin.Menu.TextColor, 0, 1 );
+                canvas.drawTextRect( item.text, itemRect.add( 10, 0, -10, 0), this.skin.MenuTextColor, 0, 1 );
             }
 
             if ( item.checkable && item.checked ) {
-                var image=VG.context.imagePool.getImageByName( "vgstyle_menu_checkmark.png" );
+                var image=VG.context.imagePool.getImageByName( "menu_checkmark.png" );
                 if ( image ) {    
                     canvas.drawImage( VG.Core.Point( itemRect.right() - image.width - 10, itemRect.y + (itemRect.height-image.height)/2), image );
                 }                
             }
 
             if ( item.shortcut ) {
-                canvas.pushFont( this.skin.Menu.ShortcutFont );
+                canvas.pushFont( this.skin.MenuShortcutFont );
 
-                var textColor=this.skin.Menu.TextColor;
-                if ( item.disabled ) textColor=this.skin.Menu.DisabledTextColor;
+                var textColor=this.skin.MenuTextColor;
+                if ( item.disabled ) textColor=this.skin.MenuDisabledTextColor;
                 var shortCutSize=canvas.getTextSize( item.shortcut.text );
                 canvas.drawTextRect( item.shortcut.text, VG.Core.Rect( itemRect.right() - shortCutSize.width - 10, itemRect.y, shortCutSize.width, itemRect.height ), textColor, 0, 1 );                             
 
@@ -646,7 +773,7 @@ VG.Styles.VisualGraphics.prototype.drawMenu=function( canvas, menu )
             y+=itemHeight;
         } else {
             var sepRect=VG.Core.Rect( rect.x, y, rect.width, 1 ).round();
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, sepRect, this.skin.Menu.SeparatorColor ); 
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, sepRect, this.skin.MenuSeparatorColor ); 
 
             y++;
         }      
@@ -659,12 +786,12 @@ VG.Styles.VisualGraphics.prototype.drawMenu=function( canvas, menu )
 
 VG.Styles.VisualGraphics.prototype.drawContextMenu=function( canvas, menu )
 {
-    canvas.pushFont( this.skin.ContextMenu.Font );
+    canvas.pushFont( this.skin.ContextMenuFont );
 
     menu.contentRect.set( menu.rect.shrink(1,1) );
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, menu.rect, this.skin.ContextMenu.BackgroundColor ); 
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, menu.contentRect, this.skin.ContextMenu.BackgroundColor ); 
+    canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, menu.rect, this.skin.ContextMenuBackgroundColor ); 
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, menu.contentRect, this.skin.ContextMenuBackgroundColor ); 
 
     var itemHeight=canvas.getLineHeight() + 7;
 
@@ -679,27 +806,27 @@ VG.Styles.VisualGraphics.prototype.drawContextMenu=function( canvas, menu )
             var itemRect=VG.Core.Rect( rect.x, y, rect.width, itemHeight ).round();
 
             if ( item.disabled ) {
-                canvas.drawTextRect( item.text, itemRect.add( 10, 0, -10, 0), this.skin.ContextMenu.DisabledTextColor, 0, 1 );                
+                canvas.drawTextRect( item.text, itemRect.add( 10, 0, -10, 0), this.skin.ContextMenuDisabledTextColor, 0, 1 );                
             } else
             if ( item === menu.selected )  {
-                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, this.skin.ContextMenu.HighlightedBackgroundColor ); 
-                canvas.drawTextRect( item.text, itemRect.add( 10, 0, -10, 0), this.skin.ContextMenu.HighlightedTextColor, 0, 1 );
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, this.skin.ContextMenuHighlightedBackgroundColor ); 
+                canvas.drawTextRect( item.text, itemRect.add( 10, 0, -10, 0), this.skin.ContextMenuHighlightedTextColor, 0, 1 );
             } else {
-                canvas.drawTextRect( item.text, itemRect.add( 10, 0, -10, 0), this.skin.ContextMenu.TextColor, 0, 1 );
+                canvas.drawTextRect( item.text, itemRect.add( 10, 0, -10, 0), this.skin.ContextMenuTextColor, 0, 1 );
             }
 
             if ( item.checkable && item.checked ) {
-                var image=VG.context.imagePool.getImageByName( "vgstyle_menu_checkmark.png" );
+                var image=VG.context.imagePool.getImageByName( "menu_checkmark.png" );
                 if ( image ) {    
                     canvas.drawImage( VG.Core.Point( itemRect.right() - image.width - 10, itemRect.y + (itemRect.height-image.height)/2), image );
                 }                
             }
 
             if ( item.shortcut ) {
-                canvas.pushFont( this.skin.ContextMenu.ShortcutFont );
+                canvas.pushFont( this.skin.ContextMenuShortcutFont );
 
-                var textColor=this.skin.ContextMenu.TextColor;
-                if ( item.disabled ) textColor=this.skin.ContextMenu.DisabledTextColor;
+                var textColor=this.skin.ContextMenuTextColor;
+                if ( item.disabled ) textColor=this.skin.ContextMenuDisabledTextColor;
                 var shortCutSize=canvas.getTextSize( item.shortcut.text );
                 canvas.drawTextRect( item.shortcut.text, VG.Core.Rect( itemRect.right() - shortCutSize.width - 10, itemRect.y, shortCutSize.width, itemRect.height ), textColor, 0, 1 );
                 canvas.popFont();
@@ -709,7 +836,7 @@ VG.Styles.VisualGraphics.prototype.drawContextMenu=function( canvas, menu )
             y+=itemHeight;            
         } else {
             var sepRect=VG.Core.Rect( rect.x, y, rect.width, 1 ).round();
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, sepRect, this.skin.ContextMenu.SeparatorColor ); 
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, sepRect, this.skin.ContextMenuSeparatorColor ); 
 
             y++;
         }      
@@ -722,41 +849,41 @@ VG.Styles.VisualGraphics.prototype.drawContextMenu=function( canvas, menu )
 
 VG.Styles.VisualGraphics.prototype.drawToolbar=function( canvas, toolbar )
 {
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, toolbar.rect, this.skin.Toolbar.BackgroundColor );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, toolbar.rect, this.skin.ToolbarColor );
 };
 
 VG.Styles.VisualGraphics.prototype.drawToolPanel=function( canvas, panel )
 {
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( panel.rect.x, panel.rect.y, panel.rect.width, this.skin.ToolPanel.Height ), this.skin.ToolPanel.Color );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( panel.rect.x, panel.rect.y, panel.rect.width, this.skin.ToolPanelHeight ), this.skin.ToolPanelColor );
 };
 
 VG.Styles.VisualGraphics.prototype.drawStatusbar=function( canvas, statusbar )
 {
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( 0, statusbar.rect.y, statusbar.rect.width, statusbar.rect.height ), this.skin.Statusbar.BorderColor );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( 0, statusbar.rect.y, statusbar.rect.width, statusbar.rect.height ), this.skin.StatusbarBorderColor );
     canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, VG.Core.Rect( 0, statusbar.rect.y + 1, statusbar.rect.width, statusbar.rect.height ), 
-                        this.skin.Statusbar.GradientColor1, this.skin.Statusbar.GradientColor2 );
+                        this.skin.StatusbarColor1, this.skin.StatusbarColor2 );    
 };
 
 VG.Styles.VisualGraphics.prototype.drawToolButton=function( canvas, button )
 {
     if ( button.visualState === VG.UI.Widget.VisualState.Hover ) {
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, button.contentRect.add( 0, 0, 0, -button.contentRect.height+3 ), this.skin.ToolButton.HoverColor1 );
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, button.contentRect.add( 0, 3, 0, -3), this.skin.ToolButton.HoverColor2 );
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, button.contentRect.add( 0, 0, 0, -button.contentRect.height+3 ), this.skin.ToolButtonHoverColor1 );
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, button.contentRect.add( 0, 3, 0, -3), this.skin.ToolButtonHoverColor2 );
     }
 
     if ( !button.iconName )
     {
-        canvas.pushFont( this.skin.ToolButton.Font );
+        canvas.pushFont( this.skin.ToolButtonFont );
 
         if ( !button.disabled )
-            canvas.drawTextRect( button.text, button.contentRect, VG.context.style.skin.ToolButton.TextColor );
+            canvas.drawTextRect( button.text, button.contentRect, VG.context.style.skin.ToolButtonTextColor );
         else
-            canvas.drawTextRect( button.text, button.contentRect, VG.context.style.skin.ToolButton.DisabledTextColor );         
+            canvas.drawTextRect( button.text, button.contentRect, VG.context.style.skin.ToolButtonDisabledTextColor );         
 
         canvas.popFont();
     } else
     {
-        if ( !button.icon || ( button.icon.stylePath !== VG.context.style.path ) ) button.icon=VG.context.imagePool.getImageByName( button.iconName );
+        if ( !button.icon ) button.icon=VG.context.imagePool.getImageByName( button.iconName );
         if ( button.icon ) 
         {
             var x=button.contentRect.x + (button.contentRect.width - button.icon.width)/2;
@@ -764,7 +891,7 @@ VG.Styles.VisualGraphics.prototype.drawToolButton=function( canvas, button )
 
             if ( button.disabled )
             {
-                if ( !button.disabledIcon || ( button.disabledIcon.stylePath !== VG.context.style.path ) )
+                if ( !button.disabledIcon )
                 {
                     button.disabledIcon=VG.Core.Image( button.icon.width, button.icon.height );
                     for ( var h=0; h < button.icon.height; ++h )
@@ -807,127 +934,65 @@ VG.Styles.VisualGraphics.prototype.drawToolButton=function( canvas, button )
 
 VG.Styles.VisualGraphics.prototype.drawToolPanelButton=function( canvas, button )
 {
-    if ( !button.disabled ) {
-        if ( button.mouseIsDown ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, button.contentRect, this.skin.ToolPanelButton.ClickedColor );
-        else if ( button.visualState === VG.UI.Widget.VisualState.Hover ) {
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, button.contentRect, this.skin.ToolPanelButton.HoverColor );
-        }
+    if ( button.disabled ) return;
+    if ( button.mouseIsDown ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, button.contentRect, this.skin.ToolPanelButtonClickedColor );
+    else if ( button.visualState === VG.UI.Widget.VisualState.Hover ) {
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, button.contentRect, this.skin.ToolPanelButtonHoverColor );
     }
-
-    if ( !button.iconName )
-    {
-        if ( !button.disabled )
-            canvas.drawTextRect( button.text, button.contentRect, VG.context.style.skin.ToolPanelButton.TextColor );
-        else
-            canvas.drawTextRect( button.text, button.contentRect, VG.context.style.skin.ToolPanelButton.DisabledTextColor );            
-    } else
-    {
-        if ( !button.icon ) this.icon=VG.Core.imagePool.getImageByName( this.iconName );
-        if ( button.icon ) 
-        {
-            var x=button.contentRect.x + (button.contentRect.width - button.icon.width)/2;
-            var y=button.contentRect.y + (button.contentRect.height - button.icon.height)/2;
-
-            if ( button.disabled )
-            {
-                if ( !button.disabledIcon )
-                {
-                    button.disabledIcon=VG.Core.Image( button.icon.width, this.icon.height );
-                    for ( var h=0; h < button.icon.height; ++h )
-                    {
-                        for ( var w=0; w < button.icon.width; ++w )
-                        {
-                            var offset=h * button.icon.modulo + w *4;
-                            button.disabledIcon.data[offset]=button.icon.data[offset] * 0.513;
-                            button.disabledIcon.data[offset+1]=button.icon.data[offset+1] * 0.521;
-                            button.disabledIcon.data[offset+2]=button.icon.data[offset+2] * 0.545;
-                            button.disabledIcon.data[offset+3]=button.icon.data[offset+3];
-                        }
-                    }
-                }
-                canvas.drawImage( VG.Core.Point( x, y ), button.disabledIcon );
-            } else 
-            if ( button.mouseIsDown )
-            {
-                if ( !button.clickedIcon )
-                {
-                    button.clickedIcon=VG.Core.Image( button.icon.width, button.icon.height );
-                    for ( var h=0; h < button.icon.height; ++h )
-                    {
-                        for ( var w=0; w < button.icon.width; ++w )
-                        {
-                            var offset=h * button.icon.modulo + w *4;
-                            this.clickedIcon.data[offset]=button.icon.data[offset] * 0.568;
-                            this.clickedIcon.data[offset+1]=button.icon.data[offset+1] * 0.619;
-                            this.clickedIcon.data[offset+2]=button.icon.data[offset+2] * 0.921;
-                            this.clickedIcon.data[offset+3]=button.icon.data[offset+3];
-                        }
-                    }
-                }
-                canvas.drawImage( VG.Core.Point( x, y ), button.clickedIcon );
-            } else
-                canvas.drawImage( VG.Core.Point( x, y ), button.icon );
-        }
-    }    
 };
 
 VG.Styles.VisualGraphics.prototype.drawToolSeparator=function( canvas, separator )
 {
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( separator.contentRect.x, separator.contentRect.y, 2, separator.contentRect.bottom() ), this.skin.Toolbar.Separator.Color );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( separator.contentRect.x, separator.contentRect.y, 2, separator.contentRect.bottom() ), this.skin.ToolSeparatorColor );
 };
 
 VG.Styles.VisualGraphics.prototype.drawToolPanelSeparator=function( canvas, separator )
 {
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( separator.contentRect.x, separator.contentRect.y, 1, separator.contentRect.height ), this.skin.ToolPanel.Separator.Color );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( separator.contentRect.x, separator.contentRect.y, 1, separator.contentRect.height ), this.skin.ToolPanelSeparatorColor );
 };
 
 VG.Styles.VisualGraphics.prototype.drawDockWidgetHeader=function( canvas, dock, rect)
 {
     var xBorderOffset=8;
 
-    canvas.pushFont( this.skin.DockWidget.Header.Font );
-    canvas.drawTextRect( dock.text, rect.add( xBorderOffset, 0, -xBorderOffset, 0), this.skin.DockWidget.Header.TextColor, 0, 1 );
+    canvas.pushFont( this.skin.DockWidgetHeaderFont );
+    canvas.drawTextRect( dock.text, rect.add( xBorderOffset, 0, -xBorderOffset, 0), this.skin.DockWidgetHeaderTextColor, 0, 1 );
     canvas.popFont();
 
     var lrect=VG.Core.Rect( rect.right() - 15 -xBorderOffset, rect.y + 10, 15, 2 );
 
     var imageName;
 
-    if ( dock.dragOp ) imageName="vgstyle_dock_handle_drag.png"
-    else imageName="vgstyle_dock_handle_normal.png"
+    if ( dock.dragOp ) imageName="dock_handle_drag.png"
+    else imageName="dock_handle_normal.png"
 
     var image=VG.context.imagePool.getImageByName( imageName );
     if ( image ) canvas.drawImage( VG.Core.Point( rect.right() -xBorderOffset - image.width, rect.y + (rect.height-image.height)/2), image );
+    
+/*
+    var color;
+
+    if ( dock.dragOp ) color=this.skin.WidgetSelectionColor;
+    else color=this.skin.DockWidgetHeaderTextColor;
+
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, lrect, color );
+    lrect.y+=5;
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, lrect, color );
+    lrect.y+=5;
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, lrect, color );*/
 };
 
 VG.Styles.VisualGraphics.prototype.drawTextEditBorder=function( canvas, edit )
 {
     if ( !edit.embedded )
     {
-        if ( edit.disabled ) canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, edit.rect, this.skin.TextEdit.DisabledBorderColor );
+        if ( edit.disabled ) canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, edit.rect, this.skin.TextEditDisabledBorderColor );
         else
         {
             if ( edit.visualState === VG.UI.Widget.VisualState.Focus ) {
-                canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, edit.rect, this.skin.Widget.SelectionColor );
+                canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, edit.rect, this.skin.WidgetSelectionColor );
             } else {
-                canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, edit.rect, this.skin.TextEdit.BorderColor )        
-            }
-        }
-        edit.contentRect=edit.rect.shrink( 1, 1 );
-    } else edit.contentRect.set( edit.rect );
-};
-
-VG.Styles.VisualGraphics.prototype.drawGeneralBorder=function( canvas, edit )
-{
-    if ( !edit.embedded )
-    {
-        if ( edit.disabled ) canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, edit.rect, this.skin.TextEdit.DisabledBorderColor );
-        else
-        {
-            if ( edit.visualState === VG.UI.Widget.VisualState.Focus ) {
-                canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, edit.rect, this.skin.Widget.SelectionColor );
-            } else {
-                canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, edit.rect, this.skin.TextEdit.BorderColor )        
+                canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, edit.rect, this.skin.TextEditBorderColor )        
             }
         }
         edit.contentRect=edit.rect.shrink( 1, 1 );
@@ -937,25 +1002,23 @@ VG.Styles.VisualGraphics.prototype.drawGeneralBorder=function( canvas, edit )
 VG.Styles.VisualGraphics.prototype.drawListWidgetBorder=function( canvas, widget )
 {    
     if ( widget.visualState !== VG.UI.Widget.VisualState.Focus )
-        canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, widget.rect, this.skin.ListWidget.BorderColor )
+        canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, widget.rect, this.skin.ListWidgetBorderColor )
     else
-        canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, widget.rect, this.skin.Widget.SelectionColor );
+        canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, widget.rect, this.skin.WidgetSelectionColor );
     
     widget.contentRect=widget.rect.add( 1, 1, -2, -2 );
 };
 
-VG.Styles.VisualGraphics.prototype.drawListWidgetItem=function( canvas, item, selected, rect, drawContent )
+VG.Styles.VisualGraphics.prototype.drawListWidgetItem=function( canvas, item, selected, rect )
 {
     if ( !selected ) {
-        canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, rect, this.skin.ListWidget.Item.BorderColor )
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect.add( 1, 1, -2, -2), this.skin.ListWidget.Item.BackgroundColor );
-        if ( drawContent )
-            canvas.drawTextRect( item.text, rect.add( this.skin.ListWidget.Item.XOffset, 0, -this.skin.ListWidget.ItemXOffset - 2, 0), this.skin.ListWidget.Item.TextColor, 0, 1 );
+        canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, rect, this.skin.ListWidgetItemBorderColor )
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect.add( 1, 1, -2, -2), this.skin.ListWidgetItemBackgroundColor );
+        canvas.drawTextRect( item.text, rect.add( this.skin.ListWidgetItemXOffset, 0, -this.skin.ListWidgetItemXOffset - 2, 0), this.skin.ListWidgetItemTextColor, 0, 1 );
     } else {
-        canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, rect, this.skin.ListWidget.Item.SelectedBorderColor )
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect.add( 1, 1, -2, -2), this.skin.ListWidget.Item.SelectedBackgroundColor );
-        if ( drawContent )
-            canvas.drawTextRect( item.text, rect.add( this.skin.ListWidget.Item.XOffset, 0, -this.skin.ListWidget.Item.XOffset - 2, 0), this.skin.ListWidget.Item.SelectedTextColor, 0, 1 );
+        canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, rect, this.skin.ListWidgetItemSelectedBorderColor )
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect.add( 1, 1, -2, -2), this.skin.ListWidgetItemSelectedBackgroundColor );
+        canvas.drawTextRect( item.text, rect.add( this.skin.ListWidgetItemXOffset, 0, -this.skin.ListWidgetItemXOffset - 2, 0), this.skin.ListWidgetItemSelectedTextColor, 0, 1 );
     }
 };
 
@@ -964,14 +1027,14 @@ VG.Styles.VisualGraphics.prototype.drawScrollbar=function( canvas, scrollBar, ad
     var color;
 
     if (  VG.context.workspace.mouseTrackerWidget === scrollBar )
-        color=this.skin.Scrollbar.ClickedColor;
+        color=this.skin.ScrollbarClickedColor;
     else 
     if ( scrollBar.visualState === VG.UI.Widget.VisualState.Hover )
-        color=this.skin.Scrollbar.HoverColor;
+        color=this.skin.ScrollbarHoverColor;
     else
     {
         if ( adjustAlpha ) canvas.setAlpha( 0.3 ); 
-        color=this.skin.Scrollbar.Color;
+        color=this.skin.ScrollbarColor;
     }
 
     canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, scrollBar.handleRect, color );
@@ -983,7 +1046,7 @@ VG.Styles.VisualGraphics.prototype.drawButton=function( canvas, button )
     var buttonRect;
 
     if ( button.visualState === VG.UI.Widget.VisualState.Focus ) {
-        canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, button.contentRect, this.skin.Button.FocusColor );        
+        canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, button.contentRect, this.skin.ButtonFocusColor );        
         buttonRect=button.contentRect.add( 2, 2, -4, -4 );
     }  else buttonRect=button.contentRect;
 
@@ -993,44 +1056,44 @@ VG.Styles.VisualGraphics.prototype.drawButton=function( canvas, button )
         if ( !button.mouseIsDown ) {
 
             if ( button.visualState === VG.UI.Widget.VisualState.Hover ) {
-                color=this.skin.Button.HoverColor;
+                color=this.skin.ButtonHoverColor;
             } else {
-                color=this.skin.Button.Color;
+                color=this.skin.ButtonColor;
             }
             
             if ( button.checkable && button.checked )
-                canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, buttonRect, this.skin.Button.CheckedColor );
+                canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, buttonRect, this.skin.ButtonCheckedColor );
             else
             if ( button.checkable && !button.checked )
-                canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, buttonRect, this.skin.Button.UncheckedColor );
+                canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, buttonRect, this.skin.ButtonUncheckedColor );
             else
             if ( button.visualState === VG.UI.Widget.VisualState.Focus )
                 canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, buttonRect, color );
             else
                 canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, buttonRect, color );
         } else {
-            color=this.skin.Button.ClickedColor;
+            color=this.skin.ButtonClickedColor;
 
             if ( button.visualState === VG.UI.Widget.VisualState.Hover )
                 canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, buttonRect, color );
             else canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, buttonRect, color );
         }
     } else {
-        color=this.skin.Button.DisabledColor;     
+        color=this.skin.ButtonDisabledColor;     
 
         if ( button.visualState === VG.UI.Widget.VisualState.Hover )
             canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, buttonRect, color );
         else canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, buttonRect, color );
     }
 
-    if ( button.big ) canvas.pushFont( this.skin.Button.Font );
-    else canvas.pushFont( this.skin.Button.SmallFont );
+    if ( button.big ) canvas.pushFont( this.skin.ButtonFont );
+    else canvas.pushFont( this.skin.ButtonSmallFont );
 
     if ( !button.iconName ) {
         if ( !button.disabled )
-            canvas.drawTextRect( button.text, button.contentRect, this.skin.Button.TextColor );    
+            canvas.drawTextRect( button.text, button.contentRect, this.skin.ButtonTextColor );    
         else
-            canvas.drawTextRect( button.text, button.contentRect, this.skin.Button.DisabledTextColor );    
+            canvas.drawTextRect( button.text, button.contentRect, this.skin.ButtonDisabledTextColor );    
     } else
     {
         if ( !button.icon ) button.icon=VG.Utils.getImageByName( button.iconName );
@@ -1049,8 +1112,8 @@ VG.Styles.VisualGraphics.prototype.drawFrame=function( canvas, frame )
     {    
         var color
 
-        if ( frame.visualState === VG.UI.Widget.VisualState.Focus ) color=this.skin.Widget.SelectionColor;
-        else color=this.skin.TextEdit.BorderColor;
+        if ( frame.visualState === VG.UI.Widget.VisualState.Focus ) color=this.skin.WidgetSelectionColor;
+        else color=this.skin.TextEditBorderColor;
         canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, frame.rect, color );
 
         frame.contentRect=frame.contentRect.shrink( 1, 1 );
@@ -1061,15 +1124,15 @@ VG.Styles.VisualGraphics.prototype.drawPopupButton=function( canvas, button )
 {
     var borderColor;
 
-    canvas.pushFont( this.skin.PopupButton.Font );
+    canvas.pushFont( this.skin.PopupButtonFont );
 
-    if ( button.embeddedSelection ) borderColor=this.skin.PopupButton.Embedded.SelectioBorderColor;
+    if ( button.embeddedSelection ) borderColor=this.skin.PopupButtonEmbeddedSelectioBorderColor;
     else
-    if ( button.disabled ) borderColor=this.skin.PopupButton.DisabledBorderColor;
+    if ( button.disabled ) borderColor=this.skin.PopupButtonDisabledBorderColor;
     else {
         if ( button.visualState !== VG.UI.Widget.VisualState.Focus )
-            borderColor=this.skin.PopupButton.BorderColor;
-        else borderColor=this.skin.Widget.SelectionColor;    
+            borderColor=this.skin.PopupButtonBorderColor;
+        else borderColor=this.skin.WidgetSelectionColor;    
     }
 
     // -- Draw the top without the lower line as this depends on popup state
@@ -1088,20 +1151,20 @@ VG.Styles.VisualGraphics.prototype.drawPopupButton=function( canvas, button )
 
     if ( button.disabled )
     {
-        if ( !button.embedded ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, button.rect.add( 1, 1, -2, -2), this.skin.PopupButton.DisabledBackgroundColor );
+        if ( !button.embedded ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, button.rect.add( 1, 1, -2, -2), this.skin.PopupButtonDisabledBackgroundColor );
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( button.rect.right()-25, button.rect.y+1, 1, button.rect.height-1 ), borderColor );
-        canvas.draw2DShape( VG.Canvas.Shape2D.FlippedTriangle, VG.Core.Rect( button.rect.right()-17, button.rect.y+11, 10, 5 ), this.skin.PopupButton.DisabledTextColor );
+        canvas.draw2DShape( VG.Canvas.Shape2D.FlippedTriangle, VG.Core.Rect( button.rect.right()-17, button.rect.y+11, 10, 5 ), this.skin.PopupButtonDisabledTextColor );
     } else
     {
-        if ( !button.embedded ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, button.rect.add( 1, 1, -2, -2), this.skin.PopupButton.BackgroundColor );
-        else if ( button.embeddedSelection ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, button.rect.add( 1, 1, -2, -2), this.skin.PopupButton.Embedded.BackgroundColor );
+        if ( !button.embedded ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, button.rect.add( 1, 1, -2, -2), this.skin.PopupButtonBackgroundColor );
+        else if ( button.embeddedSelection ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, button.rect.add( 1, 1, -2, -2), this.skin.PopupButtonEmbeddedBackgroundColor );
 
         if ( button.embeddedSelection ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( button.rect.right()-25, button.rect.y+1, 1, button.rect.height-1 ), borderColor ); 
-        else canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( button.rect.right()-25, button.rect.y+1, 1, button.rect.height-1 ), this.skin.PopupButton.BorderColor );
+        else canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( button.rect.right()-25, button.rect.y+1, 1, button.rect.height-1 ), this.skin.PopupButtonBorderColor );
      
         if ( !button.embeddedSelection && button.embedded )
-            canvas.draw2DShape( VG.Canvas.Shape2D.FlippedTriangle, VG.Core.Rect( button.rect.right()-17, button.rect.y+11, 10, 5 ), this.skin.PopupButton.TextColor );
-        else canvas.draw2DShape( VG.Canvas.Shape2D.FlippedTriangle, VG.Core.Rect( button.rect.right()-17, button.rect.y+11, 10, 5 ), this.skin.PopupButton.HighlightedTextColor );
+            canvas.draw2DShape( VG.Canvas.Shape2D.FlippedTriangle, VG.Core.Rect( button.rect.right()-17, button.rect.y+11, 10, 5 ), this.skin.PopupButtonTextColor );
+        else canvas.draw2DShape( VG.Canvas.Shape2D.FlippedTriangle, VG.Core.Rect( button.rect.right()-17, button.rect.y+11, 10, 5 ), this.skin.PopupButtonHighlightedTextColor );
     }
 
     if ( button.popup === true ) {
@@ -1122,11 +1185,11 @@ VG.Styles.VisualGraphics.prototype.drawPopupButton=function( canvas, button )
         // --- Draw the background and the separator to the popup area
         if ( !button.embedded ) 
         {
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, popupRect.add( 1, 1, -2, -2 ), this.skin.PopupButton.BackgroundColor );
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( button.rect.x+1, button.rect.y+button.rect.height-1, button.rect.width-2, 1), this.skin.PopupButton.BorderColor );
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, popupRect.add( 1, 1, -2, -2 ), this.skin.PopupButtonBackgroundColor );
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( button.rect.x+1, button.rect.y+button.rect.height-1, button.rect.width-2, 1), this.skin.PopupButtonBorderColor );
         } else { 
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, popupRect.add( 1, 1, -2, -2 ), this.skin.PopupButton.Embedded.BackgroundColor );
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( button.rect.x+1, button.rect.y+button.rect.height-1, button.rect.width-2, 1), this.skin.PopupButton.Embedded.SelectioBorderColor );
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, popupRect.add( 1, 1, -2, -2 ), this.skin.PopupButtonEmbeddedBackgroundColor );
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( button.rect.x+1, button.rect.y+button.rect.height-1, button.rect.width-2, 1), this.skin.PopupButtonEmbeddedSelectioBorderColor );
         }
 
         // --- Draw the popup text items
@@ -1137,16 +1200,16 @@ VG.Styles.VisualGraphics.prototype.drawPopupButton=function( canvas, button )
 
             var color;
 
-            if ( i === button.index ) color=this.skin.PopupButton.HighlightedTextColor;
-            else color=this.skin.PopupButton.TextColor;
+            if ( i === button.index ) color=this.skin.PopupButtonHighlightedTextColor;
+            else color=this.skin.PopupButtonTextColor;
 
             canvas.drawTextRect( button.items[i], itemRect.add( 10, 0, -10, 0), color, 0, 1 );
             
             if ( i < button.items.length - 1 )
             {
                 if ( !button.embedded )
-                    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( itemRect.x+1, itemRect.bottom()-1, itemRect.width-2, 1 ).round(), this.skin.PopupButton.BorderColor );            
-                else canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( itemRect.x+1, itemRect.bottom()-1, itemRect.width-2, 1 ).round(), this.skin.PopupButton.Embedded.BorderColor );            
+                    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( itemRect.x+1, itemRect.bottom()-1, itemRect.width-2, 1 ).round(), this.skin.PopupButtonBorderColor );            
+                else canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( itemRect.x+1, itemRect.bottom()-1, itemRect.width-2, 1 ).round(), this.skin.PopupButtonEmbeddedBorderColor );            
             }
         }
 
@@ -1162,12 +1225,12 @@ VG.Styles.VisualGraphics.prototype.drawPopupButton=function( canvas, button )
 
     if ( button.index !== -1 )
     {
-        if ( button.disabled ) canvas.drawTextRect( button.items[button.index], button.contentRect.add( 10, 0, -10, 0), this.skin.PopupButton.DisabledTextColor, 0, 1 );    
+        if ( button.disabled ) canvas.drawTextRect( button.items[button.index], button.contentRect.add( 10, 0, -10, 0), this.skin.PopupButtonDisabledTextColor, 0, 1 );    
         else {
             if ( !button.embeddedSelection && button.embedded ) {
-                canvas.drawTextRect( button.items[button.index], button.contentRect.add( 10, 0, -10, 0), this.skin.PopupButton.TextColor, 0, 1 );    
+                canvas.drawTextRect( button.items[button.index], button.contentRect.add( 10, 0, -10, 0), this.skin.PopupButtonTextColor, 0, 1 );    
             }
-            else canvas.drawTextRect( button.items[button.index], button.contentRect.add( 10, 0, -10, 0), this.skin.PopupButton.HighlightedTextColor, 0, 1 );    
+            else canvas.drawTextRect( button.items[button.index], button.contentRect.add( 10, 0, -10, 0), this.skin.PopupButtonHighlightedTextColor, 0, 1 );    
         }
     }
     canvas.popFont();    
@@ -1177,7 +1240,7 @@ VG.Styles.VisualGraphics.prototype.drawToolPanelPopupButton=function( canvas, bu
 {
     var borderColor;
 
-    canvas.pushFont( this.skin.ToolPanelPopupButton.Font );
+    canvas.pushFont( this.skin.ToolPanelPopupButtonFont );
 
     var spacing=1;
 
@@ -1194,7 +1257,7 @@ VG.Styles.VisualGraphics.prototype.drawToolPanelPopupButton=function( canvas, bu
         if ( button.menuDown ) popupRect=VG.Core.Rect( button.rect.x, button.rect.bottom()-1, button.rect.width, popupHeight );
         else popupRect=VG.Core.Rect( button.rect.x, button.rect.y - popupHeight, button.rect.width, popupHeight );            
 
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, popupRect, this.skin.ToolPanelPopupButton.BackgroundColor );
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, popupRect, this.skin.ToolPanelPopupButtonBackgroundColor );
 
         button.popupRect=popupRect;
         button.itemHeight=itemHeight;
@@ -1208,24 +1271,24 @@ VG.Styles.VisualGraphics.prototype.drawToolPanelPopupButton=function( canvas, bu
             var color;
 
             if ( i === button.index ) 
-                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, this.skin.ToolPanelPopupButton.HighlightedBackgroundColor );
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, this.skin.ToolPanelPopupButtonHighlightedBackgroundColor );
 
-            canvas.drawTextRect( button.items[i], itemRect.add( 10, 0, -10, 0), this.skin.ToolPanelPopupButton.TextColor, 0, 1 );
+            canvas.drawTextRect( button.items[i], itemRect.add( 10, 0, -10, 0), this.skin.ToolPanelPopupButtonTextColor, 0, 1 );
             
             if ( i < button.items.length - 1 )
-                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( itemRect.x, itemRect.bottom()-1, itemRect.width, 1 ), this.skin.ToolPanel.Color );
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( itemRect.x, itemRect.bottom()-1, itemRect.width, 1 ), this.skin.ToolPanelColor );
         }        
     }
 
     if ( this.index !== -1 )
     {
         if ( button.disabled ) {
-            canvas.drawTextRect( button.items[button.index], button.contentRect.add( 10, 0, -10, 0), this.skin.ToolPanelPopupButton.DisabledTextColor, 0, 1 );    
-            canvas.draw2DShape( VG.Canvas.Shape2D.FlippedTriangle, VG.Core.Rect( button.rect.right()-20, button.rect.y+14, 12, 6 ), this.skin.ToolPanelPopupButton.DisabledTextColor );
+            canvas.drawTextRect( button.items[button.index], button.contentRect.add( 10, 0, -10, 0), this.skin.ToolPanelPopupButtonDisabledTextColor, 0, 1 );    
+            canvas.draw2DShape( VG.Canvas.Shape2D.FlippedTriangle, VG.Core.Rect( button.rect.right()-20, button.rect.y+14, 12, 6 ), this.skin.ToolPanelPopupButtonDisabledTextColor );
         }
         else  {
-            canvas.drawTextRect( button.items[button.index], button.contentRect.add( 10, 0, -10, 0), this.skin.ToolPanelPopupButton.TextColor, 0, 1 );    
-            canvas.draw2DShape( VG.Canvas.Shape2D.FlippedTriangle, VG.Core.Rect( button.rect.right()-20, button.rect.y+14, 12, 6 ), this.skin.ToolPanelPopupButton.TextColor );
+            canvas.drawTextRect( button.items[button.index], button.contentRect.add( 10, 0, -10, 0), this.skin.ToolPanelPopupButtonTextColor, 0, 1 );    
+            canvas.draw2DShape( VG.Canvas.Shape2D.FlippedTriangle, VG.Core.Rect( button.rect.right()-20, button.rect.y+14, 12, 6 ), this.skin.ToolPanelPopupButtonTextColor );
         }
     }
     canvas.popFont();    
@@ -1234,63 +1297,63 @@ VG.Styles.VisualGraphics.prototype.drawToolPanelPopupButton=function( canvas, bu
 
 VG.Styles.VisualGraphics.prototype.drawWindow=function( canvas, window )
 {
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( window.rect.x, window.rect.y, window.rect.width, this.skin.Window.HeaderHeight ), this.skin.Window.FocusHeaderColor );
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, window.contentRect, this.skin.Window.BackgroundColor );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( window.rect.x, window.rect.y, window.rect.width, this.skin.WindowHeaderHeight ), this.skin.WindowFocusHeaderColor );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, window.contentRect, this.skin.WindowBackgroundColor );
 
-    var titleTextRect=VG.Core.Rect( window.rect.x+10, window.rect.y, window.rect.width, this.skin.Window.HeaderHeight );
+    var titleTextRect=VG.Core.Rect( window.rect.x+10, window.rect.y, window.rect.width, this.skin.WindowHeaderHeight );
     canvas.drawTextRect( window.text, titleTextRect, VG.Core.Color( 244, 244, 244 ), 0, 1 );    
 };
 
 VG.Styles.VisualGraphics.prototype.drawDialog=function( canvas, dialog )
 {
-    canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, dialog.rect, this.skin.Dialog.BorderColor );
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, dialog.rect.shrink(1,1), this.skin.Dialog.BackgroundColor );
+    canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, dialog.rect, this.skin.DialogBorderColor );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, dialog.rect.shrink(1,1), this.skin.DialogBackgroundColor );
 
-    var titleRect=VG.Core.Rect( dialog.rect.x+1, dialog.rect.y+1, dialog.rect.width-2, this.skin.Window.HeaderHeight-2 );
-    canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, titleRect, this.skin.Dialog.Header.Color1, this.skin.Dialog.Header.Color2 );
+    var titleRect=VG.Core.Rect( dialog.rect.x+1, dialog.rect.y+1, dialog.rect.width-2, this.skin.WindowHeaderHeight-2 );
+    canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, titleRect, this.skin.DialogTitleColor1, this.skin.DialogTitleColor2 );
 
     titleRect.x+=10;
-    canvas.drawTextRect( dialog.text, titleRect, this.skin.Widget.TextColor, 0, 1 );  
+    canvas.drawTextRect( dialog.text, titleRect, this.skin.WidgetTextColor, 0, 1 );  
 
     titleRect.x=dialog.rect.x+1;
-    titleRect.y+=this.skin.Window.HeaderHeight-2;
+    titleRect.y+=this.skin.WindowHeaderHeight-2;
     titleRect.height=1;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, titleRect, this.skin.Dialog.Header.BorderColor );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, titleRect, this.skin.DialogTitleBorderColor );
 
     // --- Dialog Title Buttons
 
     if ( !dialog.closeImage.isValid() ) {
-        var image=VG.context.imagePool.getImageByName( "vgstyle_window_close_normal.png" );
+        var image=VG.context.imagePool.getImageByName( "window_close_normal.png" );
         if ( image ) dialog.closeImage.image=image;
     }
 
     if ( !dialog.closeImage.hoverImage ) {
-        var image=VG.context.imagePool.getImageByName( "vgstyle_window_close_hover.png" );
+        var image=VG.context.imagePool.getImageByName( "window_close_hover.png" );
         if ( image ) dialog.closeImage.hoverImage=image;
     }
 
     if ( !dialog.closeImage.clickedImage ) {
-        var image=VG.context.imagePool.getImageByName( "vgstyle_window_close_clicked.png" );
+        var image=VG.context.imagePool.getImageByName( "window_close_clicked.png" );
         if ( image ) dialog.closeImage.clickedImage=image;
     }    
 
     if ( dialog.closeImage.isValid() ) {
-        dialog.closeImage.rect.set( dialog.rect.right() - 12 - dialog.closeImage.image.width, dialog.rect.y + (this.skin.Window.HeaderHeight - dialog.closeImage.image.height)/2, 
+        dialog.closeImage.rect.set( dialog.rect.right() - 12 - dialog.closeImage.image.width, dialog.rect.y + (this.skin.WindowHeaderHeight - dialog.closeImage.image.height)/2, 
             dialog.closeImage.image.width, dialog.closeImage.image.height );
         dialog.closeImage.paintWidget( canvas );
     }
 
     // ---
 
-    dialog.contentRect.set( dialog.rect.x+1, dialog.rect.y + this.skin.Window.HeaderHeight + 1, dialog.rect.width-1, dialog.rect.height - this.skin.Window.HeaderHeight );  
+    dialog.contentRect.set( dialog.rect.x+1, dialog.rect.y + this.skin.WindowHeaderHeight + 1, dialog.rect.width-1, dialog.rect.height - this.skin.WindowHeaderHeight );  
 };
 
 VG.Styles.VisualGraphics.prototype.drawSplitHandle=function( canvas, layout, pos, itemRect, childRect, dragging )
 {
     var color;
 
-    if ( dragging == false ) color=this.skin.SplitLayout.Separator.Color;
-    else color=this.skin.SplitLayout.Separator.SelectedColor;
+    if ( dragging == false ) color=this.skin.LayoutSeparatorColor;
+    else color=this.skin.LayoutSeparatorSelectedColor;
 
     if ( layout.rect[layout.secondarySize] < 40 ) drawDecoration=false;
 
@@ -1328,13 +1391,13 @@ VG.Styles.VisualGraphics.prototype.drawSplitHandle=function( canvas, layout, pos
         itemRect[layout.primarySize]=layout.spacing;
         itemRect[layout.secondarySize]=2;     
         itemRect.round();  
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, this.skin.SplitLayout.Separator.DecorationColor );
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, this.skin.LayoutSeparatorDecorationColor );
 
         itemRect[layout.secondaryCoord]+=4;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, this.skin.SplitLayout.Separator.DecorationColor );
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, this.skin.LayoutSeparatorDecorationColor );
 
         itemRect[layout.secondaryCoord]+=4;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, this.skin.SplitLayout.Separator.DecorationColor );
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, this.skin.LayoutSeparatorDecorationColor );
 
         itemRect[layout.primaryCoord]=pos + childRect[layout.primarySize];
         itemRect[layout.secondaryCoord]=layout.rect[layout.secondaryCoord] + layout.rect[layout.secondarySize] / 2 + 10;
@@ -1349,21 +1412,21 @@ VG.Styles.VisualGraphics.prototype.drawCheckbox=function( canvas, box )
 {
     var borderColor;
 
-    if ( box.disabled ) borderColor=this.skin.Checkbox.DisabledBorderColor;
+    if ( box.disabled ) borderColor=this.skin.CheckboxDisabledBorderColor;
     else {
         if ( box.visualState !== VG.UI.Widget.VisualState.Focus )
-            borderColor=this.skin.Checkbox.BorderColor;
-        else borderColor=this.skin.Widget.SelectionColor;    
+            borderColor=this.skin.CheckboxBorderColor;
+        else borderColor=this.skin.WidgetSelectionColor;    
     }    
 
     canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, box.contentRect, borderColor );   
 
-    if ( box.disabled ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, box.contentRect.add( 1, 1, -2, -2), this.skin.Checkbox.DisabledBackgroundColor );
-    else canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, box.contentRect.add( 1, 1, -2, -2), this.skin.Checkbox.BackgroundColor );
+    if ( box.disabled ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, box.contentRect.add( 1, 1, -2, -2), this.skin.CheckboxDisabledBackgroundColor );
+    else canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, box.contentRect.add( 1, 1, -2, -2), this.skin.CheckboxBackgroundColor );
 
     if ( box.checked )
     {
-        var image=VG.context.imagePool.getImageByName( "vgstyle_checkmark.png" );
+        var image=VG.context.imagePool.getImageByName( "checkmark.png" );
         if ( image ) {    
             canvas.drawImage( VG.Core.Point( box.rect.x + (box.rect.width-image.width)/2, box.rect.y + (box.rect.height-image.height)/2), image );
         }
@@ -1373,23 +1436,23 @@ VG.Styles.VisualGraphics.prototype.drawCheckbox=function( canvas, box )
 VG.Styles.VisualGraphics.prototype.drawDockWidget=function( canvas, dock )
 {
     if ( dock.location < VG.UI.DockWidgetLocation.Floating ) 
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, dock.rect, this.skin.DockWidget.BackgroundColor );
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, dock.rect, this.skin.DockWidgetBackgroundColor );
     else
     {
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, dock.rect, this.skin.DockWidget.FloatingBackgroundColor );        
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, dock.rect, this.skin.DockWidgetFloatingBackgroundColor );        
 
         if ( dock.visualState === VG.UI.Widget.VisualState.Focus )
-            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, dock.rect, this.skin.DockWidget.FloatingSelectedBorderColor );
-        else canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, dock.rect, this.skin.DockWidget.FloatingBorderColor );  
+            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, dock.rect, this.skin.DockWidgetFloatingSelectedBorderColor );
+        else canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, dock.rect, this.skin.DockWidgetFloatingBorderColor );  
     }
 
-    this.drawDockWidgetHeader( canvas, dock, VG.Core.Rect( dock.rect.x, dock.rect.y, dock.rect.width, this.skin.DockWidget.Header.Height ) );
-    dock.contentRect.set( dock.rect.add( 0, this.skin.DockWidget.Header.Height, 0, -this.skin.DockWidget.Header.Height ) );    
+    this.drawDockWidgetHeader( canvas, dock, VG.Core.Rect( dock.rect.x, dock.rect.y, dock.rect.width, this.skin.DockWidgetHeaderHeight ) );
+    dock.contentRect.set( dock.rect.add( 0, this.skin.DockWidgetHeaderHeight, 0, -this.skin.DockWidgetHeaderHeight ) );    
 };
 
 VG.Styles.VisualGraphics.prototype.drawDockStripWidget=function( canvas, dock )
 {
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( dock.rect.x, dock.rect.y, dock.rect.width, this.skin.DockStripWidget.HeaderHeight ), this.skin.DockStripWidget.BorderColor);
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( dock.rect.x, dock.rect.y, dock.rect.width, this.skin.DockStripWidgetHeaderHeight ), this.skin.DockStripWidgetBorderColor);
 };
 
 VG.Styles.VisualGraphics.prototype.drawTreeWidgetBorder=function( canvas, widget )
@@ -1401,16 +1464,16 @@ VG.Styles.VisualGraphics.prototype.drawTreeWidgetBorder=function( canvas, widget
     }
 
     if ( widget.visualState !== VG.UI.Widget.VisualState.Focus )
-        canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, widget.rect, this.skin.TreeWidget.BorderColor )
+        canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, widget.rect, this.skin.TreeWidgetBorderColor )
     else
-        canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, widget.rect, this.skin.TreeWidget.SelectionBorderColor );
+        canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, widget.rect, this.skin.TreeWidgetSelectionBorderColor );
 
     widget.contentRect=widget.rect.add( 1, 1, -2, -2 );
 };
 
 VG.Styles.VisualGraphics.prototype.drawTreeWidgetItem=function( canvas, item, selected, rect, contentRect )
 {
-    canvas.pushFont( this.skin.TreeWidget.ItemFont );
+    canvas.pushFont( this.skin.TreeWidgetItemFont );
     var arrowOffset=0;
 
     // --- Get the Icon if needed
@@ -1437,21 +1500,21 @@ VG.Styles.VisualGraphics.prototype.drawTreeWidgetItem=function( canvas, item, se
 
     if ( item.children )
     {
-        var arrowColor=this.skin.TreeWidget.ArrowColor;
-        var color=this.skin.TreeWidget.ItemColor;
+        var arrowColor=this.skin.TreeWidgetArrowColor;
+        var color=this.skin.TreeWidgetItemColor;
         if ( selected ) 
         {
-            canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, VG.Core.Rect( contentRect.x - this.skin.TreeWidget.ContentBorderSize.width + 4, rect.y, 
-                contentRect.width + 2*this.skin.TreeWidget.ContentBorderSize.width - 8, rect.height ), this.skin.TreeWidget.SelectedItemBackgroundColor );                    
-            color=this.skin.TreeWidget.SelectedItemColor;
-            arrowColor=this.skin.TreeWidget.SelectedItemColor;
+            canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, VG.Core.Rect( contentRect.x - this.skin.TreeWidgetContentBorderSize.width + 4, rect.y, 
+                contentRect.width + 2*this.skin.TreeWidgetContentBorderSize.width - 8, rect.height ), this.skin.TreeWidgetSelectedItemBackgroundColor );                    
+            color=this.skin.TreeWidgetSelectedItemColor;
+            arrowColor=this.skin.TreeWidgetSelectedItemColor;
         }
 
         if ( !item.open ) {
-            var yOffset=rect.y + (rect.height - this.skin.TreeWidget.ArrowSize.height) / 2;
-            canvas.draw2DShape( VG.Canvas.Shape2D.ArrowRight, VG.Core.Rect( rect.x + 4, yOffset, this.skin.TreeWidget.ArrowSize.width, this.skin.TreeWidget.ArrowSize.height ), arrowColor );        
+            var yOffset=rect.y + (rect.height - this.skin.TreeWidgetArrowSize.height) / 2;
+            canvas.draw2DShape( VG.Canvas.Shape2D.ArrowRight, VG.Core.Rect( rect.x + 4, yOffset, this.skin.TreeWidgetArrowSize.width, this.skin.TreeWidgetArrowSize.height ), arrowColor );        
 
-            arrowOffset=this.skin.TreeWidget.ArrowSize.height + 8;
+            arrowOffset=this.skin.TreeWidgetArrowSize.height + 8;
 
             if ( item.icon ) 
             {
@@ -1464,10 +1527,10 @@ VG.Styles.VisualGraphics.prototype.drawTreeWidgetItem=function( canvas, item, se
             canvas.drawTextRect( item.text, rect.add( arrowOffset, 0, -arrowOffset, 0), color, 0, 1 );        
         } else
         {
-            var yOffset=rect.y + (rect.height - this.skin.TreeWidget.ArrowSize.width) / 2;
-            canvas.draw2DShape( VG.Canvas.Shape2D.FlippedTriangle, VG.Core.Rect( rect.x, yOffset, this.skin.TreeWidget.ArrowSize.height, this.skin.TreeWidget.ArrowSize.width ), arrowColor );        
+            var yOffset=rect.y + (rect.height - this.skin.TreeWidgetArrowSize.width) / 2;
+            canvas.draw2DShape( VG.Canvas.Shape2D.FlippedTriangle, VG.Core.Rect( rect.x, yOffset, this.skin.TreeWidgetArrowSize.height, this.skin.TreeWidgetArrowSize.width ), arrowColor );        
 
-            arrowOffset=this.skin.TreeWidget.ArrowSize.height + 8;
+            arrowOffset=this.skin.TreeWidgetArrowSize.height + 8;
 
             if ( item.icon ) 
             {
@@ -1482,8 +1545,8 @@ VG.Styles.VisualGraphics.prototype.drawTreeWidgetItem=function( canvas, item, se
     {
         if ( selected ) 
         {
-            canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, VG.Core.Rect( contentRect.x - this.skin.TreeWidget.ContentBorderSize.width + 4, rect.y, 
-                contentRect.width + 2*this.skin.TreeWidget.ContentBorderSize.width - 8, rect.height ), this.skin.TreeWidget.SelectedItemBackgroundColor );                    
+            canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, VG.Core.Rect( contentRect.x - this.skin.TreeWidgetContentBorderSize.width + 4, rect.y, 
+                contentRect.width + 2*this.skin.TreeWidgetContentBorderSize.width - 8, rect.height ), this.skin.TreeWidgetSelectedItemBackgroundColor );                    
 
             var offset=0;
             if ( item.icon ) 
@@ -1494,7 +1557,7 @@ VG.Styles.VisualGraphics.prototype.drawTreeWidgetItem=function( canvas, item, se
                 offset=item.icon.width + 8;
             }
 
-            canvas.drawTextRect( item.text, rect.add( offset, 0, -offset, 0 ), this.skin.TreeWidget.SelectedItemColor, 0, 1 );  
+            canvas.drawTextRect( item.text, rect.add( offset, 0, -offset, 0 ), this.skin.TreeWidgetSelectedItemColor, 0, 1 );  
         } else
         {
             var offset=0;
@@ -1506,28 +1569,18 @@ VG.Styles.VisualGraphics.prototype.drawTreeWidgetItem=function( canvas, item, se
                 offset=item.icon.width + 8;
             }
 
-            canvas.drawTextRect( item.text, rect.add( offset, 0, -offset, 0), this.skin.TreeWidget.ItemColor, 0, 1 );  
+            canvas.drawTextRect( item.text, rect.add( offset, 0, -offset, 0), this.skin.TreeWidgetItemColor, 0, 1 );  
         }
     }
 
     canvas.popFont();
 };
 
-VG.Styles.VisualGraphics.prototype.drawTableWidgetRowBackground=function( canvas, tableWidget, rowRect, layout, selected )
-{
-    if ( selected )
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rowRect, canvas.style.skin.TableWidget.SelectionColor );
-};
-
-VG.Styles.VisualGraphics.prototype.drawTableWidgetHeaderBackground=function( canvas, rect )
-{
-};
-
 VG.Styles.VisualGraphics.prototype.drawTableWidgetSeparator=function( canvas, separator )
 {
     var color;
-    if ( !separator.disabled ) color=this.skin.TableWidget.Header.SeparatorColor;
-    else color=this.skin.TableWidget.DisabledSeparatorColor;
+    if ( !separator.disabled ) color=this.skin.TableWidgetSeparatorColor;
+    else color=this.skin.TableWidgetDisabledSeparatorColor;
 
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( separator.contentRect.x, separator.contentRect.y, 1, separator.contentRect.height ), color );
 };
@@ -1535,20 +1588,20 @@ VG.Styles.VisualGraphics.prototype.drawTableWidgetSeparator=function( canvas, se
 VG.Styles.VisualGraphics.prototype.drawTableWidgetHeaderSeparator=function( canvas, widget )
 {
     var color;
-    if ( !widget.disabled ) color=this.skin.TableWidget.Header.SeparatorColor;
-    else color=this.skin.TableWidget.DisabledSeparatorColor;
+    if ( !widget.disabled ) color=this.skin.TableWidgetSeparatorColor;
+    else color=this.skin.TableWidgetDisabledSeparatorColor;
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( widget.headerLayout.rect.x, widget.headerLayout.rect.bottom() + this.skin.TableWidget.Header.SeparatorHeight / 2, 
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( widget.headerLayout.rect.x, widget.headerLayout.rect.bottom() + this.skin.TableWidgetHeaderSeparatorHeight / 2, 
         widget.headerLayout.rect.width, 1 ), color );
 };
 
 VG.Styles.VisualGraphics.prototype.drawTableWidgetFooterSeparator=function( canvas, widget )
 {
     var color;
-    if ( !widget.disabled ) color=this.skin.TableWidget.Header.SeparatorColor;
-    else color=this.skin.TableWidget.DisabledSeparatorColor;
+    if ( !widget.disabled ) color=this.skin.TableWidgetSeparatorColor;
+    else color=this.skin.TableWidgetDisabledSeparatorColor;
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( widget.footerLayout.rect.x, widget.footerLayout.rect.y - this.skin.TableWidget.Footer.SeparatorHeight/2, 
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( widget.footerLayout.rect.x, widget.footerLayout.rect.y - this.skin.TableWidgetFooterSeparatorHeight/2, 
         widget.footerLayout.rect.width, 1 ), color );
 };
 
@@ -1569,6 +1622,5 @@ VG.Styles.VisualGraphics.prototype.multipliedImage=function( image, rM, gM, bM )
     return newImage;
 };
 
-var vgStyle=new VG.Styles.VisualGraphics()
-VG.Styles.pool.push( vgStyle );
-VG.context.style=vgStyle;
+VG.context.style=new VG.Styles.VisualGraphics();
+
