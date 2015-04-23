@@ -82,10 +82,10 @@ bool loadStyleImage(JSContext *cx, unsigned argc, jsval *vp)
     strcat( path, "/icons/" );
     strcat( path, JS_EncodeString( cx, name ) );
 
+	//printf( "%s\n", path );
+
     VImage image;
     
-    //printf( "%s\n", path );
-
     if (VImage::loadFromFile(path, image))
     {
         // --- Create a new image
@@ -99,10 +99,6 @@ bool loadStyleImage(JSContext *cx, unsigned argc, jsval *vp)
         RootedValue imageNameValue(cx); imageNameValue.setString( name );//JS_NewStringCopyN( cx, name, strlen(name) ) );
         RootedObject imageObject(cx, &imageValue.toObject() );
         JS_SetProperty( cx, HandleObject(imageObject), "name", MutableHandleValue(&imageNameValue) );
-
-        // --- Set the stylePath
-        RootedValue imageStylePathValue(cx); imageStylePathValue.setString( style );
-        JS_SetProperty( cx, HandleObject(imageObject), "stylePath", MutableHandleValue(&imageStylePathValue) );
 
         // --- Copy the image data
         RootedValue data(cx); 
@@ -133,7 +129,7 @@ bool loadStyleImage(JSContext *cx, unsigned argc, jsval *vp)
 
         // --- Add the image to the pool
 
-        RootedValue imagePoolRootValue( cx, JS::Value() );
+        Value imagePoolValue; RootedValue imagePoolRootValue( cx, imagePoolValue );
         ok = JS_EvaluateScript( cx, HandleObject(thisObj), "VG.context.imagePool", strlen("VG.context.imagePool"), "unknown", 1, MutableHandleValue( &imagePoolRootValue ) );
 
         RootedValue rc(cx); MutableHandleValue rcHandle( &rc );
@@ -706,10 +702,7 @@ bool addNativeMenuItem(JSContext *cx, unsigned argc, jsval *vp)
     {
         JS_GetProperty( cx, HandleObject(shortcutObject), "key", MutableHandleValue(&value) );
         string = value.toString();
-
-        //crashes on windows if null
-        if ( string )
-            keyChars=JS_EncodeString( cx, string );
+        keyChars=JS_EncodeString( cx, string );
 
         JS_GetProperty( cx, HandleObject(shortcutObject), "modifier", MutableHandleValue(&value) );
         mod1=value.toInt32();

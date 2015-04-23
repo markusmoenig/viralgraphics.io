@@ -358,13 +358,13 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
         }
     }
 
-    if ( !this.backgroundColor ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, canvas.style.skin.Scroller.BackgroundColor );
+    if ( !this.backgroundColor ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, canvas.style.skin.ScrollerBackgroundColor );
     else canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, this.backgroundColor );
 
     // ---
 
     var headerTextColor;
-    if ( !this.headerTextColor ) headerTextColor=canvas.style.skin.Scroller.HeaderTextColor;
+    if ( !this.headerTextColor ) headerTextColor=canvas.style.skin.ScrollerHeaderTextColor;
     else headerTextColor=this.headerTextColor;
 
     var imageDim=28;
@@ -448,7 +448,7 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
 
     if ( typeof(item.content) === 'string' )
     {
-        var font=VG.context.style.skin.Scroller.TextItemHeaderFont;
+        var font=VG.context.style.skin.ScrollerTextItemHeaderFont;
         canvas.pushFont( font ); 
 
         this.contentRect.set( this.rect.x + 44 + imageDim + 50, this.rect.y + 34 + imageDim - canvas.getLineHeight() - font.triFont.descender * font.scale, 0, this.rect.height );
@@ -482,7 +482,7 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
 
         canvas.popFont();
 
-        canvas.pushFont( VG.context.style.skin.Scroller.TextItemContentFont );
+        canvas.pushFont( VG.context.style.skin.ScrollerTextItemContentFont );
 
         this.contentRect.y+=this.contentRect.height + 10;
         this.contentRect.height=this.rect.height - (this.rect.y - this.contentRect.y);
@@ -510,7 +510,7 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
     } else
     if ( item.content instanceof VG.Core.Image )
     {
-        var font=VG.context.style.skin.Scroller.ImageItemHeaderFont;
+        var font=VG.context.style.skin.ScrollerImageItemHeaderFont;
         canvas.pushFont( font ); 
 
         this.contentRect.set( this.rect.x + 44 + imageDim, this.rect.y + 34 + imageDim - canvas.getLineHeight() - font.triFont.descender * font.scale, 0, 0 );

@@ -38,7 +38,6 @@ VG.UI.ListWidget=function()
     this.vScrollbar=0;
     this.needsVScrollbar=false;
     this.verified=false;
-    this._itemHeight=-1;
 
     // --- Setup Default Context Menu
 
@@ -89,20 +88,6 @@ VG.UI.ListWidget.prototype.bind=function( collection, path )
     return this.controller;
 };
 
-Object.defineProperty( VG.UI.ListWidget.prototype, "itemHeight", 
-{
-    get: function() {
-        if ( this._itemHeight === -1 ) {
-            if ( this.smallItemsMenuItem.checked )
-                return VG.context.style.skin.ListWidget.SmallItemHeight;
-            else return VG.context.style.skin.ListWidget.BigItemHeight;           
-        } else return this._itemHeight;
-    },
-    set: function( itemHeight ) {
-        this._itemHeight=itemHeight;
-    }    
-});
-
 Object.defineProperty( VG.UI.ListWidget.prototype, "bigItems", 
 {
     get: function() {
@@ -118,7 +103,8 @@ VG.UI.ListWidget.prototype.switchToBigItems=function()
 {
     this.bigItemsMenuItem.checked=true;
     this.smallItemsMenuItem.checked=false;
-    this.spacing=VG.context.style.skin.ListWidget.BigItemDistance;
+    this.itemHeight=VG.context.style.skin.ListWidgetBigItemHeight;
+    this.spacing=VG.context.style.skin.ListWidgetBigItemDistance;
     this.verified=false;
 
     VG.update();   
@@ -128,7 +114,8 @@ VG.UI.ListWidget.prototype.switchToSmallItems=function()
 {
     this.bigItemsMenuItem.checked=false;
     this.smallItemsMenuItem.checked=true;
-    this.spacing=VG.context.style.skin.ListWidget.SmallItemDistance;
+    this.itemHeight=VG.context.style.skin.ListWidgetSmallItemHeight;
+    this.spacing=VG.context.style.skin.ListWidgetSmallItemDistance;
     this.verified=false;
 
     VG.update();
@@ -183,8 +170,6 @@ VG.UI.ListWidget.prototype.keyDown=function( keyCode )
 
 VG.UI.ListWidget.prototype.mouseWheel=function( step )
 {
-    if ( !this.needsVScrollbar ) return;
-
     if ( step > 0 ) {
         this.offset-=this.itemHeight + this.spacing;
         this.vScrollbar.scrollTo( this.offset );   
@@ -291,21 +276,12 @@ VG.UI.ListWidget.prototype.selectionChanged=function()
 
 VG.UI.ListWidget.prototype.paintWidget=function( canvas )
 {
-    VG.context.style.drawGeneralBorder( canvas, this );
+    VG.context.style.drawListWidgetBorder( canvas, this );
 
     if ( !this.controller.length ) return;
 
-    if ( this.smallItemsMenuItem.checked ) {
-        this.spacing=VG.context.style.skin.ListWidget.SmallItemDistance;
-    } else {
-        this.spacing=VG.context.style.skin.ListWidget.BigItemDistance;
-    }
-
-    this.contentRect.x+=canvas.style.skin.ListWidget.Margin.left; 
-    this.contentRect.y+=canvas.style.skin.ListWidget.Margin.top;
-    this.contentRect.width-=2*canvas.style.skin.ListWidget.Margin.right; 
-    this.contentRect.height-=2*canvas.style.skin.ListWidget.Margin.bottom; 
     canvas.setClipRect( this.contentRect );
+    this.contentRect=this.contentRect.add( 4, 4, -8, -8 );
 
     if ( !this.verified || canvas.hasBeenResized )
         this.verifyScrollbar();
@@ -315,10 +291,10 @@ VG.UI.ListWidget.prototype.paintWidget=function( canvas )
     var paintRect=VG.Core.Rect( this.contentRect );
     paintRect.height=this.itemHeight;
 
-    if ( this.needsVScrollbar ) paintRect.width-=canvas.style.skin.Scrollbar.Size + canvas.style.skin.ListWidget.ScrollbarXOffset + 2;
+    if ( this.needsVScrollbar ) paintRect.width-=canvas.style.skin.ScrollbarSize + 1;
 
-    if ( this.bigItems ) canvas.pushFont( canvas.style.skin.ListWidget.BigItemFont );
-    else canvas.pushFont( canvas.style.skin.ListWidget.SmallItemFont );
+    if ( this.bigItems ) canvas.pushFont( canvas.style.skin.ListWidgetBigItemFont );
+    else canvas.pushFont( canvas.style.skin.ListWidgetSmallItemFont );
 
     paintRect.y=this.contentRect.y - this.offset;
 
@@ -326,9 +302,7 @@ VG.UI.ListWidget.prototype.paintWidget=function( canvas )
         var item=this.controller.at( i ) ;
 
         if ( paintRect.y + this.itemHeight >= this.contentRect.y || paintRect.y < this.contentRect.bottom() ) {
-            VG.context.style.drawListWidgetItem( canvas, item, this.controller.isSelected( item ), paintRect, !this.paintItemCallback );
-
-            if ( this.paintItemCallback ) this.paintItemCallback( canvas, item, paintRect, this.controller.isSelected( item ) );
+            VG.context.style.drawListWidgetItem( canvas, item, this.controller.isSelected( item ), paintRect );
 
             paintRect.y+=this.itemHeight + this.spacing;
         } 
@@ -337,8 +311,7 @@ VG.UI.ListWidget.prototype.paintWidget=function( canvas )
     canvas.popFont();        
 
     if ( this.needsVScrollbar ) {
-        this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() + canvas.style.skin.ListWidget.ScrollbarXOffset - canvas.style.skin.Scrollbar.Size - 2, 
-            this.contentRect.y, canvas.style.skin.Scrollbar.Size, this.contentRect.height );
+        this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() - canvas.style.skin.ScrollbarSize + 2, this.contentRect.y, canvas.style.skin.ScrollbarSize, this.contentRect.height );
 
         // this.totalItemHeight == Total height of all Items in the list widget including spacing
         // visibleHeight == Total height of all currently visible items

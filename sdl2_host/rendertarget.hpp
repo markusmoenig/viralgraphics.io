@@ -103,7 +103,7 @@ public:
         glBindFramebuffer( GL_FRAMEBUFFER, 0 );
     }
 
-    void destroy()
+    void release()
     {
         /** Realeses the frame buffer from gpu */
         if (id == 0) return;
@@ -120,7 +120,7 @@ public:
     void dispose()
     {
         /** Disposes the render target */
-        destroy();
+        release();
         //VG.Renderer().removeResource(this);
     }
 
@@ -162,7 +162,7 @@ public:
         /** Resizes the frame buffer, it must not be binded as this recreates
          *  the interal data */
 
-        destroy();
+        release();
 
         this->w = w;
         this->h = h;
@@ -210,7 +210,7 @@ public:
             clearBits |= GL_COLOR_BUFFER_BIT;
         }
 
-        //if ( depth != -1 )
+        if ( depth != -1 )
         {
             glClearDepthf(depth);
             clearBits |= GL_DEPTH_BUFFER_BIT;

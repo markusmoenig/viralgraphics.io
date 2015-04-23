@@ -75,7 +75,7 @@ VG.UI.DockWidget.prototype.mouseMove=function( event )
 
 VG.UI.DockWidget.prototype.mouseDown=function( event )
 {
-    if ( event.pos.y >= this.rect.y && event.pos.y <= ( this.rect.y + VG.context.style.skin.DockWidget.Header.Height ) ) 
+    if ( event.pos.y >= this.rect.y && event.pos.y <= ( this.rect.y + VG.context.style.skin.DockWidgetHeaderHeight ) ) 
     {
         this.dragOp=true;
         this.dragOpMoved=false;
@@ -240,8 +240,8 @@ VG.UI.DockStripWidget.prototype.paintWidget=function( canvas )
 {
     VG.context.style.drawDockStripWidget( canvas, this );
 
-    this.contentRect.set( this.rect.add( 0, VG.context.style.skin.DockStripWidget.HeaderHeight, 0, -1 ) );
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.contentRect, VG.context.style.skin.DockStripWidget.BackgroundColor);        
+    this.contentRect.set( this.rect.add( 0, VG.context.style.skin.DockStripWidgetHeaderHeight, 0, -1 ) );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.contentRect, VG.context.style.skin.DockStripWidgetBackgroundColor);        
 
     this.layout.rect.set( this.contentRect );
     this.layout.layout( canvas );  
@@ -266,7 +266,7 @@ VG.UI.DockStripButton=function( text )
     this.horizontalExpanding=false;
     this.verticalExpanding=false;
     
-    this.minimumSize.width=VG.context.style.skin.DockStripWidget.ButtonMinimumWidth;
+    this.minimumSize.width=VG.context.style.skin.DockStripWidgetButtonMinimumWidth;
 };
 
 VG.UI.DockStripButton.prototype=VG.UI.Widget();
@@ -281,7 +281,7 @@ VG.UI.DockStripButton.prototype.calcSize=function( canvas )
 
     if ( this.text.length && !this.iconName ) {
 
-        canvas.pushFont( canvas.style.skin.DockStripWidget.Font );        
+        canvas.pushFont( canvas.style.skin.DockStripWidgetFont );        
         canvas.getTextSize( this.text, size );
         canvas.popFont();
 
@@ -291,7 +291,7 @@ VG.UI.DockStripButton.prototype.calcSize=function( canvas )
         size.width=size.height;
         size.height=temp;
 
-        if ( size.width < VG.context.style.skin.DockStripWidget.ButtonMinimumWidth ) size.width=VG.context.style.skin.DockStripWidget.ButtonMinimumWidth;
+        if ( size.width < VG.context.style.skin.DockStripWidgetButtonMinimumWidth ) size.width=VG.context.style.skin.DockStripWidgetButtonMinimumWidth;
         //size.height=26;
     } else 
     if ( this.icon )
@@ -360,8 +360,8 @@ VG.UI.DockStripButton.prototype.paintWidget=function( canvas )
             } else canvas.drawImage( VG.Core.Point( x, y ), this.icon );
         }
     } else {
-        canvas.pushFont( canvas.style.skin.DockStripWidget.Font );
-        canvas.drawTextRect( this.text, this.contentRect, this.visualState === VG.UI.Widget.VisualState.Hover ? canvas.style.skin.DockStripWidget.HoverColor : canvas.style.skin.DockStripWidget.TextColor, 1, 1, -90 );
+        canvas.pushFont( canvas.style.skin.DockStripWidgetFont );
+        canvas.drawTextRect( this.text, this.contentRect, this.visualState === VG.UI.Widget.VisualState.Hover ? canvas.style.skin.DockStripWidgetHoverColor : canvas.style.skin.DockStripWidgetTextColor, 1, 1, -90 );
         canvas.popFont();
     }
 
@@ -369,7 +369,7 @@ VG.UI.DockStripButton.prototype.paintWidget=function( canvas )
         var rect=VG.Core.Rect( this.parent.rect );
         rect.x=rect.right()-3; rect.width=3;
         rect.y=this.rect.y; rect.height=this.rect.height;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect, canvas.style.skin.DockStripWidget.HoverColor );
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect, canvas.style.skin.DockStripWidgetHoverColor );
     }      
 };
 
@@ -394,7 +394,7 @@ VG.UI.DockStripSeparator.prototype=VG.UI.Widget();
 
 VG.UI.DockStripSeparator.prototype.calcSize=function()
 {
-    var size=VG.Core.Size( 40, VG.context.style.skin.DockStripWidget.Separator.Height );
+    var size=VG.Core.Size( 40, 1 );//VG.context.style.skin.ToolbarHeight );
     return size;
 };
 
@@ -403,11 +403,6 @@ VG.UI.DockStripSeparator.prototype.paintWidget=function( canvas )
     var size=this.calcSize();
     this.contentRect.set( this.rect );
 
-    if ( VG.context.style.skin.DockStripWidget.Separator.Height === 1 ) {
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y, this.rect.width, 1 ), VG.context.style.skin.DockStripWidget.Separator.Color );
-    } else
-    {
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y, this.rect.width, 1 ), VG.context.style.skin.DockStripWidget.Separator.Color1 );
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y+1, this.rect.width, 1 ), VG.context.style.skin.DockStripWidget.Separator.Color2 );
-    }
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y, this.rect.width, 1 ), VG.context.style.skin.DockStripWidgetSeparatorColor );
+    //canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y+2, this.rect.width, 1 ), VG.context.style.skin.DockStripWidgetSeparatorColor );
 };
