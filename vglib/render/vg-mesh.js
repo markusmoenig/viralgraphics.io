@@ -158,7 +158,8 @@ VG.Render.Mesh.prototype.init = function(vSize, iSize, bare, layout)
         this.addVertexBuffer(VG.Type.Float,
             [
                 { name: "position", offset: 0, stride: 4 },
-                { name: "normal", offset: 4, stride: 4 },
+                { name: "normal", offset: 4, stride: 3 },
+                //{ name: "uv", offset: 7, stride: 2 }
             ]
         );
 
@@ -291,11 +292,11 @@ VG.Render.Mesh.prototype.set = function(index, vertexIndex, values)
     var b = this.vBuffers[index[0]];
     var attr = b.layout[index[1]];
 
-    for (var i = 0; i < attr.stride; i++)
-    {
-        var value = i < values.length ? value = values[i] : 0;
+    if (attr.stride != values.length) throw "Values length must be equal to the atrribute stride";
 
-        b.vb.setBuffer((vertexIndex * b.stride + attr.offset) + i, value);
+    for (var i = 0; i < values.length; i++)
+    {
+        b.vb.setBuffer((vertexIndex * b.stride + attr.offset) + i, values[i]);
     }
 }
 
@@ -335,8 +336,6 @@ VG.Render.Mesh.prototype.setTriangleArray = function(array)
     for (var attrName in array)
     {
         var index = this.layout[attrName];
-
-        if (index === undefined) continue;
 
         var b = this.vBuffers[index[0]];
         var attr = b.layout[index[1]];
@@ -447,12 +446,12 @@ VG.Render.Mesh.makeBox = function(width, height, depth)
             ],
             normal:
             [
-                +1,  0,  0, 0,  +1,  0,  0, 0,  +1,  0,  0, 0,  +1,  0,  0, 0,  +1,  0,  0, 0,  +1,  0,  0, 0,
-                -1,  0,  0, 0,  -1,  0,  0, 0,  -1,  0,  0, 0,  -1,  0,  0, 0,  -1,  0,  0, 0,  -1,  0,  0, 0,
-                 0, +1,  0, 0,   0, +1,  0, 0,   0, +1,  0, 0,   0, +1,  0, 0,   0, +1,  0, 0,   0, +1,  0, 0,
-                 0, -1,  0, 0,   0, -1,  0, 0,   0, -1,  0, 0,   0, -1,  0, 0,   0, -1,  0, 0,   0, -1,  0, 0,
-                 0,  0, +1, 0,   0,  0, +1, 0,   0,  0, +1, 0,   0,  0, +1, 0,   0,  0, +1, 0,   0,  0, +1, 0,
-                 0,  0, -1, 0,   0,  0, -1, 0,   0,  0, -1, 0,   0,  0, -1, 0,   0,  0, -1, 0,   0,  0, -1, 0
+                +1,  0,  0, +1,  0,  0, +1,  0,  0, +1,  0,  0, +1,  0,  0, +1,  0,  0,
+                -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0,
+                 0, +1,  0,  0, +1,  0,  0, +1,  0,  0, +1,  0,  0, +1,  0,  0, +1,  0,
+                 0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,
+                 0,  0, +1,  0,  0, +1,  0,  0, +1,  0,  0, +1,  0,  0, +1,  0,  0, +1,
+                 0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0, -1
             ]
 
         }

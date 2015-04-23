@@ -35,9 +35,7 @@ VG.HostProperty={
 
 	"DrawMenus" : 12,
 
-	"ProjectChangedState" : 20,
-
-	"Docs.Enum" : 9000
+	"ProjectChangedState" : 20
 };
 
 VG.AnimationTick=1000.0 / 60.0;

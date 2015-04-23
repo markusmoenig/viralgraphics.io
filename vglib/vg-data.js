@@ -183,8 +183,6 @@ VG.Data.Base.prototype.updateTopLevelBindings=function()
         if  ( cont.path.indexOf(".") === -1 ) {
             cont.object.selected=0;
         }
-
-        if ( cont.object.modelChanged ) cont.object.modelChanged();
     }
 };
 

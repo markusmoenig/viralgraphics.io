@@ -21,9 +21,6 @@
 #include <iostream>
 
 #include "rendertarget.hpp"
-#include "jshost.hpp"
-
-extern JSHost *g_host;
 
 // --------------------------------------------------------------- Member Functions
 
@@ -36,12 +33,12 @@ bool RenderTarget_create(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-bool RenderTarget_destroy(JSContext *cx, unsigned argc, jsval *vp)
+bool RenderTarget_release(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
 
     RenderTarget *target=(RenderTarget *) JS_GetPrivate( &value.toObject() );
-    target->destroy();
+    target->release();
     return true;
 }
 
@@ -52,16 +49,8 @@ bool RenderTarget_dispose(JSContext *cx, unsigned argc, jsval *vp)
     RenderTarget *target=(RenderTarget *) JS_GetPrivate( &value.toObject() );
     target->dispose();
 
-    // --- VG.Renderer().removeResource(this);
+    //TODO VG.Renderer().removeResource(this);
     
-    RootedValue *renderer=g_host->executeScript( "VG.Renderer()" );
-    RootedObject rendererObject( cx, &renderer->toObject() );
-
-    RootedValue rc( cx );
-    RootedValue thisValue( cx, value );
-
-    bool ok=Call( cx, HandleObject( rendererObject ), "removeResource", HandleValueArray( thisValue ), MutableHandleValue( &rc ) );
-
     return true;
 }
 
@@ -156,8 +145,8 @@ bool RenderTarget_clear(JSContext *cx, unsigned argc, jsval *vp)
     GLfloat g = -1;
     GLfloat b = -1;
     GLfloat a = -1;
-	
-    GLint depth=1.0;
+
+    GLint depth=-1;
 
     if ( argc >= 1 && args[0].isObject() )
     {
@@ -231,7 +220,7 @@ bool SetRenderTargetProperty( JSContext *cx, Handle<JSObject *> object, Handle<j
 
 static JSFunctionSpec rendertarget_functions[] = {
     JS_FS( "create", RenderTarget_create, 0, 0 ),
-    JS_FS( "destroy", RenderTarget_destroy, 0, 0 ),
+    JS_FS( "release", RenderTarget_release, 0, 0 ),
     JS_FS( "dispose", RenderTarget_dispose, 0, 0 ),
     JS_FS( "unbind", RenderTarget_unbind, 0, 0 ),
     JS_FS( "bind", RenderTarget_bind, 0, 0 ),

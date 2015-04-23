@@ -79,8 +79,6 @@ VG.UI.Workspace=function()
     this.loginDialog=null;
     this.signupDialog=null;
     this.userName="";
-    this.userId=-1;
-    this.userIsAdmin=false;
     this.userNamePopup=VG.UI.ToolPanelPopupButton();
     this.userNamePopup.addItems( "Settings", "Logout" );
 
@@ -93,7 +91,6 @@ VG.UI.Workspace=function()
     this.operatingSystem=VG.getHostProperty( VG.HostProperty.OperatingSystem );
 
     this.textClipboard="";
-    this.nodesClipboard="";
 
     // --- Force a redraw every 1000ms
     this.autoRedrawInterval=1000;
@@ -106,13 +103,11 @@ VG.UI.Workspace=function()
         if ( response.status == "ok" && response.loggedIn == true )   
         {
             this.userName=response.username;          
-            this.userId=response.userid;          
-            this.userIsAdmin=response.isAdmin;
 
-            this.modelLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName, this.userId );
+            this.modelLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName );
 
             if ( this.callbackForLoggedStateChanged )
-                this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName, this.userId );        
+                this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName );        
             VG.update();           
         }    
     }.bind(this), "GET" );
@@ -166,18 +161,16 @@ VG.UI.Workspace.prototype.resize=function( width, height )
     VG.Renderer().onResize( width, height );
 };
 
-VG.UI.Workspace.prototype.addDockWidget=function( dockWidget, location, percent )
+VG.UI.Workspace.prototype.addDockWidget=function( dockWidget, location )
 {
     /**Adds a Dock widget to the Workspace.
      * @param {VG.UI.DockWidget} widget - The DockWidget to add to the Workspace
      * @param {VG.UI.DockWidgetLocation} location - Currently limited to VG.UI.DockWidgetLocation.Left and VG.UI.DockWidgetLocation.Right.
-     * @param {number} percent - Optional, the width this dock widget should cover in percent.
      */
 
     if ( !location ) location=VG.UI.DockWidgetLocation.Left;
 
-    if ( !percent )
-        percent=dockWidget._oldPercent ? dockWidget._oldPercent : 20;
+    var percent=dockWidget._oldPercent ? dockWidget._oldPercent : 20;
 
     var contentIndex=this.layout.children.indexOf( this._content );
     if ( contentIndex > -1 ) {
@@ -302,7 +295,7 @@ VG.UI.Workspace.prototype.paintWidget=function()
             var menubar=this.menubars[i];
 
             menubar.rect.x=this.contentRect.x; menubar.rect.y=this.contentRect.y;
-            menubar.rect.setSize( this.rect.width, VG.context.style.skin.Menubar.Height );
+            menubar.rect.setSize( this.rect.width, VG.context.style.skin.MenubarHeight );
 
             menubar.paintWidget( this.canvas );
 
@@ -321,7 +314,7 @@ VG.UI.Workspace.prototype.paintWidget=function()
 
         if ( i === 0 )  {
             // --- VG logo on first toolbar
-            toolbar.layout.margin.left=VG.context.style.skin.Toolbar.Margin.left + 15;
+            toolbar.layout.margin.left=VG.context.style.skin.ToolbarLeftMargin + 25;
 
             if ( showLoginArea || this.userName.length > 0 ) 
             {
@@ -345,8 +338,9 @@ VG.UI.Workspace.prototype.paintWidget=function()
         }
 
         toolbar.rect.y=this.contentRect.y;
-        toolbar.rect.setSize( this.rect.width, VG.context.style.skin.Toolbar.Height );
+        toolbar.rect.setSize( this.rect.width, VG.context.style.skin.ToolbarHeight );
         toolbar.paintWidget( this.canvas );
+        //this.contentRect.set( this.contentRect.add( 0, toolbar.rect.bottom(), 0, -toolbar.rect.height ) );
         this.contentRect.y+=toolbar.rect.height;
         this.contentRect.height-=toolbar.rect.height;
 
@@ -354,27 +348,16 @@ VG.UI.Workspace.prototype.paintWidget=function()
             // --- VG logo on first toolbar
 
             if ( !this.vgFont ) {
-                this.vgFont=VG.Font.Font( "Visual Graphics", VG.context.style.skin.Toolbar.Logo.Size );
+                this.vgFont=VG.Font.Font( "Visual Graphics", VG.context.style.skin.ToolbarLogoSize );
                 this.logoRect=VG.Core.Rect( toolbar.rect ); 
-                this.logoRect.width=VG.context.style.skin.Toolbar.Margin.left;
-            } else if ( VG.context.style.skin.Toolbar.Logo.Size !== this.vgFont.size ) { 
-                this.vgFont.setSize( VG.context.style.skin.Toolbar.Logo.Size );
-                this.logoRect.copy( toolbar.rect );
-                this.logoRect.width=VG.context.style.skin.Toolbar.Margin.left;                
+                this.logoRect.width=VG.context.style.skin.ToolbarLeftMargin;                
             }
 
-            if ( !this.appIconImage ) 
-            {
-                this.canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.logoRect, VG.context.style.skin.Toolbar.Logo.BackgroundColor );
+            this.canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.logoRect, VG.context.style.skin.ToolbarLogoBackgroundColor );
 
-                this.canvas.pushFont( this.vgFont );            
-                this.canvas.drawTextRect( "a", this.logoRect, VG.context.style.skin.Toolbar.Logo.Color, 1, 1 ); 
-                this.canvas.popFont();
-            } else
-            {
-                this.canvas.drawImage( VG.Core.Point( this.logoRect.x + this.logoRect.width - this.appIconImage.width,
-                    this.logoRect.y + (this.logoRect.height - this.appIconImage.height ) / 2 ), this.appIconImage );
-            }
+            this.canvas.pushFont( this.vgFont );            
+            this.canvas.drawTextRect( "a", this.logoRect, VG.context.style.skin.ToolbarLogoColor, 1, 1 ); 
+            this.canvas.popFont();
 
             if ( showLoginArea || this.userName.length > 0 ) 
             {
@@ -403,7 +386,7 @@ VG.UI.Workspace.prototype.paintWidget=function()
 
                     textRect.x=toolbar.rect.x + toolbar.rect.width - textSize.width - signupButtonSize.width - 2;     
                     textRect.width=textSize.width;    
-                    this.canvas.drawTextRect( " ", textRect, VG.context.style.skin.Widget.TextColor, 0, 1 ); 
+                    this.canvas.drawTextRect( " ", textRect, VG.context.style.skin.WidgetTextColor, 0, 1 ); 
 
                     // --- Draw Signin Button
 
@@ -433,7 +416,7 @@ VG.UI.Workspace.prototype.paintWidget=function()
                     var userNameRect=VG.Core.Rect( toolbar.rect );
                     userNameRect.width-=2;
 
-                    this.canvas.drawTextRect( this.userName, userNameRect, VG.context.style.skin.Widget.TextColor, 2, 1 );
+                    this.canvas.drawTextRect( this.userName, userNameRect, VG.context.style.skin.WidgetTextColor, 2, 1 );
                     */
                 }
 
@@ -446,14 +429,14 @@ VG.UI.Workspace.prototype.paintWidget=function()
     
     if ( this.statusbar )
     {
-        this.statusbar.rect.set( 0, this.rect.height - VG.context.style.skin.Statusbar.Height, this.rect.width, VG.context.style.skin.Statusbar.Height );
+        this.statusbar.rect.set( 0, this.rect.height - VG.context.style.skin.StatusbarHeight, this.rect.width, VG.context.style.skin.StatusbarHeight );
         this.statusbar.paintWidget( this.canvas );
-        this.contentRect=this.contentRect.add( 0, 0, 0, -VG.context.style.skin.Statusbar.Height );
+        this.contentRect=this.contentRect.add( 0, 0, 0, -VG.context.style.skin.StatusbarHeight );
     }
     
     // --- Draw Layout
 
-    this.canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.contentRect, VG.context.style.skin.Widget.BackgroundColor );
+    this.canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.contentRect, VG.context.style.skin.WidgetBackgroundColor );
 
     if ( this.layout ) {
         this.layout.rect.set( this.contentRect );
@@ -994,7 +977,7 @@ VG.UI.Workspace.prototype.tick=function( needsRedraw )
     var rt=VG.Renderer().mainRT;
     
     if ( redraw ) { 
-        rt.clear(true, 1.0);
+        rt.clear(true, true);
         rt.setViewport(this.rect);
 
 
@@ -1052,15 +1035,7 @@ VG.UI.Workspace.prototype.findLayoutItemAtMousePos=function( layout, pos )
                             for ( var i=0; i < child.childWidgets.length; ++i ) {
                                 var widget=child.childWidgets[i];
                                 if ( widget.rect.contains( pos ) ) {
-                                    if ( !widget.childWidgets ) return widget;
-                                    else
-                                    {
-                                        for ( var w=0; w < widget.childWidgets.length; ++w ) {
-                                            var subChild=widget.childWidgets[w];
-                                            if ( subChild.rect.contains( pos ) ) return subChild;
-                                        }
-                                        return widget;
-                                    }
+                                    return widget;
                                 }
                             }
                             return child;
@@ -1178,9 +1153,6 @@ VG.UI.Workspace.prototype.modelOpenLocalCallback=function()
             this.callbackForOpen( data );
         }
 
-        // --- Update the model
-        this.dataCollectionForUndoRedo.updateTopLevelBindings();
-
         this.filePath=path;
 
         if ( this.platform === VG.HostProperty.PlatformDesktop )
@@ -1290,25 +1262,24 @@ VG.UI.Workspace.prototype.modelSaveAsLocalCallback=function()
 VG.UI.Workspace.prototype.modelCutCallback=function()
 {   
     if ( this.focusWidget && this.focusWidget.clipboardCut ) 
-        this.focusWidget.clipboardCut();
+        this.focusWidget.clipboardCut( "Text" );
 };
 
 VG.UI.Workspace.prototype.modelCopyCallback=function()
 { 
-    if ( this.focusWidget && this.focusWidget.clipboardCopy ) 
-        this.focusWidget.clipboardCopy();
+    VG.copyToClipboard( "Text", this.focusWidget.copySelection() );
 };
 
 VG.UI.Workspace.prototype.modelPasteCallback=function()
 { 
     if ( this.focusWidget && this.focusWidget.clipboardPaste ) 
-        this.focusWidget.clipboardPaste();
+        this.focusWidget.clipboardPaste( "Text" );
 };
 
 VG.UI.Workspace.prototype.modelDeleteCallback=function()
 {   
     if ( this.focusWidget && this.focusWidget.clipboardDeleteSelection ) 
-        this.focusWidget.clipboardDeleteSelection();
+        this.focusWidget.clipboardDeleteSelection( "Text" );
 };
 
 VG.UI.Workspace.prototype.modelSelectAllCallback=function()
@@ -1317,44 +1288,35 @@ VG.UI.Workspace.prototype.modelSelectAllCallback=function()
         this.focusWidget.selectAll();
 };
 
-VG.UI.Workspace.prototype.modelLoggedStateChanged=function( logged, userName, userId )
+VG.UI.Workspace.prototype.modelLoggedStateChanged=function( logged, userName )
 {
     if ( !logged ) return;
 
     this.userNamePopup.clear();
-    this.userNamePopup.addItems( userName, "Settings", "Logout" );
-    this.userNamePopup.indexChanged=function( index ) {
-        
-        if ( index === 1 ) {
-            this.showUserSettingsDialog();
-            this.userNamePopup.index=0;
-        } else        
-        if ( index === 2 ) {
-            VG.DB.userLogOut( function() {
-                this.userName="";
-                this.userId=-1;
-                this.userIsAdmin=false;
-                VG.update();
-            }.bind( this ) );
-        }
-    }.bind( this );
+    this.userNamePopup.addItems( userName, "Settings", "Logout" );  
 
-    // --- Get the appId of the current application
-    VG.DB.getAppId( function( appId ) { 
-        this.appId=appId;
+    // --- Try to get the appid of the current application
 
+    if ( VG.App && VG.App.url ) 
+    {
+        var url="/app/check/?url=" + VG.Utils.decompressFromBase64( VG.App.url );// + "&domain=" + project.getChildOfName( "Settings" ).domain;
 
-    //VG.DB.createFolder( appId, "filters", "", true, false, this.userId, function( isAppAdmin ) {
-    //    VG.log( "result", isAppAdmin );
-    //}.bind( this ) );
+        VG.sendBackendRequest( url, "", function( responseText ) {
 
-        // --- Check if the logged user is an admin of this app
-        if ( this.userId !== -1 ) {
-            VG.DB.userIsAppAdmin( appId, this.userId, function( isAppAdmin ) {
-                this.userIsAppAdmin=isAppAdmin;
-            }.bind( this ) );
-        }
-    }.bind( this ) );
+            var response=JSON.parse( responseText );
+            var array=response.check;
+                
+            for( var i=0; i < array.length; ++i )
+            {
+                if ( array[i].name === "url" ) {
+                    if ( array[i].exists ) {
+                        this.appId=array[i].appid;
+                    }
+                }
+            }
+
+        }.bind( this ), "GET" );
+    } 
 };
 
 /* 
@@ -1384,13 +1346,8 @@ VG.UI.Workspace.prototype.modelMenuActionRoleValidationCallback=function( menu )
             break;
 
             case VG.UI.ActionItemRole.Paste: 
-
                 if ( VG.clipboardPasteDataForType( "Text" ) && this.focusWidget && this.focusWidget.clipboardPasteIsAvailableForType && this.focusWidget.clipboardPasteIsAvailableForType( "Text" ) )
-                    menuItem.disabled=false;
-                else
-                if ( VG.clipboardPasteDataForType( "Nodes" ) && this.focusWidget && this.focusWidget.clipboardPasteIsAvailableForType && this.focusWidget.clipboardPasteIsAvailableForType( "Nodes" ) )
-                    menuItem.disabled=false; 
-                else menuItem.disabled=true;
+                    menuItem.disabled=false; else menuItem.disabled=true;
             break;  
 
             case VG.UI.ActionItemRole.SelectAll: 
@@ -1585,27 +1542,6 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
     }
 };
 
-VG.UI.Workspace.prototype.getVisibleScreenRect=function( rect )
-{
-    /**Returns a rectangle with the visible screen area. Useful on Websites when the VG app is larger than the visible size and the browser
-     * uses a scrollbar. In this case the returned rectangle contains the width and height of the visible area along with its offet. On all other
-     * platforms the returned retangle is the same size as the Workspace rectangle.
-     * @param {VG.Core.Rect} rect - Optional, the rectangle to fill out. If undefined a new rect will be allocated.
-     * @returns A filled out rectangle with the visible screen space.
-     */    
-
-    if ( !rect ) rect=VG.Core.Rect();
-
-    if ( VG.getHostProperty( VG.HostProperty.Platform ) === VG.HostProperty.PlatformWeb ) {
-        
-        rect.x=document.body.scrollLeft;
-        rect.y=document.body.scrollTop;
-        rect.width=window.innerWidth;
-        rect.height=window.innerHeight;
-    } else rect.set( this.rect );
-    return rect;
-};
-
 VG.UI.Workspace.prototype.showWindow=function( window )
 {
     /**Shows the VG.UI.Window derived object, like VG.UI.Dialog on the Workspace.
@@ -1613,12 +1549,10 @@ VG.UI.Workspace.prototype.showWindow=function( window )
      */     
     if ( this.windows.indexOf( window ) !== -1 ) return;
 
-    var screenRect=this.getVisibleScreenRect();
-
     window.calcSize( this.canvas );
 
     window.rect.x=(this.contentRect.width - window.rect.width) / 2;
-    window.rect.y=(screenRect.height - window.rect.height) / 2;
+    window.rect.y=100;//(this.contentRect.height - window.rect.height) / 2;
 
     window.visible=true;
     window.setFocus();
@@ -1631,20 +1565,4 @@ VG.UI.Workspace.prototype.showWindow=function( window )
     }.bind( this );
     
     this.windows.push( window );
-};
-
-VG.UI.Workspace.prototype.switchToStyle=function( style )
-{
-    VG.context.style=style;
-    VG.context.workspace.canvas.style=style;
-
-    // --- Adjust the CSS background color to the statusbar end color
-    if ( VG.getHostProperty( VG.HostProperty.Platform ) === VG.HostProperty.PlatformWeb ) {
-        var canvas=document.getElementById( 'webgl' );
-        var body=document.body;
-          
-        body.style["background-color"]=VG.context.style.skin.Statusbar.GradientColor2.toHex();
-    }
-            
-    VG.update();
 };
