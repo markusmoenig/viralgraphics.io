@@ -1,11 +1,70 @@
 var widgetExamples=[
 {
+    text : "Checkbox",
+    source : function checkboxExample( message ) {
+
+    var checkbox=VG.UI.Checkbox();
+
+    checkbox.changed=function( checked ) {
+        message( "Checked: " + checked );
+    }.bind( this );
+
+    this.layout=VG.UI.LabelLayout( "Checkbox", checkbox );
+
+    return this.layout;
+},
+},
+
+{
     text : "ListWidget",
     source : function listWidgetExample( message ) {
     var dc=VG.Data.Collection( "MainData" );
     dc.items=[];
 
     var listWidget=VG.UI.ListWidget();
+
+    this.controller=listWidget.bind( dc, "items" );
+    this.controller.addObserver( "selectionChanged", function() {
+        var item=this.controller.selected;
+        message( "Selected \"" + item.text + "\" at index " + this.controller.indexOf( item ) );
+    }.bind( this ) );
+
+    function item( text ) {
+        this.text=text;
+    }
+
+    this.controller.add( new item( "First Item" ) );
+    this.controller.add( new item( "Second Item" ) );
+    this.controller.add( new item( "Third Item" ) );
+
+    return listWidget;
+},
+},
+
+{
+    text : "ListWidget - Custom Items",
+    source : function listWidgetExample( message ) {
+    var dc=VG.Data.Collection( "MainData" );
+    dc.items=[];
+
+    var listWidget=VG.UI.ListWidget();
+
+    listWidget.itemHeight=80;
+    listWidget.paintItemCallback=function( canvas, item, rect, isSelected )  {
+
+        var image=VG.Utils.getImageByName( "vgstyle_status_question.png" );
+        if ( image && image.isValid() ) {
+            canvas.drawImage( VG.Core.Point( rect.x + 10, rect.y + (rect.height - image.height)/2 ), image );
+
+            var rect=VG.Core.Rect( rect.x + 10 + image.width + 15, rect.y, rect.width - (10+image.width+15), rect.height );
+    
+            var color;
+            if ( isSelected ) color=canvas.style.skin.ListWidget.Item.SelectedTextColor;
+            else color=canvas.style.skin.ListWidget.Item.TextColor;
+    
+            canvas.drawTextRect( item.text, rect, color, 0, 1 );
+        }
+    }.bind( this );
 
     this.controller=listWidget.bind( dc, "items" );
     this.controller.addObserver( "selectionChanged", function() {
@@ -45,7 +104,6 @@ var widgetExamples=[
     this.stackedLayout=VG.UI.StackedLayout( this.widget1, this.widget2 );
 
     var labelLayout=VG.UI.LabelLayout( "Current", popupButton );
-    labelLayout.margin.clear();
 
     this.layout=VG.UI.Layout( labelLayout, this.stackedLayout );
     this.layout.vertical=true;
@@ -53,6 +111,24 @@ var widgetExamples=[
     return this.layout;
 },
 },
+
+{
+    text : "Slider",
+    source : function sliderExample( message ) {
+
+    var slider=VG.UI.Slider( 0, 100, 1 );
+    slider.maximumSize.width=200;
+
+    slider.changed=function( checked ) {
+        message( "Value: " + checked );
+    }.bind( this );
+
+    this.layout=VG.UI.LabelLayout( "Slider", slider );
+
+    return this.layout;
+},
+},
+
 
 {
     text : "TableWidget",
@@ -113,6 +189,24 @@ var widgetExamples=[
 },
 
 {
+    text : "Toolbar",
+    source : function toolbarExample( message ) {
+
+    var textButton=VG.UI.ToolButton( "Text Button");
+    textButton.clicked=function() { message( "Text Button Clicked" ); }.bind( this );
+    var iconButton=VG.UI.ToolButton( "Icon Button", "open.png" );
+    iconButton.clicked=function() { message( "Icon Button Clicked" ); }.bind( this );
+
+    var toolbar=VG.UI.Toolbar( textButton, iconButton );
+
+    this.layout=VG.UI.Layout( VG.UI.LayoutVSpacer(), toolbar, VG.UI.LayoutVSpacer() );
+    this.layout.vertical=true;
+
+    return this.layout;
+},
+},
+
+{
     text : "TreeWidget",
     source : function treeWidgetExample( message ) {
     var dc=VG.Data.Collection( "MainData" );
@@ -165,11 +259,21 @@ var layoutExamples=[
 },
 
 {
+    text : "Layout",
+    source : function layoutExample( message ) {
+
+    var layout=VG.UI.Layout( VG.UI.TextEdit("TextEdit #1"), VG.UI.TextEdit("TextEdit #2"), VG.UI.TextEdit("TextEdit #3") );
+    layout.vertical=true;
+
+    return layout;
+},
+},
+
+{
     text : "SplitLayout - Horizontal",
     source : function splitLayoutExample( message ) {
 
     var layout=VG.UI.SplitLayout( VG.UI.TextEdit("30 Percent Space"), 30, VG.UI.TextEdit("70 Percent Space"), 70 );
-    layout.margin.clear();
 
     return layout;
 },
@@ -180,7 +284,6 @@ var layoutExamples=[
     source : function splitLayoutExample( message ) {
 
     var layout=VG.UI.SplitLayout( VG.UI.TextEdit("30 Percent Space"), 30, VG.UI.TextEdit("70 Percent Space"), 70 );
-    layout.margin.clear();
     layout.vertical=true;
 
     return layout;
@@ -207,7 +310,6 @@ var layoutExamples=[
     this.stackedLayout=VG.UI.StackedLayout( this.widget1, this.widget2 );
 
     var labelLayout=VG.UI.LabelLayout( "Current", popupButton );
-    labelLayout.margin.clear();
 
     this.layout=VG.UI.Layout( labelLayout, this.stackedLayout );
     this.layout.vertical=true;
