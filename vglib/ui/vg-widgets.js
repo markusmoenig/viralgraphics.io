@@ -838,7 +838,7 @@ VG.UI.Checkbox.prototype.mouseDown=function( event )
         this.collection.storeDataForPath( this.path, this.checked );   
 
     if ( this.changed )
-        this.changed.call( VG.context );  
+        this.changed( this.checked, this );
 
     VG.update();
 };
@@ -1266,7 +1266,7 @@ VG.UI.Slider.prototype.gotoPixelOffset=function( offset )
         this.value=this.min + offset * perPixel;
 
     if ( this.changed )
-        this.changed.call( VG.context );      
+        this.changed.call( VG.context, this.value, true, this );      
 };
 
 VG.UI.Slider.prototype.mouseUp=function( event )
@@ -1277,7 +1277,7 @@ VG.UI.Slider.prototype.mouseUp=function( event )
             this.collection.storeDataForPath( this.path, this.value );   
 
         if ( this.changed )
-            this.changed.call( VG.context );  
+            this.changed.call( VG.context, this.value, false, this );  
     }
     this.dragging=false;    
 };

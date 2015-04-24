@@ -49,10 +49,12 @@ VG.UI.ToolSeparator.prototype.paintWidget=function( canvas )
 
 // ----------------------------------------------------------------- VG.UI.ToolButton
 
-VG.UI.ToolButton=function( text )
+VG.UI.ToolButton=function( text, iconName )
 {
-    if ( !(this instanceof VG.UI.ToolButton) ) return new VG.UI.ToolButton( text );
-    this.text=arguments[0];
+    if ( !(this instanceof VG.UI.ToolButton) ) return new VG.UI.ToolButton( text, iconName );
+    
+    this.text=text ? text : "";
+    this.iconName=iconName ? iconName : undefined;
     
     VG.UI.Widget.call( this );
     this.name="ToolButton";
@@ -133,7 +135,9 @@ VG.UI.Toolbar=function()
     this.layout=VG.UI.Layout();
 
     for( var i=0; i < arguments.length; ++i )
-        this.addItem( arguments[i] );         
+        this.addItem( arguments[i] );
+
+    this.maximumSize.height=VG.context.style.skin.Toolbar.Height;
 };
 
 VG.UI.Toolbar.prototype=VG.UI.Widget();
@@ -151,8 +155,7 @@ VG.UI.Toolbar.prototype.addItems=function()
 
 VG.UI.Toolbar.prototype.paintWidget=function( canvas )
 {
-    //this.rect.height=VG.context.style.skin.Toolbar.Height;
-
+    this.maximumSize.height=VG.context.style.skin.Toolbar.Height;    
     VG.context.style.drawToolbar( canvas, this );
         
     this.layout.rect.set( this.rect );

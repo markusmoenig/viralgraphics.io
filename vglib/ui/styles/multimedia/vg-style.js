@@ -871,7 +871,7 @@ VG.Styles.Multimedia.prototype.drawToolbar=function( canvas, toolbar )
     this.workRect1.y+=this.workRect1.height;
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.workRect1, this.skin.Toolbar.GradientColor2 );
 
-    this.workRect1.y=toolbar.rect.y + toolbar.rect.height - 2;
+    this.workRect1.y=toolbar.rect.y + toolbar.rect.height - 2; this.workRect1.height=1;
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.workRect1, this.skin.Toolbar.BottomBorderColor1 );
     this.workRect1.y+=1;
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.workRect1, this.skin.Toolbar.BottomBorderColor2 );

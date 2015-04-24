@@ -104,6 +104,32 @@ VG.UI.LayoutHSpacer.prototype.paintWidget=function( canvas )
     this.contentRect.set( this.rect );
 };
 
+// ----------------------------------------------------------------- VG.UI.LayoutVSpacer
+
+VG.UI.LayoutVSpacer=function()
+{
+    if ( !(this instanceof VG.UI.LayoutVSpacer )) return new VG.UI.LayoutVSpacer();
+
+    VG.UI.Widget.call( this );
+    this.name="LayoutVSpacer";
+
+    this.horizontalExpanding=false;
+    this.verticalExpanding=true;
+};
+
+VG.UI.LayoutVSpacer.prototype=VG.UI.Widget();
+
+VG.UI.LayoutVSpacer.prototype.calcSize=function()
+{
+    var size=VG.Core.Size( 1,1 );
+    return size;
+};
+
+VG.UI.LayoutVSpacer.prototype.paintWidget=function( canvas )
+{
+    this.contentRect.set( this.rect );
+};
+
 // ----------------------------------------------------------------- VG.UI.Layout
 
 VG.UI.Layout=function()
