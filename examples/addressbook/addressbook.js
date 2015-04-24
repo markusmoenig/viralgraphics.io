@@ -364,7 +364,7 @@ function showContentFor( widget )
 
 function addContactImage()
 {
-    var fileDialog=VG.FileDialog( VG.UI.FileDialog.Image, function( image ) {
+    var fileDialog=VG.OpenFileDialog( VG.UI.FileDialog.Image, function( image ) {
         this.imageView.image=image;
         this.imageView.image.needsUpdate=true;
         image=null;
