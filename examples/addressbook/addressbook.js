@@ -100,7 +100,7 @@ PhoneOrEMail=function()
 
     this.companyCheckbox=VG.UI.Checkbox();
     this.companyCheckbox.bind( this.dc, "contacts.company" );
-    this.companyCheckbox.changed=function() { companySwitch.call( this ); };
+    this.companyCheckbox.changed=function() { companySwitch.call( this ); }.bind( this );
 
     this.contactEditLayout.addChild( "Company:", this.companyCheckbox );    
 
