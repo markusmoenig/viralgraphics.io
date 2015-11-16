@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 VG.Controller = {};
@@ -178,7 +181,7 @@ VG.Controller.Array.prototype.insert=function( index, item, noUndo )
     array.splice( index, 0, item );
 
     if ( this.collection.__vgUndo && !noUndo ) 
-        this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.Add, this.path, array.length-1, JSON.stringify( item ) );
+        this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.Add, this.path, index, JSON.stringify( item ) );
 
     this.notifyObservers( "changed" );    
     return item;
@@ -197,9 +200,10 @@ VG.Controller.Array.prototype.remove=function( item, noUndo )
 
 	this.notifyObservers( "changed" );
 
-    if ( index-1 < array.length )
+    if ( index-1 < array.length && index-1 >= 0 )
     	this.selected=array[index-1];
     else
+        this.selected=array[index];
 
     this.removeFromSelection( item );
 };
@@ -319,6 +323,7 @@ Object.defineProperty( VG.Controller.Tree.prototype, "length",
 {
     get: function() {
         var array=this.collection.dataForPath( this.path );
+        if ( !array ) return 0;
         return array.length;
     }   
 });
@@ -342,6 +347,7 @@ VG.Controller.Tree.prototype.at=function( index )
 
     if ( !item )
     {
+        if ( !pathArray ) return undefined;
         for( var i=0; i < pathArray.length; ++i )
         {
             if ( i === 0 )
@@ -472,6 +478,7 @@ VG.Controller.Tree.prototype.remove=function( item, noUndo )
 
     var index=this.indexOf( item );
     var itemArray=this.arrayOfItem( item );
+    var itemIndex=itemArray.indexOf( item );
 
     if ( itemArray )
     {
@@ -482,6 +489,12 @@ VG.Controller.Tree.prototype.remove=function( item, noUndo )
 
         this.notifyObservers( "changed" );
         this.removeFromSelection( item );
+
+        itemIndex-=1;
+        if ( itemArray.length ) {
+            if ( itemIndex >= 0 ) this.selected=itemArray[itemIndex];
+            this.selected=itemArray[0];
+        }
     }
 };
 
@@ -646,8 +659,10 @@ VG.Controller.Tree.prototype.indexOf=function( item )
 
     index=index.toString();
 
-    if ( array.indexOf( item ) !== -1 )
+    if ( array.indexOf( item ) !== -1 ) {
         index=array.indexOf( item ).toString();
+        return index;
+    }
     else {
         for( var i=0; i < array.length; ++i )
         {
@@ -661,11 +676,25 @@ VG.Controller.Tree.prototype.indexOf=function( item )
                 if ( rc != -1 )
                 {
                     index=rc;
-                    break;
+                    return index;
                 }
             }
         }
     }
 
-    return index;
+    return undefined;
+};
+
+VG.Controller.Tree.prototype.parentOfItem=function( item )
+{
+    var index=this.indexOf( item );
+
+    if ( index !== undefined ) {
+        var array=index.split( '.' );
+        array.splice( -1, 1 );
+
+        return this.at( array.join( '.' ) );
+    }
+    
+    return undefined;
 };

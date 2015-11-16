@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include <iostream>
@@ -23,113 +26,103 @@
 #include "shader.hpp"
 #include "jshost.hpp"
 
-extern JSHost *g_host;
+extern JSWrapper *g_jsWrapper;
 
 // --------------------------------------------------------------- Member Functions
 
-bool Shader_create(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION( Shader_create )
 
-    Shader *shader=(Shader *) JS_GetPrivate( &value.toObject() );
+    Shader *shader=(Shader *) JSWRAPPER_FUNCTION_GETCLASS
     shader->create();
-    return true;
-}
 
-bool Shader_bind(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    Shader *shader=(Shader *) JS_GetPrivate( &value.toObject() );
+JSWRAPPER_FUNCTION( Shader_bind )
+
+    Shader *shader=(Shader *) JSWRAPPER_FUNCTION_GETCLASS
     shader->bind();
-    return true;
-}
 
-bool Shader_destroy(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    Shader *shader=(Shader *) JS_GetPrivate( &value.toObject() );
+JSWRAPPER_FUNCTION( Shader_destroy )
+
+    Shader *shader=(Shader *) JSWRAPPER_FUNCTION_GETCLASS
     shader->destroy();
-    return true;
-}
 
-bool Shader_dispose(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    Shader *shader=(Shader *) JS_GetPrivate( &value.toObject() );
+JSWRAPPER_FUNCTION( Shader_dispose )
+
+    Shader *shader=(Shader *) JSWRAPPER_FUNCTION_GETCLASS
     shader->dispose();
 
     // --- VG.Renderer().removeResource(this);
-    
-    RootedValue *renderer=g_host->executeScript( "VG.Renderer()" );
-    RootedObject rendererObject( cx, &renderer->toObject() );
 
-    RootedValue rc( cx );
-    RootedValue thisValue( cx, value );
+    JSWrapperData rendererObject;
+    g_jsWrapper->execute( "VG.Renderer()", &rendererObject );
 
-    bool ok=Call( cx, HandleObject( rendererObject ), "removeResource", HandleValueArray( thisValue ), MutableHandleValue( &rc ) );
+    JSWrapperArguments arguments;
+    arguments.append( thisObject );    
 
-    return true;
-}
+    JSWrapperData addObject;
+    rendererObject.object()->get( "removeResource", &addObject );
+    addObject.object()->call( &arguments, rendererObject.object() );
 
-bool Shader_getUniform( JSContext *cx, unsigned argc, jsval *vp )
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    if ( argc == 1 && args[0].isString() ) {
-        Shader *shader=(Shader *) JS_GetPrivate( &value.toObject() );
-        JSString *name = args[0].toString();
-        GLuint uniform=shader->getUniform( JS_EncodeString(cx, name) );
+JSWRAPPER_FUNCTION( Shader_getUniform )
 
-        args.rval().set( UINT_TO_JSVAL( uniform ) );
+    Shader *shader=(Shader *) JSWRAPPER_FUNCTION_GETCLASS
+
+    if ( args.count() == 1 && args[0].isString() ) {
+        GLuint uniform=shader->getUniform( args[0].toString().c_str() );
+
+        JSWrapperData data; data.setNumber( uniform );
+        JSWRAPPER_FUNCTION_SETRC( data )
     }
-    return true;
-}
 
-bool Shader_getAttrib( JSContext *cx, unsigned argc, jsval *vp )
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    if ( argc == 1 && args[0].isString() ) {
-        Shader *shader=(Shader *) JS_GetPrivate( &value.toObject() );
-        JSString *name = args[0].toString();
-        GLint attribute=shader->getAttrib( JS_EncodeString(cx, name) );
+JSWRAPPER_FUNCTION( Shader_getAttrib )
 
-        args.rval().set( INT_TO_JSVAL( attribute ) );
-    }
-    return true;
-}
+    Shader *shader=(Shader *) JSWRAPPER_FUNCTION_GETCLASS
 
-bool Shader_setFloat( JSContext *cx, unsigned argc, jsval *vp )
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+    if ( args.count() == 1 && args[0].isString() ) {
 
-    if ( argc == 2 ) {
-        Shader *shader=(Shader *) JS_GetPrivate( &value.toObject() );        
+        GLint attribute=shader->getAttrib( args[0].toString().c_str() );
+
+        JSWrapperData data; data.setNumber( attribute );
+        JSWRAPPER_FUNCTION_SETRC( data )
+    } 
+
+JSWRAPPER_FUNCTION_END
+
+JSWRAPPER_FUNCTION( Shader_setFloat )
+
+    Shader *shader=(Shader *) JSWRAPPER_FUNCTION_GETCLASS
+
+    if ( args.count() == 2 ) {
         GLint id=-1;
 
         if ( args[0].isString() ) {
-            JSString *name = args[0].toString();
-            id=shader->getUniform( JS_EncodeString(cx, name) );
+            id=shader->getUniform( args[0].toString().c_str() );
         } else
         if ( args[0].isNumber() ) {
-            id=args[0].toInt32();
+            id=args[0].toNumber();
         }
 
         if ( id != -1 && args[1].isObject() )
         {
             GLfloat values[4];
 
-            unsigned int length; RootedObject rootedObject(cx, &args[1].toObject() );
-            JS_GetArrayLength( cx, HandleObject( rootedObject ), &length );
+            unsigned int length; 
+            args[1].object()->getArrayLength( &length );
 
-            RootedValue val(cx);
+            JSWrapperData data;
             for(int i = 0; i < length; i++)
             {
-                JS_GetElement( cx, HandleObject( rootedObject ), i, MutableHandleValue(&val) );
-                values[i]=val.toNumber();
+                args[1].object()->getArrayElement( i, &data );
+                values[i]=data.toNumber();
             }
             shader->setFloat( id, length, values );
         } else
@@ -139,298 +132,341 @@ bool Shader_setFloat( JSContext *cx, unsigned argc, jsval *vp )
             shader->setFloat( id, 1, &v );
         }
     }
-    return true;
-}
 
-bool Shader_setTexture( JSContext *cx, unsigned argc, jsval *vp )
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    if ( argc == 3 ) {
-        Shader *shader=(Shader *) JS_GetPrivate( &value.toObject() );        
+JSWRAPPER_FUNCTION( Shader_setFloatArray )
+
+    Shader *shader=(Shader *) JSWRAPPER_FUNCTION_GETCLASS
+
+    if ( args.count() == 2 ) {
         GLint id=-1;
 
         if ( args[0].isString() ) {
-            JSString *name = args[0].toString();
-            id=shader->getUniform( JS_EncodeString(cx, name) );
+            id=shader->getUniform( args[0].toString().c_str() );
         } else
         if ( args[0].isNumber() ) {
-            id=args[0].toInt32();
+            id=args[0].toNumber();
         }
 
         if ( id != -1 && args[1].isObject() )
         {
-            shader->setTexture( id, &args[1].toObject(), args[2].toInt32() );
+            unsigned int length; 
+            args[1].object()->getArrayLength( &length );
+
+            GLfloat* values = (GLfloat*) malloc( length * sizeof(GLfloat) );
+
+            JSWrapperData data;
+            for(int i = 0; i < length; i++)
+            {
+                args[1].object()->getArrayElement( i, &data );
+                values[i]=data.toNumber();
+            }
+
+            shader->setFloatArray( id, length, values );
         }
     }
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
-bool Shader_setColor( JSContext *cx, unsigned argc, jsval *vp )
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION( Shader_setTexture )
 
-    if ( argc == 2 ) {
-        Shader *shader=(Shader *) JS_GetPrivate( &value.toObject() );        
+    Shader *shader=(Shader *) JSWRAPPER_FUNCTION_GETCLASS
+
+    if ( args.count() == 3 ) {
         GLint id=-1;
 
         if ( args[0].isString() ) {
-            JSString *name = args[0].toString();
-            id=shader->getUniform( JS_EncodeString(cx, name) );
+            id=shader->getUniform( args[0].toString().c_str() );
         } else
         if ( args[0].isNumber() ) {
-            id=args[0].toInt32();
+            id=args[0].toNumber();
         }
 
         if ( id != -1 && args[1].isObject() )
         {
-            RootedObject object(cx, &args[1].toObject() );
-            RootedValue red(cx), green(cx), blue(cx), alpha(cx);
-
-            JS_GetProperty( cx, HandleObject(object), "r", MutableHandleValue(&red) );
-            JS_GetProperty( cx, HandleObject(object), "g", MutableHandleValue(&green) );
-            JS_GetProperty( cx, HandleObject(object), "b", MutableHandleValue(&blue) );
-            JS_GetProperty( cx, HandleObject(object), "a", MutableHandleValue(&alpha) );
-
-            shader->setColor( id, red.toNumber(), green.toNumber(), blue.toNumber(), alpha.toNumber() );
+            JSWrapperObject *object=args[1].object()->copy();
+            shader->setTexture( id, object, args[2].toNumber() );
+            delete object;
         }
     }
-    return true;    
-}
 
-bool Shader_setColor3( JSContext *cx, unsigned argc, jsval *vp )
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    if ( argc == 2 ) {
-        Shader *shader=(Shader *) JS_GetPrivate( &value.toObject() );        
+JSWRAPPER_FUNCTION( Shader_setColor )
+
+    Shader *shader=(Shader *) JSWRAPPER_FUNCTION_GETCLASS
+
+    if ( args.count() == 2 ) {
         GLint id=-1;
 
         if ( args[0].isString() ) {
-            JSString *name = args[0].toString();
-            id=shader->getUniform( JS_EncodeString(cx, name) );
+            id=shader->getUniform( args[0].toString().c_str() );
         } else
         if ( args[0].isNumber() ) {
-            id=args[0].toInt32();
+            id=args[0].toNumber();
         }
 
         if ( id != -1 && args[1].isObject() )
         {
-            RootedObject object(cx, &args[1].toObject() );
-            RootedValue red(cx), green(cx), blue(cx);
+            float r, g, b, a;
 
-            JS_GetProperty( cx, HandleObject(object), "r", MutableHandleValue(&red) );
-            JS_GetProperty( cx, HandleObject(object), "g", MutableHandleValue(&green) );
-            JS_GetProperty( cx, HandleObject(object), "b", MutableHandleValue(&blue) );
+            JSWrapperData data;
+            args[1].object()->get("r", &data);
+            r=data.toNumber();
+            args[1].object()->get("g", &data);
+            g=data.toNumber();
+            args[1].object()->get("b", &data);
+            b=data.toNumber();
+            args[1].object()->get("a", &data);
+            a=data.toNumber();            
 
-            shader->setColor3( id, red.toNumber(), green.toNumber(), blue.toNumber() );
+            shader->setColor( id, r, g, b, a );
         }
     }
-    return true;    
-}
 
-bool Shader_setInt( JSContext *cx, unsigned argc, jsval *vp )
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    if ( argc == 2 ) {
-        Shader *shader=(Shader *) JS_GetPrivate( &value.toObject() );        
+JSWRAPPER_FUNCTION( Shader_setColor3 )
+
+    Shader *shader=(Shader *) JSWRAPPER_FUNCTION_GETCLASS
+
+    if ( args.count() == 2 ) {
         GLint id=-1;
 
         if ( args[0].isString() ) {
-            JSString *name = args[0].toString();
-            id=shader->getUniform( JS_EncodeString(cx, name) );
+            id=shader->getUniform( args[0].toString().c_str() );
         } else
         if ( args[0].isNumber() ) {
-            id=args[0].toInt32();
+            id=args[0].toNumber();
+        }
+
+        if ( id != -1 && args[1].isObject() )
+        {
+            float r, g, b;
+
+            JSWrapperData data;
+            args[1].object()->get("r", &data);
+            r=data.toNumber();
+            args[1].object()->get("g", &data);
+            g=data.toNumber();
+            args[1].object()->get("b", &data);
+            b=data.toNumber();   
+
+            shader->setColor3( id, r, g, b );
+        }
+    }
+
+JSWRAPPER_FUNCTION_END
+
+JSWRAPPER_FUNCTION( Shader_setInt )
+
+    Shader *shader=(Shader *) JSWRAPPER_FUNCTION_GETCLASS
+
+    if ( args.count() == 2 ) {
+        GLint id=-1;
+
+        if ( args[0].isString() ) {
+            id=shader->getUniform( args[0].toString().c_str() );
+        } else
+        if ( args[0].isNumber() ) {
+            id=args[0].toNumber();
         }
 
         if ( id != -1 && args[1].isObject() )
         {
             GLuint values[4];
 
-            unsigned int length; RootedObject rootedObject(cx, &args[1].toObject() );
-            JS_GetArrayLength( cx, HandleObject( rootedObject ), &length );
+            unsigned int length; 
+            args[1].object()->getArrayLength( &length );
 
-            RootedValue val(cx);
+            JSWrapperData data;
             for(int i = 0; i < length; i++)
             {
-                JS_GetElement( cx, HandleObject( rootedObject ), i, MutableHandleValue(&val) );
-                values[i]=val.toInt32();
+                args[1].object()->getArrayElement( i, &data );
+                values[i]=data.toNumber();
             }
             shader->setInt( id, length, values );
         } else
         if ( id != -1 && args[1].isNumber() )
         {
-            unsigned int v;
-            JS::ToUint32( cx, args[1], &v );
+            unsigned int v=(unsigned int) args[1].toNumber();
             shader->setInt( id, 1, &v );
         }
     }
-    return true;
-}
 
-bool Shader_setMatrix( JSContext *cx, unsigned argc, jsval *vp )
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    bool transpose=false;
-    if ( argc == 3 ) args[2].toBoolean();
+JSWRAPPER_FUNCTION( Shader_setBool )
 
-    if ( argc >= 2 ) {
-        Shader *shader=(Shader *) JS_GetPrivate( &value.toObject() );        
+    Shader *shader=(Shader *) JSWRAPPER_FUNCTION_GETCLASS
+
+    if ( args.count() == 2 ) {
         GLint id=-1;
 
         if ( args[0].isString() ) {
-            JSString *name = args[0].toString();
-            id=shader->getUniform( JS_EncodeString(cx, name) );
+            id=shader->getUniform( args[0].toString().c_str() );
         } else
         if ( args[0].isNumber() ) {
-            id=args[0].toInt32();
+            id=args[0].toNumber();
+        }
+
+        if ( id != -1 && args[1].isBoolean() )
+        {
+            bool v = args[1].toBoolean();
+            shader->setBool( id, v );
+        }
+    }
+
+JSWRAPPER_FUNCTION_END
+
+JSWRAPPER_FUNCTION( Shader_setMatrix )
+
+    Shader *shader=(Shader *) JSWRAPPER_FUNCTION_GETCLASS
+
+    bool transpose=false;
+    if ( args.count() == 3 ) args[2].toBoolean();
+
+    if ( args.count() >= 2 ) {
+        GLint id=-1;
+
+        if ( args[0].isString() ) {
+            id=shader->getUniform( args[0].toString().c_str() );
+        } else
+        if ( args[0].isNumber() ) {
+            id=args[0].toNumber();
         }
 
         if ( id != -1 && args[1].isObject() )
         {
-            GLfloat values[16];
+            float *values; unsigned int length;
+            args[1].object()->getAsFloat32Array( &values, &length );
 
-            unsigned int length; RootedObject rootedObject(cx, &args[1].toObject() );
-            JS_GetArrayLength( cx, HandleObject( rootedObject ), &length );
-
-            RootedValue val(cx);
-            for(int i = 0; i < length; i++)
-            {
-                JS_GetElement( cx, HandleObject( rootedObject ), i, MutableHandleValue(&val) );
-                values[i]=val.toNumber();
-            }
             shader->setMatrix( id, length, values, transpose );
         } 
     }
-    return true;
-}
 
-// --------------------------------------------------------------- Properties
+JSWRAPPER_FUNCTION_END
 
-bool GetShaderProperty( JSContext *cx, Handle<JSObject *> object, Handle<jsid> id, MutableHandle<Value> value )
-{
-    RootedValue val(cx); JS_IdToValue( cx, id, MutableHandleValue(&val) );
-    JSString *propertyString = val.toString(); const char *propertyName=JS_EncodeString(cx, propertyString);    
-    //printf("GetShaderProperty: %s\n", propertyName ); 
-    
-    Shader *shader=(Shader *) JS_GetPrivate( object );
+// --------------------------------------------------------------- Getters
 
-    if ( !strcmp( propertyName, "blendType" ) ) {
-        value.set( INT_TO_JSVAL( shader->blendType ) );
-    } else   
-    if ( !strcmp( propertyName, "depthWrite" ) ) {
-        value.set( BOOLEAN_TO_JSVAL( shader->depthWrite ) );
-    } else
-    if ( !strcmp( propertyName, "depthTest" ) ) {
-        value.set( BOOLEAN_TO_JSVAL( shader->depthTest ) );
-    } else
-    if ( !strcmp( propertyName, "culling" ) ) {
-        value.set( BOOLEAN_TO_JSVAL( shader->culling ) );
-    }  
-    return true;    
-}
+JSWRAPPER_GETPROPERTY( GetShaderProperty_blendType )
 
-bool SetShaderProperty( JSContext *cx, Handle<JSObject *> object, Handle<jsid> id, bool, MutableHandle<Value> value)
-{
-    RootedValue val(cx); JS_IdToValue( cx, id, MutableHandleValue(&val) );
-    JSString *propertyString = val.toString(); const char *propertyName=JS_EncodeString(cx, propertyString);    
-    //printf("SetShaderProperty: %s\n", propertyName ); 
+    Shader *shader=(Shader *) JSWRAPPER_PROPERTY_GETCLASS
 
-    Shader *shader=(Shader *) JS_GetPrivate( object );
+    JSWrapperData data; data.setNumber( shader->blendType );
+    JSWRAPPER_GETPROPERTY_SETRC( data )
 
-    if ( !strcmp( propertyName, "blendType" ) ) {
-        shader->blendType=value.toInt32();
-    } else
-    if ( !strcmp( propertyName, "depthWrite" ) ) {
-        shader->depthWrite=value.toBoolean();
-    } else
-    if ( !strcmp( propertyName, "depthTest" ) ) {
-        shader->depthTest=value.toBoolean();
-    } else
-    if ( !strcmp( propertyName, "culling" ) ) {
-        shader->culling=value.toBoolean();
-    }    
-    return true;
-}
+JSWRAPPER_GETPROPERTY_END
 
-static JSFunctionSpec shader_functions[] = {
-    JS_FS( "create", Shader_create, 0, 0 ),
-    JS_FS( "bind", Shader_bind, 0, 0 ),
-    JS_FS( "destroy", Shader_destroy, 0, 0 ),
-    JS_FS( "dispose", Shader_dispose, 0, 0 ),
-    JS_FS( "getUniform", Shader_getUniform, 0, 0 ),
-    JS_FS( "getAttrib", Shader_getAttrib, 0, 0 ),
-    JS_FS( "setFloat", Shader_setFloat, 0, 0 ),
-    JS_FS( "setTexture", Shader_setTexture, 0, 0 ),
-    JS_FS( "setColor", Shader_setColor, 0, 0 ),
-    JS_FS( "setColor3", Shader_setColor3, 0, 0 ),
-    JS_FS( "setInt", Shader_setInt, 0, 0 ),
-    JS_FS( "setMatrix", Shader_setMatrix, 0, 0 ),
+JSWRAPPER_GETPROPERTY( GetShaderProperty_depthWrite )
 
-    JS_FS_END
-};
- 
+    Shader *shader=(Shader *) JSWRAPPER_PROPERTY_GETCLASS
+
+    JSWrapperData data; data.setBoolean( shader->depthWrite );
+    JSWRAPPER_GETPROPERTY_SETRC( data )
+
+JSWRAPPER_GETPROPERTY_END
+
+JSWRAPPER_GETPROPERTY( GetShaderProperty_depthTest )
+
+    Shader *shader=(Shader *) JSWRAPPER_PROPERTY_GETCLASS
+
+    JSWrapperData data; data.setBoolean( shader->depthTest );
+    JSWRAPPER_GETPROPERTY_SETRC( data )
+
+JSWRAPPER_GETPROPERTY_END
+
+JSWRAPPER_GETPROPERTY( GetShaderProperty_culling )
+
+    Shader *shader=(Shader *) JSWRAPPER_PROPERTY_GETCLASS
+
+    JSWrapperData data; data.setBoolean( shader->culling );
+    JSWRAPPER_GETPROPERTY_SETRC( data )
+
+JSWRAPPER_GETPROPERTY_END
+
+// --------------------------------------------------------------- Setters
+
+JSWRAPPER_SETPROPERTY( SetShaderProperty_blendType )
+
+    Shader *shader=(Shader *) JSWRAPPER_PROPERTY_GETCLASS
+    shader->blendType=data.toNumber();
+
+JSWRAPPER_SETPROPERTY_END
+
+JSWRAPPER_SETPROPERTY( SetShaderProperty_depthWrite )
+
+    Shader *shader=(Shader *) JSWRAPPER_PROPERTY_GETCLASS
+    shader->depthWrite=data.toBoolean();
+
+JSWRAPPER_SETPROPERTY_END
+
+JSWRAPPER_SETPROPERTY( SetShaderProperty_depthTest )
+
+    Shader *shader=(Shader *) JSWRAPPER_PROPERTY_GETCLASS
+    shader->depthTest=data.toBoolean();
+
+JSWRAPPER_SETPROPERTY_END
+
+JSWRAPPER_SETPROPERTY( SetShaderProperty_culling )
+
+    Shader *shader=(Shader *) JSWRAPPER_PROPERTY_GETCLASS
+    shader->culling=data.toBoolean();
+
+JSWRAPPER_SETPROPERTY_END
+
 // --------------------------------------------------------------- 
 
-JSClass ShaderClass = 
-{ 
-    "Shader", JSCLASS_HAS_PRIVATE, JS_PropertyStub, NULL,
-    JS_PropertyStub, JS_StrictPropertyStub,
-    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL
-};
+JSWRAPPER_CONSTRUCTOR( ShaderConstructor, "Shader" )
 
-bool ShaderConstructor( JSContext *cx, unsigned argc, jsval *vp )
-{
-    //printf( "Shader Constructor!%d\n", argc );
+    if ( args.count() == 2 ) {
+        Shader *shader=new Shader( args.at(0).toString(), args.at(1).toString() );
 
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
-
-    JSObject *object = JS_NewObjectForConstructor( cx, &ShaderClass, args );
-    RootedObject obj(cx, object ); RootedValue v(cx, JS::UndefinedValue() );
-    JS_DefineFunctions( cx, HandleObject(obj), shader_functions );
-    JS_DefineProperty( cx, HandleObject(obj), "blendType", HandleValue(&v), JSPROP_SHARED, (JSPropertyOp) GetShaderProperty, (JSStrictPropertyOp) SetShaderProperty );
-    JS_DefineProperty( cx, HandleObject(obj), "depthWrite", HandleValue(&v), JSPROP_SHARED, (JSPropertyOp) GetShaderProperty, (JSStrictPropertyOp) SetShaderProperty );
-    JS_DefineProperty( cx, HandleObject(obj), "depthTest", HandleValue(&v), JSPROP_SHARED, (JSPropertyOp) GetShaderProperty, (JSStrictPropertyOp) SetShaderProperty );
-    JS_DefineProperty( cx, HandleObject(obj), "culling", HandleValue(&v), JSPROP_SHARED, (JSPropertyOp) GetShaderProperty, (JSStrictPropertyOp) SetShaderProperty );
-
-    if ( argc == 2 ) {
-        JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
-
-        JSString *vs = args[0].toString();
-        JSString *fs = args[1].toString();
-
-        Shader *shader=new Shader( cx, JS_EncodeString(cx, vs), JS_EncodeString(cx, fs) );
-
-        JS_SetPrivate( object, shader );
-        args.rval().set( OBJECT_TO_JSVAL( object ) );
+        JSWRAPPER_CONSTRUCTOR_SETCLASS( shader )
     }
 
     //VG.Renderer().addResource(this);
 
-    RootedValue rendererRC(cx); RootedObject global( cx,JS_GetGlobalForObject( cx, object ) );
-    bool ok = JS_EvaluateScript( cx, HandleObject( global ), "VG.Renderer()", strlen("VG.Renderer()"), "unknown", 1, MutableHandleValue(&rendererRC) );    
-    if ( ok )
-    {
-        RootedValue objectValue( cx, OBJECT_TO_JSVAL(object) );
-        RootedObject renderer(cx, &rendererRC.toObject() ); MutableHandleValue handleValue( &rendererRC );
-        ok=Call( cx, HandleObject(renderer), "addResource", HandleValueArray( objectValue ), handleValue );
-    }    
+    JSWrapperData rendererObject;
+    g_jsWrapper->execute( "VG.Renderer()", &rendererObject );
 
-    return true;
-}
+    JSWrapperArguments arguments;
+    arguments.append( thisObject );    
 
-JSObject *registerShader( JSContext *cx, JSObject *object )
+    JSWrapperData addObject;
+    rendererObject.object()->get( "addResource", &addObject );
+    addObject.object()->call( &arguments, rendererObject.object() );    
+
+JSWRAPPER_CONSTRUCTOR_END
+
+JSWrapperClass *registerShader( JSWrapper *jsWrapper )
 {
-    RootedObject obj(cx, object ); RootedObject parentobj(cx);
+    JSWrapperData data;
+    jsWrapper->globalObject()->get( "VG", &data );
+ 
+    JSWrapperClass *shaderClass=data.object()->createClass( "Shader", ShaderConstructor );
+    shaderClass->registerFunction( "create", Shader_create );
+    shaderClass->registerFunction( "bind", Shader_bind );
+    shaderClass->registerFunction( "destroy", Shader_destroy );
+    shaderClass->registerFunction( "dispose", Shader_dispose );
+    shaderClass->registerFunction( "getUniform", Shader_getUniform );
+    shaderClass->registerFunction( "getAttrib", Shader_getAttrib );
+    shaderClass->registerFunction( "setFloat", Shader_setFloat );
+    shaderClass->registerFunction( "setFloatArray", Shader_setFloatArray );
+    shaderClass->registerFunction( "setTexture", Shader_setTexture );
+    shaderClass->registerFunction( "setColor", Shader_setColor );
+    shaderClass->registerFunction( "setColor3", Shader_setColor3 );
+    shaderClass->registerFunction( "setInt", Shader_setInt );
+    shaderClass->registerFunction( "setBool", Shader_setBool );
+    shaderClass->registerFunction( "setMatrix", Shader_setMatrix );
 
-    JSObject * newObject=JS_InitClass( cx, HandleObject(obj), HandleObject(parentobj), &ShaderClass,  
-        ShaderConstructor, 0,
-        NULL, NULL,
-        NULL, NULL);
+    shaderClass->registerProperty( "blendType", GetShaderProperty_blendType, SetShaderProperty_blendType );
+    shaderClass->registerProperty( "depthWrite", GetShaderProperty_depthWrite, SetShaderProperty_depthWrite );
+    shaderClass->registerProperty( "depthTest", GetShaderProperty_depthTest, SetShaderProperty_depthTest );
+    shaderClass->registerProperty( "culling", GetShaderProperty_culling, SetShaderProperty_culling );
 
-    return newObject;
+    shaderClass->install();
+
+    return shaderClass;
 }

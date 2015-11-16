@@ -25,19 +25,21 @@ VG.Nodes.ParamContainerEdit=function( container )
     if ( !(this instanceof VG.Nodes.ParamContainerEdit ) ) return new VG.Nodes.ParamContainerEdit( container );
 
     VG.UI.Widget.call( this );
+    this.name="ParamContainerEdit";
 
     this.container=container;
 
-    this.tabWidget=VG.UI.TabWidget();
-    this.layout=VG.UI.Layout( this.tabWidget );
+    this.snapperWidget=VG.UI.SnapperWidget();
+    this.layout=VG.UI.Layout( this.snapperWidget );
     this.layout.margin.set( 0, 0, 0, 0 );
+    this.layout.parent=this;
 
     for( var i=0; i < this.container.groups.length; ++i )
     {
         var group=this.container.groups[i];
         group.layout=VG.UI.LabelLayout();
 
-        this.tabWidget.addItem( group.text, group.layout );
+        this.snapperWidget.addItem( group.text, group.layout, group.open );
 
         for( var p=0; p < group.parameters.length; ++p )
         {
@@ -66,6 +68,88 @@ VG.Nodes.ParamContainerEdit=function( container )
 
                 group.layout.addChild( param.text, param.widget );
             } else
+            if ( param instanceof VG.Nodes.ParamSlider )
+            {
+                param.widget=VG.UI.Slider( param.min, param.max, param.step );
+                param.widget.value=param.data[param.name],
+                param.widget.name=param.name;
+
+                param.widget.changed=function( value, continuous, object ) {
+
+                    var param=this.container.getParam( object.name );
+
+                    // --- Send undo packet with old & new value
+                    if ( !continuous && this.container.node && this.container.node.graph && this.container.node.graph.nodePropertyWillChange )  {
+                        var object={ oldValue: param.widget.startValue, newValue: value };
+                        this.container.node.graph.nodePropertyWillChange( param, object );
+                    }
+
+                    param.data[param.name]=value;
+
+                    // --- Update the graph
+                    if (  this.container.node && this.container.node.graph  )
+                        this.container.node.graph.update();
+                }.bind( this );
+
+                param.widget.disabled=param.disabled;
+                group.layout.addChild( param.text, param.widget );
+            } else            
+            if ( param instanceof VG.Nodes.ParamBoolean )
+            {
+                param.widget=VG.UI.Checkbox( param.data[param.name] );
+                param.widget.name=param.name;
+
+                param.widget.changed=function( value, object ) {
+                    var param=this.container.getParam( object.name );
+
+                    // --- Send undo packet with old & new value
+                    if (  this.container.node && this.container.node.graph && this.container.node.graph.nodePropertyWillChange )  {
+                        var object={ oldValue: param.data[param.name], newValue: value };
+                        this.container.node.graph.nodePropertyWillChange( param, object );
+                    }
+
+                    param.data[param.name]=value;
+
+                    // --- Update the graph
+                    if (  this.container.node && this.container.node.graph  )
+                        this.container.node.graph.update();
+                }.bind( this );
+
+                group.layout.addChild( param.text, param.widget );
+            } else       
+            if ( param instanceof VG.Nodes.ParamList )
+            {
+                param.widget=VG.UI.DropDownMenu();
+                param.widget.name=param.name;
+
+                if ( param.list ) {
+                    for ( var ii=0; ii < param.list.length; ++ii )
+                        param.widget.addItem( param.list[ii] );
+                }
+
+                param.widget.index=param.data[param.name];
+                if ( param.callback ) param.callback( param.data[param.name] );
+
+                param.widget.changed=function( value, textValue, object ) {
+                    var param=this.container.getParam( object.name );
+
+                    // --- Send undo packet with old & new value
+                    if (  this.container.node && this.container.node.graph && this.container.node.graph.nodePropertyWillChange )  {
+                        var object={ oldValue: param.data[param.name], newValue: value };
+                        this.container.node.graph.nodePropertyWillChange( param, object );
+                    }
+
+                    param.data[param.name]=value;
+
+                    if ( param.callback ) param.callback( value );
+
+                    // --- Update the graph
+                    if (  this.container.node && this.container.node.graph  )
+                        this.container.node.graph.update();
+                }.bind( this );
+
+                group.layout.addChild( param.text, param.widget );
+            } else       
             if ( param instanceof VG.Nodes.ParamVector2 )
             {
                 param.widget=VG.UI.Vector2Edit( param.data[param.name].x, param.data[param.name].y, param.min, param.max );
@@ -146,11 +230,17 @@ VG.Nodes.ParamContainerEdit=function( container )
             } else              
             if ( param instanceof VG.Nodes.ParamColor )
             {
-                param.widget=VG.UI.ColorPicker();
-                param.widget.color=String( param.value );
+                param.widget=VG.UI.ColorWheel();
+
+                param.value.setValue( param.data[param.name].r, param.data[param.name].g, param.data[param.name].b,
+                    param.data[param.name].a );
+
+                param.widget.color=param.value;
                 param.widget.name=param.name;
 
-                param.widget.changed=function( value, object ) {
+                param.widget.changed=function( value, continuous, object ) {
+                    if ( continuous ) return;
+
                     var param=this.container.getParam( object.name );
 
                     // --- Send undo packet with old & new value

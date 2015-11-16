@@ -51,6 +51,11 @@ namespace embree
         shape->postIntersect(ray,dg);
       }
       
+      __forceinline Vector3f getRandomSample() const
+      {
+          return shape->getRandomSample();
+      }
+      
     public:
       Ref<Shape> shape;
       Ref<Light> light;
@@ -102,6 +107,10 @@ namespace embree
       for (size_t i=0; i<geometry.size(); i++) {
         const Ref<Primitive>& prim = geometry[i];
         if (prim && prim->light) add(prim->light);
+        if (prim && prim->material && prim->material->isEmissive())
+        {
+            lights.push_back(prim);
+        }
       }
     }
 
@@ -113,8 +122,16 @@ namespace embree
             geometry[id0_to_geomID[ray.id0]]->postIntersect(ray, dg);
         }
     }
+    
+    virtual Vector3f getLightPoint(Color& intensity) const
+    {
+        unsigned int id = rand() % lights.size();
+        intensity = lights[id]->material->getIntensity();
+        return lights[id]->getRandomSample();
+    }
 
   private:
+    std::vector<Ref<Primitive> > lights;
     std::vector<Ref<Primitive> > geometry;  //!< Geometry of the scene
     std::vector<int> id0_to_geomID;
   };

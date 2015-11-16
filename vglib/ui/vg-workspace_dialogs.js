@@ -1,30 +1,33 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
- 
+
 // ----------------------------------------------------------------------------------- Login Dialog
 
 VG.UI.Workspace.prototype.showLoginDialog=function()
 {
     if ( !this.loginDialog ) {
 
-        this.loginDialog=VG.UI.Dialog( "Login Dialog");
+        this.loginDialog=VG.UI.Dialog( "LOGIN DIALOG");
 
         var layout=VG.UI.LabelLayout();
         layout.labelSpacing=40;
@@ -34,12 +37,12 @@ VG.UI.Workspace.prototype.showLoginDialog=function()
         this.login_passwordEdit=VG.UI.TextLineEdit( "" );
         this.login_passwordEdit.password=true;
 
-        layout.addChild( "Username", this.login_userNameEdit );
-        layout.addChild( "Password", this.login_passwordEdit );
+        layout.addChild( "USERNAME", this.login_userNameEdit );
+        layout.addChild( "PASSWORD", this.login_passwordEdit );
 
         this.loginDialog.layout=layout;
-        this.loginDialog.addButton( "Close", function() { this.close( this ); }.bind( this.loginDialog ) );
-        this.loginDialog.addButton( "Login", function() { 
+        this.loginDialog.addButton( "CLOSE", function() { this.close( this ); }.bind( this.loginDialog ) );
+        this.loginDialog.addButton( "LOGIN", function() { 
 
             VG.DB.userLogIn( this.login_userNameEdit.text, this.login_passwordEdit.text, function( success, userName, userId, isAdmin ) {
                 if ( success ) 
@@ -68,7 +71,7 @@ VG.UI.Workspace.prototype.showSignupDialog=function()
 {
     if ( !this.signupDialog ) {
 
-        this.signupDialog=VG.UI.Dialog( "Signup Dialog");
+        this.signupDialog=VG.UI.Dialog( "SIGNUP DIALOG");
 
         // --- Signup Area
 
@@ -80,12 +83,10 @@ VG.UI.Workspace.prototype.showSignupDialog=function()
         this.signup_eMailEdit=VG.UI.TextLineEdit( "" );
         this.signup_passwordEdit=VG.UI.TextLineEdit( "" );
         this.signup_passwordEdit.password=true;
-        //this.firstNameEdit.bind( this.dc, "contacts.firstName" );
-        //this.firstNameEdit.textChanged=function() { computeSelectedContactItemText.call( this ); };
 
-        layout.addChild( "Username", this.signup_userNameEdit );
-        layout.addChild( "eMail", this.signup_eMailEdit );
-        layout.addChild( "Password", this.signup_passwordEdit );
+        layout.addChild( "USERNAME", this.signup_userNameEdit );
+        layout.addChild( "EMAIL", this.signup_eMailEdit );
+        layout.addChild( "PASSWORD", this.signup_passwordEdit );
 
         // ---
 
@@ -95,24 +96,22 @@ VG.UI.Workspace.prototype.showSignupDialog=function()
         widget.html.elements.body.font=VG.Font.Font( "Open Sans Semibold", 14 );
         widget.html.elements.body.spacing=5;
         widget.html.elements.body.margin.set( 0, 0, 0, 0 );
-        widget.html.elements.body.bgColor=VG.context.workspace.canvas.style.skin.Dialog.BackgroundColor;
-        widget.html.html="<b>Sign up</b> to Visual Graphics and sign in to all the applications and games using the Visual Graphics Framework. Applications will only have access " +
-        "to your username, never to your eMail.";
+        widget.html.elements.body.bgColor=VG.context.workspace.canvas.style.skin.Window.BackColor;
+        widget.html.html="<b>Sign up</b> to Visual Graphics and sign in to all the applications and games using the Visual Graphics Framework.";
         widget.paintWidget=function( canvas ) {
-            var rect=VG.Core.Rect( this.rect.x, this.rect.y, canvas.style.skin.NewsScroller.Body.Item.ImageSize.width, canvas.style.skin.NewsScroller.Body.Item.ImageSize.height );
+            var rect=VG.Core.Rect( this.rect.x + 20, this.rect.y, 93, 85 );
+            var svgLogo=VG.Utils.getSVGByName( "vglogo.svg"  );
+            if ( svgLogo ) {
+                canvas.drawSVG( svgLogo, undefined, rect, VG.Core.Color( 255, 255, 255 ) );
+            }
 
-            canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, rect, VG.Core.Color( "#5c6a97") );
-            canvas.pushFont( VG.Font.Font( "Visual Graphics", 64 ) );
-            canvas.drawTextRect( "a", rect, VG.Core.Color( 248, 248, 248 ), 1, 1 );
-            canvas.popFont();
-
-            rect.x+=rect.width + 10;
-            rect.width=this.rect.width - ( canvas.style.skin.NewsScroller.Body.Item.ImageSize.width + 10 );
+            rect.x+=rect.width + 25;
+            rect.width=this.rect.width - ( 93 + 10 ) - 50;
             rect.height+=5;
             this.html.rect.set( rect );
             this.html.paintWidget( canvas );
 
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y + this.rect.height - 1, this.rect.width, 1 ), canvas.style.skin.TextEdit.BorderColor );
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y + this.rect.height - 1, this.rect.width, 1 ), canvas.style.skin.TextEdit.BorderColor1 );
         };
 
         var vlayout=VG.UI.Layout( widget, layout );
@@ -124,10 +123,12 @@ VG.UI.Workspace.prototype.showSignupDialog=function()
         vlayout.vertical=true;        
 
         this.signupDialog.layout=vlayout;
-        this.signupDialog.addButton( "Close", function() { this.close( this ) }.bind( this.signupDialog ) );
-        this.signupDialog.addButton( "Signup", function() { VG.context.workspace.showSignupDialog_signUp.call( VG.context.workspace ); } );
+        this.signupDialog.addButton( "CLOSE", function() { this.close( this ) }.bind( this.signupDialog ) );
+        this.signupDialog.addButton( "SIGNUP", function() { VG.context.workspace.showSignupDialog_signUp.call( VG.context.workspace ); } );
+
     }
 
+    this.signup_userNameEdit.setFocus();
     this.showWindow( this.signupDialog );            
 };
 
@@ -174,7 +175,7 @@ VG.UI.Workspace.prototype.showUserSettingsDialog=function()
         this.userSettings_passwordEdit1.password=true;
         this.userSettings_passwordEdit2.password=true;
 
-        layout.addChild( "Password", this.userSettings_passwordEdit1 );
+        layout.addChild( "New Password", this.userSettings_passwordEdit1 );
         layout.addChild( "Repeat", this.userSettings_passwordEdit2 );
 
         this.userSettingsDialog.layout=layout;
@@ -205,9 +206,9 @@ VG.RemoteFileDialogItem=function()
     this.type="";
 };
 
-VG.RemoteFileDialog=function( fileType, callback, title, buttonText, allowDownload )
+VG.RemoteFileDialog=function( fileType, callback, title, buttonText, allowDownload, defaultName )
 {
-    if ( !(this instanceof VG.RemoteFileDialog) ) return new VG.RemoteFileDialog( fileType, callback, title, buttonText, allowDownload );
+    if ( !(this instanceof VG.RemoteFileDialog) ) return new VG.RemoteFileDialog( fileType, callback, title, buttonText, allowDownload, defaultName );
 
     // --- Request list of files
 
@@ -235,14 +236,16 @@ VG.RemoteFileDialog=function( fileType, callback, title, buttonText, allowDownlo
     this.fileType=fileType;
     this.callback=callback;
 
-    this.dc=VG.Data.Collection( "File List" ); this.dc.fileList=[];
+    this.dc=VG.Data.Collection( "File List" ); 
+    this.dc.fileList=[];
+
     this.fileListWidget=new VG.UI.TableWidget();
 
     this.fileListController=this.fileListWidget.bind( this.dc, "fileList" );
     this.fileListController.addObserver( "selectionChanged", function() {
 
-    if ( this.fileListController.selected ) this.fileNameEdit.text=this.fileListController.selected.fileName;
-    else this.fileNameEdit.text="";
+        if ( this.fileListController.selected ) this.fileNameEdit.text=this.fileListController.selected.fileName;
+        else this.fileNameEdit.text=defaultName;
 
     }.bind( this ) );
 
@@ -253,10 +256,10 @@ VG.RemoteFileDialog=function( fileType, callback, title, buttonText, allowDownlo
     this.fileListWidget.horizontalExpanding=true;
     this.fileListWidget.verticalExpanding=true;
 
-    this.fileNameEdit=new VG.UI.TextLineEdit( "" );
+    this.fileNameEdit=new VG.UI.TextLineEdit( defaultName );
     this.fileNameEdit.defaultText="Filename";
     this.fileNameEdit.horizontalExpanding=true;
-    this.fileNameEdit.bind( this.dc, "fileList.fileName" );
+    //this.fileNameEdit.bind( this.dc, "fileList.fileName" );
 
     this.layout=VG.UI.LabelLayout( "", this.fileListWidget, "", this.fileNameEdit );
     this.layout.labelSpacing=0;
@@ -284,11 +287,4 @@ VG.RemoteFileDialog=function( fileType, callback, title, buttonText, allowDownlo
 };
 
 VG.RemoteFileDialog.prototype=VG.UI.Dialog();
-/*
-VG.RemoteFileDialog.prototype.paintWidget=function( canvas )
-{
-    if ( !this.visible ) return;
-
-    //VG.UI.Dialog.prototype.paintWidget.call( this, canvas );
-};*/
 

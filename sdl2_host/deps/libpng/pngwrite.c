@@ -2418,24 +2418,24 @@ png_image_write_to_file(png_imagep image, const char *file_name,
                   (void)fclose(fp);
                }
 
-               (void)remove(file_name);
+               //(void)remove(file_name);
                /* The image has already been cleaned up; this is just used to
                 * set the error (because the original write succeeded).
                 */
-               return png_image_error(image, strerror(error));
+               return png_image_error(image, ""/*strerror(error)*/);
             }
 
             else
             {
                /* Clean up: just the opened file. */
                (void)fclose(fp);
-               (void)remove(file_name);
+               //(void)remove(file_name);
                return 0;
             }
          }
 
          else
-            return png_image_error(image, strerror(errno));
+            return png_image_error(image, ""/*strerror(errno)*/);
       }
 
       else

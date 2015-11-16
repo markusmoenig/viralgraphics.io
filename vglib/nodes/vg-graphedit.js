@@ -56,46 +56,13 @@ VG.Nodes.GraphEdit=function( customWidget, customWidgetSpace )
     };
 
    	this.availableNodes.mouseDoubleClick=function( event ) {
-   		if ( this.availableNodesController.selected && this.availableNodesController.selected.className ) {
+   		if ( this.availableNodesController.selected && this.availableNodesController.selected.className && this.controller.isValid() ) {
             var node=new VG.Nodes[this.availableNodesController.selected.className];
             this.addNode( node );
    		}
    	}.bind( this );
 
-    var folderIndex=[];
-    this.availableNodesController.add( "", new NodeFolder( "Available Nodes", true ), true );
-
-    // --- Get all Folders
-    for (var key of VG.Nodes.availableNodes.keys() )
-    {
-        var stringArray=String( key ).split( "." );
-
-        if ( stringArray.length >1 && folderIndex.indexOf( stringArray[0] ) === -1 )
-        {
-        	var f=new NodeFolder( stringArray[0], false );
-		    this.availableNodesController.add( "0", f, true );
-
-        	folderIndex.push( stringArray[0] );
-        }
-    }   
-
-	// --- Insert all Nodes
-    for (var key of VG.Nodes.availableNodes.keys() )
-    {
-        var stringArray=String( key ).split( "." );
-
-        if ( stringArray.length > 1 )
-        {
-        	var index=folderIndex.indexOf( stringArray[0] );
-
-        	var f=new Node( stringArray[1], VG.Nodes.availableNodes.get(key) );
-		    this.availableNodesController.add( "0." + index, f, true );
-        } else
-        {
-        	var f=new Node( stringArray[0], VG.Nodes.availableNodes.get(key) );
-		    this.availableNodesController.add( "0", f, true );        	
-        }
-    } 
+    this.parseAvailableNodes();
 
     // ---
 
@@ -154,10 +121,46 @@ VG.Nodes.GraphEdit.prototype.bind=function( collection, path )
         collection.addControllerForPath( this.controller, path );
     }
 
-    //this.controller.addObserver( "changed", this.changed, this );    
-    //this.controller.addObserver( "selectionChanged", this.selectionChanged, this );
-
     return this.controller;
+};
+
+VG.Nodes.GraphEdit.prototype.parseAvailableNodes=function( node, noUndo )
+{
+    this.dc.nodes=[];
+    var folderIndex=[];
+    this.availableNodesController.add( "", new NodeFolder( "Available Nodes", true ), true );
+
+    // --- Get all Folders
+    for (var key of VG.Nodes.availableNodes.keys() )
+    {
+        var stringArray=String( key ).split( "." );
+
+        if ( stringArray.length >1 && folderIndex.indexOf( stringArray[0] ) === -1 )
+        {
+            var f=new NodeFolder( stringArray[0], false );
+            this.availableNodesController.add( "0", f, true );
+
+            folderIndex.push( stringArray[0] );
+        }
+    }   
+
+    // --- Insert all Nodes
+    for (var key of VG.Nodes.availableNodes.keys() )
+    {
+        var stringArray=String( key ).split( "." );
+
+        if ( stringArray.length > 1 )
+        {
+            var index=folderIndex.indexOf( stringArray[0] );
+
+            var f=new Node( stringArray[1], VG.Nodes.availableNodes.get(key) );
+            this.availableNodesController.add( "0." + index, f, true );
+        } else
+        {
+            var f=new Node( stringArray[0], VG.Nodes.availableNodes.get(key) );
+            this.availableNodesController.add( "0", f, true );          
+        }
+    } 
 };
 
 VG.Nodes.GraphEdit.prototype.addNode=function( node, noUndo )
@@ -176,6 +179,13 @@ VG.Nodes.GraphEdit.prototype.getOutputTerminal=function( node )
 	{
 		return this.graphView.previewNode.inputs[0].connectedTo[0];
 	} else return null;
+};
+
+VG.Nodes.GraphEdit.prototype.reload=function( canvas )
+{
+    var terminal=this.getOutputTerminal();
+    this.controller.modelChanged( true );
+    if ( terminal ) this.graphView.previewNode.inputs[0].connectTo( terminal );
 };
 
 VG.Nodes.GraphEdit.prototype.paintWidget=function( canvas )
@@ -216,20 +226,20 @@ VG.Nodes.GraphView=function( graph )
     this.previewNode.addInput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Universal, "in", null, function( t ) {
     	// --- onConnect, if connected to a Sample2D terminal add the size terminal
 
-    	if ( t.type === VG.Nodes.Terminal.Type.Sample2D )
-			this.addInput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector2, "size" ) );
+    	//if ( t.type === VG.Nodes.Terminal.Type.Sample2D )
+		//	this.addInput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector2, "size" ) );
 
     }.bind( this.previewNode ), function( t ) {
     	// --- onDisconnect, if it exists, remove the size Terminal
 
-    	var sizeTerminal=this.getInput( "size" );
-    	if ( sizeTerminal ) this.removeInput( sizeTerminal );
+    	//var sizeTerminal=this.getInput( "size" );
+    	//if ( sizeTerminal ) this.removeInput( sizeTerminal );
 
     }.bind( this.previewNode ) ) );
 
     this.previewNode.data={ id : -1, xPos : 600, yPos : 300 };
 	this.previewNode.rect=VG.Core.Rect( 0, 0, 200, 200 );
-	this.previewImage=VG.Core.Image( 200, 200 );
+	this.previewImage=VG.Core.Image( 198, 173 );
 
 	this.graph.previewNode=this.previewNode;
 
@@ -275,6 +285,7 @@ VG.Nodes.GraphView=function( graph )
     	"TerminalColor2" : VG.Core.Color( "#ee804a" ),
     	"TerminalColor3" : VG.Core.Color( "#6775d0" ),
     	"TerminalColor4" : VG.Core.Color( "#f1c200" ),
+		"TerminalColor5" : VG.Core.Color( "#f175d0" ),
 
     	"TerminalConnectedColor" : VG.Core.Color( "#000000" ),
     };
@@ -285,7 +296,7 @@ VG.Nodes.GraphView.prototype=VG.UI.Widget();
 VG.Nodes.GraphView.prototype.setController=function( controller )
 {
 	this.controller=controller;
-	this.controller.addObserver( "changed", function() { this.graph.updateCallback(); VG.update(); }, this );	
+	this.controller.addObserver( "changed", function() { if ( this.graph.updateCallback ) { this.graph.updateCallback(); VG.update(); } }, this );	
 };
 
 VG.Nodes.GraphView.prototype.drawNode=function( canvas, node )
@@ -475,81 +486,79 @@ VG.Nodes.GraphView.prototype.drawPreviewNode=function( canvas, node )
 		{
 			text="Preview: Sample2D";
 
-			if ( this.graphOutput )
-				canvas.drawImage( this.workRect1.pos(), this.graphOutput.output );
+            if (this.graphOutput && this.graphOutput.output)
+            {
+                var width, height;
+                var image=this.graphOutput.output;
 
-			// --- Draw the optional input terminals
+                var  aspectRatio=image.getHeight() / image.getWidth();
+                if ( this.previewImage.width * aspectRatio > this.previewImage.height )
+                {
+                    width = this.previewImage.height / aspectRatio < image.getWidth() ? this.previewImage.height / aspectRatio : image.getWidth();
+                } else
+                {
+                    width = this.previewImage.width < image.getWidth() ? this.previewImage.width : image.getWidth();
+                }
+                height = Math.floor( aspectRatio * this.previewImage.width );
+              
+                width=Math.floor( width );
 
-			if ( node.inputs.length > 1 )
-			{
-				this.style.TitleFont.setSize( 12 * this.scale );
-				canvas.pushFont( this.style.TitleFont );	
+                var wOffset=Math.floor( ( (this.previewImage.width - width)/2 ) );
+                var hOffset=Math.floor( ( (this.previewImage.height - height)/2 ) );
 
-				this.workRect1.x+=8 * this.scale; this.workRect1.y+=9 * this.scale; this.workRect1.height=12 * this.scale;
-				this.workRect1.width=12 * this.scale;
-				var y=this.workRect1.y;
+                canvas.drawImage( VG.Core.Point( this.workRect1.x + wOffset, this.workRect1.y + hOffset ), this.graphOutput.output,
+                    VG.Core.Size( width, height ) );
+            }
+		} else
+		if ( connTerminal.type === VG.Nodes.Terminal.Type.Texture ) 
+		{
+			text="Preview: Texture";
 
-				for( var i=1; i < node.inputs.length; ++i )
-				{
-					var t=node.inputs[i];
-					var color=this.getTerminalColor( t );
+			if (this.graphOutput && this.graphOutput.output)
+            {
+                var width, height;
+                var image=this.graphOutput.output;
 
-					this.workRect1.x-=4; this.workRect1.width=15 * this.scale + canvas.getTextSize( t.name ).width + 8;
-					this.workRect1.y-=4; this.workRect1.height+=8;
-					canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, this.workRect1, VG.Core.Color( 0, 0, 0, 160 ) );
-					this.workRect1.x+=4; this.workRect1.width=12 * this.scale;
-					this.workRect1.y+=4; this.workRect1.height-=8;
-					
-					canvas.draw2DShape( VG.Canvas.Shape2D.Circle, this.workRect1, color );
+                var  aspectRatio=image.getHeight() / image.getWidth();
+                if ( this.previewImage.width * aspectRatio > this.previewImage.height )
+                {
+                    width = this.previewImage.height / aspectRatio < image.getWidth() ? this.previewImage.height / aspectRatio : image.getWidth();
+                } else
+                {
+                    width = this.previewImage.width < image.getWidth() ? this.previewImage.width : image.getWidth();
+                }
+                height = Math.floor( aspectRatio * this.previewImage.width );
+              
+                width=Math.floor( width );
 
-					if ( !t.rect ) t.rect=VG.Core.Rect();
-					t.rect.set( this.workRect1 );
+                var wOffset=Math.floor( ( (this.previewImage.width - width)/2 ) );
+                var hOffset=Math.floor( ( (this.previewImage.height - height)/2 ) );
 
-					this.workRect1.x+=15 * this.scale;
-					this.workRect1.width=(158 - 2 - 2 * 15) * this.scale;		
-
-	    			canvas.drawTextRect( t.name, this.workRect1, this.style.TitleTextColor, 0, 1 );	
-	    		}
-	    		canvas.popFont();
-	    	}
+                canvas.drawImage( VG.Core.Point( this.workRect1.x + wOffset, this.workRect1.y + hOffset ), this.graphOutput.output,
+                    VG.Core.Size( width, height ) );
+            }
 		} else
 		if ( connTerminal.type === VG.Nodes.Terminal.Type.Material ) 
 		{
 			text="Preview: Material";
+            var rc=this.graphOutput.output;
 
-			// --- Fake Preview
+            if ( !this.materialPreview ) this.materialPreview=new VG.Nodes.MaterialPreview();
 
-			if ( this.graphOutput )
-			{
-				canvas.drawImage( this.workRect1.pos(), this.graph.outputImage );
+            if ( 1 ) // --- Debug output of material
+            {
+                VG.log( "-----" );
+                VG.log( "Ka [ ", rc.Ka[0].toFixed(precision), ", ", rc.Ka[1].toFixed(precision), ", ", rc.Ka[2].toFixed(precision), " ] " );
+                VG.log( "Kd [ ", rc.Kd[0].toFixed(precision), ", ", rc.Kd[1].toFixed(precision), ", ", rc.Kd[2].toFixed(precision), " ] " );
+                VG.log( "Ks [ ", rc.Ks[0].toFixed(precision), ", ", rc.Ks[1].toFixed(precision), ", ", rc.Ks[2].toFixed(precision), " ] " );
+                VG.log( "illum [ ", rc.illum.toFixed( precision) );
+                VG.log( "Ns [ ", rc.Ns.toFixed( precision) );
+            }
 
-				this.style.TitleFont.setSize( 14 * this.scale );
-				canvas.pushFont( this.style.TitleFont );
+            this.materialPreview.setMtlData( rc );
 
-				this.workRect1.y=this.rect.y + node.data.yPos + 25;
-				this.workRect1.height=14 * this.scale + 2 * this.scale;
-
-    			canvas.drawTextRect( "Specular: " + String( parseFloat(this.graphOutput.output.specular).toFixed(precision) ), this.workRect1, this.getTerminalColor( connTerminal ), 0, 1 );
-				this.workRect1.y+=this.workRect1.height;    			
-    			canvas.drawTextRect( "Glossiness: " + String( parseFloat(this.graphOutput.output.glossiness).toFixed(precision) ), this.workRect1, this.getTerminalColor( connTerminal ), 0, 1 );
-				this.workRect1.y+=this.workRect1.height;    			
-    			canvas.drawTextRect( "Normal: " + String( parseFloat(this.graphOutput.output.normal.x).toFixed(precision) ) + ", " +
-    				String( parseFloat(this.graphOutput.output.normal.y).toFixed(precision) ) + ", " +
-    				String( parseFloat(this.graphOutput.output.normal.z).toFixed(precision) ),
-					this.workRect1, this.getTerminalColor( connTerminal ), 0, 1 );
-				this.workRect1.y+=this.workRect1.height;    			    			
-    			canvas.drawTextRect( "Luminosity: " + String( parseFloat(this.graphOutput.output.luminosity.x).toFixed(precision) ) + ", " +
-    				String( parseFloat(this.graphOutput.output.luminosity.y).toFixed(precision) ) + ", " +
-    				String( parseFloat(this.graphOutput.output.luminosity.z).toFixed(precision) ),
-					this.workRect1, this.getTerminalColor( connTerminal ), 0, 1 );
-				this.workRect1.y+=this.workRect1.height;    			    			
-    			canvas.drawTextRect( "Reflect: " + String( parseFloat(this.graphOutput.output.reflect.x).toFixed(precision) ) + ", " +
-    				String( parseFloat(this.graphOutput.output.reflect.y).toFixed(precision) ) + ", " +
-    				String( parseFloat(this.graphOutput.output.reflect.z).toFixed(precision) ),
-					this.workRect1, this.getTerminalColor( connTerminal ), 0, 1 );
-
-    			canvas.popFont();
-			}
+            this.materialPreview.rect.copy( this.workRect1 );
+            this.materialPreview.paintWidget( canvas );            
 		}	
 	}
 	
@@ -588,6 +597,8 @@ VG.Nodes.GraphView.prototype.getTerminalColor=function( t )
 	if ( t.type === VG.Nodes.Terminal.Type.Sample2D || t.type === VG.Nodes.Terminal.Type.Sample3D ) return this.style.TerminalColor4;	
 	else
 	if ( t.type === VG.Nodes.Terminal.Type.Material ) return this.style.TerminalColor2;
+	else
+	if ( t.type === VG.Nodes.Terminal.Type.Texture ) return this.style.TerminalColor5;
 
 	return VG.Core.Color();
 };
@@ -814,11 +825,11 @@ VG.Nodes.GraphView.prototype.paintWidget=function( canvas )
 {   
     var rect=this.rect;
 
-    canvas.setClipRect( this.rect );
+    canvas.pushClipRect( this.rect );
 
     // --- Background
 
-    if ( !this.bgImage ) this.bgImage=VG.Utils.getImageByName( "nodes_bg.jpg" );
+    /*if ( !this.bgImage )*/ this.bgImage=VG.Utils.getImageByName( "nodes_bg.png" );
     if ( this.bgImage ) {
 
     	var pt=VG.Core.Point( rect.x, rect.y );
@@ -828,6 +839,18 @@ VG.Nodes.GraphView.prototype.paintWidget=function( canvas )
     		for( ; pt.x < rect.right(); pt.x+=this.bgImage.width )
 				canvas.drawImage( pt, this.bgImage );
 		}
+    }
+
+    // --- Check if Controller has Content
+
+    if ( !this.controller.isValid() ) {
+    
+        canvas.pushFont( VG.Font.Font( canvas.style.DefaultFontName, 60 ) );
+        canvas.drawTextRect( "No Content", this.rect, VG.Core.Color( 255, 255, 255 ), 1, 1 );
+        canvas.popFont();
+
+        canvas.setClipRect();
+        return;
     }
 
     // --- Nodes
@@ -933,7 +956,7 @@ VG.Nodes.GraphView.prototype.paintWidget=function( canvas )
     	}
     }
 
-	canvas.setClipRect();
+	canvas.popClipRect();
 };
 
 // --------------------- Clipboard

@@ -18,87 +18,99 @@ Contact=function()
     this.text="New Contact";
 };
 
-// --- Constructor for the Phone / eMails of the Contact.
+// --- vgMain
 
-PhoneOrEMail=function()
+function vgMain( workspace )
 {
-    this.value="";
-    this.type=0;
-    this.comments="";
-};
-
-// --- main
-
- function vgMain( workspace )
- {
-    // --- Create a new Data Collection which will hold the projects data and initialize it
+    // --- Create a new Data Collection which will hold the projects data
     this.dc=VG.Data.Collection( "MainData" );
-    clearDataCollection.call( this );
+    this.dc.contacts=[];
 
-    // --- Register the Data Collection for automated undo / redo and open / save operations
+    // --- Register the Data Collection for automated Undo / Redo and Open / Save operations
     this.workspace.registerDataCollection( this.dc, VG.UI.DataCollectionRole.LoadSaveRole | VG.UI.DataCollectionRole.UndoRedoRole, "addressbook" );
-    // --- Register Callbacks
-    this.workspace.registerCallback( VG.UI.CallbackType.New, clearDataCollection.bind( this ) );
+
+    // --- Register New Callback, called when the DataModel needs to be cleared
+    this.workspace.registerCallback( VG.UI.CallbackType.New, function () {
+        this.dc.contacts=[];
+        setToolbarMessage.call( this );
+    }.bind( this ) );
+
+    // --- Register Undo / Redo Callback, called to indicate an Undo/Redo action was performed, we just use it to update the StatusBar Message.
     this.workspace.registerCallback( VG.UI.CallbackType.UndoRedo, setToolbarMessage.bind( this ) );
 
     // --- Setup the Menus
-
-    var menubar=VG.UI.Menubar();
-    workspace.addMenubar( menubar );
+    var menubar=VG.UI.MenuBar();
+    workspace.addMenuBar( menubar );
     
     VG.Utils.addDefaultFileMenu( menubar );
     VG.Utils.addDefaultEditMenu( menubar );
     VG.Utils.addDefaultViewMenu( menubar );
 
-    // --- Setup the Toolbar
+    // --- Setup the Decorated Toolbar
+    this.workspace.createDecoratedToolBar();
 
-    var toolbar=VG.UI.Toolbar();
-    workspace.addToolbar( toolbar );
-     
-    this.workspace.addToolButtonRole( toolbar, VG.UI.ActionItemRole.New );
-    toolbar.addItem( VG.UI.ToolSeparator() );
-    this.workspace.addToolButtonRole( toolbar, VG.UI.ActionItemRole.Open );
-    this.workspace.addToolButtonRole( toolbar, VG.UI.ActionItemRole.SaveAs );
-    toolbar.addItem( VG.UI.ToolSeparator() );
-    this.workspace.addToolButtonRole( toolbar, VG.UI.ActionItemRole.Undo );
-    this.workspace.addToolButtonRole( toolbar, VG.UI.ActionItemRole.Redo );
-     
-    // --- Statusbar
+    this.addContactQMI=this.workspace.addQuickMenuItem( "ADD CONTACT", function() { this.addButton.clicked(); }.bind( this ) );
+    this.removeContactQMI=this.workspace.addQuickMenuItem( "REMOVE CONTACT", function() { this.removeButton.clicked(); }.bind( this ) );
+    this.workspace.addQuickMenuItem( "" );
+    this.selectImageQMI=this.workspace.addQuickMenuItem( "SELECT IMAGE", function() { this.imageButton.clicked(); }.bind( this ) );
 
-    workspace.statusbar=VG.UI.Statusbar();
+    // --- StatusBar
+    workspace.statusBar=VG.UI.StatusBar();
 
-    // --- Setup the left DockWidget with its ListWidget and the ToolPanel
+    // --- Setup the left DockWidget / ListWidget
 
     var contactsWidget=VG.UI.ListWidget();
     this.contactsController=contactsWidget.bind( this.dc, "contacts" );
     this.contactsController.contentClassName="Contact";
     this.contactsController.addObserver( "selectionChanged", contactSelectionChanged );
 
-    this.addButton=VG.UI.ToolPanelButton( "+" );
-    this.addButton.clicked=addContact;
+    this.addButton=VG.UI.ToolButton( "Add" );
+    this.addButton.clicked=function() {
+        var item=this.contactsController.add();// new Contact() );
+        this.contactsController.selected=item;
 
-    this.removeButton=VG.UI.ToolPanelButton( "-" );
+        this.salutationEdit.setFocus();
+        setToolbarMessage.call( this );
+    }.bind( this );
+
+    this.removeButton=VG.UI.ToolButton( "Remove" );
     this.removeButton.disabled=true;
-    this.removeButton.clicked=removeContact;
+    this.removeButton.clicked=function() {
+        this.contactsController.remove( this.contactsController.selected );
+        setToolbarMessage.call( this );
+    }.bind( this );
+
+    this.imageButton=VG.UI.ToolButton( "Image" );
+    this.imageButton.disabled=true;
+    this.imageButton.clicked=function() {
+        var fileDialog=VG.OpenFileDialog( VG.UI.FileDialog.Image, function( name, image ) {
+            this.imageView.image=image;
+            this.imageView.image.needsUpdate=true;
+            image=null;
+        }.bind( this ) );
+    }.bind( this );    
+
+    contactsWidget.addToolWidget( this.addButton );
+    contactsWidget.addToolWidget( this.removeButton );
+    contactsWidget.addToolWidget( this.imageButton );
 
     var dockWidget=VG.UI.DockWidget( "Contact List" );
 
     var contactsWidgetLayout=VG.UI.Layout( contactsWidget );
     contactsWidgetLayout.margin.clear();
-    var toolPanel=VG.UI.ToolPanel( this.addButton, this.removeButton );
 
-    dockWidget.addItems( contactsWidgetLayout, toolPanel );    
+    dockWidget.addItem( contactsWidget );//contactsWidgetLayout );    
      
     // --- ContactEditLayout
 
     this.contactEditLayout=VG.UI.LabelLayout();
-    //this.contactEditLayout.margin.set( 30, 15, 30, 15 );
     this.contactEditLayout.labelSpacing=20;
     this.contactEditLayout.disabled=true;
+    this.contactEditLayout.addTitle( "Contact Data" );
 
     // --- Company Switch
 
-    this.companyCheckbox=VG.UI.Checkbox();
+    this.companyCheckbox=VG.UI.CheckBox();
     this.companyCheckbox.bind( this.dc, "contacts.company" );
     this.companyCheckbox.changed=function() { companySwitch.call( this ); }.bind( this );
 
@@ -115,7 +127,7 @@ PhoneOrEMail=function()
 
     // --- Salutation
 
-    this.salutationEdit=VG.UI.PopupButton( "" );
+    this.salutationEdit=VG.UI.DropDownMenu( "" );
     this.salutationEdit.addItem( "Mr." );
     this.salutationEdit.addItem( "Ms." );
     this.salutationEdit.addItem( "Doctor" );
@@ -155,127 +167,31 @@ PhoneOrEMail=function()
     //this.addressEdit.maximumSize.height=200;
     this.contactEditLayout.addChild( "Address:", this.addressEdit );    
 
-    // --- Phone and eMails Table Widget
-
-    this.phoneOrEMailWidget=new VG.UI.TableWidget();
-    this.phoneOrEMailWidget.frameType=VG.UI.Frame.Type.None;
-
-    this.phoneOrEMailController=this.phoneOrEMailWidget.bind( this.dc, "contacts.phoneOrEMail" );
-    this.phoneOrEMailController.contentClassName="PhoneOrEMail";
-    this.phoneOrEMailController.addObserver( "selectionChanged", function() {
-        this.phoneAndEMailRemoveButton.disabled=!this.phoneOrEMailController.canRemove();
-    }.bind( this ) );
-
-    this.phoneOrEMailWidget.disabled=true;
-    this.phoneOrEMailWidget.addColumn( "value", "Phone / eMail",  VG.UI.TableWidgetItemType.TextLineEdit, true );
-    this.phoneOrEMailWidget.addColumn( "type", "Type", VG.UI.TableWidgetItemType.PopupButton, false, 120 );
-    this.phoneOrEMailWidget.addColumn( "comments", "Comments", VG.UI.TableWidgetItemType.TextLineEdit, true );
-
-    this.phoneOrEMailWidget.setColumnDefaultText( 0, "Phone / eMail" );
-    this.phoneOrEMailWidget.setColumnPopupItems( 1, "Phone", "eMail", "Other" );
-    this.phoneOrEMailWidget.setColumnDefaultText( 2, "Comment" );
-
-    this.phoneAndEMailAddButton=this.phoneOrEMailWidget.addButton( "Add" );
-    this.phoneAndEMailAddButton.clicked=function() {
-        var item=this.phoneOrEMailController.add();
-        this.phoneOrEMailController.selected=item;        
-    }.bind( this );
-    this.phoneAndEMailAddButton.disabled=true;
-
-    this.phoneAndEMailRemoveButton=this.phoneOrEMailWidget.addButton( "Remove" );
-    this.phoneAndEMailRemoveButton.clicked=function() {
-        this.phoneOrEMailController.remove( this.phoneOrEMailController.selected );
-    }.bind( this );
-    this.phoneAndEMailRemoveButton.disabled=true;
-
-    // --- Contact Layout
-
-    this.contactLayout=VG.UI.SplitLayout( this.contactEditLayout, 70, this.phoneOrEMailWidget, 30 );
-    this.contactLayout.vertical=true;
-    this.contactLayout.margin.set( 0, 0, 0, 0 );
-
-    // --- Notes Layout
+    // --- Notes Edit
 
     this.notesEdit=VG.UI.TextEdit( "" );
     this.notesEdit.bind( this.dc, "contacts.notes" );
-
-    this.notesEditLayout=VG.UI.Layout( this.notesEdit );
-    this.notesEditLayout.disabled=true;
+    this.contactEditLayout.addChild( "Notes:", this.notesEdit );
 
     // --- Image Layout
-
-    this.addImageButton=VG.UI.Button( "Select Image" );
-    this.addImageButton.clicked=addContactImage;
 
     this.imageView=VG.UI.Image();
     this.imageView.bind( this.dc, "contacts.image" );
 
-    this.imageEditLayout=VG.UI.Layout( this.imageView, this.addImageButton );
+    this.imageEditLayout=VG.UI.Layout( this.imageView );
     this.imageEditLayout.disabled=true;
-    this.imageEditLayout.vertical=true; 
-
-    // --- Source Code Display
-
-    this.sourceCodeEdit=VG.UI.CodeEdit( vgMain.toString() + "\n\n" + addContact.toString() + "\n\n" + removeContact.toString() + "\n\n" + clearDataCollection.toString()
-         + "\n\n" + setToolbarMessage.toString() + "\n\n" + contactSelectionChanged.toString() + "\n\n" + computeSelectedContactItemText.toString() + "\n\n" + companySwitch.toString() 
-         + "\n\n" + showContentFor.toString() + "\n\n" + addContactImage.toString() );
-    this.sourceCodeEdit.readOnly=true;
-    this.sourceCodeLayout=VG.UI.Layout( this.sourceCodeEdit );
-    this.sourceCodeLayout.margin.set( 8, 0, 0, 0 );
-
-    // --- DockStrip Widget
-
-    var dockStripWidget=VG.UI.DockStripWidget( "Strip" );
-    dockStripWidget.selectionChanged=showContentFor.bind( this );
-
-    this.showAddressButton=VG.UI.DockStripButton( "Contact Info" );
-    this.showAddressButton.selected=true;
-    this.showNotesButton=VG.UI.DockStripButton( "Notes" );
-    this.showImageButton=VG.UI.DockStripButton( "Image" );
-
-    dockStripWidget.addItems( this.showAddressButton, VG.UI.DockStripSeparator(), this.showNotesButton, VG.UI.DockStripSeparator(), this.showImageButton );
+    this.imageEditLayout.addTitle( "Image" );
 
     // --- Settup up the main layout
 
-    this.stackedLayout=VG.UI.StackedLayout( this.contactLayout, this.notesEditLayout, this.imageEditLayout );
-
-    var mainLayout=VG.UI.SplitLayout( this.stackedLayout, 50, this.sourceCodeLayout, 50 );
-    mainLayout.horizontal=true;
+    var mainLayout=VG.UI.SplitLayout( this.contactEditLayout, 50, this.imageEditLayout, 50 );
     mainLayout.margin.set( 0, 0, 0, 0 );
 
     // --- Setting up the workspace
 
     workspace.addDockWidget( dockWidget, VG.UI.DockWidgetLocation.Left );
-    workspace.addDockWidget( dockStripWidget, VG.UI.DockWidgetLocation.Right );
     workspace.content=mainLayout;    
 
-    setToolbarMessage.call( this );
- }
-
-// --- Add a contact to the ListWidget.
-
-function addContact()
-{
-    var item=this.contactsController.add();// new Contact() );
-    this.contactsController.selected=item;
-
-    this.salutationEdit.setFocus();
-    setToolbarMessage.call( this );
-}
-
-// --- Add a contact to the ListWidget.
-
-function removeContact()
-{
-    this.contactsController.remove( this.contactsController.selected );
-    setToolbarMessage.call( this );
-}
-
-// --- Clear the data collection, used as a callback when a "New" action is performed.
-
-function clearDataCollection()
-{
-    this.dc.contacts=[];
     setToolbarMessage.call( this );
 }
 
@@ -284,7 +200,7 @@ function clearDataCollection()
 function setToolbarMessage()
 {
     if ( this.contactsController )
-        VG.context.workspace.statusbar.message( this.contactsController.length + " contact(s) listed." );
+        VG.context.workspace.statusBar.message( this.contactsController.length + " contact(s) listed." );
 }
 
 // --- Dis/Enable the Add / Remove Button according to the controller state.
@@ -292,12 +208,12 @@ function setToolbarMessage()
 function contactSelectionChanged()
 {
     this.removeButton.disabled=!this.contactsController.canRemove();
+    this.imageButton.disabled=!this.contactsController.canRemove();
+    this.removeContactQMI.disabled=!this.contactsController.canRemove();
+    this.selectImageQMI.disabled=!this.contactsController.canRemove();
     this.contactEditLayout.disabled=!this.contactsController.canRemove();  
-    this.phoneOrEMailWidget.disabled=!this.contactsController.canRemove();  
-    this.phoneAndEMailAddButton.disabled=this.phoneOrEMailWidget.disabled;
-    this.notesEditLayout.disabled=!this.contactsController.canRemove();  
+
     this.imageEditLayout.disabled=!this.contactsController.canRemove();
-    if ( !this.contactsController.canRemove() ) this.phoneOrEMailController.selected=null;
 }
 
 // --- 
@@ -349,24 +265,3 @@ function companySwitch()
 
     computeSelectedContactItemText.call( this );
 }
-
-function showContentFor( widget )
-{
-    if ( widget === this.showAddressButton )
-        this.stackedLayout.current=this.contactLayout;
-    else
-    if ( widget === this.showNotesButton )
-        this.stackedLayout.current=this.notesEditLayout;
-    else
-    if ( widget === this.showImageButton )
-        this.stackedLayout.current=this.imageEditLayout;    
-};
-
-function addContactImage()
-{
-    var fileDialog=VG.OpenFileDialog( VG.UI.FileDialog.Image, function( image ) {
-        this.imageView.image=image;
-        this.imageView.image.needsUpdate=true;
-        image=null;
-    }.bind( this ));
-};

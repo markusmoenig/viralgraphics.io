@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 // ----------------------------------------------------------------- VG.UI.ListWidget
@@ -32,6 +35,8 @@ VG.UI.ListWidget=function()
 
     this.offset=0;
 
+    this.previousRect=VG.Core.Rect();
+
     this.minimumSize.set( 100, 100 );
     this.supportsFocus=true;
 
@@ -39,6 +44,10 @@ VG.UI.ListWidget=function()
     this.needsVScrollbar=false;
     this.verified=false;
     this._itemHeight=-1;
+
+    this.toolLayout=VG.UI.Layout();
+    this.layout=this.toolLayout;
+    this.toolLayout.margin.set( 1, 1, 1, 1 );
 
     // --- Setup Default Context Menu
 
@@ -52,10 +61,7 @@ VG.UI.ListWidget=function()
         if ( this.controller && this.controller.canRemove() ) this.controller.remove( this.controller.selected ); 
     }.bind( this ));
 
-    this.contextMenu.addSeparator();
-    this.bigItemsMenuItem=this.contextMenu.addItem( "Big Items", null, this.switchToBigItems.bind( this ) );
-    this.smallItemsMenuItem=this.contextMenu.addItem( "Small Items", null, this.switchToSmallItems.bind( this ) );
-    this.smallItemsMenuItem.addExclusions( this.bigItemsMenuItem );
+    //this.contextMenu.addSeparator();
 
     this.contextMenu.aboutToShow=function() {
         // --- Disable / Enable the add and remove context menu items based on controller state
@@ -67,10 +73,6 @@ VG.UI.ListWidget=function()
             if ( this.controller.canRemove() ) this.removeMenuItem.disabled=false;
         }
     }.bind( this );
-
-    // --- Big Items as Default
-
-    this.switchToBigItems();
 };
 
 VG.UI.ListWidget.prototype=VG.UI.Widget();
@@ -93,9 +95,10 @@ Object.defineProperty( VG.UI.ListWidget.prototype, "itemHeight",
 {
     get: function() {
         if ( this._itemHeight === -1 ) {
-            if ( this.smallItemsMenuItem.checked )
-                return VG.context.style.skin.ListWidget.SmallItemHeight;
-            else return VG.context.style.skin.ListWidget.BigItemHeight;           
+            VG.context.workspace.canvas.pushFont( VG.UI.stylePool.current.skin.ListWidget.Font );
+            var fontHeight=VG.context.workspace.canvas.getLineHeight();
+            VG.context.workspace.canvas.popFont();
+            return fontHeight + 4;
         } else return this._itemHeight;
     },
     set: function( itemHeight ) {
@@ -103,35 +106,15 @@ Object.defineProperty( VG.UI.ListWidget.prototype, "itemHeight",
     }    
 });
 
-Object.defineProperty( VG.UI.ListWidget.prototype, "bigItems", 
+VG.UI.ListWidget.prototype.addToolWidget=function( widget )
 {
-    get: function() {
-        return this.bigItemsMenuItem.checked;
-    },
-    set: function( bigItems ) {
-        if ( bigItems ) this.switchToBigItems();
-        else this.switchToSmallItems();
-    }    
-});
-
-VG.UI.ListWidget.prototype.switchToBigItems=function()
-{
-    this.bigItemsMenuItem.checked=true;
-    this.smallItemsMenuItem.checked=false;
-    this.spacing=VG.context.style.skin.ListWidget.BigItemDistance;
-    this.verified=false;
-
-    VG.update();   
+    widget.supportsFocus=false;
+    this.toolLayout.addChild( widget );
 };
 
-VG.UI.ListWidget.prototype.switchToSmallItems=function()
+VG.UI.ListWidget.prototype.removeToolWidget=function( widget )
 {
-    this.bigItemsMenuItem.checked=false;
-    this.smallItemsMenuItem.checked=true;
-    this.spacing=VG.context.style.skin.ListWidget.SmallItemDistance;
-    this.verified=false;
-
-    VG.update();
+    this.toolLayout.removeChild( widget );
 };
 
 VG.UI.ListWidget.prototype.focusIn=function()
@@ -271,7 +254,7 @@ VG.UI.ListWidget.prototype.verifyScrollbar=function( text )
         this.needsVScrollbar=true;
 
     if ( this.needsVScrollbar && !this.vScrollbar ) {
-        this.vScrollbar=VG.UI.Scrollbar( "ListWidget Scrollbar" );
+        this.vScrollbar=VG.UI.ScrollBar( "ListWidget Scrollbar" );
         this.vScrollbar.callbackObject=this;
     }    
 
@@ -291,62 +274,9 @@ VG.UI.ListWidget.prototype.selectionChanged=function()
 
 VG.UI.ListWidget.prototype.paintWidget=function( canvas )
 {
-    VG.context.style.drawGeneralBorder( canvas, this );
+    this.spacing=VG.UI.stylePool.current.skin.ListWidget.Spacing;
 
-    if ( !this.controller.length ) return;
-
-    if ( this.smallItemsMenuItem.checked ) {
-        this.spacing=VG.context.style.skin.ListWidget.SmallItemDistance;
-    } else {
-        this.spacing=VG.context.style.skin.ListWidget.BigItemDistance;
-    }
-
-    this.contentRect.x+=canvas.style.skin.ListWidget.Margin.left; 
-    this.contentRect.y+=canvas.style.skin.ListWidget.Margin.top;
-    this.contentRect.width-=2*canvas.style.skin.ListWidget.Margin.right; 
-    this.contentRect.height-=2*canvas.style.skin.ListWidget.Margin.bottom; 
-    canvas.setClipRect( this.contentRect );
-
-    if ( !this.verified || canvas.hasBeenResized )
-        this.verifyScrollbar();
-
-    // ---
-
-    var paintRect=VG.Core.Rect( this.contentRect );
-    paintRect.height=this.itemHeight;
-
-    if ( this.needsVScrollbar ) paintRect.width-=canvas.style.skin.Scrollbar.Size + canvas.style.skin.ListWidget.ScrollbarXOffset + 2;
-
-    if ( this.bigItems ) canvas.pushFont( canvas.style.skin.ListWidget.BigItemFont );
-    else canvas.pushFont( canvas.style.skin.ListWidget.SmallItemFont );
-
-    paintRect.y=this.contentRect.y - this.offset;
-
-    for ( var i=0; i < this.controller.length; ++i ) {
-        var item=this.controller.at( i ) ;
-
-        if ( paintRect.y + this.itemHeight >= this.contentRect.y || paintRect.y < this.contentRect.bottom() ) {
-            VG.context.style.drawListWidgetItem( canvas, item, this.controller.isSelected( item ), paintRect, !this.paintItemCallback );
-
-            if ( this.paintItemCallback ) this.paintItemCallback( canvas, item, paintRect, this.controller.isSelected( item ) );
-
-            paintRect.y+=this.itemHeight + this.spacing;
-        } 
-    }
-
-    canvas.popFont();        
-
-    if ( this.needsVScrollbar ) {
-        this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() + canvas.style.skin.ListWidget.ScrollbarXOffset - canvas.style.skin.Scrollbar.Size - 2, 
-            this.contentRect.y, canvas.style.skin.Scrollbar.Size, this.contentRect.height );
-
-        // this.totalItemHeight == Total height of all Items in the list widget including spacing
-        // visibleHeight == Total height of all currently visible items
-        // this.contentRect.height == Height of the available area for the list items
-
-        this.vScrollbar.setScrollbarContentSize( this.totalItemHeight, this.contentRect.height );// this.visibleHeight );
-        this.vScrollbar.paintWidget( canvas );
-    }    
-
-    canvas.setClipRect( false );
+    if ( !this.rect.equals( this.previousRect ) ) this.verified=false;    
+    VG.UI.stylePool.current.drawListWidget( this, canvas );
+    this.previousRect.set( this.rect );    
 };

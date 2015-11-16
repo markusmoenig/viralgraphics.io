@@ -19,6 +19,7 @@
 
 #include "platform.h"
 #include <xmmintrin.h>
+#include <algorithm>
 
 #if defined __MIC__
 #include <immintrin.h>
@@ -144,6 +145,8 @@ __forceinline void __cpuid(int out[4], int op) {
   asm volatile ("cpuid" : "=a"(out[0]), "=b"(out[1]), "=c"(out[2]), "=d"(out[3]) : "a"(op)); 
 }
 
+// LINUX has these defined in algorithm inside libstdc++
+#ifdef __APPLE__
 __forceinline uint64 __rdtsc()  {
   uint32 high,low;
   asm volatile ("rdtsc" : "=d"(high), "=a"(low));
@@ -155,6 +158,7 @@ __forceinline uint64 __rdpmc(int i) {
   asm volatile ("rdpmc" : "=d"(high), "=a"(low) : "c"(i));
   return (((uint64)high) << 32) + (uint64)low;
 }
+#endif
 
 __forceinline unsigned int __popcnt(unsigned int in) {
   int r = 0; asm ("popcnt %1,%0" : "=r"(r) : "r"(in)); return r;

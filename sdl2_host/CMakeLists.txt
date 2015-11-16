@@ -4,8 +4,18 @@ cmake_minimum_required(VERSION 2.6)
 
 project(VisualGraphics)
 
-# Addd zlib as subproject
+# Linux needs GTK+-3.0 libraries, therefore search for Gtk+-3.0 package and 
+# check availability, add include directories and link directories
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+  
+  include_directories(${GTK3_INCLUDE_DIRS})
+  link_directories(${GTK3_LIBRARY_DIRS})
+  add_definitions(${GTK3_CFLAGS_OTHER})
+endif()
 
+# Addd zlib as subproject
 set(ZLIB_DIR "${VisualGraphics_SOURCE_DIR}/deps/zlib")
 set(ZLIB_BUILD_DIR "${VisualGraphics_BINARY_DIR}/deps/zlib")
 add_subdirectory(${ZLIB_DIR})
@@ -35,8 +45,6 @@ add_subdirectory(${LIBJPEG_DIR})
 
 include_directories(${LIBJPEG_DIR} ${LIBJPEG_BUILD_DIR})
 
-
-
 # Use our modified FindSDL2* modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${VisualGraphics_SOURCE_DIR}/cmake")
 # Set an output directory for our binaries
@@ -48,9 +56,14 @@ set(BIN_DIR ${VisualGraphics_SOURCE_DIR}/bin)
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
     # Too many warnings...
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -std=c++11")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O2")
+    # For Linux OS specify that we want SSE up to 4.1 and fpermissive
+    if (${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -fpermissive -std=c++11")
+    else()
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    endif()
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -Wno-c++11-narrowing -Wno-address-of-temporary")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O2 -Wno-c++11-narrowing -Wno-address-of-temporary")
 elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
     if (CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
         ##string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -77,8 +90,11 @@ elseif(${WIN32})
 endif()
 
 ## Native File Dialogs
-
-include_directories( "deps/nativefiledialog/src" "deps/nativefiledialog/src/include" )
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    include_directories( ${GTK3_INCLUDE_DIRS} "deps/nativefiledialog/src" "deps/nativefiledialog/src/include" )
+else()
+    include_directories( "deps/nativefiledialog/src" "deps/nativefiledialog/src/include" )
+endif()
 
 if (${APPLE})
 
@@ -95,8 +111,6 @@ elseif(${WIN32})
     
 endif()
 
-
-
 # EMBREE
 
 set( EMBREE_LIBRARY "" )
@@ -107,7 +121,14 @@ if (DEFINED EMBREE_DIR)
     add_definitions( -D__VG_WITH_EMBREE )
     message( STATUS "Using embree" )
 
-    set( EMBREE_SOURCES tracer/tracer.cpp tracer/scene.cpp tracer/util.cpp)
+    set( EMBREE_SOURCES
+	tracer/tracer.cpp
+	tracer/scene.cpp
+	tracer/util.cpp
+	tracer/light.cpp
+	tracer/material.cpp
+    tracer/mesh.cpp)
+
     set( EMBREE_RENDERER_SOURCES
         tracer/common/sys/filename.cpp
         tracer/common/sys/library.cpp
@@ -135,6 +156,8 @@ if (DEFINED EMBREE_DIR)
         tracer/samplers/sampler.cpp
 
         tracer/integrators/pathtraceintegrator.cpp
+        tracer/integrators/pathintegrator.cpp
+        tracer/integrators/whittedintegrator.cpp
 
         tracer/filters/filter.cpp
     )
@@ -160,33 +183,62 @@ if (DEFINED EMBREE_DIR)
 
     endif()
 
-
-
 endif()
-
-
-## Sources
- 
-set ( SOURCES main.cpp image_loader.cpp jshost.cpp jshost_funcs.cpp jshost_funcs_utils.cpp shader.cpp gpubuffer.cpp rendertarget.cpp texture.cpp base64.cpp ${JSHOST} ${NFD_SOURCES} ${EMBREE_SOURCES} )
-
-# So the compiler knows when to re-compile on header change
-set ( HEADERS gl.hpp image_loader.hpp jshost.hpp shader.hpp gpubuffer.hpp rendertarget.hpp texture.hpp ${EMBREE_HEADERS} )
-
-
-
 
 ## SDL2
 
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
 
+## JAVASCRIPT ENGINE WRAPPER
 
-set( SM_INCLUDE_DIR "${SM_DIR}/dist/include")
-include_directories(${SM_INCLUDE_DIR})
+if (DEFINED SM_DIR )
 
-set( SM_LIBRARIES "-L${SM_DIR}/dist/lib -ljs_static")
+    #add_definitions( -D__JSWRAPPER_SM )
 
+    #set( SM_INCLUDE_DIR "${SM_DIR}/dist/include")
+    #include_directories(${SM_INCLUDE_DIR})
 
+    #set( SM_LIBRARIES "-L${SM_DIR}/dist/lib -ljs_static")
+
+    #set( JSWRAPPER_SOURCES "jswrapper_sm.cpp" )
+    #set( JSWRAPPER_HEADERS "jswrapper_sm.hpp" )
+
+    add_definitions( -D__JSWRAPPER_SM )
+
+    set( JSWRAPPER_INCLUDE_DIR "${SM_DIR}/dist/include")
+    include_directories( ${JSWRAPPER_INCLUDE_DIR} "deps/jsenginewrapper" )
+
+    set( JSWRAPPER_LIBRARIES "-L${SM_DIR}/dist/lib -ljs_static")
+
+    set( JSWRAPPER_SOURCES "deps/jsenginewrapper/jswrapperdata.cpp" "deps/jsenginewrapper/jswrapper_sm.cpp" "deps/jsenginewrapper/jswrapperobject_sm.cpp" "deps/jsenginewrapper/jswrapperclass_sm.cpp")
+    set( JSWRAPPER_HEADERS "deps/jsenginewrapper/jswrapperdata.hpp" "deps/jsenginewrapper/jswrapper_sm.hpp" "deps/jsenginewrapper/jswrapperobject_sm.hpp" "deps/jsenginewrapper/jswrapperclass_sm.hpp" )
+
+endif()
+
+if (DEFINED V8_DIR )
+
+    add_definitions( -D__JSWRAPPER_V8 )
+
+    set( JSWRAPPER_INCLUDE_DIR "${V8_DIR}")
+    include_directories( ${JSWRAPPER_INCLUDE_DIR} "deps/jsenginewrapper" )
+
+    if (${APPLE})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++ -Wno-c++11-narrowing -Wno-address-of-temporary")
+    endif()
+    set( JSWRAPPER_LIBRARIES "-L${V8_DIR}/out/x64.release -lv8_base -lv8_libbase -lv8_libplatform -lv8_external_snapshot -licudata -licuuc -licui18n")
+
+    set( JSWRAPPER_SOURCES "deps/jsenginewrapper/jswrapperdata.cpp" "deps/jsenginewrapper/jswrapper_v8.cpp" "deps/jsenginewrapper/jswrapperobject_v8.cpp" "deps/jsenginewrapper/jswrapperclass_v8.cpp")
+    set( JSWRAPPER_HEADERS "deps/jsenginewrapper/jswrapperdata.hpp" "deps/jsenginewrapper/jswrapper_v8.hpp" "deps/jsenginewrapper/jswrapperobject_v8.hpp" "deps/jsenginewrapper/jswrapperclass_v8.hpp" )
+
+endif()
+
+## Sources
+ 
+set ( SOURCES main.cpp image_loader.cpp image_saver.cpp jshost.cpp jshost_funcs.cpp jshost_funcs_utils.cpp shader.cpp gpubuffer.cpp rendertarget.cpp texture.cpp base64.cpp files_unix.cpp ${JSHOST} ${NFD_SOURCES} ${EMBREE_SOURCES} ${JSWRAPPER_SOURCES} )
+
+# So the compiler knows when to re-compile on header change
+set ( HEADERS gl.hpp image_loader.hpp image_saver.hpp jshost.hpp shader.hpp gpubuffer.hpp rendertarget.hpp texture.hpp ${EMBREE_HEADERS} ${JSWRAPPER_HEADERS} )
 
 ## Apple / Mac OSX specific
 if (${APPLE})
@@ -194,13 +246,13 @@ if (${APPLE})
     ## OpenGL
     find_package(OpenGL REQUIRED)
 
-    set( SM_LIBRARIES ${SM_LIBRARIES} "libz.dylib" )
+    set( JSWRAPPER_LIBRARIES ${JSWRAPPER_LIBRARIES} "libz.dylib" )
 
 
 elseif(${UNIX})
     
     set( OPENGL_LIBRARIES "-lGLESv2") 
-    set( SM_LIBRARIES "${SM_LIBRARIES} -lz -ldl -lpthread")
+    set( JSWRAPPER_LIBRARIES "${JSWRAPPER_LIBRARIES} -lz -ldl -lpthread")
 
 elseif(${WIN32})
 
@@ -223,4 +275,10 @@ endif()
 
 ###
 add_executable( VisualGraphics MACOSX_BUNDLE ${HEADERS} ${SOURCES} )
-target_link_libraries( VisualGraphics jpeg_static png16_static zlibstatic ${SDL2_LIBRARY} ${SDL2MAIN_LIBRARY} ${OPENGL_LIBRARIES} ${SM_LIBRARIES} ${EMBREE_LIBRARY} )
+
+# Linux based system needs to link against GTK+-3.0 libraries
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+  target_link_libraries( VisualGraphics jpeg_static png16_static zlibstatic ${SDL2_LIBRARY} ${SDL2MAIN_LIBRARY} ${OPENGL_LIBRARIES} ${JSWRAPPER_LIBRARIES} ${EMBREE_LIBRARY} ${GTK3_LIBRARIES} )
+else()
+  target_link_libraries( VisualGraphics jpeg_static png16_static zlibstatic ${SDL2_LIBRARY} ${SDL2MAIN_LIBRARY} ${OPENGL_LIBRARIES} ${JSWRAPPER_LIBRARIES} ${EMBREE_LIBRARY} )
+endif()

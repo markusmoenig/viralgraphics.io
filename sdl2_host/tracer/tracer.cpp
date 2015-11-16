@@ -1,25 +1,27 @@
 /*
-* (C) Copyright 2014, 2015 Markus Moenig Luis Jimenez <kuko@kvbits.com>.
-*
-* This file is part of Visual Graphics.
-*
-* Visual Graphics is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Lesser General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* Visual Graphics is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU Lesser General Public License for more details.
-*
-* You should have received a copy of the GNU Lesser General Public License
-* along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
-*
-*/
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 
-#include "Tracer.h"
-
+#include "tracer.h"
 
 #include <embree2/rtcore.h>
 #include <embree2/rtcore_ray.h>
@@ -33,9 +35,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <assert.h>
-#include <jsapi.h>
-#include <jsfriendapi.h>
-#include "../jshost.hpp"
 
 #include "renderers/debugrenderer.h"
 #include "renderers/integratorrenderer.h"
@@ -56,11 +55,9 @@
 
 #include "util.h"
 
-
-extern JSHost *g_host;
+#include "jswrapper.hpp"
 
 using namespace embree;
-
 
 /* error reporting function */
 void error_handler(const RTCError code, const int8* str)
@@ -99,10 +96,7 @@ Tracer* Tracer::instancePtr = nullptr;
 Tracer* Tracer::instance()
 {
     if (!instancePtr)
-    {
         instancePtr = new Tracer();
-    }
-
     return instancePtr;
 }
 
@@ -115,7 +109,7 @@ Tracer::Tracer()
     //m_pRenderer = new DebugRenderer(embree::Parms());
     m_pRenderer->refInc();
 
-    TaskScheduler::create(8);
+    TaskScheduler::create(0);
 }
 
 Tracer::~Tracer()
@@ -144,20 +138,20 @@ Tracer::Context* Tracer::getContextById(int32_t id) const
     return nullptr;
 }
 
-Tracer::Context* Tracer::getContextByJSObject(JSContext* cx, RootedObject& jsTraceContext)
+Tracer::Context* Tracer::getContextByJSObject( JSWrapperObject *traceContextObject )
 {
     int32_t id = 0;
 
-    RootedValue tempValue(cx);
+    JSWrapperData data;
+    traceContextObject->get( "id", &data );
 
-    JS_GetProperty(cx, HandleObject(jsTraceContext), "id", MutableHandleValue(&tempValue));
-    id = tempValue.toInt32();
+    id = data.toNumber();
 
-    Context* pContext = getContextById(id);
+    Tracer::Context* pContext = getContextById(id);
 
     if (!pContext)
     {
-        pContext = new Context();
+        pContext = new Tracer::Context();
         pContext->id = generateUniqueId();
 
         //make sure it's null
@@ -166,8 +160,8 @@ Tracer::Context* Tracer::getContextByJSObject(JSContext* cx, RootedObject& jsTra
         pContext->pToneMapper = new DefaultToneMapper(embree::Parms());
         pContext->pToneMapper->refInc();
 
-        tempValue.setInt32(pContext->id);
-        JS_SetProperty(cx, HandleObject(jsTraceContext), "id", tempValue);
+        data.setNumber(pContext->id);
+        traceContextObject->set( "id", data );
 
         m_contexts.insert(ContextMap::value_type(pContext->id, pContext));
     }
@@ -178,11 +172,11 @@ Tracer::Context* Tracer::getContextByJSObject(JSContext* cx, RootedObject& jsTra
 uint32_t Tracer::generateUniqueId() const
 {
     int32_t id = std::rand();
-
+    
     Context* pContext = getContextById(id);
-
-    if (pContext) return generateUniqueId();
-
+    if (pContext)
+        id = generateUniqueId();
+    
     return id;
 }
 
@@ -232,14 +226,12 @@ void Tracer::trace(Context* pContext, embree::Camera* pCamera, Scene* pScene)
     pContext->pSwapChain->swapBuffers();
 
     size_t buffID = pContext->pSwapChain->id();
-
     {
         RT_COMMAND_HEADER;
         pContext->pSwapChain->buffer(buffID)->wait();
     }
 
     uint8_t* pFrameData = (uint8_t*)pContext->pSwapChain->buffer(buffID)->getData();
-    
     assert(pFrameData);
 
     for (int h = 0; h < output.height; h++)
@@ -257,109 +249,121 @@ void Tracer::trace(Context* pContext, embree::Camera* pCamera, Scene* pScene)
         }
     }
 }
-
-static bool getOutputFromJS(JSContext* cx, RootedObject& jsTraceContext, Tracer::Output& output)
+//
+static bool getOutputFromJS( JSWrapperObject *traceContextObject, Tracer::Output& output )
 {
-    //TODO add checks
-    RootedValue tmpValue(cx);
+    JSWrapperData outputData;
+    traceContextObject->get( "output", &outputData );
 
-    JS_GetProperty(cx, HandleObject(jsTraceContext), "output", MutableHandleValue(&tmpValue));
+    JSWrapperData data;
+    outputData.object()->get( "width", &data );
+    output.width = data.toNumber();
 
-    RootedObject jsOutput(cx, &tmpValue.toObject());
-
-    JS_GetProperty(cx, HandleObject(jsOutput), "width", MutableHandleValue(&tmpValue));
-    output.width = tmpValue.toInt32();
-
-    JS_GetProperty(cx, HandleObject(jsOutput), "height", MutableHandleValue(&tmpValue));
-    output.height = tmpValue.toInt32();
+    outputData.object()->get( "height", &data );
+    output.height = data.toNumber();    
 
     assert(output.width > 0 && output.height > 0);
 
-    JS_GetProperty(cx, HandleObject(jsOutput), "modulo", MutableHandleValue(&tmpValue));
-    output.modulo = tmpValue.toInt32();
+    outputData.object()->get( "modulo", &data );
+    output.modulo = data.toNumber();    
 
-    JS_GetProperty(cx, HandleObject(jsOutput), "data", MutableHandleValue(&tmpValue));
-    JS_GetObjectAsUint8Array(&tmpValue.toObject(), &output.length, &output.pFrame);
+    outputData.object()->get( "data", &data );
+    data.object()->getAsUint8Array( &output.pFrame, &output.length );
 
-    tmpValue.setBoolean(true);
-    JS_SetProperty(cx, HandleObject(jsOutput), "needsUpdate", tmpValue);
+    data.setBoolean(true);
+    outputData.object()->set( "needsUpdate", data );
 
     return true;
 }
 
-bool vgRenderTrace(JSContext* cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+JSWRAPPER_FUNCTION( vgRenderTrace )
 
-    // makes sure we create the tracer instance only whenever "trace" has been called */
+    JSWrapperData rcData;
+
+    assert( args.count() == 2 );
+    rcData.setBoolean( true );
+
+    JSWrapperObject *renderContext=args[0].object()->copy();
+    JSWrapperObject *sceneManager=args[1].object()->copy();
+
+    JSWrapperData traceContextData, cameraData, data;
+
+    renderContext->get( "traceContext", &traceContextData );
+    renderContext->get( "camera", &cameraData );
+
+    // internal trace context detail
     Tracer* pTracer = Tracer::instance();
 
-    assert(argc == 3);
+    Tracer::Context* pContext = pTracer->getContextByJSObject( traceContextData.object() ); // create or reuse internal tracer.
 
-    RootedObject jsTraceContext(cx, &args[0].toObject());
-    RootedObject jsCamera(cx, &args[1].toObject());
-    RootedObject jsScene(cx, &args[2].toObject());
+    // flags to notify
 
-    Tracer::Context* pContext = pTracer->getContextByJSObject(cx, jsTraceContext);
+    traceContextData.object()->get( "sceneChanged", &data );
+    bool sceneChanged = data.toBoolean();
 
-    RootedValue tmpValue(cx);
+    traceContextData.object()->get( "resetAccumulation", &data );
+    bool resetAccumulation = data.toBoolean();
 
-    JS_GetProperty(cx, HandleObject(jsTraceContext), "resetAccumulation", MutableHandleValue(&tmpValue));
-
-    if (tmpValue.toBoolean())
-    {
+    if (sceneChanged || resetAccumulation)
         pContext->accum = 0;
-        tmpValue.setBoolean(false);
-        JS_SetProperty(cx, HandleObject(jsTraceContext), "resetAccumulation", tmpValue);
+
+    if (resetAccumulation)
+    {   // reset flag
+        data.setBoolean(false);
+        traceContextData.object()->set( "resetAccumulation", data );
     }
 
-    tmpValue.setInt32(pContext->accum);
-    JS_SetProperty(cx, HandleObject(jsTraceContext), "iterations", tmpValue);
+    data.setNumber( pContext->accum );
+    traceContextData.object()->set( "iterations", data );
 
-    JS_GetProperty(cx, HandleObject(jsTraceContext), "maxIterations", MutableHandleValue(&tmpValue));
-    int32_t maxIterations = tmpValue.toInt32();
+    //printf("iterations %d\n", pContext->accum );
 
-    if (pContext->accum > maxIterations)
+    traceContextData.object()->get( "maxIterations", &data );
+    int32_t maxIterations = data.toNumber();
+
+    if (pContext->accum > maxIterations) {
+        JSWRAPPER_FUNCTION_RETURN
+    }
+
+    getOutputFromJS( traceContextData.object(), pContext->output); // make sure the tracer's output it's updated.
+
+    // internal scene detail
+    static Scene* pScene=0;// = new Scene();
+    if (sceneChanged)
     {
-        return true;
+        if ( pScene ) delete pScene;
+
+        pScene = new Scene();
+
+        pScene->clean();
+        pScene->sync( renderContext, sceneManager );
+        // reset flag
+
+        data.setBoolean( false );
+        traceContextData.object()->set("sceneChanged", data );
     }
 
-    //make sure the output it's updated
-    getOutputFromJS(cx, jsTraceContext, pContext->output);
-
-    static Scene* pScene = new Scene();
-    pScene->sync(cx, jsScene);
-
-
-    AffineSpace3f tm = readJSMatrix4(cx, jsCamera);
-
-    JS_GetProperty(cx, jsCamera, "fov", MutableHandleValue(&tmpValue));
-    const float fov = tmpValue.toNumber();
-
+    // update the internal camera
+    AffineSpace3f tm = readJSMatrix4( cameraData.object() );
+    cameraData.object()->get( "fov", &data );
+    const float fov = data.toNumber();
     Parms parms;
-
     parms.add("local2world", Variant(tm));
     parms.add("angle", Variant(fov));
     parms.add("aspectRatio", Variant((float)pContext->output.width / (float)pContext->output.height));
-
     Ref<embree::Camera> pCamera = new PinHoleCamera(parms);
-
-    //nullptr safe
+    
+    // do trace processing.
     pTracer->trace(pContext, pCamera.ptr, pScene);
 
-    return true;
-}
+    JSWRAPPER_FUNCTION_SETRC( rcData )
 
-static JSFunctionSpec vg_tracer_functions[] = 
+JSWRAPPER_FUNCTION_END
+
+void registerTracer( JSWrapper *jsWrapper )
 {
-    JS_FS("trace", vgRenderTrace, 0, 0),
-    JS_FS_END
-};
+    JSWrapperData data;
+    jsWrapper->execute( "VG.Render", &data );
 
-void registerTracer(JSContext *cx, JSObject *vgRenderObject)
-{
-    RootedObject obj(cx, vgRenderObject);
-
-    if (!JS_DefineFunctions(cx, HandleObject(obj), vg_tracer_functions))
-        JS_ReportError(cx, "Error Registering VG Tracer Functions!");
+    data.object()->registerFunction( "trace", vgRenderTrace );
 }

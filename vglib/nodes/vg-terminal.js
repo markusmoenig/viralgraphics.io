@@ -57,7 +57,7 @@ VG.Nodes.Terminal=function( type, name, onCall, onConnect, onDisconnect )
 }
 
 VG.Nodes.Terminal.Type={ "Universal" : 0, "String" : 1, "Float" : 2, "Vector2" : 3, "Vector3" : 4, "Vector4" : 5, "Sample2D" : 6, "Sample3D" : 7, 
-    "Material" : 8, "Docs.Enum" : -1 };
+    "Material" : 8, "Texture" : 9, "Docs.Enum" : -1 };
 
 VG.Nodes.Terminal.prototype.connectTo=function( t, dontAddToLowLevelData )
 {

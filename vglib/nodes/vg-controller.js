@@ -153,9 +153,10 @@ VG.Controller.Node.prototype.remove=function( item, noUndo )
 
     this.notifyObservers( "changed" );
 
-    if ( index-1 < array.length )
+    if ( index-1 < array.length && index-1 >= 0 )
         this.selected=array[index-1];
     else
+        this.selected=array[index];
 
     this.removeFromSelection( item );
 };
@@ -222,7 +223,7 @@ VG.Controller.Node.prototype.connect=function( index, name, data, noUndo )
     return item;    
 };
 
-VG.Controller.Node.prototype.modelChanged=function(  )
+VG.Controller.Node.prototype.modelChanged=function( forceRenew )
 {
     var array=this.collection.dataForPath( this.path );
 
@@ -237,7 +238,7 @@ VG.Controller.Node.prototype.modelChanged=function(  )
         {
             var item=array[i];
 
-            if ( !item.node )
+            if ( !item.node || forceRenew )
             {
                 Object.defineProperty( item, "node", { 
                     enumerable: false, 
@@ -379,4 +380,10 @@ VG.Controller.Node.prototype.indexOf=function( item )
 {
     var array=this.collection.dataForPath( this.path );
     return array.indexOf( item );
+};
+
+VG.Controller.Node.prototype.isValid=function()
+{
+    var array=this.collection.dataForPath( this.path );
+    if ( !array ) return false; else return true;
 };

@@ -43,15 +43,16 @@ VG.Nodes.ParamContainer=function( node )
     this.node=node;
 }
 
-VG.Nodes.ParamContainer.prototype.addGroupByName=function( name, text )
+VG.Nodes.ParamContainer.prototype.addGroupByName=function( name, text, open )
 {
     /**Adds a new parameter group to the container and returns it.
      * @param {string} name - The name of the new group, the name is used to identify groups inside a container and has to be unique.
      * @param {string} text - The text / title of this group.
+     * @param {string} open - True if the group should be open by default. Default is true.
      * @returns The newly added VG.Nodes.ParamGroup.
      */
 
-    var group=VG.Nodes.ParamGroup( name, text );
+    var group=VG.Nodes.ParamGroup( name, text, open );
     group.container=this;    
     this.groups.push( group );
     return group;
@@ -129,7 +130,7 @@ VG.Nodes.ParamContainer.prototype.setParamColor=function( name, r, g, b, a )
 
 VG.Nodes.ParamContainer.prototype.setParamNumber=function( name, value )
 {
-    /**Sets the value of a color parameter, identified by its name.
+    /**Sets the value of a number parameter, identified by its name.
      * @param {string} name - The name of the parameter to set.
      * @param {number} value - The value to set.
      */
@@ -137,9 +138,43 @@ VG.Nodes.ParamContainer.prototype.setParamNumber=function( name, value )
     param.data[param.name]=value;
 };
 
+VG.Nodes.ParamContainer.prototype.setParamSlider=function( name, value )
+{
+    /**Sets the value of a slider parameter, identified by its name.
+     * @param {string} name - The name of the parameter to set.
+     * @param {number} value - The value to set.
+     */
+    var param=this.getParam( name );
+    param.data[param.name]=value;
+};
+
+VG.Nodes.ParamContainer.prototype.setParamBoolean=function( name, value )
+{
+    /**Sets the value of a boolean parameter, identified by its name.
+     * @param {string} name - The name of the parameter to set.
+     * @param {number} value - The value to set.
+     */
+    var param=this.getParam( name );
+    param.data[param.name]=value;
+
+    if ( param.widget )
+        param.widget.checked=value;
+};
+
+VG.Nodes.ParamContainer.prototype.setParamList=function( name, value )
+{
+    /**Sets the value of a list parameter, identified by its name.
+     * @param {string} name - The name of the parameter to set.
+     * @param {number} value - The value to set.
+     */
+    var param=this.getParam( name );
+    param.data[param.name]=value;
+};
+
+
 VG.Nodes.ParamContainer.prototype.setParamVector2=function( name, x, y )
 {
-    /**Sets the value of a color parameter, identified by its name.
+    /**Sets the value of a vector2 parameter, identified by its name.
      * @param {string} name - The name of the parameter to set.
      * @param {number} x - The x value to set.
      * @param {number} y - The y value to set.
@@ -152,7 +187,7 @@ VG.Nodes.ParamContainer.prototype.setParamVector2=function( name, x, y )
 
 VG.Nodes.ParamContainer.prototype.setParamVector3=function( name, x, y, z )
 {
-    /**Sets the value of a color parameter, identified by its name.
+    /**Sets the value of a vector3 parameter, identified by its name.
      * @param {string} name - The name of the parameter to set.
      * @param {number} x - The x value to set.
      * @param {number} y - The y value to set.
@@ -167,7 +202,7 @@ VG.Nodes.ParamContainer.prototype.setParamVector3=function( name, x, y, z )
 
 VG.Nodes.ParamContainer.prototype.setParamVector4=function( name, x, y, z, w )
 {
-    /**Sets the value of a color parameter, identified by its name.
+    /**Sets the value of a vector4 parameter, identified by its name.
      * @param {string} name - The name of the parameter to set.
      * @param {number} x - The x value to set.
      * @param {number} y - The y value to set.
@@ -200,7 +235,7 @@ VG.Nodes.ParamContainer.prototype.setParamImage=function( name, imageName, image
 
 // ----------------------------------------------------------------- VG.Nodes.ParamGroup
 
-VG.Nodes.ParamGroup=function( name, text )
+VG.Nodes.ParamGroup=function( name, text, open )
 {
     /**
      * Creates a Parameter Group.<br>
@@ -208,12 +243,14 @@ VG.Nodes.ParamGroup=function( name, text )
      * VG.Nodes.ParamGroup is used to group several parameters. Typically these parameters control a common feature of the node.
      * @param {string} name - The name of the new group, the name is used to identify groups inside a container and has to be unique.
      * @param {string} text - The text / title of this group. 
+     * @param {string} open - True if the group should be open by default. Default is true.     
      * @constructor
     */    
-    if ( !(this instanceof VG.Nodes.ParamGroup ) ) return new VG.Nodes.ParamGroup( name, text );
+    if ( !(this instanceof VG.Nodes.ParamGroup ) ) return new VG.Nodes.ParamGroup( name, text, open );
 
     this.name=name ? name : "settings";
     this.text=text ? text : "Settings";
+    this.open=open === undefined ? true : false;
 
     /**The array of parameters contained in this group.
      * @member {array} */
@@ -228,7 +265,27 @@ VG.Nodes.ParamGroup.prototype.addParam=function( param )
 
     param.group=this;
     this.parameters.push( param );
+
+    return param;
 };
+
+// ----------------------------------------------------------------- VG.Nodes.Param
+
+VG.Nodes.Param=function()
+{
+    if ( !(this instanceof VG.Nodes.Param) ) return new VG.Nodes.Param();
+};
+
+Object.defineProperty( VG.Nodes.Param.prototype, "disabled", 
+{
+    get: function() {
+        return this._disabled;
+    },
+    set: function( disabled ) {
+        this._disabled=disabled;
+        if ( this.widget ) this.widget.disabled=disabled;
+    }    
+});
 
 // ----------------------------------------------------------------- VG.Nodes.ParamNumber
 
@@ -257,6 +314,96 @@ VG.Nodes.ParamNumber=function( data, name, text, value, min, max )
     this.data=data;
     if ( !data[name] ) data[name]=value;
 };
+
+VG.Nodes.ParamNumber.prototype=VG.Nodes.Param();
+
+// ----------------------------------------------------------------- VG.Nodes.ParamNumber
+
+VG.Nodes.ParamSlider=function( data, name, text, value, min, max, step )
+{
+    /**
+     * Creates a Slider Parameter.<br>
+     * 
+     * @param {object} data - The object which holds the low level representation of the parameters.
+     * @param {string} name - The name of the new parameter, the name is used to identify parameters inside a container or group and has to be unique.
+     * @param {string} text - The text to display in the user interface for this parameter.
+     * @param {number} value - The initial value of this parameter.
+     * @param {number} min - Optional, the minimum number allowed.
+     * @param {number} max - Optional, the maximum number allowed.
+     * @param {number} step - Optional, the step distance between possible values.
+     * @constructor
+    */    
+
+    //VG.Nodes.Param.call( this );
+
+    if ( !(this instanceof VG.Nodes.ParamSlider ) ) return new VG.Nodes.ParamSlider( data, name, text, value, min, max, step );
+
+    this.name=name ? name : "value";
+    this.text=text ? text : "Value";
+
+    this.min=min;
+    this.max=max;
+    this.step=step;    
+
+    this.data=data;
+    if ( !data[name] ) data[name]=value;
+};
+
+VG.Nodes.ParamSlider.prototype=VG.Nodes.Param();
+
+// ----------------------------------------------------------------- VG.Nodes.ParamBoolean
+
+VG.Nodes.ParamBoolean=function( data, name, text, value )
+{
+    /**
+     * Creates a Boolean (on/off) Parameter.<br>
+     * 
+     * @param {object} data - The object which holds the low level representation of the parameters.
+     * @param {string} name - The name of the new parameter, the name is used to identify parameters inside a container or group and has to be unique.
+     * @param {string} text - The text to display in the user interface for this parameter.
+     * @param {number} value - The initial value of this parameter.
+     * @constructor
+    */    
+
+    if ( !(this instanceof VG.Nodes.ParamBoolean ) ) return new VG.Nodes.ParamBoolean( data, name, text, value );
+
+    this.name=name ? name : "value";
+    this.text=text ? text : "Value";
+
+    this.data=data;
+    if ( !data[name] ) data[name]=value;
+};
+
+VG.Nodes.ParamBoolean.prototype=VG.Nodes.Param();
+
+// ----------------------------------------------------------------- VG.Nodes.ParamList
+
+VG.Nodes.ParamList=function( data, name, text, value, array, callback )
+{
+    /**
+     * Creates a List Parameter.<br>
+     * 
+     * @param {object} data - The object which holds the low level representation of the parameters.
+     * @param {string} name - The name of the new parameter, the name is used to identify parameters inside a container or group and has to be unique.
+     * @param {string} text - The text to display in the user interface for this parameter.
+     * @param {number} value - The initial index of this parameter.
+     * @param {array} array - An array of strings.
+     * @constructor
+    */    
+
+    if ( !(this instanceof VG.Nodes.ParamList ) ) return new VG.Nodes.ParamList( data, name, text, value, array, callback );
+
+    this.name=name ? name : "value";
+    this.text=text ? text : "Value";
+
+    this.list=array;
+    this.callback=callback;
+
+    this.data=data;
+    if ( !data[name] ) data[name]=value;
+};
+
+VG.Nodes.ParamList.prototype=VG.Nodes.Param();
 
 // ----------------------------------------------------------------- VG.Nodes.ParamVector2
 
@@ -293,6 +440,8 @@ VG.Nodes.ParamVector2=function( data, name, text, x, y, min, max )
     this.data=data;
     this.value=new VG.Math.Vector2( x, y );
 };
+
+VG.Nodes.ParamVector2.prototype=VG.Nodes.Param();
 
 // ----------------------------------------------------------------- VG.Nodes.ParamVector3
 
@@ -331,6 +480,8 @@ VG.Nodes.ParamVector3=function( data, name, text, x, y, z, min, max )
     this.data=data;
     this.value=new VG.Math.Vector3( x, y, z );
 };
+
+VG.Nodes.ParamVector3.prototype=VG.Nodes.Param();
 
 // ----------------------------------------------------------------- VG.Nodes.ParamVector4
 
@@ -372,6 +523,8 @@ VG.Nodes.ParamVector4=function( data, name, text, x, y, z, w, min, max )
     this.value=new VG.Math.Vector4( x, y, z, w );
 };
 
+VG.Nodes.ParamVector4.prototype=VG.Nodes.Param();
+
 // ----------------------------------------------------------------- VG.Nodes.ParamColor
 
 VG.Nodes.ParamColor=function( data, name, text, value )
@@ -404,6 +557,8 @@ VG.Nodes.ParamColor=function( data, name, text, value )
     this.value=VG.Core.Color( value );
 };
 
+VG.Nodes.ParamColor.prototype=VG.Nodes.Param();
+
 // ----------------------------------------------------------------- VG.Nodes.ParamImage
 
 VG.Nodes.ParamImage=function( data, name, text )
@@ -434,6 +589,8 @@ VG.Nodes.ParamImage=function( data, name, text )
     this.data=data;
 };
 
+VG.Nodes.ParamImage.prototype=VG.Nodes.Param();
+
 VG.Nodes.ParamImage.prototype.updateFromData=function( data )
 { 
     if ( data[this.name] )
@@ -443,6 +600,11 @@ VG.Nodes.ParamImage.prototype.updateFromData=function( data )
                 if ( this.group.container.node.graph && this.group.container.node.graph.update ) 
                     this.group.container.node.graph.update(); 
             }.bind( this ) );
+
+            if ( VG.context.workspace.platform !== VG.HostProperty.PlatformWeb ) {
+                if ( this.group.container.node.graph && this.group.container.node.graph.update ) 
+                    this.group.container.node.graph.update(); 
+            }
         } else this.value.clear();
     }    
 };

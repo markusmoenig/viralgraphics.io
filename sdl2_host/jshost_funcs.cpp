@@ -1,37 +1,42 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include <iostream>
 
-#include <jsapi.h>
-#include <jsfriendapi.h>
 #include <nfd.h>
 #include "base64.h"
 #include "jshost.hpp"
 
 #include "image_loader.hpp"
+#include "image_saver.hpp"
 
-using namespace JS;
+#include <SDL.h>
+
+extern std::string g_appName, g_appVersion;
 
 extern JSHost *g_host;
 extern int g_width, g_height;
+extern bool g_quit;
 
 #ifdef __APPLE__
     extern void setMouseCursor_cocoa( const char * );
@@ -43,8 +48,11 @@ extern int g_width, g_height;
     extern void setNativeMenuItemState_cocoa( int menuItemId, bool disabled, bool checked );
     extern void hostProjectStarted_cocoa();
     extern void hostProjectEnded_cocoa();
-    extern void setWindowTitle_cocoa( const char *_title, const char *_filePath );    
+    extern void setWindowTitle_cocoa( const char *_title, const char *_filePath, const char *appName, const char *appVersion );    
     extern void setProjectChangedState_cocoa( bool value );
+    extern void getKeyWindow( void );
+    extern void setKeyWindow( void );
+    extern void gotoUrl_cocoa( const char * );
 #endif
 
 // --
@@ -52,35 +60,103 @@ extern int g_width, g_height;
 extern bool g_redraw;
 extern std::string vgDir;
 
-bool print(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
+JSWrapper *g_jsWrapper;
 
-    if ( argc == 1 )
+#include <iostream>
+
+// --- Sample print function. Prints all arguments.
+
+JSWRAPPER_FUNCTION( print )
+    // --- JSWrapperArguments args; is already defined
+
+    for ( int i=0; i < args.count(); ++i )
     {
-        JSString *string = args[0].toString();
-        printf( "%s\n", JS_EncodeString( cx, string ) );
+        JSWrapperData data=args.at( i );
+
+        if ( data.type() == JSWrapperData::Undefined )
+            std::cout << "Undefined ";
+        else
+        if ( data.type() == JSWrapperData::Null )
+            std::cout << "Null ";
+        else            
+        if ( data.type() == JSWrapperData::Number )
+            std::cout << data.toNumber() << " ";
+        else
+        if ( data.type() == JSWrapperData::String )
+            std::cout << data.toString() << " ";
+        else
+        if ( data.type() == JSWrapperData::Boolean )
+            std::cout << data.toBoolean() << " ";
+        else
+        if ( data.type() == JSWrapperData::Object )
+            std::cout << "[Object object] ";        
     }
+ 
+    std::cout << std::endl;
 
-    return true;
-}
+    JSWrapperData data;
+    JSWRAPPER_FUNCTION_SETRC( data )
 
-// --- loadStyleImage, load a local (style) image, decompress it and call the callback with the newly created VG.Core.Image
+JSWRAPPER_FUNCTION_END
 
-bool loadStyleImage(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
+JSWRAPPER_FUNCTION( quit )
+    g_quit=true;
+JSWRAPPER_FUNCTION_END
+
+JSWRAPPER_FUNCTION( loadStyleSVG )
 
     static char path[1024];
 
-    JSString *style = args[0].toString();
-    JSString *name = args[1].toString();
+    strcpy( path, vgDir.c_str() );//"/Users/markusm/Documents/VisualGraphics/vglib/ui/styles/" );
+    strcat( path, "vglib/ui/styles/" );
+    strcat( path, args.at(0).toString().c_str() );
+    strcat( path, "/svg/" );
+    strcat( path, args.at(1).toString().c_str() );
+
+    FILE* file = fopen( path, "rb");
+    if ( file )
+    {
+        fseek(file, 0, SEEK_END);
+        int size = ftell(file);
+        rewind(file);
+
+        char* chars = new char[size + 1];
+        chars[size] = '\0';
+        for (int i = 0; i < size;) 
+        {
+            int read = static_cast<int>(fread(&chars[i], 1, size - i, file));
+            i += read;
+        }
+        fclose(file);
+
+        // --- Create a new SVG
+
+        JSWrapperData coreObject;
+        g_jsWrapper->execute( "VG.Core", &coreObject );
+
+        JSWrapperData svgData;
+        coreObject.object()->get( "SVG", &svgData );
+
+        JSWrapperArguments arguments;
+        arguments.append( args.at(1).toString() );
+        arguments.append( std::string( chars ) );
+
+        svgData.object()->call( &arguments, coreObject.object() );
+    }
+
+JSWRAPPER_FUNCTION_END
+
+// --- loadStyleImage, load a local (style) image, decompress it and call the callback with the newly created VG.Core.Image
+
+JSWRAPPER_FUNCTION( loadStyleImage )
+
+    static char path[1024];
 
     strcpy( path, vgDir.c_str() );//"/Users/markusm/Documents/VisualGraphics/vglib/ui/styles/" );
     strcat( path, "vglib/ui/styles/" );
-    strcat( path, JS_EncodeString( cx, style ) );
+    strcat( path, args.at( 0 ).toString().c_str() );
     strcat( path, "/icons/" );
-    strcat( path, JS_EncodeString( cx, name ) );
+    strcat( path, args.at( 1 ).toString().c_str() );
 
     VImage image;
     
@@ -91,29 +167,27 @@ bool loadStyleImage(JSContext *cx, unsigned argc, jsval *vp)
         // --- Create a new image
         sprintf( path, "VG.Core.Image( %d, %d );", image.width, image.height );
 
-        Value th=JS_ComputeThis( cx, vp ); RootedObject thisObj(cx, &th.toObject() );
-        RootedValue imageValue(cx);  MutableHandleValue imageHandle( &imageValue );
-        bool ok = JS_EvaluateScript( cx, HandleObject(thisObj), path, strlen(path), "unknown", 1, imageHandle );    
+        JSWrapperData imageData;
+        g_jsWrapper->execute( path, &imageData );
 
-        // --- Set its name
-        RootedValue imageNameValue(cx); imageNameValue.setString( name );//JS_NewStringCopyN( cx, name, strlen(name) ) );
-        RootedObject imageObject(cx, &imageValue.toObject() );
-        JS_SetProperty( cx, HandleObject(imageObject), "name", MutableHandleValue(&imageNameValue) );
+        // --- Set the name
+        imageData.object()->set( "name", args.at( 1 ) );
 
         // --- Set the stylePath
-        RootedValue imageStylePathValue(cx); imageStylePathValue.setString( style );
-        JS_SetProperty( cx, HandleObject(imageObject), "stylePath", MutableHandleValue(&imageStylePathValue) );
+        imageData.object()->set( "stylePath", args.at( 0 ) );
 
         // --- Copy the image data
-        RootedValue data(cx); 
-        JS_GetProperty( cx, HandleObject(imageObject), "data", MutableHandleValue(&data) );
-        ok=JS_IsTypedArrayObject(&data.toObject() );
-        if ( ok ) {
-            unsigned int length; uint8_t *ptr;
-            JS_GetObjectAsUint8Array( &data.toObject(), &length, &ptr );
+        JSWrapperData arrayData;
+        imageData.object()->get( "data", &arrayData );
 
-            RootedValue moduloValue(cx); JS_GetProperty( cx, HandleObject(imageObject), "modulo", MutableHandleValue(&moduloValue) );
-            unsigned int modulo=moduloValue.toInt32();
+        if ( arrayData.object()->isTypedArray() ) 
+        {
+            unsigned int length; uint8_t *ptr;
+            arrayData.object()->getAsUint8Array( &ptr, &length );
+
+            JSWrapperData moduloData;
+            imageData.object()->get( "modulo", &moduloData );
+            unsigned int modulo=moduloData.toNumber();
 
             for (int h = 0; h < image.height; h++)
             {
@@ -132,32 +206,34 @@ bool loadStyleImage(JSContext *cx, unsigned argc, jsval *vp)
         }
 
         // --- Add the image to the pool
+        JSWrapperData imagePoolData;
+        g_jsWrapper->execute( "VG.context.imagePool", &imagePoolData );
 
-        RootedValue imagePoolRootValue( cx, JS::Value() );
-        ok = JS_EvaluateScript( cx, HandleObject(thisObj), "VG.context.imagePool", strlen("VG.context.imagePool"), "unknown", 1, MutableHandleValue( &imagePoolRootValue ) );
+        JSWrapperData addImageData;
+        imagePoolData.object()->get( "addImage", &addImageData );
 
-        RootedValue rc(cx); MutableHandleValue rcHandle( &rc );
-        RootedObject rootedImagePoolObject(cx, &imagePoolRootValue.toObject() );
-        Call( cx, HandleObject(rootedImagePoolObject), "addImage", HandleValueArray( imageValue ), rcHandle );
+        JSWrapperArguments args;
+        args.append( imageData.object() );
+        addImageData.object()->call( &args, imagePoolData.object() );
 
         image.free();            
     }
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
 // --- decompressImageData, decompresses the given image data into the given image.
 
-bool decompressImageData(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
+JSWRAPPER_FUNCTION( decompressImageData )
+
+    //g_jsWrapper->gc();
+    //g_jsWrapper->gc();
 
     // --- Arg 0 -> Base64 Data of Image
-    JSString *jsdata = args[0].toString();
-    const char *b64data=JS_EncodeString( cx, jsdata );
-
+    std::string b64=args.at( 0 ).toString();
+    const char *b64data=b64.c_str();
     // --- Arg 1 -> VG.Core.Image
-    RootedObject imageObject(cx, &args[1].toObject() );
+
+    JSWrapperObject *imageObject=args.at( 1 ).object()->copy();
 
     VImage image;
 
@@ -165,7 +241,7 @@ bool decompressImageData(JSContext *cx, unsigned argc, jsval *vp)
     {
         //printf( "is jpeg\n" );
 
-        std::string result=base64_decode( std::string( b64data+23 ) );
+        std::string result=base64_decode( std::string( b64data + 23 ) );
         image.decompress( IMAGE_TYPE_JPG, (const unsigned char *) result.data(), result.length(), image );
     } else
     if ( strncmp( b64data, "data:image/png;base64,", 22 ) == 0 )
@@ -176,34 +252,41 @@ bool decompressImageData(JSContext *cx, unsigned argc, jsval *vp)
         image.decompress( IMAGE_TYPE_PNG, (const unsigned char *) result.data(), result.length(), image );
     } else {
         printf( "decompressImageData::Unknown Image Type!\n" );
-        return true;
+        JSWRAPPER_FUNCTION_RETURN
     }
 
+    JSWrapperData data; 
+
     // --- Set Image Width / Height
-    RootedValue value(cx); value.setNumber( image.width );
-    JS_SetProperty( cx, HandleObject(imageObject), "width", MutableHandleValue(&value) );  
-    value.setNumber( image.height );
-    JS_SetProperty( cx, HandleObject(imageObject), "height", MutableHandleValue(&value) );
+    data.setNumber( image.width );
+    imageObject->set( "width", data );
+
+    data.setNumber( image.height );
+    imageObject->set( "height", data );
 
     // --- Tell the system that textures based on this image need an update
-    value.setBoolean( true );
-    JS_SetProperty( cx, HandleObject(imageObject), "needsUpdate", MutableHandleValue(&value) );
+    data.setBoolean( true );
+    imageObject->set( "needsUpdate", data );
+
+    // --- Set the image data
+    imageObject->set( "imageData", args.at(0) );
 
     // --- Allocate the image
-    RootedValue rc(cx); MutableHandleValue handleValue( &rc );
-    Call( cx, HandleObject(imageObject), "alloc", HandleValueArray::empty(), MutableHandleValue(&rc) );   
+    imageObject->get( "alloc", &data );
+    data.object()->call( NULL, imageObject );
 
     // --- Copy the image data
-    RootedValue data(cx); 
-    JS_GetProperty( cx, HandleObject(imageObject), "data", MutableHandleValue(&data) );
-    bool ok=JS_IsTypedArrayObject(&data.toObject() );
-    if ( ok ) 
+    JSWrapperData arrayData;
+    imageObject->get( "data", &arrayData );
+
+    if ( arrayData.object()->isTypedArray() ) 
     {
         unsigned int length; uint8_t *ptr;
-        JS_GetObjectAsUint8Array( &data.toObject(), &length, &ptr );
+        arrayData.object()->getAsUint8Array( &ptr, &length );
 
-        RootedValue moduloValue(cx); JS_GetProperty( cx, HandleObject(imageObject), "modulo", MutableHandleValue(&moduloValue) );
-        unsigned int modulo=moduloValue.toInt32();
+        JSWrapperData moduloData;
+        imageObject->get( "modulo", &moduloData );
+        unsigned int modulo=moduloData.toNumber();
 
         for (int h = 0; h < image.height; h++)
         {
@@ -221,22 +304,67 @@ bool decompressImageData(JSContext *cx, unsigned argc, jsval *vp)
         }
     }
 
-    JS_free( cx, (void *) b64data );
-    image.free();
+    delete imageObject;
 
-    return true;    
-}
+JSWRAPPER_FUNCTION_END
+
+// --- CompressIamge, compresses the given Image, PNG Only For Now
+
+JSWRAPPER_FUNCTION( compressImage )
+
+    JSWrapperObject *imageObject=args.at( 0 ).object()->copy();
+
+    JSWrapperData widthData; imageObject->get( "width", &widthData );
+    JSWrapperData heightData; imageObject->get( "height", &heightData );
+    JSWrapperData realWidthData; imageObject->get( "realWidth", &realWidthData );
+    JSWrapperData realHeightData; imageObject->get( "realHeight", &realHeightData );
+
+    unsigned int width=widthData.toNumber(), height=heightData.toNumber(), realWidth=realWidthData.toNumber(), realHeight=realHeightData.toNumber();
+
+    // --- Get the image data
+    JSWrapperData arrayData;
+    imageObject->get( "data", &arrayData );
+
+    if ( arrayData.object()->isTypedArray() ) 
+    {
+        unsigned int length; uint8_t *ptr;
+        arrayData.object()->getAsUint8Array( &ptr, &length );
+
+        JSWrapperData moduloData;
+        imageObject->get( "modulo", &moduloData );
+        unsigned int modulo=moduloData.toNumber();
+        unsigned int outSize;
+
+        const unsigned char *bytes=compressPNG( ptr, width, height, realWidth, realHeight, modulo, &outSize );
+
+        const char *base64_chars=( std::string("data:image/png;base64," ) + base64_encode( bytes, outSize )).c_str();
+
+        JSWrapperData rc; rc.setString( base64_chars );
+        JSWRAPPER_FUNCTION_SETRC( rc )
+
+        delete bytes;
+    }
+
+    delete imageObject;
+
+JSWRAPPER_FUNCTION_END
 
 // --- OpenFileDialog, opens a local file through a dialog and sends the content and path to the provided Callback.
 
-bool OpenFileDialog(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
+JSWRAPPER_FUNCTION( OpenFileDialog )
 
-    int fileType=args[0].toInt32();
+    int fileType=args.at( 0 ).toNumber();
+
+#ifdef __APPLE__
+    getKeyWindow();
+#endif
 
     nfdchar_t *outPath = NULL;
-    nfdresult_t result = NFD_OpenDialog( NULL, NULL, &outPath );
+    nfdresult_t result= NFD_OpenDialog( NULL, NULL, &outPath );
+
+#ifdef __APPLE__
+    setKeyWindow();
+#endif
 
     if ( result == NFD_OKAY )
     {
@@ -259,9 +387,6 @@ bool OpenFileDialog(JSContext *cx, unsigned argc, jsval *vp)
         }
         fclose(file);
 
-        RootedValue rc(cx); MutableHandleValue rcHandle( &rc );
-        Value th=JS_ComputeThis( cx, vp ); RootedObject thisObj(cx, &th.toObject() );
-
         if ( fileType == 0 )
         {
             // --- Image, returns a new VG.Core.Image Object
@@ -273,46 +398,33 @@ bool OpenFileDialog(JSContext *cx, unsigned argc, jsval *vp)
              if ( type == IMAGE_TYPE_INVALID ) {
                 printf( "VG.OpenFileDialog::Unknown Image Type!\n" );
                 delete chars;
-                return true;
+                JSWRAPPER_FUNCTION_RETURN
             }
 
             VImage image;
-
             image.decompress( type, (const unsigned char *) chars, size, image );
 
             // --- Create a new image
             sprintf( imageCmd, "VG.Core.Image( %d, %d );", image.width, image.height );
 
-            Value th=JS_ComputeThis( cx, vp ); RootedObject thisObj(cx, &th.toObject() );
-            RootedValue imageValue(cx);  MutableHandleValue imageHandle( &imageValue );
-            bool ok = JS_EvaluateScript( cx, HandleObject(thisObj), imageCmd, strlen(imageCmd), "unknown", 1, imageHandle );    
+            JSWrapperData imageData;
+            g_jsWrapper->execute( imageCmd, &imageData );
 
-            // --- Set its name
-            RootedValue imageNameValue(cx); imageNameValue.setString( JS_NewStringCopyN( cx, outPath, strlen(outPath) ) );
-            RootedObject imageObject(cx, &imageValue.toObject() );
-            JS_SetProperty( cx, HandleObject(imageObject), "name", MutableHandleValue(&imageNameValue) );
-
-            // --- Set its data
-            std::string base64=base64_encode( (const unsigned char *) chars, size );
-
-            if ( type == IMAGE_TYPE_PNG ) base64.insert( 0, std::string( "data:image/png;base64," ) );
-            else
-            if ( type == IMAGE_TYPE_JPG ) base64.insert( 0, std::string( "data:image/jpeg;base64," ) );
-
-            RootedValue imageDataValue(cx); imageDataValue.setString( JS_NewStringCopyN( cx, base64.c_str(), base64.length() ) );
-            JS_SetProperty( cx, HandleObject(imageObject), "imageData", MutableHandleValue(&imageDataValue) );            
+            // --- Set the name
+            //imageData.object()->set( "name", (std::string) outPath );
 
             // --- Copy the image data
-            RootedValue data(cx); 
-            JS_GetProperty( cx, HandleObject(imageObject), "data", MutableHandleValue(&data) );
-            ok=JS_IsTypedArrayObject(&data.toObject() );
-            if ( ok ) 
+            JSWrapperData arrayData;
+            imageData.object()->get( "data", &arrayData );
+
+            if ( arrayData.object()->isTypedArray() ) 
             {
                 unsigned int length; uint8_t *ptr;
-                JS_GetObjectAsUint8Array( &data.toObject(), &length, &ptr );
+                arrayData.object()->getAsUint8Array( &ptr, &length );
 
-                RootedValue moduloValue(cx); JS_GetProperty( cx, HandleObject(imageObject), "modulo", MutableHandleValue(&moduloValue) );
-                unsigned int modulo=moduloValue.toInt32();
+                JSWrapperData moduloData;
+                imageData.object()->get( "modulo", &moduloData );
+                unsigned int modulo=moduloData.toNumber();
 
                 for (int h = 0; h < image.height; h++)
                 {
@@ -329,124 +441,137 @@ bool OpenFileDialog(JSContext *cx, unsigned argc, jsval *vp)
                     }
                 }
             }
-
             image.free();
 
+            // --- Set the imageData
+
+            std::string base64=base64_encode( (const unsigned char *) chars, size );            
+
+            if ( type == IMAGE_TYPE_PNG ) base64.insert( 0, std::string( "data:image/png;base64," ) );
+            else
+            if ( type == IMAGE_TYPE_JPG ) base64.insert( 0, std::string( "data:image/jpeg;base64," ) );
+
+            JSWrapperData data; data.setString( base64 );
+            imageData.object()->set( "imageData", data );
+
             // --- Call the Callback
+            JSWrapperArguments arguments;
+            arguments.append( (std::string) outPath );
+            arguments.append( imageData.object() );
 
-            AutoValueVector vector(cx);
-            vector.append( imageValue );
+            args.at( 1 ).object()->call( &arguments, thisObject );              
+        }
+        else if ( fileType == 3 ) // Binary
+        {
+            std::string base64_chars=base64_encode( (const unsigned char *) chars, size );
 
-            JS_CallFunctionValue( cx, HandleObject(thisObj), HandleValue( args[1] ), HandleValueArray( vector ), rcHandle );            
+            JSWrapperArguments arguments;
+            arguments.append( (std::string) outPath );
+            arguments.append( base64_chars );
+
+            args.at( 1 ).object()->call( &arguments, thisObject );
         }
         else
         {
-            JSString *name = JS_NewStringCopyN(cx, outPath, strlen(outPath));
-            RootedValue nameValue(cx); nameValue.setString( name );
+            JSWrapperArguments arguments;
+            arguments.append( (std::string) outPath );
+            arguments.append( (std::string) chars );
 
-            JSString *content = JS_NewStringCopyN(cx, chars, strlen(chars));
-            RootedValue contentValue(cx); contentValue.setString( content );            
-
-            AutoValueVector vector(cx);
-            vector.append( nameValue );
-            vector.append( contentValue );
-
-            JS_CallFunctionValue( cx, HandleObject(thisObj), HandleValue( args[1] ), HandleValueArray( vector ), rcHandle );
+            args.at( 1 ).object()->call( &arguments, thisObject );
         }
 
         delete chars;
     }
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
 // --- SaveFileDialog, saves a file locally using a native FileDialog.
 
-bool SaveFileDialog(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
+JSWRAPPER_FUNCTION( SaveFileDialog )
 
-    int fileType=args[0].toInt32();
+    int fileType=args.at( 0 ).toNumber();
 
-    JSString *jsdata = args[2].toString();
-    const char *data=JS_EncodeString( cx, jsdata );
+    std::string name=args.at( 1 ).toString();
+    std::string data=args.at( 2 ).toString();
 
     nfdchar_t *outPath = NULL;
-    nfdresult_t result = NFD_SaveDialog( NULL, NULL, &outPath );
+    nfdresult_t result = NFD_SaveDialog( NULL, name.c_str(), &outPath );
 
     if ( result == NFD_OKAY )
     {
-        //printf( outPath );
-
         // --- Write the file
 
-        FILE* file = fopen( outPath, "w");
-        fprintf(file, "%s", data );
-        fclose(file);
+        if ( strncmp( data.c_str(), "data:image/png;base64,", strlen("data:image/png;base64,") ) == 0 )
+        {
+            size_t out;
+            unsigned char *b64Data=base64_decode_bin( data.c_str() + 22, strlen( data.c_str() ) -22, &out );
 
+            FILE* file = fopen( outPath, "wb");
+            fwrite( b64Data, 1, out, file );
+            fclose(file);
+            free( b64Data );
+        } else {
+            FILE* file = fopen( outPath, "w");
+            fprintf(file, "%s", data.c_str() );
+            fclose(file);
+        }
     }
 
-    JSString *path;
+    JSWrapperData rc; 
 
-    if ( outPath ) path=JS_NewStringCopyN(cx, outPath, strlen(outPath));
-    else path=JS_NewStringCopyN(cx, "", 0 );
+    if ( outPath ) rc.setString( std::string( outPath ) );
+    else rc.setString( "" );
 
-    args.rval().setString( path );
+    JSWRAPPER_FUNCTION_SETRC( rc )    
 
-    JS_free( cx, (void *) data );
-
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
 // --- saveFile, saves a file locally using the provided path and content. Returns true on success, false otherwise.
 
-bool saveFile(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
+JSWRAPPER_FUNCTION( saveFile )
 
-    JSString *jsdata = args[0].toString();
-    const char *pathChars=JS_EncodeString( cx, jsdata );
+    std::string path=args.at( 0 ).toString();
+    std::string data=args.at( 1 ).toString();
 
-    jsdata = args[1].toString();
-    const char *dataChars=JS_EncodeString( cx, jsdata );
+    JSWrapperData rc;
 
-    int rc=1;
+    if ( strncmp( data.c_str(), "data:image/png;base64,", strlen("data:image/png;base64,") ) == 0 )
+    {
+        size_t out;
+        unsigned char *b64Data=base64_decode_bin( data.c_str() + 22, strlen( data.c_str() ) -22, &out );
 
-    FILE* file = fopen( pathChars, "w");
-    if ( file ) {
-        fprintf(file, "%s", dataChars );
+        FILE* file = fopen( path.c_str(), "wb");
+        fwrite( b64Data, 1, out, file );
         fclose(file);
-    } else rc=0;
+        free( b64Data );
 
-    JS_free( cx, (void *) pathChars );
-    JS_free( cx, (void *) dataChars );
+        rc.setBoolean(true);
+    } else
+    {
+        FILE* file = fopen( path.c_str(), "w");
+        if ( file ) {
+            fprintf(file, "%s", data.c_str() );
+            fclose(file);
+            rc.setBoolean(true);            
+        } else rc.setBoolean(false);
+    }
 
-    args.rval().setInt32( rc );
+    JSWRAPPER_FUNCTION_SETRC( rc )    
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
 // --- setWindowTitle
 
-bool setWindowTitle(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
+JSWRAPPER_FUNCTION( setWindowTitle )
 
-    JSString *title = args[0].toString();
-    const char *titleChars=JS_EncodeString( cx, title );
-
-    JSString *path = args[1].toString();
-    const char *pathChars=JS_EncodeString( cx, path );
+    std::string title=args.at( 0 ).toString();
+    std::string path=args.at( 1 ).toString();
 
 #ifdef __APPLE__            
-    setWindowTitle_cocoa( titleChars, pathChars );
+    setWindowTitle_cocoa( title.c_str(), path.c_str(), g_appName.c_str(), g_appVersion.c_str() );
 #endif
 
-    JS_free( cx, (void *) titleChars );
-    JS_free( cx, (void *) pathChars );
-
-    return true;
-};
+JSWRAPPER_FUNCTION_END
 
 // --- getHostProperty
 
@@ -470,11 +595,9 @@ VG.HostProperty={
 };
 */
 
-bool getHostProperty(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
+JSWRAPPER_FUNCTION( getHostProperty )
 
-    int property=args[0].toInt32();
+    int property=args.at( 0 ).toNumber();
     int rc=-1;
 
     switch ( property )
@@ -495,323 +618,279 @@ bool getHostProperty(JSContext *cx, unsigned argc, jsval *vp)
         {
 #ifdef __APPLE__            
             rc=0;//VG.HostProperty.OSMac;
+#else
+            rc=1;//VG.HostProperty.OSMac;
 #endif
         }
         break;
     }
 
-    args.rval().setInt32( rc );
+    JSWrapperData data; data.setNumber( rc );
+    JSWRAPPER_FUNCTION_SETRC( data )    
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
-bool setHostProperty(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
+// --- setHostProperty
 
-    int property=args[0].toInt32();
+JSWRAPPER_FUNCTION( setHostProperty )
+
+    int property=args.at( 0 ).toNumber();
 
     if ( property == 20 )    
     {
-        int value=args[1].toInt32();
+        int value=args.at( 1 ).toNumber();
 
 #ifdef __APPLE__            
         setProjectChangedState_cocoa( value );
 #endif        
     }
-    return true;
-}
+
+JSWRAPPER_FUNCTION_END
 
 // --- sendBackendRequest, sends a JSON data package to the given url, calls the callback with the returned JSON.
 
-bool sendBackendRequest(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
+JSWRAPPER_FUNCTION( sendBackendRequest )
 
-    const char *url=JS_EncodeString( cx, args[0].toString() );
-    const char *parameters=JS_EncodeString( cx, args[1].toString() );
-    const char *type="POST";
+    std::string url=args.at( 0 ).toString();
+    std::string parameters=args.at( 1 ).toString();
+    std::string type="POST";
 
-    if ( argc >=4 ) type=JS_EncodeString( cx, args[3].toString() );
+    if ( args.count() >= 4 ) type=args.at( 3 ).toString();
 
-    const char *result;
+    JSWrapperObject *callbackObject=args.at( 2 ).object()->copy();
 
-    Heap<JS::Value> *heap=new Heap<JS::Value>( args[2] );
-    AddValueRoot(cx, heap );
+    // ---
 
 #ifdef __APPLE__
-    result=sendBackendRequest_cocoa( url, parameters, type, (void *) heap );
+    sendBackendRequest_cocoa( url.c_str(), parameters.c_str(), type.c_str(), (void *) callbackObject );
 #else
     printf( "sendBackendRequest not implemented!\n" );
 #endif
 
-    JS_free( cx, (void *) url );  JS_free( cx, (void *) parameters );
+JSWRAPPER_FUNCTION_END
 
-    return true;
-}
-
-void sendBackendRequest_finished( const char *result, void *heap )
+void sendBackendRequest_finished( const char *result, void *callbackValuePtr )
 {
     //printf( "sendBackendRequest_finished %s\n", result );
 
-    RootedValue* context=g_host->executeScript( "VG.context" );
-    RootedObject contextObject(g_host->cx, &context->toObject() );
-    
-    RootedValue rc(g_host->cx); MutableHandleValue rcHandle( &rc );
+    JSWrapperObject *callbackObject=(JSWrapperObject *) callbackValuePtr;
 
-    JSString *content = JS_NewStringCopyN(g_host->cx, result, strlen(result));
-    RootedValue contentValue(g_host->cx); contentValue.setString( content );
+    JSWrapperData contextData;
+    g_jsWrapper->execute( "VG.context", &contextData );
 
-    AutoValueVector vector(g_host->cx);
-    vector.append( contentValue );
+    JSWrapperArguments arguments;
+    arguments.append( std::string( result ) );
 
-    Heap<JS::Value> *heapValue=(Heap<JS::Value> *) heap;
+    callbackObject->call( &arguments, contextData.object() );
 
-    RootedValue callbackObject(g_host->cx, *heapValue );
-    JS_CallFunctionValue( g_host->cx, HandleObject(contextObject), HandleValue( &callbackObject ), HandleValueArray( vector ), rcHandle );
-    
-    RemoveValueRoot( g_host->cx, heapValue );
+    delete callbackObject;
 }
 
 // --- setMouseCursor, sets the mouse cursor to the specified shape.
 
-bool setMouseCursor(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
+JSWRAPPER_FUNCTION( setMouseCursor )
 
-    JSString *string = args[0].toString();
-    const char *chars=JS_EncodeString( cx, string );
+    std::string cursor=args.at( 0 ).toString();
 
 #ifdef __APPLE__
-    setMouseCursor_cocoa( chars );
+    setMouseCursor_cocoa( cursor.c_str() );
 #else
     printf( "setMouseCursor not implemented!\n" );
 #endif
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
 // --- clipboardPasteDataForType, returns the Clipboard content for the given Type (right now only "Text" type is supported).
 
-bool clipboardPasteDataForType(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
+JSWRAPPER_FUNCTION( clipboardPasteDataForType )
 
-    JSString *string = args[0].toString();
-    const char *chars=JS_EncodeString( cx, string );
-
+    std::string type=args.at( 0 ).toString();
     const char *result = "";
 
 #ifdef __APPLE__
-    result=clipboardPasteDataForType_cocoa( chars );
+    result=clipboardPasteDataForType_cocoa( type.c_str() );
 #else
     printf( "clipboardPasteDataForType not implemented!\n" );
 #endif
 
-    JSString *resultString = JS_NewStringCopyN(cx, result, strlen(result));
-    args.rval().setString( resultString );
+    JSWrapperData data; data.setString( std::string( result ) );
+    JSWRAPPER_FUNCTION_SETRC( data )
 
-    JS_free( cx, (void *) chars );
+JSWRAPPER_FUNCTION_END
 
-    return true;
-}
 
 // --- copyToClipboard, copies the data of the given type to the native Clipboard (right now only "Text" type is supported).
 
-bool copyToClipboard(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
+JSWRAPPER_FUNCTION( copyToClipboard )
 
-    JSString *string = args[0].toString();
-    const char *typeChars=JS_EncodeString( cx, string );
-
-    string=args[1].toString();
-    const char *dataChars=JS_EncodeString( cx, string );
+    std::string type=args.at( 0 ).toString();
+    std::string data=args.at( 1 ).toString();
 
 #ifdef __APPLE__
-    copyToClipboard_cocoa( typeChars, dataChars );
+    copyToClipboard_cocoa( type.c_str(), data.c_str() );
 #else
     printf( "copyToClipboard not implemented!\n" );
 #endif
 
-    JS_free( cx, (void *) typeChars );
-    JS_free( cx, (void *) dataChars );
-
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
 // --- addNativeMenu
 
-bool addNativeMenu(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
+JSWRAPPER_FUNCTION( addNativeMenu )
 
-    // --- VG.UI.Menu
-    RootedObject menu(cx, &args[0].toObject() );
-
-    RootedValue data(cx); 
-    JS_GetProperty( cx, HandleObject(menu), "text", MutableHandleValue(&data) );
-
-    JSString *name = data.toString();
-    const char *nameChars=JS_EncodeString( cx, name );
+    JSWrapperData menuData;
+    args.at( 0 ).object()->get( "text", &menuData );
 
 #ifdef __APPLE__
-    addNativeMenu_cocoa( nameChars );
+    addNativeMenu_cocoa( menuData.toString().c_str() );
 #else
     printf( "addNativeMenu not implemented!\n" );
 #endif
 
-    JS_free( cx, (void *) nameChars );
+JSWRAPPER_FUNCTION_END
 
-    return true;
-}
+// --- addNativeMenuItem
 
-bool addNativeMenuItem(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
+JSWRAPPER_FUNCTION( addNativeMenuItem )
 
-    // --- VG.UI.Menu
-    RootedObject menu(cx, &args[0].toObject() );
-    RootedValue menuText(cx); 
-    JS_GetProperty( cx, HandleObject(menu), "text", MutableHandleValue(&menuText) );
-    JSString *string = menuText.toString();
-    const char *menuNameChars=JS_EncodeString( cx, string );
+    JSWrapperData menuNameData;
+    args.at( 0 ).object()->get( "text", &menuNameData );
 
     // --- VG.UI.MenuItem
-    RootedObject menuItem(cx, &args[1].toObject() );
-    RootedValue value(cx); 
-    JS_GetProperty( cx, HandleObject(menuItem), "id", MutableHandleValue(&value) );
+    JSWrapperData menuItemIdData;
+    args.at( 1 ).object()->get( "id", &menuItemIdData );
+    int id=menuItemIdData.toNumber();
 
-    int id=value.toInt32();
+    JSWrapperData menuItemNameData;
+    args.at( 1 ).object()->get( "text", &menuItemNameData );
 
-    JS_GetProperty( cx, HandleObject(menuItem), "text", MutableHandleValue(&value) );
-    string = value.toString();
-    const char *menuItemNameChars="";
+    JSWrapperData menuItemDisabledData;
+    args.at( 1 ).object()->get( "disabled", &menuItemDisabledData );
 
-    if ( id != -1 ) menuItemNameChars=JS_EncodeString( cx, string );
+    JSWrapperData menuItemCheckedData;
+    args.at( 1 ).object()->get( "checked", &menuItemCheckedData );    
 
-    JS_GetProperty( cx, HandleObject(menuItem), "disabled", MutableHandleValue(&value) );
-    bool disabled=value.toInt32();
+    JSWrapperData menuItemShortcutData;
+    args.at( 1 ).object()->get( "shortcut", &menuItemShortcutData );  
 
-    JS_GetProperty( cx, HandleObject(menuItem), "checked", MutableHandleValue(&value) );
-    bool checked=value.toInt32();    
-
-    JS_GetProperty( cx, HandleObject(menuItem), "shortcut", MutableHandleValue(&value) );
-    RootedObject shortcutObject(cx, &value.toObject() );
-
-    const char *keyChars="";
+    std::string key="";
     int mod1=0, mod2=0;
 
-    if ( !value.isUndefined() )
+    if ( menuItemShortcutData.type() == JSWrapperData::Object )
     {
-        JS_GetProperty( cx, HandleObject(shortcutObject), "key", MutableHandleValue(&value) );
-        string = value.toString();
+        JSWrapperData keyData;
+        menuItemShortcutData.object()->get( "key", &keyData );
+        key=keyData.toString();
 
-        //crashes on windows if null
-        if ( string )
-            keyChars=JS_EncodeString( cx, string );
+        JSWrapperData mod1Data;
+        menuItemShortcutData.object()->get( "modifier", &mod1Data );
+        mod1=mod1Data.toNumber();
 
-        JS_GetProperty( cx, HandleObject(shortcutObject), "modifier", MutableHandleValue(&value) );
-        mod1=value.toInt32();
-
-        JS_GetProperty( cx, HandleObject(shortcutObject), "modifierOptional", MutableHandleValue(&value) );        
-        mod2=value.toInt32();
+        JSWrapperData mod2Data;
+        menuItemShortcutData.object()->get( "modifierOptional", &mod2Data );
+        mod2=mod2Data.toNumber();
     }
 
 #ifdef __APPLE__
-    addNativeMenuItem_cocoa( menuNameChars, menuItemNameChars, id, disabled, checked, keyChars, mod1, mod2 );
+    addNativeMenuItem_cocoa( menuNameData.toString().c_str(), menuItemNameData.toString().c_str(), menuItemIdData.toNumber(), 
+        menuItemDisabledData.toBoolean(), menuItemCheckedData.toBoolean(), key.c_str(), mod1, mod2 );
 #else
     printf( "addNativeMenuItem not implemented!\n" );
 #endif
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
-bool setNativeMenuItemState(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
+// --- setNativeMenuItemState
 
-    int menuItemId=args[0].toInt32();
-    int disabled=args[1].toInt32();
-    int checked=args[2].toInt32();
+JSWRAPPER_FUNCTION( setNativeMenuItemState )
 
 #ifdef __APPLE__
-    setNativeMenuItemState_cocoa( menuItemId, disabled, checked );
+    setNativeMenuItemState_cocoa( args.at(0).toNumber(), args.at(1).toNumber(), args.at(2).toNumber() );
 #else
     printf( "addNativeMenuItem not implemented!\n" );
 #endif
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
 // --- hostProjectStarted
-bool hostProjectStarted(JSContext *cx, unsigned argc, jsval *vp)
-{
+
+JSWRAPPER_FUNCTION( hostProjectStarted )
+
 #ifdef __APPLE__
     hostProjectStarted_cocoa();
 #endif
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
 // --- hostProjectEnded
-bool hostProjectEnded(JSContext *cx, unsigned argc, jsval *vp)
-{
+
+JSWRAPPER_FUNCTION( hostProjectEnded )
+
 #ifdef __APPLE__
     hostProjectEnded_cocoa();
 #endif
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
 // --- hostUpdate, forces the host to redraw.
-bool hostUpdate(JSContext *cx, unsigned argc, jsval *vp)
-{
+
+JSWRAPPER_FUNCTION( hostUpdate )
+
     g_redraw=true;
-    return true;
-}
+
+JSWRAPPER_FUNCTION_END
 
 // --- resizeCanvas, resize the Workspace.
-bool resizeCanvas(JSContext *cx, unsigned argc, jsval *vp)
-{
+
+JSWRAPPER_FUNCTION( resizeCanvas )
+
     char cmdbuffer[80];        
     sprintf( cmdbuffer, "VG.context.workspace.resize( %d, %d );", g_width, g_height );
-    g_host->executeScript( cmdbuffer );    
+    g_jsWrapper->execute( cmdbuffer );    
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
-// --- VG.xxx Function definitions and registration.
+// --- addNativeMenu
 
-static JSFunctionSpec vg_global_functions[] = {
-    JS_FS("loadStyleImage", loadStyleImage, 0, 0),
-    JS_FS("decompressImageData", decompressImageData, 0, 0),
-    JS_FS("OpenFileDialog", OpenFileDialog, 0, 0),
-    JS_FS("SaveFileDialog", SaveFileDialog, 0, 0),
-    JS_FS("saveFile", saveFile, 0, 0),
-    JS_FS("getHostProperty", getHostProperty, 0, 0),
-    JS_FS("setHostProperty", setHostProperty, 0, 0),
-    JS_FS("sendBackendRequest", sendBackendRequest, 0, 0),
-    JS_FS("setMouseCursor", setMouseCursor, 0, 0),
-    JS_FS("clipboardPasteDataForType", clipboardPasteDataForType, 0, 0),
-    JS_FS("copyToClipboard", copyToClipboard, 0, 0),
-    JS_FS("addNativeMenu", addNativeMenu, 0, 0),
-    JS_FS("addNativeMenuItem", addNativeMenuItem, 0, 0),
-    JS_FS("setNativeMenuItemState", setNativeMenuItemState, 0, 0),
-    JS_FS("setWindowTitle", setWindowTitle, 0, 0),
-    JS_FS("hostProjectStarted", hostProjectStarted, 0, 0),
-    JS_FS("hostProjectEnded", hostProjectEnded, 0, 0),
-    JS_FS("hostUpdate", hostUpdate, 0, 0),
-    JS_FS("resizeCanvas", resizeCanvas, 0, 0),
-    JS_FS("print", print, 0, 0),
+JSWRAPPER_FUNCTION( gotoUrl )
 
-    JS_FS_END
-};
+#ifdef __APPLE__
+    gotoUrl_cocoa( args[0].toString().c_str() );
+#else
+    printf( "gotoUrl not implemented!\n" );
+#endif
 
-void registerVGFunctions( JSContext *cx, JSObject *vgObject )
+JSWRAPPER_FUNCTION_END
+
+void registerVGFunctions( JSWrapper *jsWrapper )
 {
-    RootedObject obj(cx, vgObject );
-  
-    if ( !JS_DefineFunctions( cx, HandleObject(obj), vg_global_functions ) )
-        JS_ReportError( cx, "Error Registering Global VG Functions!" );
+    g_jsWrapper=jsWrapper;
+
+    JSWrapperData vgData;
+    jsWrapper->execute( "VG", &vgData );
+
+    vgData.object()->registerFunction( "print", print );
+    vgData.object()->registerFunction( "loadStyleSVG", loadStyleSVG );
+    vgData.object()->registerFunction( "loadStyleImage", loadStyleImage );
+    vgData.object()->registerFunction( "decompressImageData", decompressImageData );
+    vgData.object()->registerFunction( "compressImage", compressImage );
+    vgData.object()->registerFunction( "OpenFileDialog", OpenFileDialog );
+    vgData.object()->registerFunction( "SaveFileDialog", SaveFileDialog );
+    vgData.object()->registerFunction( "saveFile", saveFile );
+    vgData.object()->registerFunction( "getHostProperty", getHostProperty );
+    vgData.object()->registerFunction( "setHostProperty", setHostProperty );
+    vgData.object()->registerFunction( "sendBackendRequest", sendBackendRequest );
+    vgData.object()->registerFunction( "setMouseCursor", setMouseCursor );
+    vgData.object()->registerFunction( "clipboardPasteDataForType", clipboardPasteDataForType );
+    vgData.object()->registerFunction( "copyToClipboard", copyToClipboard );
+    vgData.object()->registerFunction( "addNativeMenu", addNativeMenu );
+    vgData.object()->registerFunction( "addNativeMenuItem", addNativeMenuItem );
+    vgData.object()->registerFunction( "setNativeMenuItemState", setNativeMenuItemState );
+    vgData.object()->registerFunction( "setWindowTitle", setWindowTitle );
+    vgData.object()->registerFunction( "hostProjectStarted", hostProjectStarted );
+    vgData.object()->registerFunction( "hostProjectEnded", hostProjectEnded );
+    vgData.object()->registerFunction( "hostUpdate", hostUpdate );
+    vgData.object()->registerFunction( "resizeCanvas", resizeCanvas );
+    vgData.object()->registerFunction( "quit", quit );
+    vgData.object()->registerFunction( "gotoUrl", gotoUrl );
 }

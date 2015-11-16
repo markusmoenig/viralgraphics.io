@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 // ----------------------------------------------------------------- VG.UI.NewsScrollerItem
@@ -131,7 +134,7 @@ VG.UI.NewsScroller.prototype.paintWidget=function( canvas )
             canvas.drawImage( VG.Core.Point( this.rect.x + ( this.rect.width - image.width) / 2, this.rect.y + ( this.rect.height - image.height ) / 2 ), image );
         }
     }
-    
+
     if ( !this.backgroundColor ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, canvas.style.skin.NewsScroller.BackgroundColor );
     else canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, this.backgroundColor );
 
@@ -156,13 +159,15 @@ VG.UI.NewsScroller.prototype.paintWidget=function( canvas )
             this.leftImage.clickedImage=VG.Core.Image(); this.leftImage.clickedImage.set( image ); this.leftImage.clickedImage.mul( VG.Core.Color( "#8b8def" ) );             
             this.leftImage.hoverImage=VG.Core.Image(); this.leftImage.hoverImage.set( image ); this.leftImage.hoverImage.mul( VG.Core.Color( "#7a7aa9" ) );             
         }
-    }
+    }    
 
     if ( !this.rightImage.isValid() ) {
         var image=VG.context.imagePool.getImageByName( "scroller_right.png" );
-        if ( image ) { this.rightImage.image.set( image ); this.rightImage.image.mul( VG.Core.Color( "#cbcfe0" ) ); }
-        this.rightImage.clickedImage=VG.Core.Image(); this.rightImage.clickedImage.set( image ); this.rightImage.clickedImage.mul( VG.Core.Color( "#8b8def" ) );             
-        this.rightImage.hoverImage=VG.Core.Image(); this.rightImage.hoverImage.set( image ); this.rightImage.hoverImage.mul( VG.Core.Color( "#7a7aa9" ) );             
+        if ( image ) { 
+            this.rightImage.image.set( image ); this.rightImage.image.mul( VG.Core.Color( "#cbcfe0" ) );
+            this.rightImage.clickedImage=VG.Core.Image(); this.rightImage.clickedImage.set( image ); this.rightImage.clickedImage.mul( VG.Core.Color( "#8b8def" ) );             
+            this.rightImage.hoverImage=VG.Core.Image(); this.rightImage.hoverImage.set( image ); this.rightImage.hoverImage.mul( VG.Core.Color( "#7a7aa9" ) );
+        }
     }
 
     if ( this.leftImage.isValid() ) {
@@ -349,6 +354,8 @@ VG.UI.Scroller.prototype.addItem=function( header, content )
 
 VG.UI.Scroller.prototype.paintWidget=function( canvas )
 {
+    var setClippedRect=false;
+
     // --- Draw Background (Custom Image Background and Background Color)
 
     if ( this.backgroundImageName ) {
@@ -458,7 +465,9 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
 
         if ( this.animActive )
         {
-            canvas.setClipRect( this.contentRect.add( -40, 0, 40, 0 ) );
+            canvas.pushClipRect( this.contentRect.add( -40, 0, 40, 0 ) );
+            setClippedRect=true;
+
             this.animPixelOffset=this.animOffset * this.contentRect.width / this.animDuration;
 
             if ( this.animDirectionLeft ) this.contentRect.x-=this.animPixelOffset;
@@ -526,5 +535,5 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
         canvas.drawImage( this.contentRect.pos(), item.content );
     }
 
-    canvas.setClipRect();    
+    if ( setClippedRect ) canvas.popClipRect();    
 };

@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include <iostream>
@@ -27,52 +30,35 @@
 
 #include <SDL_syswm.h>
 
-#include "jshost.hpp"
-#include "jsfriendapi.h"
-
-
 #ifdef __VG_WITH_EMBREE
 #include "tracer/tracer.h"
 #endif
-
 
 #ifdef __APPLE__
     const char *getPath_cocoa( int type );
     void init_cocoa( void );
 #endif
 
-/* The class of the global object. */
-static JSClass globalClass = {
-    "global",
-    JSCLASS_GLOBAL_FLAGS,
-    JS_PropertyStub,
-    JS_DeletePropertyStub,
-    JS_PropertyStub,
-    JS_StrictPropertyStub,
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
-    nullptr, nullptr, nullptr, nullptr,
-    JS_GlobalObjectTraceHook
-};
+#ifdef _WIN32
+    FILE _iob[] = {*stdin, *stdout, *stderr};
+    extern "C" FILE * __cdecl __iob_func(void)
+    {
+        return _iob;
+    }
+#endif
 
-// The error reporter callback.
-void reportError(JSContext *cx, const char *message, JSErrorReport *report) {
-     fprintf(stderr, "%s:%u:%s\n",
-             report->filename ? report->filename : "[no filename]",
-             (unsigned int) report->lineno,
-             message);
-}
- 
+#include "jshost.hpp"
+
 unsigned int timerCallback(unsigned int interval, void *param);
 int SDLKeyCodeToVG( int code );
  
 bool g_redraw=true;
 int g_width = 1400;
 int g_height = 1000;
- 
-const char *g_appNameChars=0;
-const char *g_appVersionChars=0;
+bool g_quit = false;
+
+std::string g_appName;
+std::string g_appVersion;
  
 SDL_SysWMinfo g_wmInfo;
 
@@ -83,36 +69,20 @@ int main(int argc, char** argv)
 	bool rawApp = false;
 
     char cmdbuffer[256];        
-    int rc=0;
+    int rc=0, argOffset=1;
 
-    // --- Initialize SpiderMonkey
+    // --- Setup JS Wrapper
 
-    if (!JS_Init()) return 1;
-
-    JSRuntime *rt = JS_NewRuntime(8L * 1024 * 1024 * 10, JS_USE_HELPER_THREADS );
-    if (!rt) return 1;
-
-    JSContext *cx = JS_NewContext(rt, 8192);
-    if (!cx) return 1;
-
-    JS_SetErrorReporter(cx, reportError);
-
-    JSAutoRequest ar(cx);
-
-    RootedObject global(cx );
-    global = JS_NewGlobalObject(cx, &globalClass, nullptr, JS::DontFireOnNewGlobalHook);    
-    if (!global) return 1;
-
-    JSAutoCompartment ac(cx, global);    
-    JS_InitStandardClasses(cx, global);
-
-    //JSCompartment *compartment = js::GetContextCompartment( cx );
-    //if(compartment != NULL) JS_SetVersionForCompartment( compartment, JSVERSION_LATEST );
+    JSWrapper jsWrapper( argv[0] );
+    if ( !jsWrapper.isValid() ) {
+        printf("Unable to Initialize JavaScript Wrapper.\n");
+        return 1;
+    }
 
     // --- Setup JSHost and the VG Namespace
 
     const char *vgLibPath=0;
-
+ 
 #ifdef __APPLE__
     vgLibPath=getPath_cocoa( 0 );
 #endif
@@ -121,31 +91,25 @@ int main(int argc, char** argv)
     {
         vgDir=vgLibPath;
     } else
-    if ( argc > 1 )
-    {
+    if ( argc > 1 ) {
         vgDir = argv[1];
+        argOffset=2;
     }
  
-    JSHost *jsHost=new JSHost( cx, &global, vgDir.c_str() );
+    JSHost *jsHost=new JSHost( &jsWrapper, vgDir.c_str() );
 
     // --- Setup VGLib
 
     if ( !jsHost->setupVG() ) {
         delete jsHost;
 
-        //JS_DestroyContext(cx);
-        JS_DestroyRuntime(rt);
-        JS_ShutDown();
-
-        //SDL_GL_DeleteContext(glcontext);
-        //SDL_DestroyWindow(window);
-        //SDL_Quit(); 
+        printf( "Initialization of Visual Graphics Library Failed.\n" );
+        return 1;
     } 
  
      // --- Load the app
 
-    std::string appSource = "apps/view3d.js";
-
+    std::string appSource = "app.vide";
     const char *projectPath=0;
 
 #ifdef __APPLE__
@@ -161,24 +125,14 @@ int main(int argc, char** argv)
     } else
     if (argc > 2) {
         appSource = argv[2];
+        argOffset=3;
     }
 
-    //only allow to run js apps in debug builds
-//#ifdef _DEBUG
-    if (appSource.find_last_of(".js") != std::string::npos)
-    {
+    // --- Run a raw .js script
+
+    if (appSource.find_last_of(".js") != std::string::npos) {
 	    rawApp = true;
-	    std::cout << "Running raw .js app" << std::endl;
-    }
-//#endif
-
-	//clear any error up to this point
-	
-
-    if (rawApp)
-    {
-	    const char* dummyAppSource = "VG.App = {};";
-	    jsHost->executeScript(dummyAppSource);
+	    jsWrapper.execute( "VG.App = {};" );
     }
 	
 	jsHost->addVGLibSourceFile(appSource.c_str(), absolutePath);
@@ -186,45 +140,54 @@ int main(int argc, char** argv)
     // --- Settup SDL2
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16); 
+    //SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16); 
 
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		std::cout << "SDL_Init Error: " << SDL_GetError() << std::endl;
 		return 1;
 	}
 
-#ifdef __VG_OPENGL3__
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
 
-    //Windows and OSX
+#ifdef __APPLE__
+
+    #define __VG_OPENGL3__ 1
+
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
-
 #else
 
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+/*
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);  
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
     
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
+*/
 
 #endif
 
     // --- Composing the Window Title
 
-    RootedValue *value=jsHost->executeScript( "VG.Utils.decompressFromBase64( VG.App.name );" );
-    JSString *name = value->toString();
-    g_appNameChars=JS_EncodeString( cx, name );
+    g_appName=std::string("Visual Graphics"); g_appVersion="0.0";
 
-    value=jsHost->executeScript( "VG.Utils.decompressFromBase64( VG.App.version );" );
-    JSString *version = value->toString();
-    g_appVersionChars=JS_EncodeString( cx, version );  
+    {
+        JSWrapperData data;
 
-    sprintf( cmdbuffer, "%s v%s", g_appNameChars, g_appVersionChars );
+        jsWrapper.execute( "VG.Utils.decompressFromBase64( VG.App.name );", &data );
+        g_appName=data.toString();
+
+        jsWrapper.execute( "VG.Utils.decompressFromBase64( VG.App.version );", &data );        
+        g_appVersion=data.toString();
+    }
+
+    sprintf( cmdbuffer, "%s v%s", g_appName.c_str(), g_appVersion.c_str() );
+    if ( !rawApp )
+        printf( "Running Application %s v%s\n", g_appName.c_str(), g_appVersion.c_str() );
 
     // --- Creating the Window
 
@@ -235,11 +198,21 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-    SDL_GLContext glcontext=SDL_GL_CreateContext(window);
-	if (glcontext == nullptr) {
-		std::cout << "SDL_GL_CreateContext Error: " << SDL_GetError() << std::endl;
-		SDL_Quit();
-		return 1;
+    SDL_GLContext glcontext=SDL_GL_CreateContext( window );
+	if (glcontext == nullptr) 
+	{
+		// --- This did not work, try to reduce AA
+
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8 );
+
+		glcontext = SDL_GL_CreateContext(window);
+		if (glcontext == nullptr)
+		{
+			// --- Still does not work
+			std::cout << "SDL_GL_CreateContext Error: " << SDL_GetError() << std::endl;
+			SDL_Quit();
+			return 1;
+		}
 	}    
 
     SDL_GetWindowWMInfo(window, &g_wmInfo);    
@@ -249,10 +222,7 @@ int main(int argc, char** argv)
     init_cocoa();
 #endif
 
-    // ---
-
-    //glClearColor( 0, 0, 0, 0 );
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	    
+    // ---   
  
     printf("----------------------------------------------------------------\n");
     printf("Graphics Successfully Initialized\n");
@@ -263,7 +233,8 @@ int main(int argc, char** argv)
     printf("    Shading: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
     printf("----------------------------------------------------------------\n");
 
-#ifdef _WIN32
+#ifdef WIN32
+    glewExperimental=TRUE;
     if (glewInit() != GLEW_OK)
     {
 		std::cout << "GLEW failed to initialize" << std::endl;
@@ -276,7 +247,21 @@ int main(int argc, char** argv)
 	while (glGetError() != GL_NO_ERROR) {}
 
     sprintf( cmdbuffer, "VG.context.workspace=VG.UI.Workspace(); VG.context.workspace.resize( %d, %d );", g_width, g_height );
-    jsHost->executeScript( cmdbuffer );
+    jsWrapper.execute( cmdbuffer );
+
+    // --- Build the vgMain Call with the arguments
+
+    if ( argc > argOffset ) {
+        int arguments=argc - argOffset;
+
+        sprintf( cmdbuffer, "vgMain.call( VG.context, VG.context.workspace, %d, [", arguments );
+        for ( int i=argOffset; i < argc; ++i ) {
+            strcat( cmdbuffer, "\"" );
+            strcat( cmdbuffer, argv[i] );
+            if ( i < argc-1 ) strcat( cmdbuffer, "\", " );
+        }
+        strcat( cmdbuffer, "\"] );\n" );
+    } else sprintf( cmdbuffer, "vgMain.call( VG.context, VG.context.workspace, 0, [] );" );
 
     // --- Unpack the content of the VIDE Project and execute vgMain
 
@@ -301,7 +286,14 @@ int main(int argc, char** argv)
             "VG.print( e.message.toString() );\n"
         "}\n"
     "}\n"
-    
+
+    "// --- Add the SVGs of the project to the pool\n"
+    "for (var svgName in VG.App.svg ) {\n"
+        "var decodedSVG=VG.Utils.decompressFromBase64( VG.App.svg[svgName] );\n"
+
+        "var svg=VG.Core.SVG( svgName, decodedSVG );\n"
+        "VG.context.svgPool.addSVG( svg );\n"
+    "} \n"
     "// --- Load the Fonts of the project\n"
     "for (var fontName in VG.App.fonts )\n"
     "{\n"
@@ -315,21 +307,38 @@ int main(int argc, char** argv)
         "}\n"
     "}\n"
     "VG.fontManager.addFonts();\n"
-    "vgMain.call( VG.context, VG.context.workspace, 0, [] );";
 
-    jsHost->executeScript( unpackAndRunApp.c_str() );
+    "// --- Activate the right Style / Skin\n"
+    "if ( VG.App.styleIndex && VG.App.styleIndex < VG.Styles.pool.length ) {\n"
+        "var style=VG.Styles.pool[VG.App.styleIndex];\n"
+        "var skin=undefined;\n"
+
+        "if ( VG.App.skinIndex && VG.App.skinIndex < style.skins.length ) {\n"
+            "skin=style.skins[VG.App.skinIndex];\n"
+        "}\n"
+
+        "VG.context.workspace.switchToStyle( style, skin );\n"
+    "}\n";
+
+    unpackAndRunApp+=cmdbuffer;
+    jsWrapper.execute( unpackAndRunApp.c_str() );
+
+    // ---
+
+    unsigned int idleCount=0;
+    SDL_Event event;
 
     // --- Show the Window
-    value=jsHost->executeScript( "VG.context.workspace.tick( true );" );                
-    if ( value && value->toBoolean() ) SDL_GL_SwapWindow( window );
+
+    JSWrapperData *tickData=new JSWrapperData;
+    jsWrapper.execute( "VG.context.workspace.tick( true );", tickData );
+    if ( tickData->toBoolean() ) SDL_GL_SwapWindow( window );
+    delete tickData;
     SDL_ShowWindow( window );
 
     // --- Event Loop
-    
-    bool quit = false;
-    SDL_Event event;
 
-    while( !quit )
+    while( !g_quit )
     {
         //JS_MaybeGC( cx );
 
@@ -343,7 +352,7 @@ int main(int argc, char** argv)
                         g_width=event.window.data1; g_height=event.window.data2;
                     
                         sprintf( cmdbuffer, "VG.context.workspace.resize( %d, %d );", g_width, g_height );
-					   jsHost->executeScript( cmdbuffer );
+                        jsWrapper.execute( cmdbuffer );
                     
                         g_redraw=true;
                     }
@@ -355,7 +364,7 @@ int main(int argc, char** argv)
 
                     if ( keyCode != -1 ) {
             	       sprintf( cmdbuffer, "VG.context.workspace.keyDown( %d );", keyCode );
-				        jsHost->executeScript( cmdbuffer );
+				        jsWrapper.execute( cmdbuffer );
                     }
                 }
                 break;
@@ -366,29 +375,30 @@ int main(int argc, char** argv)
 
                     if ( keyCode != -1 ) {
                         sprintf( cmdbuffer, "VG.context.workspace.keyUp( %d );", keyCode );
-                        jsHost->executeScript( cmdbuffer );
+                        jsWrapper.execute( cmdbuffer );
                     }
                 }
                 break;            
                 
                 case SDL_TEXTINPUT:
                 {
-                    RootedValue *workspace=jsHost->executeScript( "VG.context.workspace" );
-                    RootedObject workspaceObject( cx, &workspace->toObject() );
+                    JSWrapperData workspaceObject;
+                    jsWrapper.execute( "VG.context.workspace", &workspaceObject );
 
-                    JSString *input = JS_NewStringCopyN( cx, event.text.text, strlen(event.text.text));
+                    JSWrapperData textInputFunc;
+                    workspaceObject.object()->get( "textInput", &textInputFunc );
 
-                    RootedValue rc( cx );    
-                    RootedValue inputValue( cx ); inputValue.setString( input );
-
-                    bool ok=Call( cx, HandleObject( workspaceObject ), "textInput", HandleValueArray( inputValue ), MutableHandleValue( &rc ) ); 
+                    JSWrapperArguments args;
+                    args.append( std::string( event.text.text ) );
+ 
+                    textInputFunc.object()->call( &args, workspaceObject.object() );
                 }
                 break;
-                
+                 
                 case SDL_MOUSEMOTION:
                 {
-            	   sprintf( cmdbuffer, "VG.context.workspace.mouseMove( %d, %d );", event.motion.x, event.motion.y );
-				    jsHost->executeScript( cmdbuffer );
+                    sprintf( cmdbuffer, "VG.context.workspace.mouseMove( %d, %d );", event.motion.x, event.motion.y );
+				    jsWrapper.execute( cmdbuffer );
                 }
                 break;
                
@@ -403,13 +413,13 @@ int main(int argc, char** argv)
                             if ( event.button.clicks != 2 ) code="VG.context.workspace.mouseDown( VG.Events.MouseButton.Left );";
                             else code="VG.context.workspace.mouseDoubleClick();";
 
-						  jsHost->executeScript( code );
+						  jsWrapper.execute( code );
                         }
                         break;
                         
                         case SDL_BUTTON_RIGHT:
                         {
-                    	   jsHost->executeScript( "VG.context.workspace.showContextMenu();" );
+                    	   jsWrapper.execute( "VG.context.workspace.showContextMenu();" );
                         }
                         break;
                     }
@@ -422,7 +432,7 @@ int main(int argc, char** argv)
                     {
                         case SDL_BUTTON_LEFT:
                         {
-                    	   jsHost->executeScript( "VG.context.workspace.mouseUp( VG.Events.MouseButton.Left );" );
+                    	   jsWrapper.execute( "VG.context.workspace.mouseUp( VG.Events.MouseButton.Left );" );
                         }
                     }
                 }
@@ -431,14 +441,14 @@ int main(int argc, char** argv)
                 case SDL_MOUSEWHEEL:
                 {
                     if ( event.wheel.y < 0)
-                        jsHost->executeScript( "VG.context.workspace.mouseWheel( -1 );" );
+                        jsWrapper.execute( "VG.context.workspace.mouseWheel( -1 );" );
                     else
-                        jsHost->executeScript( "VG.context.workspace.mouseWheel( 1 );" );
+                        jsWrapper.execute( "VG.context.workspace.mouseWheel( 1 );" );
                 }
                 break;
          
                 case SDL_QUIT:
-                    quit=true;
+                    g_quit=true;
                 break;
             }
         }
@@ -447,35 +457,41 @@ int main(int argc, char** argv)
 
         if ( g_redraw ) code="VG.context.workspace.tick( true );";
         else code="VG.context.workspace.tick( false );";
-                
-        Rooted<Value> *rc=jsHost->executeScript( code );
-            
-        if ( rc && rc->toBoolean() ) 
+
+        JSWrapperData data;
+
+        jsWrapper.execute( code, &data );
+        bool rc=data.toBoolean();
+       
+        if ( rc ) 
         {
             SDL_GL_SwapWindow(window);
             SDL_Delay( 1 );
-        } else SDL_Delay( 10 );
-
+        } else {
+            //JS_MaybeGC( cx );
+            ++idleCount;
+            if ( idleCount > 400 ) { 
+                // --- Initiate GC
+                jsWrapper.gc();
+                idleCount=0; 
+            }
+            SDL_Delay( 10 ); 
+        }
+ 
         g_redraw=false; 
     }    
-
-    JS_free( cx, (void *) g_appNameChars ); JS_free( cx, (void *) g_appVersionChars );
-
+ 
     // --- Cleanup
 
     SDL_GL_DeleteContext(glcontext);
     SDL_DestroyWindow(window);
     SDL_Quit();	
 
-    //JS_DestroyContext(cx);
-    JS_DestroyRuntime(rt);
-    JS_ShutDown();
+    delete jsHost;
 
 #ifdef __VG_WITH_EMBREE
     Tracer::cleanUp();
 #endif
-
-	delete jsHost;
 
     return 0;    
 }

@@ -1,23 +1,25 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 // ----------------------------------------------------------------- VG.UI.MenuItem
 
 VG.UI.MenuItem=function( text, iconName, clicked, shortcut )
@@ -33,6 +35,8 @@ VG.UI.MenuItem=function( text, iconName, clicked, shortcut )
     this.exclusions=[];
     this.checkable=false;
     this._checked=false;
+
+    this._rect=VG.Core.Rect();
 
     this.id=-1;
 };
@@ -76,12 +80,12 @@ VG.UI.MenuItem.prototype.addExclusions=function()
 
 // ----------------------------------------------------------------- VG.UI.Menubar
 
-VG.UI.Menubar=function()
+VG.UI.MenuBar=function()
 {
-    if ( !(this instanceof VG.UI.Menubar) ) return new VG.UI.Menubar();
+    if ( !(this instanceof VG.UI.MenuBar) ) return new VG.UI.MenuBar();
 
     VG.UI.Widget.call( this );
-    this.name="Menubar";
+    this.name="MenuBar";
 
     this.horizontalExpanding=false;
     this.verticalExpanding=false;
@@ -97,9 +101,9 @@ VG.UI.Menubar=function()
     this.itemIdCounter=1;
 };
 
-VG.UI.Menubar.prototype=VG.UI.Widget();
+VG.UI.MenuBar.prototype=VG.UI.Widget();
 
-VG.UI.Menubar.prototype.addMenu=function( text, callback )
+VG.UI.MenuBar.prototype.addMenu=function( text, callback )
 {
     var menu=new VG.UI.Menu( text, callback, this );
 
@@ -110,7 +114,7 @@ VG.UI.Menubar.prototype.addMenu=function( text, callback )
     return menu;
 };
 
-VG.UI.Menubar.prototype.activateMenu=function( menu )
+VG.UI.MenuBar.prototype.activateMenu=function( menu )
 {
     this.active=menu;
 
@@ -118,7 +122,7 @@ VG.UI.Menubar.prototype.activateMenu=function( menu )
     VG.update();    
 };
 
-VG.UI.Menubar.prototype.mouseMove=function( event )
+VG.UI.MenuBar.prototype.mouseMove=function( event )
 {
     if ( this.active )
     {
@@ -135,7 +139,7 @@ VG.UI.Menubar.prototype.mouseMove=function( event )
     }
 };
 
-VG.UI.Menubar.prototype.mouseDown=function( event )
+VG.UI.MenuBar.prototype.mouseDown=function( event )
 {
     if ( !this.active )
     {
@@ -154,11 +158,11 @@ VG.UI.Menubar.prototype.mouseDown=function( event )
     }
 };
 
-VG.UI.Menubar.prototype.mouseUp=function( event )
+VG.UI.MenuBar.prototype.mouseUp=function( event )
 {  
 };
 
-VG.UI.Menubar.prototype.menuItemById=function( id )
+VG.UI.MenuBar.prototype.menuItemById=function( id )
 {
     for( var i=0; i < this.items.length; ++i )
     {
@@ -175,7 +179,7 @@ VG.UI.Menubar.prototype.menuItemById=function( id )
     return -1;
 };
 
-VG.UI.Menubar.prototype.clickMenuItemById=function( id )
+VG.UI.MenuBar.prototype.clickMenuItemById=function( id )
 {
     for( var i=0; i < this.items.length; ++i )
     {
@@ -188,7 +192,7 @@ VG.UI.Menubar.prototype.clickMenuItemById=function( id )
             if ( menuItem.id !== -1 && menuItem.id === id )
             {
                 menu.externalClickItem=menuItem;
-                menu.externalClickTime=Date.now();
+                //menu.externalClickTime=Date.now();
 
                 menu.clickItem( menuItem );
             }
@@ -197,16 +201,16 @@ VG.UI.Menubar.prototype.clickMenuItemById=function( id )
     return -1;
 };
 
-VG.UI.Menubar.prototype.calcSize=function()
+VG.UI.MenuBar.prototype.calcSize=function( canvas )
 {
     var size=VG.Core.Size( VG.UI.MaxLayoutSize, 26 );
     return size;
 };
 
-VG.UI.Menubar.prototype.paintWidget=function( canvas )
+VG.UI.MenuBar.prototype.paintWidget=function( canvas )
 {
     if ( !this.visible ) return;
-    VG.context.style.drawMenubar( canvas, this );
+    VG.UI.stylePool.current.drawMenuBar( this, canvas );
 
     if ( this.active && canvas.delayedPaintWidgets.indexOf( this.active ) === -1 )  {
 
@@ -307,17 +311,17 @@ VG.UI.Menu.prototype.clickItem=function( item )
         item.checked=true;
 
         for ( var i=0; i < item.exclusions.length; ++i ) 
-                item.exclusions[i].checked=false;
+            item.exclusions[i].checked=false;
     }    
 };
 
-VG.UI.Menu.prototype.calcSize=function()
+VG.UI.Menu.prototype.calcSize=function( canvas )
 {
-    var size=VG.Core.Size();
+    var size=this.preferredSize;
     
     var minWidth=80;
 
-    VG.context.workspace.canvas.pushFont( VG.context.style.skin.Menu.Font );
+    VG.context.workspace.canvas.pushFont( VG.UI.stylePool.current.skin.Menu.Font );
 
     for( var i=0; i < this.items.length; ++i ) {
         if ( !this.items[i].isSeparator ) {
@@ -362,6 +366,14 @@ VG.UI.Menu.prototype.mouseMove=function( event )
 
     if ( selected !== this.selected ) {
         this.selected=selected;
+
+        // --- StatusTip
+        if ( VG.context.workspace.statusbar )
+        {
+            if ( selected && selected.statusTip && !selected.disabled ) VG.context.workspace.statusbar.message( selected.statusTip, 4000 );
+            else VG.context.workspace.statusbar.message( "" );
+        } 
+
         VG.update();
     }
 };
@@ -409,7 +421,7 @@ VG.UI.Menu.prototype.mouseUp=function( event )
 VG.UI.Menu.prototype.paintWidget=function( canvas )
 {
     if ( !this.visible ) return;
-    VG.context.style.drawMenu( canvas, this );    
+    VG.UI.stylePool.current.drawMenu( this, canvas );    
 };
 
 // ----------------------------------------------------------------- VG.UI.ContextMenu
@@ -550,7 +562,7 @@ VG.UI.ContextMenu.prototype.mouseUp=function( event )
 VG.UI.ContextMenu.prototype.activate=function( pos )
 {
     this.rect.setPos( pos );
-    this.rect.setSize( this.calcSize() );
+    this.rect.setSize( this.calcSize( VG.context.workspace.canvas ) );
 
     if ( this.aboutToShow )
         this.aboutToShow();
@@ -560,13 +572,13 @@ VG.UI.ContextMenu.prototype.activate=function( pos )
     VG.context.workspace.mouseTrackerWidget=this;
 };
 
-VG.UI.ContextMenu.prototype.calcSize=function()
+VG.UI.ContextMenu.prototype.calcSize=function( canvas )
 {
-    var size=VG.Core.Size();
+    var size=this.preferredSize;
     
     var minWidth=80;
 
-    VG.context.workspace.canvas.pushFont( VG.context.style.skin.ContextMenu.Font );
+    VG.context.workspace.canvas.pushFont( canvas.style.skin.ContextMenu.Font );
 
     for( var i=0; i < this.items.length; ++i ) {
         if ( !this.items[i].isSeparator ) {
@@ -575,7 +587,7 @@ VG.UI.ContextMenu.prototype.calcSize=function()
         }
     }
 
-    size.set( minWidth, (VG.context.workspace.canvas.getLineHeight()+7) * (this.items.length-this.separatorCount) + 2 + this.separatorCount );
+    size.set( minWidth, (VG.context.workspace.canvas.getLineHeight()+4) * (this.items.length-this.separatorCount) + 2 + this.separatorCount );
 
     size=size.add( 100, 0 );
     this.minimumSize.set( size );
@@ -588,5 +600,5 @@ VG.UI.ContextMenu.prototype.calcSize=function()
 VG.UI.ContextMenu.prototype.paintWidget=function( canvas )
 {
     if ( !this.visible ) return;
-    VG.context.style.drawContextMenu( canvas, this );    
+    VG.UI.stylePool.current.drawContextMenu( this, canvas );
 };

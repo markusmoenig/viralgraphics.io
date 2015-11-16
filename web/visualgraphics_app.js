@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 // Web specific Implementations
@@ -61,14 +64,14 @@ function main()
     // ---- Plug into browser cut / copy paste
 
     window.addEventListener('cut', function ( event ) {
-        VG.context.workspace.modelCutCallback.call( VG.context.workspace );
+        VG.context.workspace.modelCutCallback.call( VG.context.workspace, true );
         if ( event.clipboardData )
             event.clipboardData.setData('text/plain',  VG.context.workspace.textClipboard );            
         event.preventDefault();
     });
 
     window.addEventListener('copy', function ( event ) {
-        VG.context.workspace.modelCopyCallback.call( VG.context.workspace );
+        VG.context.workspace.modelCopyCallback.call( VG.context.workspace, true );
         if ( event.clipboardData )
             event.clipboardData.setData('text/plain',  VG.context.workspace.textClipboard );        
         event.preventDefault();
@@ -84,13 +87,49 @@ function main()
             }
         }
 
-        VG.context.workspace.modelPasteCallback.call( VG.context.workspace );
+        VG.context.workspace.modelPasteCallback.call( VG.context.workspace, true );
         event.preventDefault();
     });  
 
-    // ----
+    // --- Touch Events
 
     VG.context.workspace=VG.UI.Workspace();
+
+    window.addEventListener('touchstart', function ( event ) {
+
+        var touches = event.changedTouches;    
+        for (var i = 0; i < touches.length; i++) {
+            var touch=touches[i];
+            VG.context.workspace.mouseMove( touch.clientX, touch.clientY );
+            VG.context.workspace.mouseDown( VG.Events.MouseButton.Left );
+        }
+
+        event.preventDefault();
+    });  
+
+    window.addEventListener('touchmove', function ( event ) {
+
+        var touches = event.changedTouches;    
+        for (var i = 0; i < touches.length; i++) {
+            var touch=touches[i];
+            VG.context.workspace.mouseMove( touch.clientX, touch.clientY );
+        }
+
+        event.preventDefault();
+    });  
+
+    window.addEventListener('touchend', function ( event ) {
+
+        var touches = event.changedTouches;    
+        for (var i = 0; i < touches.length; i++) {
+            var touch=touches[i];
+            VG.context.workspace.mouseUp( VG.Events.MouseButton.Left );
+        }
+
+        event.preventDefault();
+    }); 
+
+    // ---
 
     canvas.onmousedown = mouseDownRelay;
     document.onmouseup = mouseUpRelay;
@@ -126,6 +165,14 @@ function main()
         }        
     }
 
+    // --- Add the SVGs of the project to the pool
+    for (var svgName in VG.App.svg )  {
+        var decodedSVG=VG.Utils.decompressFromBase64( VG.App.svg[svgName] );
+
+        var svg=VG.Core.SVG( svgName, decodedSVG );
+        VG.context.svgPool.addSVG( svg );
+    }  
+
     // --- Load the Fonts of the project
     for (var fontName in VG.App.fonts )  
     {
@@ -141,11 +188,25 @@ function main()
 
     VG.fontManager.addFonts();  
     
+    // --- Activate the right Style / Skin
+
+    if ( VG.App.styleIndex && VG.App.styleIndex < VG.Styles.pool.length ) {
+
+        var style=VG.Styles.pool[VG.App.styleIndex];
+        var skin=undefined;
+
+        if ( VG.App.skinIndex && VG.App.skinIndex < style.skins.length ) {
+            skin=style.skins[VG.App.skinIndex];
+        }
+
+        VG.context.workspace.switchToStyle( style, skin );
+    }
+
     // --- Splash Screen 
 
-    if ( VG.App.webSplashScreen )
+    if ( VG.App.splashScreen && VG.App.showSplashScreen )
     {
-        var splashScreen=VG.Utils.decompressFromBase64( VG.App.webSplashScreen );
+        var splashScreen=VG.Utils.decompressFromBase64( VG.App.splashScreen );
         eval( splashScreen );
 
         if ( VG.drawSplashScreen ) 
@@ -153,7 +214,20 @@ function main()
             VG.context.workspace.canvas.setAlpha( 0 );
             VG.splashStartTime=new Date().getTime();
         }
-    } 
+    } else
+    {
+        VG.splashScreenFunc=null; 
+        //VG.splashScreenFuncFadeIn=null;
+
+        VG.resizeCanvas( true );      
+
+        var rt=VG.Renderer().mainRT;
+        rt.setViewport( VG.context.workspace.rect );  
+
+        VG.context.workspace.canvas.setAlpha( 1 );
+        VG.context.workspace.canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.context.workspace.rect, VG.Core.Color( 255, 255, 255 ) );
+        VG.context.workspace.canvas.setAlpha( 0 );
+    }
 
     VG.resizeCanvas();    
 
@@ -168,7 +242,7 @@ function main()
 
     tick();
 
-    VG.context.workspace.needsRedraw=true;    
+    VG.context.workspace.needsRedraw=true;
 }
 
 window.addEventListener( 'resize', VG.resizeCanvas );
@@ -367,6 +441,13 @@ VG.splashScreenFuncFadeIn=function()
         VG.context.workspace.canvas.setAlpha( 1.0 );
         VG.context.workspace.paintWidget();            
         VG.splashScreenFuncFadeIn=null;
+
+        // --- Border Color
+
+        if ( VG.App.webBorderColor ) {
+            var borderColor=VG.Utils.decompressFromBase64( VG.App.webBorderColor );
+            document.body.style.backgroundColor=borderColor;
+        }        
     }
     VG.context.workspace.canvas.flush();        
 }

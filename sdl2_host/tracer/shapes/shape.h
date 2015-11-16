@@ -106,6 +106,8 @@ namespace embree
 
     /*! Performs interpolation of shading vertex parameters. */
     virtual void postIntersect(const Ray& ray, DifferentialGeometry& dg) const = 0;
+    
+    virtual Vector3f getRandomSample() const = 0;
 
   public:
     AccelType ty;

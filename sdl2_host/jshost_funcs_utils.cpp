@@ -1,65 +1,44 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include <iostream>
 
-#include <jsapi.h>
-#include <jsfriendapi.h>
-#include <nfd.h>
-#include "base64.h"
 #include "jshost.hpp"
-
 #include "image_loader.hpp"
 
-using namespace JS;
-
-extern JSHost *g_host;
+extern JSWrapper *g_jsWrapper;
 
 // --- Activates the callback of the menuItem identified by its id.
 
 void activateMenuItem( int menuItemId )
 {
-    RootedValue* menu=g_host->executeScript( "VG.context.workspace.menubars[0]" );
-    RootedObject menubarObject(g_host->cx, &menu->toObject() );
+    JSWrapperData data;
+    g_jsWrapper->execute( "VG.context.workspace.menubars[0]", &data );
 
-    // --- Get the menu item for the id
-    RootedValue menuItem(g_host->cx);    
-    RootedValue menuIdValue(g_host->cx); menuIdValue.setInt32( menuItemId );
-    //bool ok=Call( g_host->cx, HandleObject(menubarObject), "menuItemById", HandleValueArray( menuIdValue ), MutableHandleValue(&menuItem) );
-    bool ok=Call( g_host->cx, HandleObject(menubarObject), "clickMenuItemById", HandleValueArray( menuIdValue ), MutableHandleValue(&menuItem) );
+    JSWrapperData funcData;
+    data.object()->get( "clickMenuItemById", &funcData );
 
-/*
-    if (!ok) return;
-
-    RootedObject menuItemObject(g_host->cx, &menuItem.toObject() );
-
-    // --- Get the callback
-    //RootedValue id(g_host->cx); 
-    //JS_GetProperty( g_host->cx, HandleObject(menuItemObject), "id", MutableHandleValue(&id) );
-    //printf( "menu item id %d", id.toInt32() );
-
-    RootedValue callback(g_host->cx); 
-    JS_GetProperty( g_host->cx, HandleObject(menuItemObject), "clicked", MutableHandleValue(&callback) );
-
-    // --- Call the callback
-    RootedValue rc(g_host->cx); MutableHandleValue rcHandle( &rc );
-    JS_CallFunctionValue( g_host->cx, HandleObject(menuItemObject), HandleValue( callback ), HandleValueArray::empty(), rcHandle );*/
+    JSWrapperArguments arguments; arguments.append( (double) menuItemId );
+    funcData.object()->call( &arguments, data.object() );
 }
 

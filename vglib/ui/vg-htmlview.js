@@ -1,23 +1,26 @@
 /*
- * (C) Copyright 2014, 2015 Krishnakanth Mallik <krishnakanthmallikc@gmail.com>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
+ 
 VG.UI.HtmlView=function( html )
 {
     /**Creates a new HtmlView widget that can render HTML source text.
@@ -56,60 +59,60 @@ VG.UI.HtmlView=function( html )
     this.readOnly=true;
 
     this.body={
-        "font" : VG.Font.Font( VG.context.style.DefaultFontName, 15 ),
+        "font" : VG.Font.Font( VG.UI.stylePool.current.skin.HtmlView.FontName, 15 ),
         "bgColor" : VG.Core.Color( 0, 0, 0, 0 ),//VG.context.style.skin.Widget.BackgroundColor,
-        "color" : VG.context.style.skin.Widget.TextColor,
+        "color" : VG.Core.Color( VG.UI.stylePool.current.skin.Widget.TextColor ),
         "margin" : VG.Core.Margin( 20, 25, 20, 25 ),
         "spacing" : 10,
         "noframe" : false
     };
 
     this.h1={
-        "font" : VG.Font.Font( VG.context.style.DefaultBoldFontName, 24 ),
-        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
-        "color" : VG.context.style.skin.Widget.TextColor,
+        "font" : VG.Font.Font( VG.UI.stylePool.current.skin.HtmlView.BoldFontName, 24 ),
+        "bgColor" : VG.UI.stylePool.current.skin.Widget.BackgroundColor,
+        "color" : VG.Core.Color( VG.UI.stylePool.current.skin.Widget.TextColor ),
         "margin" : VG.Core.Margin( 0, 10, 20, 10 )
     };
 
     this.h2={
-        "font" : VG.Font.Font( VG.context.style.DefaultBoldFontName, 22 ),
-        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
-        "color" : VG.context.style.skin.Widget.TextColor,
+        "font" : VG.Font.Font( VG.UI.stylePool.current.skin.HtmlView.BoldFontName, 22 ),
+        "bgColor" : VG.UI.stylePool.current.skin.Widget.BackgroundColor,
+        "color" : VG.Core.Color( VG.UI.stylePool.current.skin.Widget.TextColor ),
         "margin" : VG.Core.Margin( 0, 10, 20, 10 )
     };
 
     this.h3={
-        "font" : VG.Font.Font( VG.context.style.DefaultBoldFontName, 18 ),
-        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
-        "color" : VG.context.style.skin.Widget.TextColor,
+        "font" : VG.Font.Font( VG.UI.stylePool.current.skin.HtmlView.BoldFontName, 18 ),
+        "bgColor" : VG.UI.stylePool.current.skin.Widget.BackgroundColor,
+        "color" : VG.Core.Color( VG.UI.stylePool.current.skin.Widget.TextColor ),
         "margin" : VG.Core.Margin( 0, 10, 20, 10 )
     };
 
     this.h4={
-        "font" : VG.Font.Font( VG.context.style.DefaultBoldFontName, 16 ),
-        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
-        "color" : VG.context.style.skin.Widget.TextColor,
+        "font" : VG.Font.Font( VG.UI.stylePool.current.skin.HtmlView.BoldFontName, 16 ),
+        "bgColor" : VG.UI.stylePool.current.skin.Widget.BackgroundColor,
+        "color" : VG.Core.Color( VG.UI.stylePool.current.skin.Widget.TextColor ),
         "margin" : VG.Core.Margin( 0, 10, 20, 10 )
     };
 
     this.h5={
-        "font" : VG.Font.Font( VG.context.style.DefaultBoldFontName, 12 ),
-        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
-        "color" : VG.context.style.skin.Widget.TextColor,
+        "font" : VG.Font.Font( VG.UI.stylePool.current.skin.HtmlView.BoldFontName, 12 ),
+        "bgColor" : VG.UI.stylePool.current.skin.Widget.BackgroundColor,
+        "color" : VG.Core.Color( VG.UI.stylePool.current.skin.Widget.TextColor ),
         "margin" : VG.Core.Margin( 0, 10, 20, 10 )
     };
 
     this.h6={
-        "font" : VG.Font.Font( VG.context.style.DefaultBoldFontName, 10 ),
-        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
-        "color" : VG.context.style.skin.Widget.TextColor,
+        "font" : VG.Font.Font( VG.UI.stylePool.current.skin.HtmlView.BoldFontName, 10 ),
+        "bgColor" : VG.UI.stylePool.current.skin.Widget.BackgroundColor,
+        "color" : VG.Core.Color( VG.UI.stylePool.current.skin.Widget.TextColor ),
         "margin" : VG.Core.Margin( 0, 10, 20, 10 )
     };
 
     this.ul={
-        "font" : VG.Font.Font( VG.context.style.DefaultFontName, 15 ),
-        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
-        "color" : VG.context.style.skin.Widget.TextColor,
+        "font" : VG.Font.Font( VG.UI.stylePool.current.skin.HtmlView.FontName, 15 ),
+        "bgColor" : VG.UI.stylePool.current.skin.Widget.BackgroundColor,
+        "color" : VG.Core.Color( VG.UI.stylePool.current.skin.Widget.TextColor ),
         "margin" : VG.Core.Margin( 40, 10, 20, 10 ),
         "bulletStart" : 30,
         "bulletSize" : 0.5,
@@ -117,28 +120,28 @@ VG.UI.HtmlView=function( html )
     };
 
     this.ol={
-        "font" : VG.Font.Font( VG.context.style.DefaultFontName, 15 ),
-        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
-        "color" : VG.context.style.skin.Widget.TextColor,
+        "font" : VG.Font.Font( VG.UI.stylePool.current.skin.HtmlView.FontName, 15 ),
+        "bgColor" : VG.UI.stylePool.current.skin.Widget.BackgroundColor,
+        "color" : VG.Core.Color( VG.UI.stylePool.current.skin.Widget.TextColor ),
         "margin" : VG.Core.Margin( 40, 10, 20, 10 )
     };
 
     this.b={
-        "font" : VG.Font.Font( VG.context.style.DefaultBoldFontName, 15 ),
-        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
-        "color" : VG.context.style.skin.Widget.TextColor
+        "font" : VG.Font.Font( VG.UI.stylePool.current.skin.HtmlView.BoldFontName, 15 ),
+        "bgColor" : VG.UI.stylePool.current.skin.Widget.BackgroundColor,
+        "color" : VG.Core.Color( VG.UI.stylePool.current.skin.Widget.TextColor ),
     };
 
     this.i={
-        "font" : VG.Font.Font( VG.context.style.DefaultItalicFontName, 15 ),
-        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
-        "color" : VG.context.style.skin.Widget.TextColor
+        "font" : VG.Font.Font( VG.UI.stylePool.current.skin.HtmlView.ItalicFontName, 15 ),
+        "bgColor" : VG.UI.stylePool.current.skin.Widget.BackgroundColor,
+        "color" : VG.Core.Color( VG.UI.stylePool.current.skin.Widget.TextColor ),
     };
 
     this.a={
-        "font" : VG.Font.Font( VG.context.style.DefaultFontName, 15 ),
-        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
-        "color" : VG.context.style.skin.Widget.TextColor,
+        "font" : VG.Font.Font( VG.UI.stylePool.current.skin.HtmlView.FontName, 15 ),
+        "bgColor" : VG.UI.stylePool.current.skin.Widget.BackgroundColor,
+        "color" : VG.Core.Color( VG.UI.stylePool.current.skin.Widget.TextColor ),
         "underlineHeight" : 1
     };
 
@@ -151,16 +154,23 @@ VG.UI.HtmlView=function( html )
     };
 
     this.font={
-        "bgColor" : VG.context.style.skin.Widget.BackgroundColor,
+        "bgColor" : VG.UI.stylePool.current.skin.Widget.BackgroundColor,
         "override" : false
     };
 
     this.code={
-        "font" : VG.Font.Font( VG.context.style.DefaultFontName, 15 ),
+        "font" : VG.Font.Font( VG.UI.stylePool.current.skin.HtmlView.FontName, 15 ),
         "margin" : VG.Core.Margin( 20, 10, 20, 10 ),
         "verticalExpanding" : true,
         "maxHeight" : 100
     };
+
+    this.appedit={
+        "font" : VG.Font.Font( VG.UI.stylePool.current.skin.HtmlView.FontName, 15 ),
+        "margin" : VG.Core.Margin(),
+        "verticalExpanding" : true,
+        "maxHeight" : 100
+    };    
 
     this.image={
         "margin" : VG.Core.Margin( 20, 10, 20, 10 )
@@ -184,6 +194,7 @@ VG.UI.HtmlView=function( html )
     this.elements.font=this.font;
     this.elements.p=this.p;
     this.elements.code=this.code;
+    this.elements.appedit=this.appedit;
     this.elements.image=this.image;
         
     if ( arguments.length ) this._html=arguments[0];
@@ -298,7 +309,7 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
 
             var tagName=tag.substring( 0, tag.length );
 
-            if( tagName === "li" || tagName === "p" || tagName === "code" && textGroup ) {
+            if( tagName === "li" || tagName === "p" || tagName === "code" || tagName === "appedit" && textGroup ) {
 
                 this.textGroupArray.push( textGroup );
                 textGroup=null;
@@ -353,7 +364,7 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
 
                 textGroup.formattedTextArray.push( formattedText );
             }
-            else if( tagName === "li" || tagName === "p" || tagName === "code" || tagName === "img" )
+            else if( tagName === "li" || tagName === "p" || tagName === "code" || tagName === "appedit" || tagName === "img" )
             {
                 // End current textGroup if exists.
                 if( textGroup ) this.textGroupArray.push( textGroup );
@@ -500,6 +511,26 @@ VG.UI.HtmlView.prototype.verifyText=function()
             continue;
         }
 
+        if( this.textGroupArray[gIndex].groupModifier === "AppEdit" ) {
+
+            var codeTextArray=currentArrayItem.text.split(/\r\n|\r|\n/);
+            var rect=VG.Core.Rect();
+
+            VG.context.workspace.canvas.pushFont( currentGroupItem.appEdit.font );
+
+            // CodeEdits textLineRect only has its height.
+            rect.height=this.elements.code.verticalExpanding ? 
+                            Math.min((codeTextArray.length +1 )* VG.context.workspace.canvas.getLineHeight() + 10, 250) : 
+                            Math.min( this.elements.code.maxHeight, codeTextArray.length * VG.context.workspace.canvas.getLineHeight());
+
+            VG.context.workspace.canvas.popFont( currentGroupItem.appEdit.font );
+
+            currentArrayItem.textLineRects.push(rect);
+
+            ++tIndex;
+            continue;
+        }        
+
         if( this.textGroupArray[gIndex].groupModifier === "Image" ) {
 
             var rect=VG.Core.Rect();
@@ -612,25 +643,43 @@ VG.UI.HtmlView.prototype.processHtml=function()
         var textGroup=this.textGroupArray[j];
         textGroup.numTextLines=0;
 
-        if( textGroup.groupModifier === "Code" || textGroup.groupModifier === "Image" )
+        if( textGroup.groupModifier === "Code" || textGroup.groupModifier === "AppEdit" || textGroup.groupModifier === "Image" )
         {
             // Html formatting is not allowed inside code.
             if(textGroup.numFormattedTexts > 1) throw 'Html Error, Html Formatting is not allowed inside code tags or image tags.';
 
-            textGroup.formattedTextArray[0].textLines.push(textGroup.formattedTextArray[0].text)
-
             if( textGroup.groupModifier === "Code" )
             {
+                if ( textGroup.codeEdit )
+                    continue;
+
                 textGroup.codeEdit = VG.UI.CodeEdit( textGroup.formattedTextArray[0].text );
                 textGroup.codeEdit.font=this.code.font;
 
                 this.childWidgets.push(textGroup.codeEdit);
             }
+            else if( textGroup.groupModifier === "AppEdit" )
+            {
+                if ( textGroup.appEdit )
+                    continue;
+
+                textGroup.appEdit = VG.UI.AppEditWidget( textGroup.formattedTextArray[0].text );
+                textGroup.appEdit.font=this.appedit.font;
+
+                //this.childWidgets.push(textGroup.appEdit);
+                for ( var i=0; i < textGroup.appEdit.childWidgets.length; ++i ) {
+                    this.childWidgets.push( textGroup.appEdit.childWidgets[i] );
+                }
+            }            
             else if( textGroup.groupModifier === "Image" )
             {
+                if ( textGroup.image )
+                    continue;
+
                 textGroup.image = VG.Utils.getImageByName(textGroup.formattedTextArray[0].image);
             }
 
+            textGroup.formattedTextArray[0].textLines.push(textGroup.formattedTextArray[0].text)
             textGroup.numTextLines=textGroup.formattedTextArray[0].textLines.length;
             numTextLines+=textGroup.numTextLines;
 
@@ -785,7 +834,7 @@ VG.UI.HtmlView.prototype.verifyScrollbar=function()
 
         }
 
-        if( this.textGroupArray[gIndex].groupModifier === "Code" )
+        if( this.textGroupArray[gIndex].groupModifier === "Code" || this.textGroupArray[gIndex].groupModifier === "AppEdit" )
         {
             this.totalItemHeight+=this.textGroupArray[gIndex].formattedTextArray[aIndex].textLineRects[tIndex].height 
                                     + this.elements.code.margin.top + this.elements.code.margin.bottom;
@@ -851,7 +900,7 @@ VG.UI.HtmlView.prototype.verifyScrollbar=function()
         this.needsVScrollbar=true;
 
     if ( this.needsVScrollbar && this.supportsScrollbars && !this.vScrollbar ) {
-        this.vScrollbar=VG.UI.Scrollbar( "HtmlView Scrollbar" );
+        this.vScrollbar=VG.UI.ScrollBar( "HtmlView Scrollbar" );
         this.vScrollbar.callbackObject=this;
     } 
 
@@ -866,21 +915,20 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
     this.rect.round(); // --- Make sure rect is integer only
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, this.body.bgColor );
 
-    if( !this.elements.body.noframe )
-        canvas.style.drawGeneralBorder( canvas, this );
-    else
-        this.contentRect=this.rect;
+    //TODO if( !this.elements.body.noframe ) canvas.style.drawGeneralBorder( canvas, this );
+    //else 
+        this.contentRect.copy( this.rect );
 
     if ( !this.textGroupArray.length ) return;
 
-    canvas.setClipRect( this.contentRect );
-    this.contentRect=this.contentRect.add( 4, 2, -8, -4 );
+    canvas.pushClipRect( this.contentRect );
+    this.contentRect=this.contentRect.shrink( 4, 2, this.contentRect );
 
     if ( !this.verified || canvas.hasBeenResized )
         this.verifyScrollbar();
 
     if ( this.needsVScrollbar )
-        this.contentRect.width-=canvas.style.skin.Scrollbar.Size + 2;
+        this.contentRect.width-=VG.UI.stylePool.current.skin.ScrollBar.Size;
 
     var paintRect=VG.Core.Rect( this.contentRect );
     paintRect.x=this.contentRect.x + this.elements.body.margin.left;
@@ -890,13 +938,13 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
     this.visibleHeight=0;
 
     var textColor;
-    if ( !this.disabled ) textColor=VG.context.style.skin.HtmlView.TextColor;
-    else textColor=VG.context.style.skin.HtmlView.TextColor;
+    if ( !this.disabled ) textColor=VG.UI.stylePool.current.skin.Widget.TextColor;
+    else textColor=VG.UI.stylePool.current.skin.Widget.TextColor;
 
     var tIndex=0;
     var aIndex=0;
     var gIndex=0;
-    var numContinueLines=0;  
+    var numContinueLines=0;
      
     for ( var i=0; i < this.numTextLines; ++i ) {
 
@@ -964,6 +1012,12 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
             paintRect.y+=this.elements.code.margin.top;
         }
 
+        if( currentGroupItem.groupModifier === "AppEdit" && currentGroupItem.appEdit ) {
+
+            paintRect.x+=this.elements.appedit.margin.left;
+            paintRect.y+=this.elements.appedit.margin.top;
+        }        
+
         if( currentGroupItem.groupModifier === "Image" && currentGroupItem.image ) {
 
             paintRect.x+=this.elements.image.margin.left;
@@ -985,10 +1039,26 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
 
                 paintRect.y+=paintRect.height + this.elements.code.margin.bottom;
 
-                canvas.setClipRect( this.contentRect );
+                //canvas.setClipRect( this.contentRect );todo
                 ++tIndex;
                 continue;
             }
+
+            if(currentGroupItem.groupModifier === "AppEdit" && currentGroupItem.appEdit ) {
+
+                var codeRect=VG.Core.Rect( paintRect );
+
+                codeRect.width-=codeRect.x - this.contentRect.x + this.elements.code.margin.right;
+
+                currentGroupItem.appEdit.rect.set(codeRect);
+                currentGroupItem.appEdit.paintWidget(canvas);
+
+                paintRect.y+=paintRect.height + this.elements.code.margin.bottom;
+
+                //canvas.setClipRect( this.contentRect );todo
+                ++tIndex;
+                continue;
+            }            
 
             if ( currentGroupItem.groupModifier === "Image" ) {
 
@@ -1028,8 +1098,8 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
             }
 
             //var fontModifier=currentArrayItem.getModifier("Font");
-            var textColor=VG.context.style.skin.HtmlView.TextColor;
-            var bgColor=VG.context.style.skin.Widget.BackgroundColor;
+            var textColor=VG.UI.stylePool.current.skin.Widget.TextColor;
+            var bgColor=VG.UI.stylePool.current.skin.Widget.BackgroundColor;
             var font=this.elements.body.font;
 
             font=currentArrayItem.font;
@@ -1107,7 +1177,7 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
         } else break;
     }
 
-    canvas.setClipRect( false );
+    canvas.popClipRect();
 
     if( this.needsVScrollbar ) {
 
@@ -1181,6 +1251,8 @@ VG.UI.HtmlView.prototype.mouseMove=function( event )
         ++tIndex;
     }
 
+    if ( this.needsVScrollbar && this.vScrollbar && this.vScrollbar.autoScrolling )
+        this.vScrollbar.mouseMove( event );
 };
 
 VG.UI.HtmlView.prototype.mouseDown=function( event )
@@ -1223,7 +1295,6 @@ VG.UI.HtmlView.prototype.mouseDown=function( event )
                     var link=linkModifier.hasAttrib("link") ? linkModifier.link : null;
 
                     if( link ) {
-
                         this.linkCallback( link );
                         return;  
                     } 
@@ -1233,6 +1304,9 @@ VG.UI.HtmlView.prototype.mouseDown=function( event )
 
         ++tIndex;
     }
+
+    if ( this.needsVScrollbar && this.vScrollbar )
+        this.vScrollbar.autoScrollStart( event );
 };
 
 VG.UI.HtmlView.prototype.mouseWheel=function( step )
@@ -1256,9 +1330,9 @@ VG.UI.HtmlView.prototype.mouseWheel=function( step )
 
 VG.UI.HtmlView.prototype.setVScrollbarDimensions=function( canvas )
 {
-    this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() + 2, this.contentRect.y, canvas.style.skin.Scrollbar.Size, this.contentRect.height );
+    this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() + 2, this.contentRect.y, VG.UI.stylePool.current.skin.ScrollBar.Size, this.contentRect.height );
     
-    this.vScrollbar.setScrollbarContentSize( this.totalItemHeight, this.contentRect.height );
+    this.vScrollbar.setScrollBarContentSize( this.totalItemHeight, this.contentRect.height );
 };
 
 // ----------------------------------------------------------------- VG.UI.HtmlView.TextGroup
@@ -1270,6 +1344,7 @@ VG.UI.HtmlView.TextGroupNames={
     "li" : "ListItem",
     "p" : "Paragraph",
     "code" : "Code",
+    "appedit" : "AppEdit",
     "img" : "Image"
 }
 
@@ -1300,9 +1375,9 @@ VG.UI.HtmlView.FormattedText=function( text, options )
 
     if ( !options ) options="";
 
-    this.font = options.font ? options.font : VG.context.style.skin.HtmlView.DefaultFont;
+    this.font = options.font ? options.font : VG.UI.stylePool.current.skin.Widget.Font;
     this.size = options.font ? options.font.size : this.font.size;
-    this.color = options.color ? options.color : VG.context.style.skin.HtmlView.TextColor;
+    this.color = options.color ? options.color : VG.UI.stylePool.current.skin.Widget.TextColor;
 
     this.textModifiers = options.modifiers ? options.modifiers : [];
 

@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 // Web specific Implementations
@@ -49,7 +52,7 @@ VG.sendBackendRequest=function( url, parameters, callback, type, error_callback 
     var request = new VG.ajaxRequest();
 
     request.withCredentials = true;
- 
+
     request.onreadystatechange = function() {
         if (request.readyState == 4) {
             if ( request.status == 200 || window.location.href.indexOf("http") ==-1 ) {
@@ -243,6 +246,31 @@ VG.compressImage=function( image )
     return ctx.canvas.toDataURL();// "image/jpeg" );
 };
 
+VG.loadStyleSVG=function( style, svgName, callback ) 
+{
+    var request = new VG.ajaxRequest();
+
+    request.withCredentials = true;
+
+    request.onreadystatechange = function() {
+        if (request.readyState == 4) 
+        {
+            if ( request.status == 200 || window.location.href.indexOf("http") ==-1 ) {
+                VG.Core.SVG( svgName, request.responseText, 20 );
+            }
+        }
+    };
+
+    var path;
+
+    if ( VG.localVGLibPrefix ) path=VG.localVGLibPrefix + "vglib/ui/styles/" + style + "/svg/" + svgName;
+    else path="vglib/ui/styles/" + style + "/svg/" + svgName;
+
+    request.open( "GET", path, true );
+    request.setRequestHeader( "Content-type", "application/json;charset=UTF-8" );
+    request.send();// parameters );    
+};
+
 VG.loadStyleImage=function( style, imageName, callback ) 
 {
     var image=new Image();
@@ -306,7 +334,7 @@ VG.clipboardPasteDataForType=function( type )
     return null;
 };
 
-VG.gotoWebLink=function( link )
+VG.gotoUrl=function( link )
 {
     window.open( link );    
 };

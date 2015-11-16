@@ -442,15 +442,39 @@ VG.Nodes.NodeImage=function()
 
     // --- Terminals
 
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Sample2D, "out", function( vector ) {
+    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Sample2D, "sample", function( vector ) {
+        
+		var image=this.container.getParam( "image" ).value;
+        
+		if (image.width && image.height) {
+			image.getPixel(vector.x, vector.y, this.color);
+			return this.color;
+		} else
+		{
+			return null;
+		}
+	}.bind( this ) ) );
 
-        var image=this.container.getParam( "image" ).value;
+    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Texture, "texture", function(w, h, reference) {
+		// w : width to output
+		// h : height to output
+		// reference : reference image to output
+        
+		var image=this.container.getParam( "image" ).value;
+		if (!image || !image.width || !image.height)
+			return null;
 
-        if ( image.width && image.height ) {
-            image.getPixel( vector.x, vector.y, this.color );
-        } else this.color.set( 0, 0, 0, 1 );
+		for( var y=0; y < h; ++y )
+		{
+			for( var x=0; x < w; ++x )
+			{
+				image.getPixel(x, y, this.color);
+				reference.setPixel( x, y, this.color.r, this.color.g, this.color.b, this.color.a );
+			}
+		}
 
-        return this.color;
+		var texture = VG.Renderer().getTexture(reference);
+		return texture;
     }.bind( this ) ) );
 
     this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector2, "size", function( vector ) {
@@ -459,7 +483,7 @@ VG.Nodes.NodeImage=function()
         this.size.set( image.width, image.height );
 
         return this.size;
-    }.bind( this ) ) );    
+    }.bind( this ) ) );
 };
 
 VG.Nodes.NodeImage.prototype=VG.Nodes.Node();
@@ -481,7 +505,6 @@ VG.Nodes.NodeImage.prototype.updateFromData=function( data )
 };
 
 // ---
-
 VG.Nodes.availableNodes.set( "Primitive.Float", "NodeFloat" );
 VG.Nodes.availableNodes.set( "Primitive.Vector2", "NodeVector2" );
 VG.Nodes.availableNodes.set( "Primitive.Vector3", "NodeVector3" );

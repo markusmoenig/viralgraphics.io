@@ -75,6 +75,8 @@ namespace embree
     /*! Helper to call the post intersector of the shape instance,
      *  which will call the post intersector of the shape. */
     virtual void postIntersect(const Ray& ray, DifferentialGeometry& dg) const = 0;
+    
+    virtual Vector3f getLightPoint(Color& intensity) const = 0;
 
   public:
     std::vector<Ref<Light> > allLights;              //!< All lights of the scene

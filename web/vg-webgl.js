@@ -1,22 +1,26 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 
 // Web specific Implementations
 
@@ -29,29 +33,23 @@ VG.init=function()
 { 
     VG.WebGL.canvas=document.getElementById( 'webgl' );
     VG.WebGL.gl=WebGLUtils.setupWebGL( VG.WebGL.canvas );
+    VG.WebGL.samples=VG.WebGL.gl.getParameter( VG.WebGL.gl.SAMPLES );
 
     var enabledAttrs = [];
 
     VG.WebGL.enableAttrib = function(index)
     {
-        if (!enabledAttrs[index])
-        {
-            VG.WebGL.gl.enableVertexAttribArray(index);
-            enabledAttrs[index] = true;
-        }
+		VG.WebGL.gl.enableVertexAttribArray(index);
+		enabledAttrs.push(index);
     }
 
-    VG.WebGL.purgeAttrs = function()
+    VG.WebGL.purgeAttribs = function()
     {
-        //skip attrib 0 it should be always enabled
-        for (var i = 1; i < enabledAttrs.length; i++)
+        for (var i = 0; i < enabledAttrs.length; i++)
         {
-            if (enabledAttrs[i])
-            {
-                VG.WebGL.gl.disableVertexAttribArray(i);
-                enabledAttrs[i] = false;
-            }
+			VG.WebGL.gl.disableVertexAttribArray(enabledAttrs[i]);
         }
+		enabledAttrs = [];
     }
 }
 
@@ -92,37 +90,27 @@ VG.GPUBuffer = function(type, size, dynamic, isIndexBuffer)
     {
     case VG.Type.Float:
         this.elemType = gl.FLOAT;
-        this.data = new Float32Array(size); 
         break;
     case VG.Type.Uint8: 
         this.elemType = gl.UNSIGNED_BYTE;
-        this.data = new Uint8Array(size); 
         break;
     case VG.Type.Uint16:
         this.elemType = gl.UNSIGNED_SHORT;
-        this.data = new Uint16Array(size); 
         break;
     case VG.Type.Uint32:
         this.elemType = gl.UNSIGNED_INT;
-        this.data = new Uint32Array(size); 
         break;
     }
 
+    this.dataBuffer=VG.Core.TypedArray( type, size );
 
-    if ((this.getStride() * this.getSize()) % 16 != 0) VG.log("Warning: VG.GPUBuffer is not 16-byte alligned");
+
+    if ((this.getStride() * this.dataBuffer.getSize()) % 16 != 0) VG.log("Warning: VG.GPUBuffer is not 16-byte alligned");
 
     //This shouldn't happend in native code as the enum is constant
-    if (!this.data) throw "Data is null, unkown/invalid type?";
+    if (!this.dataBuffer.data) throw "Data is null, unkown/invalid type?";
 
     VG.Renderer().addResource(this);
-}
-
-VG.GPUBuffer.prototype.getSize = function()
-{
-    /** Returns the size (not in bytes but elements)
-     *  @returns {number}
-     *  */
-    return this.data.length;
 }
 
 VG.GPUBuffer.prototype.getStride = function()
@@ -131,23 +119,16 @@ VG.GPUBuffer.prototype.getStride = function()
      *  @returns {number}
      *  */
 
-    return this.data.BYTES_PER_ELEMENT;
+    return this.dataBuffer.data.BYTES_PER_ELEMENT;
 }
 
-VG.GPUBuffer.prototype.setBuffer = function(index, value)
+VG.GPUBuffer.prototype.getDataBuffer = function()
 {
-    /** Sets the buffer data by index
-     *  @param {number} index - The index in the buffer, must be < size 
-     *  @param {*} */
-    this.data[index] = value;
-}
+    /** Returns the VG.Core.TypedArray which contains the data for this buffer.
+     *  @returns {VG.Core.TypedArray}
+     *  */
 
-VG.GPUBuffer.prototype.getBuffer = function(index)
-{
-    /** Gets the buffer data by index
-     *  @param {number} index - The index in the buffer, must be < size 
-     *  @return {*} */
-    return this.data[index];
+    return this.dataBuffer;
 }
 
 VG.GPUBuffer.prototype.bind = function()
@@ -181,7 +162,7 @@ VG.GPUBuffer.prototype.update = function(offset, count, nobind)
 
     if (!count)
     {
-        count = this.data.length;
+        count = this.dataBuffer.data.length;
     }
 
     //On native code, check for offset + cout overflow, or it will crash
@@ -189,13 +170,13 @@ VG.GPUBuffer.prototype.update = function(offset, count, nobind)
     //this does not allocate a new buffer, just a hack for webgl (subarray returns a view)
     //for native opengl would be  glBufferSubData(target, offset, count, dataPtr); in BYTES!
     
-    if (count >= this.data.length)
+    if (count >= this.dataBuffer.data.length)
     {
-        gl.bufferData(this.target, this.data, this.usage);
+        gl.bufferData(this.target, this.dataBuffer.data, this.usage);
     }
     else
     {
-        var data = this.data.subarray(offset, count);
+        var data = this.dataBuffer.data.subarray(offset, count);
 
         gl.bufferSubData(this.target, offset, data);
     }
@@ -215,7 +196,7 @@ VG.GPUBuffer.prototype.create = function()
     this.id = gl.createBuffer();
 
     this.bind();
-    gl.bufferData(this.target, this.data, this.usage);
+    gl.bufferData(this.target, this.dataBuffer.data, this.usage);
 }
 
 VG.GPUBuffer.prototype.destroy = function()
@@ -226,6 +207,7 @@ VG.GPUBuffer.prototype.destroy = function()
     var gl = VG.WebGL.gl;
 
     gl.deleteBuffer(this.id);
+    delete this.dataBuffer;
 
     this.id = 0;
 }
@@ -251,68 +233,40 @@ VG.GPUBuffer.prototype.vertexAttrib = function(index, size, norm, stride, offset
 
     VG.WebGL.enableAttrib(index);
     gl.vertexAttribPointer(index, size, this.elemType, norm, stride, offset);
-} 
-
-VG.GPUBuffer.prototype.draw = function(primType, offset, count, nobind)
-{
-    /** Draws primitives
-     *  @param {enum} primType - Primitive type VG.Primitive.Triangles, VG.Primitive.Lines VG.Primitive.TriangleStip VG.Primitive.LineStrip 
-     *  @param {number} offset - The offset or start index 
-     *  @param {number} count - The count from the offset on 
-     *  @param {bool} nobind - If true the buffer wont be binded
-     *  */
-    var gl = VG.WebGL.gl;
-
-    if (!nobind)
-    {
-        this.bind();
-    }
-
-    var mode = gl.TRIANGLES;
-
-    switch (primType)
-    {
-    case VG.Renderer.Primitive.Lines: mode = gl.LINES; break;
-    case VG.Renderer.Primitive.LineStrip: mode = gl.LINE_STRIP; break;
-    case VG.Renderer.Primitive.TriangleStrip: mode = gl.TRIANGLE_STRIP; break;
-    }
-
-    gl.drawArrays(mode, offset, count); 
-    VG.WebGL.purgeAttrs();
 }
 
-VG.GPUBuffer.prototype.drawIndexed = function(primType, offset, count, indexBuffer, nobind)
+VG.GPUBuffer.prototype.purgeAttribs = function()
 {
-    /** Draws indexed primitives
+    /** Disables all vertex attibutes in shader
+	 */
+    VG.WebGL.purgeAttribs();
+}
+
+VG.GPUBuffer.prototype.drawBuffer = function(primType, offset, count, indexed, elemType)
+{
+    /** Draws primitives, buffer must be bind before.
      *  @param {enum} primType - Primitive type VG.Primitive.Triangles, VG.Primitive.Lines VG.Primitive.TriangleStip VG.Primitive.LineStrip 
      *  @param {number} offset - The index offset or start index 
      *  @param {number} count - The index count from the offset on
-     *  @param {enum} indexType - The index type: VG.Type.Uint8 or VG.Type.Uint16 
-     *  @param {VG.GPUBuffer} indexBuffer - The index buffer
-     *  @param {bool} nobind - If true no buffer will be binded including the index buffer
+     *  @param {boolean} indexed - If true call to drawElements(), else call to drawArrays().
+	 *  @param {enume} elemType - The element type for drawElements()
      *  */
-    var gl = VG.WebGL.gl;   
+    var gl = VG.WebGL.gl;
 
     var mode = gl.TRIANGLES;
-
-    if (!nobind)
-    {
-        this.bind();
-        indexBuffer.bind();
-    }
-
     switch (primType)
     {
     case VG.Renderer.Primitive.Lines: mode = gl.LINES; break;
     case VG.Renderer.Primitive.LineStrip: mode = gl.LINE_STRIP; break;
     case VG.Renderer.Primitive.TriangleStrip: mode = gl.TRIANGLE_STRIP; break;
+        case VG.Renderer.Primitive.Points: mode = gl.POINTS; break;
     }
 
-    gl.drawElements(mode, count, indexBuffer.elemType, offset);
-    VG.WebGL.purgeAttrs();
+	if (indexed)
+		gl.drawElements(mode, count, elemType, offset);
+	else
+		gl.drawArrays(mode, offset, count);
 }
-
-
 
 
 
@@ -412,7 +366,7 @@ VG.Shader.prototype.create = function()
 
     if (!gl.getProgramParameter(this.id, gl.LINK_STATUS))
     {
-        var error = gl.getProgramInfoLog(program);
+        var error = gl.getProgramInfoLog(this.id);
 
         this.destroy();
         
@@ -569,6 +523,23 @@ VG.Shader.prototype.setFloat = function(uniform, value)
     }
 }
 
+VG.Shader.prototype.setFloatArray = function(uniform, value)
+{
+    /** Sets single float array, the shader must be binded.
+     *  @param {number | string} uniform - Takes either a location/index or the name
+     *  @param {float[] array} value - A single float array
+     *  */
+
+    var gl = VG.WebGL.gl;
+
+    if (!(uniform instanceof WebGLUniformLocation))
+    {
+        uniform = this.getUniform(uniform);
+    }
+
+	gl.uniform1fv(uniform, value);
+}
+
 VG.Shader.prototype.setTexture = function(uniform, texture, slot)
 {
     /** Sets a texture
@@ -659,6 +630,23 @@ VG.Shader.prototype.setInt = function(uniform, value)
     }
 }
 
+VG.Shader.prototype.setBool = function(uniform, value)
+{
+    /** Sets single boolean, the shader must be binded
+     *  @param {number | string} uniform - Takes either a location/index or the name
+     *  @param {boolean} value - A single boolean value
+     *  */
+
+    var gl = VG.WebGL.gl;
+
+    if (!(uniform instanceof WebGLUniformLocation))
+    {
+        uniform = this.getUniform(uniform);
+    }
+	
+	gl.uniform1i(uniform, value ? 1 : 0);
+}
+
 VG.Shader.prototype.setMatrix = function(uniform, value, transpose)
 {
     /** Sets a matrix from a float array, the shader must be binded
@@ -697,17 +685,6 @@ VG.Shader.prototype.setMatrix = function(uniform, value, transpose)
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
 //TODO add option to provide with custom/pre-generated mipmaps
 VG.Texture = function(images, cube)
 {
@@ -734,12 +711,13 @@ VG.Texture = function(images, cube)
      * @member {enum}*/
     this.filtering = VG.Texture.Filter.None;
 
-    this.initW = images[0].realWidth;
-    this.initH = images[0].realHeight;
-
+    var image = images[0];
+    this.initialRealWidth = image.getRealWidth();
+    this.initialRealHeight = image.getRealHeight();
+    this.initialWidth = image.getWidth();
+    this.initialHeight = image.getHeight();
 
     var gl = VG.WebGL.gl;
-
 
     this.target = cube ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D;
 
@@ -750,6 +728,44 @@ VG.Texture = function(images, cube)
     this.id = 0;
     VG.Renderer().addResource(this);
 }
+
+VG.Texture.prototype.identifyTexture=function()
+{
+    /** Identify if this is texture on outside of web library.
+     */
+};
+
+VG.Texture.prototype.getRealWidth=function()
+{
+    /** Get the real width of the image (power of two).
+	 * @returns {Number}
+     */    
+    return this.initialRealWidth;
+};
+
+VG.Texture.prototype.getRealHeight=function()
+{
+    /** Get the real height of the image (power of two).
+	 * @returns {Number}
+     */    
+    return this.initialRealHeight;
+};
+
+VG.Texture.prototype.getWidth=function()
+{
+    /** Get the user specified width of the Image.
+	 * @returns {Number}
+     */
+    return this.initialWidth;
+};
+
+VG.Texture.prototype.getHeight=function()
+{
+    /** Get the user specified height of the Image.
+	 * @returns {Number}
+     */
+    return this.initialHeight;
+};
 
 VG.Texture.prototype.bind = function()
 {
@@ -809,16 +825,14 @@ VG.Texture.prototype.create = function()
 
     gl.texParameteri(this.target, gl.TEXTURE_WRAP_S, wrapS);
     gl.texParameteri(this.target, gl.TEXTURE_WRAP_T, wrapT);
-    
 
     var image = this.images[0];
-
-
-    var w = image.realWidth;
-    var h = image.realHeight; 
-
-    this.initW = w;
-    this.initH = h;    
+    this.initialRealWidth = image.getRealWidth();
+    this.initialRealHeight = image.getRealHeight();
+    this.initialWidth = image.getWidth();
+    this.initialHeight = image.getHeight();
+    var w = image.getRealWidth();
+    var h = image.getRealHeight(); 
 
     if (this.target == gl.TEXTURE_CUBE_MAP)
     {
@@ -867,7 +881,7 @@ VG.Texture.prototype.update = function(x, y, w, h)
 
 
     //if the dimmension has changed, recreate the texture from scratch
-    if (imW != this.initW || imH != this.initH)
+    if (imW != this.initialRealWidth || imH != this.initialRealHeight)
     {
         this.destroy();
         this.create();
@@ -933,19 +947,18 @@ VG.RenderTarget = function(w, h, main)
 
     this.main = main;
 
-    this.autoResize = w === undefined || h === undefined;
-
     this.id = 0;
     this.rbid = 0;
 
     if (main)
     {
-        //force autoResize if this is a main frame buffer
+        // force autoResize if this is a main frame buffer
         this.autoResize = true;
     }
 
-    //this holds the texture
+    // this holds the texture
     this.texid = 0;
+
     VG.Renderer().addResource(this);
 }
 
@@ -997,6 +1010,39 @@ VG.RenderTarget.prototype.create = function()
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 }
 
+VG.RenderTarget.prototype.getRealWidth=function()
+{
+    /** Get the real width of the image (power of two).
+	 * @returns {Number}
+     */    
+    return this.w;
+};
+
+VG.RenderTarget.prototype.getRealHeight=function()
+{
+    /** Get the real height of the image (power of two).
+	 * @returns {Number}
+     */    
+    return this.h;
+};
+
+VG.RenderTarget.prototype.getWidth=function()
+{
+    /** Get the user specified width of the Image.
+	 * @returns {Number}
+     */
+
+    return this.imageWidth ? this.imageWidth : this.w;
+};
+
+VG.RenderTarget.prototype.getHeight=function()
+{
+    /** Get the user specified height of the Image.
+	 * @returns {Number}
+     */
+    return this.imageHeight ? this.imageHeight : this.h;
+};
+
 VG.RenderTarget.prototype.destroy = function()
 {
     /** Realeses the frame buffer from gpu */
@@ -1046,6 +1092,41 @@ VG.RenderTarget.prototype.bind = function()
     }
 }
 
+VG.RenderTarget.prototype.fillPixelBuffer = function( rect, typedArray )
+{
+    /** Fills the given typed array with raw pixel data from the render target. The rect parameter can be either null / undefined if the whole rendertarget
+      * data should be copied or a VG.Core.Rect structure if only a certain rectangle is required.
+        @param {Object} An VG.Core.Rect object defining the pixel data to acquire or undefined if the whole pixel data should be copied.
+        @param {Uint8Array} A typed Uint8Array big enough to hold the pixel data to copy. The whole pixel data of the render target would have the size of getWidth() * getHeight() * 4.
+     */
+
+    var gl = VG.WebGL.gl;
+ 
+    var x=0, y=0, width=this.getWidth(), height=this.getHeight();
+    if ( rect ) {
+        x=rect.x; y=rect.y;
+        width=rect.width; height=rect.height;
+    }
+
+    gl.readPixels( x, this.getRealHeight() - (y+height), width, height, gl.RGBA, gl.UNSIGNED_BYTE, typedArray );
+}
+
+VG.RenderTarget.prototype.toImage = function() {
+    var gl = VG.WebGL.gl;
+    var buf = new Uint8Array( 4 * this.getWidth() * this.getHeight() );
+    gl.readPixels( 0, this.getRealHeight() - this.getHeight, this.getWidth(), this.getHeight(), gl.RGBA, gl.UNSIGNED_BYTE, buf );
+
+    var image = new VG.Core.Image(this.getWidth(), this.getHeight());
+    var index = 0;
+    for(var j = 0; j < this.getWidth(); j++){
+        for(var i = 0; i< this.getHeight(); i++){
+            image.setPixelRGBA(i, j, buf[index], buf[index+1], buf[index+2], buf[index+3]);
+            index += 4;
+        }
+    }
+    return image;
+}
+
 VG.RenderTarget.prototype.bindAsTexture = function()
 {
     /** Binds this frame buffer as a texture */
@@ -1069,6 +1150,20 @@ VG.RenderTarget.prototype.resize = function(w, h)
     this.create();
 }
 
+VG.RenderTarget.prototype.resetSize = function(w, h)
+{
+    /** Resets the frame buffer */
+
+	var recreate = !this.id || this.w != w || this.h != h;
+	if (recreate)
+		this.resize(w, h);
+	else {
+		this.bind();
+		this.clear();
+		this.unbind();
+	}
+}
+
 VG.RenderTarget.prototype.setViewport = function(rect)
 {
     /** Sets the drawing viewport for the next draw call and on 
@@ -1076,7 +1171,19 @@ VG.RenderTarget.prototype.setViewport = function(rect)
 
     var gl = VG.WebGL.gl;
 
-    gl.viewport(rect.x, rect.y, rect.width, rect.height);
+    gl.viewport(rect.x, this.h - rect.bottom(), rect.width, rect.height);
+}
+
+VG.RenderTarget.prototype.setViewportEx = function(x, y, width, height)
+{
+    /** Sets the drawing viewport for the next draw call and on 
+     *  @param {number} x - The x value 
+     *  @param {number} y - The y value 
+     *  @param {number} width - The width value
+     *  @param {number} height - The height value */
+
+    var gl = VG.WebGL.gl;
+    gl.viewport(x, this.h - (y+height), width, height);
 }
 
 VG.RenderTarget.prototype.setScissor = function(rect)
@@ -1084,15 +1191,17 @@ VG.RenderTarget.prototype.setScissor = function(rect)
     /** Sets the scissor for the next draw call and on, it discards pixels outside the rect
      *  @param {VG.Core.Rect} rect - The rect, if null/false then it clears it.*/
     var gl = VG.WebGL.gl;
-
-    if (rect)
+    
+    if (rect && rect.width > 0 && rect.height > 0)
     {
         gl.enable(gl.SCISSOR_TEST);
-        gl.scissor(rect.x, this.h - rect.bottom(), rect.width, rect.height);        
+        gl.scissor(rect.x, this.h - rect.bottom(), rect.width, rect.height);
     }
     else
     {
-        //disable scissor
+        if (rect && (rect.width < 0 || rect.height < 0)) {
+            VG.log("RenderTarget.setScissor(glScissor) gets invalid rect(x, y, width, height) paramters : rect(%f, %f, %f, %f\n" + rect);
+        }
         gl.disable(gl.SCISSOR_TEST);
     }
 }
@@ -1109,16 +1218,16 @@ VG.RenderTarget.prototype.clear = function(color, depth)
     if (color !== false)
     {
         if (color instanceof VG.Core.Color)
-        {
             gl.clearColor(color.r, color.g, color.b, color.a);
-        }
 
         clearBits |= gl.COLOR_BUFFER_BIT;
     }
 
     if (depth !== false)
     {
-        gl.clearDepth(depth);
+		if (depth)
+			gl.clearDepth(depth);
+        
         clearBits |= gl.DEPTH_BUFFER_BIT;
     }
 
@@ -1126,4 +1235,13 @@ VG.RenderTarget.prototype.clear = function(color, depth)
     gl.clear(clearBits);
 }
 
-
+VG.RenderTarget.prototype.checkStatusComplete = function()
+{
+    /**
+     * Check status for complete draw/read
+     * see: https://www.opengl.org/sdk/docs/man3/xhtml/glCheckFramebufferStatus.xml
+     * @return {Boolean} true if gl draw/read call complete
+     */
+    var gl = VG.WebGL.gl;
+    return gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+};

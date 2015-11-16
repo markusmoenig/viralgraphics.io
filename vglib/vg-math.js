@@ -83,7 +83,6 @@ VG.Math.Matrix4.prototype.concat = function(other) {
       b[i] = e[i];
     }
   }
-  
   for (i = 0; i < 4; i++) {
     ai0=a[i];  ai1=a[i+4];  ai2=a[i+8];  ai3=a[i+12];
     e[i]    = ai0 * b[0]  + ai1 * b[1]  + ai2 * b[2]  + ai3 * b[3];
@@ -91,27 +90,47 @@ VG.Math.Matrix4.prototype.concat = function(other) {
     e[i+8]  = ai0 * b[8]  + ai1 * b[9]  + ai2 * b[10] + ai3 * b[11];
     e[i+12] = ai0 * b[12] + ai1 * b[13] + ai2 * b[14] + ai3 * b[15];
   }
-  
   return this;
 };
 VG.Math.Matrix4.prototype.multiply = VG.Math.Matrix4.prototype.concat;
 
 /**
  * Multiply the three-dimensional vector.
- * @param pos  The multiply vector
- * @return The result of multiplication(Float32Array)
+ * This assume the vector is direction (NOT position).
+ * @param pos {VG.Math.Vector3} The multiply vector
+ * @return {VG.Math.Vector3} The result of multiplication
  */
 VG.Math.Matrix4.prototype.multiplyVector3 = function(pos) {
-  var e = this.elements;
-  var p = pos.elements;
-  var v = new Vector3();
-  var result = v.elements;
+    var e = this.elements;
+    var p = [pos.x, pos.y, pos.z];
+    var v = new VG.Math.Vector3();
 
-  result[0] = p[0] * e[0] + p[1] * e[4] + p[2] * e[ 8] + e[11];
-  result[1] = p[0] * e[1] + p[1] * e[5] + p[2] * e[ 9] + e[12];
-  result[2] = p[0] * e[2] + p[1] * e[6] + p[2] * e[10] + e[13];
+    v.x = p[0] * e[0] + p[1] * e[4] + p[2] * e[ 8] + e[12]; // was: e[11];
+    v.y = p[0] * e[1] + p[1] * e[5] + p[2] * e[ 9] + e[13]; // was: e[12];
+    v.z = p[0] * e[2] + p[1] * e[6] + p[2] * e[10] + e[14]; // was: e[13];
+    return v;
+};
 
-  return v;
+VG.Math.Matrix4.prototype.multiplyDirection = function (dir) {
+  /**
+   * transform a direction vector with this matrix.
+   * @param dir {VG.Math.Vector3} direction
+   * @return {VG.Math.Vector3} the transformed direction.
+   */
+    return this.multiplyVector3(dir);
+};
+
+VG.Math.Matrix4.prototype.multiplyPosition = function(pos) {
+  /**
+   * transform a position vector with this matrix.
+   * @param pos {VG.Math.Vector3} position
+   * @return {VG.Math.Matrix3} the transformed position.
+   */
+    var out = this.multiplyDirection(pos);
+    var e = this.elements;
+    var w = pos.x * e[3] + pos.y * e[7] + pos.z * e[11] + e[15];
+    out.mul(1/w);
+    return out;
 };
 
 /**
@@ -682,30 +701,34 @@ VG.Math.Matrix4.prototype.dropShadowDirectionally = function(normX, normY, normZ
 //FROM HERE VG'S CODE
 
 /*
- * (C) Copyright 2014, 2015 Luis Jimenez <kuko@kvbits.com>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 
 //TODO implement own Matrix4
 
 VG.Math.Matrix4.prototype.transformVectorArray=function(p, normal)
 {
-    /** Transform a single vector 3/4 array 
+    /** Transform a single vector 3 or 4 array 
      *  @param {Array} p - The vector array 
      *  @param {Bool} normal - Determines if the vector is a normal, must be 3 element long */
     var e = this.elements;
@@ -719,16 +742,15 @@ VG.Math.Matrix4.prototype.transformVectorArray=function(p, normal)
     {
         if (normal)
         {
-            x = p[0] * e[0] + p[1] * e[4] + p[2] * e[ 8] + 0 * e[12];
-            y = p[0] * e[1] + p[1] * e[5] + p[2] * e[ 9] + 0 * e[13];
-            z = p[0] * e[2] + p[1] * e[6] + p[2] * e[10] + 0 * e[14];
-            w = p[0] * e[3] + p[1] * e[7] + p[2] * e[11] + 0 * e[15];
+            x = p[0] * e[0] + p[1] * e[4] + p[2] * e[ 8];
+            y = p[0] * e[1] + p[1] * e[5] + p[2] * e[ 9];
+            z = p[0] * e[2] + p[1] * e[6] + p[2] * e[10];
         }
         else
         {
-            x = p[0] * e[0] + p[1] * e[4] + p[2] * e[ 8] + e[11];
-            y = p[0] * e[1] + p[1] * e[5] + p[2] * e[ 9] + e[12];
-            z = p[0] * e[2] + p[1] * e[6] + p[2] * e[10] + e[13];
+            x = p[0] * e[0] + p[1] * e[4] + p[2] * e[ 8] + e[12];
+            y = p[0] * e[1] + p[1] * e[5] + p[2] * e[ 9] + e[13];
+            z = p[0] * e[2] + p[1] * e[6] + p[2] * e[10] + e[14];
         }
 
     }
@@ -745,7 +767,8 @@ VG.Math.Matrix4.prototype.transformVectorArray=function(p, normal)
     p[0] = x; 
     p[1] = y;
     p[2] = z;
-    if (p[3]) p[3] = w;
+    if (p[3])
+		p[3] = w;
 }
 
 VG.Math.Matrix4.prototype.mul=function(other)
@@ -1203,6 +1226,22 @@ VG.Math.Vector3.prototype.copy=function(other)
     return this;
 }
 
+VG.Math.Vector3.prototype.toArray = function()
+{
+    /** Returns array of all components.
+     *  @returns [x, y, z] */
+    return [this.x, this.y, this.z];
+}
+
+VG.Math.Vector3.prototype.getArray = function(array)
+{
+    /** set array of all components.
+     *  @param [x, y, z] array - array to set*/
+    array[0] = this.x;
+	array[1] = this.y;
+	array[2] = this.z;
+}
+
 VG.Math.Vector3.prototype.clone=function()
 {
     /** Returns a copy of this vector 
@@ -1459,7 +1498,35 @@ VG.Math.Vector3.prototype.computeNormal=function(p1, p2, p3)
     return this;
 }
 
+VG.Math.Vector3.prototype.cross=function(B)
+{
+    /**
+     * Compute cross product from vectors, this cross B.
+     * @param {VG.Math.Vector3} B - a vector
+     */
+    var A = this;
+    return new VG.Math.Vector3(
+        A.y * B.z - A.z * B.y,
+        A.z * B.x - A.x * B.z,
+        A.x * B.y - A.y * B.x
+    );
+};
 
+VG.Math.Vector3.prototype.transform=function(m, byVector)
+{
+    /** Transforms this vector by a matrix4 
+     *  @param {VG.Math.Matrix4} 
+     *  @returns this */
+    var p = [this.x, this.y, this.z];
+
+    m.transformVectorArray(p, byVector);
+
+    this.x = p[0];
+    this.y = p[1];
+    this.z = p[2];
+    
+	return this;
+}
 
 VG.Math.Vector3.Zero = new VG.Math.Vector3(0, 0, 0);
 VG.Math.Vector3.Up = new VG.Math.Vector3(0, 1, 0);
@@ -1530,10 +1597,22 @@ VG.Math.Vector4.prototype.transform=function(m)
     return this;
 }
 
+VG.Math.Vector4.prototype.toArray = function()
+{
+    /** Returns array of all components.
+     *  @returns [x, y, z, w] */
+    return [this.x, this.y, this.z, this.w];
+}
 
-
-
-
+VG.Math.Vector4.prototype.getArray = function(array)
+{
+    /** set array of all components.
+     *  @param [x, y, z, w] array - array to set*/
+    array[0] = this.x;
+	array[1] = this.y;
+	array[2] = this.z;
+	array[3] = this.w;
+}
 
 VG.Math.Aabb=function()
 {

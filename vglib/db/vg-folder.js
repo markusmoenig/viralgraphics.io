@@ -114,3 +114,19 @@ VG.DB.Folder.prototype.addContent=function( name, content, callback )
         } else if ( callback ) callback( false );
     }.bind( this ), "PUT" );
 };
+
+VG.DB.Folder.prototype.removeContent=function( id, callback )
+{
+    /**Removes content identified by id from the Folder.
+     * @param {number} id - The id of the content.
+     * @param {function} Callback - The callback to be called when the operation finishes. The first argument of the callback
+     * will be true if the upload succeeded, false otherwise.
+     */      
+    VG.sendBackendRequest( "/folder/" + this.id + "/content/" + id, "", function( responseText ) {
+        var response=JSON.parse( responseText );
+
+        if ( response.status === "ok" ) {
+            if ( callback ) callback( true );
+        } else if ( callback ) callback( false );
+    }.bind( this ), "DELETE" );
+};

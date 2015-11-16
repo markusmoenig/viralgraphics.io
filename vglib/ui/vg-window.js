@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 // ----------------------------------------------------------------- VG.UI.Widget
@@ -50,13 +53,10 @@ VG.UI.Window=function( title )
 
     this.dragOp=false;    
 
-    this.closeImage=VG.UI.Image();
-    this.closeImage.clicked=function() {
-        this.close( this );
-    }.bind( this );
+    this.closeRect=VG.Core.Rect();
+    this.supportsClose=true;
 
     this.childWidgets=[];
-    this.childWidgets.push( this.closeImage );
 };
 
 VG.UI.Window.prototype=VG.UI.Widget();
@@ -72,7 +72,7 @@ VG.UI.Window.prototype.setFocus=function()
 
 VG.UI.Window.prototype.calcSize=function( canvas )
 {
-    var size=VG.Core.Size( 0, 0 );
+    var size=this.preferredSize;
 
     if ( this.layout ) {
         var layoutSize=this.layout.calcSize( canvas );//VG.Core.Size( 0, 0 );
@@ -81,7 +81,7 @@ VG.UI.Window.prototype.calcSize=function( canvas )
         //layoutSize.height+=10;
 
         size.width=layoutSize.width;
-        size.height=VG.context.style.skin.Window.HeaderHeight + layoutSize.height;
+        size.height=VG.UI.stylePool.current.skin.Window.HeaderHeight + layoutSize.height;
 
         this.rect.width=size.width;
         this.rect.height=size.height;
@@ -115,11 +115,23 @@ VG.UI.Window.prototype.mouseMove=function( event )
         this.rect.y=this.dragOpPos.y + offsetY;
         VG.update();
     }
+
+    if ( this.closeRect.contains( event.pos ) )
+    {
+        if ( !this.insideCloseRect ) {
+            VG.update();
+            this.insideCloseRect=true;
+        }
+    } else if ( this.insideCloseRect )
+    {
+        VG.update();
+        this.insideCloseRect=false;        
+    }
 };
 
 VG.UI.Window.prototype.mouseDown=function( event )
 {
-    if ( event.pos.y >= this.rect.y && event.pos.y <= (this.rect.y + 40 ) ) {
+    if ( event.pos.y >= this.rect.y && event.pos.y <= (this.rect.y + VG.UI.stylePool.current.skin.Window.HeaderHeight ) ) {
 
         this.dragOp=true;
         this.dragOpStart.set( event.pos ); 
@@ -128,6 +140,10 @@ VG.UI.Window.prototype.mouseDown=function( event )
 
         VG.context.workspace.mouseTrackerWidget=this;    
     }
+
+    if ( this.closeRect.contains( event.pos ) )
+        this.close( this );
+
     this.mouseIsDown=true;
 };
 
@@ -188,11 +204,11 @@ VG.UI.Dialog.prototype.calcSize=function( canvas )
 {
     if ( this.layout ) 
     {
-        this.layout.margin.set( 15, 12, 15, 6 );
+        //this.layout.margin.set( 15, 12, 15, 6 );
         this.layout.maximumSize.set( this.maximumSize.width, this.maximumSize.height );
     }
 
-    var size=VG.UI.Window.prototype.calcSize.call( this );
+    var size=VG.UI.Window.prototype.calcSize.call( this, canvas );
 
     this.buttonLayoutSize.set( this.buttonLayout.calcSize( canvas ) );
 
@@ -266,7 +282,9 @@ VG.UI.Dialog.prototype.paintWidget=function( canvas )
 {
     if ( !this.visible ) return;
 
-    VG.context.style.drawDialog( canvas, this );    
+    this.rect.round();
+    VG.UI.stylePool.current.drawWindow( this, canvas );
+
     //VG.context.style.drawWindowTitleCloseButton( canvas, this, this.closeButtonState, this.closeButtonRect );
 
     if ( this.layout ) {
@@ -303,13 +321,13 @@ VG.UI.StatusDialog=function( type, title, message )
     this.text=title;
     this.image=VG.UI.Image();
 
-    var imageName="vgstyle_status_success.png";
+    var imageName="status_success.png";
 
-    if ( type === VG.UI.StatusDialog.Type.Error ) imageName="vgstyle_status_error.png";
+    if ( type === VG.UI.StatusDialog.Type.Error ) imageName="status_error.png";
     else
-    if ( type === VG.UI.StatusDialog.Type.Warning ) imageName="vgstyle_status_warning.png";        
+    if ( type === VG.UI.StatusDialog.Type.Warning ) imageName="status_warning.png";        
     else
-    if ( type === VG.UI.StatusDialog.Type.Question ) imageName="vgstyle_status_question.png";    
+    if ( type === VG.UI.StatusDialog.Type.Question ) imageName="status_question.png";    
 
     this.image.image=VG.Utils.getImageByName( imageName );
     this.image.horizontalExpanding=false;

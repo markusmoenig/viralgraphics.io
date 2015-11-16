@@ -141,6 +141,19 @@ namespace embree
       type_o = types[i];
       return colors[i];
     }
+    
+    const BRDF* get(unsigned int i) const
+    {
+        return BRDFs[i];
+    }
+    
+    ~CompositedBRDF()
+    {
+        for (size_t i = 0; i < numBRDFs; i++)
+        {
+            delete BRDFs[i];
+        }
+    }
 
   private:
 

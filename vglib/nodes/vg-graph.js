@@ -54,6 +54,8 @@ VG.Nodes.Graph.prototype.addNode=function( node, customSetup )
 
         Object.defineProperty( node.data, "node", { enumerable: false, writable: true } );
 
+        while ( this.nodes.has( this.idCounter ) ) this.idCounter++;
+
         node.data.id=this.idCounter++;
         node.data.className=node.className;
         node.data.node=node;
@@ -166,6 +168,23 @@ VG.Nodes.Graph.prototype.load=function( data, displaceImage )
     return this.outputTerminal;
 };
 
+VG.Nodes.Graph.prototype.save=function()
+{
+    /**Saves the node data of this graph. This is very low level, in a GraphEdit environment this gets taken care of the node controller.
+     * @returns {string} data - The compressed data
+     */
+
+     var arr=[];
+
+    this.nodes.forEach(function(n) {
+        arr.push( n.data );
+    });
+    var data=JSON.stringify( arr );
+    data=VG.Utils.compressToBase64( data );
+
+    return data;
+};
+
 VG.Nodes.Graph.prototype.update=function()
 {
     /**Called when the graph has changed and the graph has to be rerun.
@@ -222,22 +241,47 @@ VG.Nodes.Graph.prototype.run=function( terminal, image, sizeVector )
     if ( terminal.type === VG.Nodes.Terminal.Type.Sample2D ) 
     {
         var vector=new VG.Math.Vector2();
+		var callbreak = false;
 
         if ( sizeVector && sizeVector.x && sizeVector.y && ( sizeVector.x !== image.width || sizeVector.y !== image.height ) )
         {
-            // --- Connected size input for preview, interpolate pixels for preview
-            var x_ratio = sizeVector.x / image.width;
-            var y_ratio = sizeVector.y / image.height; 
+            var width, height;
 
-            for ( var h=0; h < image.height; h++ ) 
+            var  aspectRatio=sizeVector.y / sizeVector.x;
+            if ( image.width * aspectRatio > image.height )
             {
-                for ( var w=0; w < image.width; w++ ) 
+                width = image.height / aspectRatio < sizeVector.x ? image.height / aspectRatio : sizeVector.x;
+            } else
+            {
+                width = image.width < sizeVector.x ? image.width : sizeVector.x;
+            }
+            height = Math.floor( aspectRatio * image.width );
+              
+            width=Math.floor( width );
+
+            var wOffset=Math.floor( ( (image.width - width)/2 ) );
+            var hOffset=Math.floor( ( (image.height - height)/2 ) );
+
+            // --- Connected size input for preview, interpolate pixels for preview
+            var x_ratio = sizeVector.x / width;//image.width;
+            var y_ratio = sizeVector.y / height;//image.height; 
+
+            for ( var h=0; h < height; h++ ) 
+            {
+                for ( var w=0; w < width; w++ ) 
                 {
                     vector.set( Math.floor(w*x_ratio), Math.floor(h*y_ratio) );
                     rc=terminal.onCall( vector );
-                    image.setPixel( w, h, rc.r, rc.g, rc.b, rc.a );                    
+					if (!rc)
+					{
+						callbreak = true;
+						break;
+					}
+                    image.setPixel( w + wOffset, h + hOffset, rc.r, rc.g, rc.b, rc.a );                    
                 }
-            }    
+				if (callbreak)
+					break;
+            }
         } else
         {
             // --- No connected size input for preview, just use preview dimensions
@@ -247,17 +291,34 @@ VG.Nodes.Graph.prototype.run=function( terminal, image, sizeVector )
                 {
                     vector.set( w, h );
                     rc=terminal.onCall( vector );
+					if (!rc)
+					{
+						callbreak = true;
+						break;
+					}
                     image.setPixel( w, h, rc.r, rc.g, rc.b, rc.a );
                 }
+				if (callbreak)
+					break;
             }
         }
 
         delete vector;
-        image.needsUpdate=true;
+		image.needsUpdate=true;
         rc=image;
+    } else
+    if ( terminal.type === VG.Nodes.Terminal.Type.Texture ) 
+    {
+		var renderer = VG.Renderer();
+		renderer.startPingPong(image.getRealWidth(), image.getRealHeight(), image.getWidth(), image.getHeight() );
+		rc = terminal.onCall(image.getWidth(), image.getHeight(), image);
+		if (rc)
+			renderer.endPingPong(rc);
     } else
     if ( terminal.type === VG.Nodes.Terminal.Type.Material ) 
     {
+        rc=terminal.onCall();
+/*
         var vector=new VG.Math.Vector3();
         for( var h=0; h < image.height; ++h )
         {
@@ -265,11 +326,18 @@ VG.Nodes.Graph.prototype.run=function( terminal, image, sizeVector )
             {
                 vector.set( w, h, 0 );
                 rc=terminal.onCall( vector );
+				if (!rc)
+				{
+					callbreak = true;
+					break;
+				}
                 image.setPixel( w, h, rc.color.r, rc.color.g, rc.color.b, rc.color.a );
             }
+			if (callbreak)
+				break;
         }
-        delete vector;        
-        image.needsUpdate=true;
+        delete vector;
+        image.needsUpdate=true;*/
     }     
 
     ms=Date.now() - ms;

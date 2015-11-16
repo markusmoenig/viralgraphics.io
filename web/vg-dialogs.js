@@ -1,22 +1,26 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 
 // Web specific Implementations
 
@@ -37,12 +41,16 @@ VG.handleImageDropEvent=function( event )
             match=true; 
     } else 
     if ( VG.fileDialog.fileType === VG.UI.FileDialog.Text ) {
-        if ( file.type.match( /text.*/ ) || file.type.match( /javascript.*/ ) )
-                match=true;
+        //if ( file.type.match( /text.*/ ) || file.type.match( /javascript.*/ ) )
+            match=true;
     }
     else 
     if ( VG.fileDialog.fileType === VG.UI.FileDialog.Project ) {
             match=true;
+    }
+    else
+    if ( VG.fileDialog.fileType === VG.UI.FileDialog.Binary ) {
+        match=true;
     }
 
     if ( match ) 
@@ -54,7 +62,7 @@ VG.handleImageDropEvent=function( event )
             VG.fileDialog.fileSelected( file.name, reader.result );
         }
 
-        if ( VG.fileDialog.fileType === VG.UI.FileDialog.Image )
+        if ( VG.fileDialog.fileType === VG.UI.FileDialog.Image || VG.fileDialog.fileType === VG.UI.FileDialog.Binary )
             reader.readAsDataURL( file ); 
         else reader.readAsText( file );
     }
@@ -89,6 +97,9 @@ VG.OpenFileDialog=function( fileType, callback )
     else
     if ( this.fileType === VG.UI.FileDialog.Project )
         dropAreaName="\n\n\nDrop Project Here\n\n\n";
+    else
+    if ( this.fileType === VG.UI.FileDialog.Binary )
+        dropAreaName="\n\n\nDrop File Here\n\n\n";
 
     this.dropLabel=VG.UI.Label( dropAreaName );
     this.dropLabel.frameType=VG.UI.Frame.Type.Box;
@@ -137,10 +148,10 @@ VG.OpenFileDialog=function( fileType, callback )
 
         if ( this.fileType === VG.UI.FileDialog.Image ) {
             if ( this.callback && this.image.image ) 
-                this.callback( this.image.image );
+                this.callback( this.fileName, this.image.image );
         } else {
             if ( this.callback && this.fileContent ) 
-                this.callback( this.fileName, this.textEdit.text );
+                this.callback( this.fileName, this.fileContent );
         }
         this.close( this );
     }.bind( this ) );
@@ -173,6 +184,84 @@ VG.OpenFileDialog.prototype.fileSelected=function( name, data )
         VG.fileDialog.image.image.name=name;
         VG.decompressImageData( data, VG.fileDialog.image.image );
     } else
+    if ( this.fileType === VG.UI.FileDialog.Binary )
+    { 
+        var Base={};
+        Base64.byteToCharMap_ = null;
+        Base64.charToByteMap_ = null;
+        Base64.byteToCharMapWebSafe_ = null;
+        Base64.charToByteMapWebSafe_ = null;
+        Base64.ENCODED_VALS_BASE =
+            'ABCDEFGHIJKLMNOPQRSTUVWXYZ' +
+            'abcdefghijklmnopqrstuvwxyz' +
+            '0123456789';
+
+        Base64.ENCODED_VALS = Base64.ENCODED_VALS_BASE + '+/=';
+        Base64.ENCODED_VALS_WEBSAFE = Base64.ENCODED_VALS_BASE + '-_.';
+
+        Base64.encodeByteArray = function(input, opt_webSafe) {
+            Base64.init_();
+
+            var byteToCharMap = opt_webSafe ?
+                                  Base64.byteToCharMapWebSafe_ :
+                                  Base64.byteToCharMap_;
+
+            var output = [];
+
+            for (var i = 0; i < input.length; i += 3) 
+            {
+                var byte1 = input[i];
+                var haveByte2 = i + 1 < input.length;
+                var byte2 = haveByte2 ? input[i + 1] : 0;
+                var haveByte3 = i + 2 < input.length;
+                var byte3 = haveByte3 ? input[i + 2] : 0;
+
+                var outByte1 = byte1 >> 2;
+                var outByte2 = ((byte1 & 0x03) << 4) | (byte2 >> 4);
+                var outByte3 = ((byte2 & 0x0F) << 2) | (byte3 >> 6);
+                var outByte4 = byte3 & 0x3F;
+
+                if (!haveByte3) {
+                    outByte4 = 64;
+
+                    if (!haveByte2) {
+                        outByte3 = 64;
+                    }
+                }
+
+                output.push(byteToCharMap[outByte1],
+                    byteToCharMap[outByte2],
+                    byteToCharMap[outByte3],
+                    byteToCharMap[outByte4]);
+            }
+
+            return output.join('');
+        };
+
+        Base64.init_ = function() {
+            if (!Base64.byteToCharMap_) {
+                Base64.byteToCharMap_ = {};
+                Base64.charToByteMap_ = {};
+                Base64.byteToCharMapWebSafe_ = {};
+                Base64.charToByteMapWebSafe_ = {};
+
+                // We want quick mappings back and forth, so we precompute two maps.
+                for (var i = 0; i < Base64.ENCODED_VALS.length; i++) {
+                    Base64.byteToCharMap_[i] =
+                    Base64.ENCODED_VALS.charAt(i);
+                    Base64.charToByteMap_[Base64.byteToCharMap_[i]] = i;
+                    Base64.byteToCharMapWebSafe_[i] =
+                    Base64.ENCODED_VALS_WEBSAFE.charAt(i);
+                    Base64.charToByteMapWebSafe_[
+                    Base64.byteToCharMapWebSafe_[i]] = i;
+                }
+            }
+        };
+
+        VG.fileDialog.textEdit.text=data;
+        VG.fileDialog.fileContent=Base64.encodeByteArray( data );
+        VG.fileDialog.fileName=name;
+    } else    
     {
         VG.fileDialog.textEdit.text=data;
 
@@ -224,6 +313,6 @@ VG.SaveFileDialog=function( fileType, name, data )
             }
             return data;
         }
-    }.bind( VG.context ), "Select", "Save", true );
+    }.bind( VG.context ), "Select", "Save", true, name );
     VG.context.workspace.showWindow( fileDialog );
 };

@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include <iostream>
@@ -26,23 +29,22 @@ JSHost *g_host=0;
 
 // --- Externals
 
-void registerVGFunctions( JSContext *cx, JSObject *vgObject );
+void registerVGFunctions( JSWrapper *wrapper );
+void registerVGFileFunctions( JSWrapper *wrapper );
 
-JSObject *registerShader( JSContext *cx, JSObject *vgObject );
-JSObject *registerGPUBuffer( JSContext *cx, JSObject *vgObject );
-JSObject *registerRenderTarget( JSContext *cx, JSObject *vgObject );
-JSObject *registerTexture( JSContext *cx, JSObject *vgObject );
+JSWrapperClass *registerShader( JSWrapper * );
+JSWrapperClass *registerGPUBuffer( JSWrapper * );
+JSWrapperClass *registerRenderTarget( JSWrapper *);
+JSWrapperClass *registerTexture( JSWrapper * );
 
 #ifdef __VG_WITH_EMBREE
-void registerTracer(JSContext *cx, JSObject *vgRenderObject);
+void registerTracer( JSWrapper * );
 #endif
 
 // ---
 
-JSHost::JSHost( JSContext *cx, RootedObject *global, const char *path ) : rcValue( cx )
+JSHost::JSHost( JSWrapper *jsWrapper, const char *path ) : m_jsWrapper( jsWrapper )
 {
-    this->cx=cx;
-    this->global=global;
     this->vgPath=path;  
     g_host=this; 
 }
@@ -84,10 +86,10 @@ bool JSHost::addVGLibSourceFile( const char *libSourceFile, bool absolutePath )
 
     // ---
 
-    RootedValue *value=this->executeScript( chars, libSourceFile );
+    bool rc=m_jsWrapper->execute( chars, NULL, libSourceFile );
     delete chars;
 
-    return true;
+    return rc;
 }
 
 bool JSHost::setupVG( void )
@@ -107,6 +109,8 @@ bool JSHost::setupVG( void )
     success=addVGLibSourceFile( "vglib/vg-undo.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/vg-controller.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/vg-font.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/vg-sax.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/vg-svg.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/vg-renderer.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/vg-canvas.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/vg-docs.js" ); if ( !success ) return false;
@@ -115,36 +119,31 @@ bool JSHost::setupVG( void )
 
     // --- Register Host Functions
 
-    RootedValue* rc=this->executeScript( "VG" );
-    JSObject *vgObject=&rc->toObject();
-
-    registerVGFunctions( cx, vgObject );
-
-    // --- Register Host Render functions
-
-    rc = this->executeScript("VG.Render");
-    JSObject *vgRenderObject = &rc->toObject();
+    registerVGFunctions( m_jsWrapper );
 
 #ifdef __VG_WITH_EMBREE
-    // --- Only register the tracer if we're linking against embree
-    registerTracer(cx, vgRenderObject);
+    // --- Register Host Render functions
+    registerTracer( m_jsWrapper );
 #endif
-
 
     // ---
 
     success=addVGLibSourceFile( "vglib/db/vg-db.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/db/vg-folder.js" ); if ( !success ) return false;
 
+    success=addVGLibSourceFile( "vglib/utils/vg-compressor.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/utils/vg-utils.js" ); if ( !success ) return false;
+
     success=addVGLibSourceFile( "vglib/ui/vg-defines.js" ); if ( !success ) return false;
-    success=addVGLibSourceFile( "vglib/ui/styles/visualgraphics/vg-style.js" ); if ( !success ) return false;
-    success=addVGLibSourceFile( "vglib/ui/styles/multimedia/vg-style.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/ui/styles/visualgraphics/vg-desktop.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/ui/styles/visualgraphics/desktop_gray/vg-skin.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/vg-widgets.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/vg-menu.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/vg-listwidget.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/vg-treewidget.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/vg-textwidgets.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/vg-htmlview.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/ui/vg-numericalwidgets.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/vg-toolbar.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/vg-toolpanel.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/ui/vg-layout.js" ); if ( !success ) return false;
@@ -164,33 +163,28 @@ bool JSHost::setupVG( void )
     success=addVGLibSourceFile( "vglib/nodes/vg-graph.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/nodes/vg-parameteredit.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/nodes/vg-graphedit.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/nodes/vg-materialwidget.js" ); if ( !success ) return false;
 
     success=addVGLibSourceFile( "vglib/render/vg-material.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/render/vg-pipeline.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/render/vg-scene.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/render/vg-camera.js" ); if ( !success ) return false;
     success=addVGLibSourceFile( "vglib/render/vg-mesh.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/render/vg-light.js" ); if ( !success ) return false;
+    success=addVGLibSourceFile( "vglib/render/vg-import.js" ); if ( !success ) return false;
 
-    success=addVGLibSourceFile( "vglib/utils/vg-compressor.js" ); if ( !success ) return false;
-    success=addVGLibSourceFile( "vglib/utils/vg-utils.js" ); if ( !success ) return false;
+    registerShader( m_jsWrapper );
+    m_jsWrapper->execute( "VG.Shader.Blend = { None: 0, Alpha: 1 } " );
+    registerGPUBuffer( m_jsWrapper );
+    registerRenderTarget( m_jsWrapper );
+    registerTexture( m_jsWrapper );
+    m_jsWrapper->execute( "VG.Texture.Wrap = { Clamp: 0, Repeat: 1 };" );
+    m_jsWrapper->execute( "VG.Texture.Filter = { None: 0, Linear: 1, Bilinear: 2, Trilinear: 3, Anisotropic: 4 };" );
 
-    registerShader( cx, vgObject );
-    this->executeScript( "VG.Shader.Blend = { None: 0, Alpha: 1 } " );
-    registerGPUBuffer( cx, vgObject );
-    registerRenderTarget( cx, vgObject );
-    registerTexture( cx, vgObject );
-    this->executeScript( "VG.Texture.Wrap = { Clamp: 0, Repeat: 1 };" );
-    this->executeScript( "VG.Texture.Filter = { None: 0, Linear: 1, Bilinear: 2, Trilinear: 3, Anisotropic: 4 };" );
+    // --- Register VG.File which is only available on Desktop Implementations
+
+    m_jsWrapper->execute( "VG.File={};" );
+    registerVGFileFunctions( m_jsWrapper );
 
     return success;
-}
-
-Rooted<Value> *JSHost::executeScript( const char *script, const char *fileName )
-{
-    MutableHandleValue v( &rcValue );
-
-    bool ok = JS_EvaluateScript( cx, *global, script, strlen(script), fileName, 1, v );
-
-    if ( !ok ) return 0;
-    return &rcValue;
 }

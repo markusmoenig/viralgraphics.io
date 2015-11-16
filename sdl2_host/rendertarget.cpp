@@ -1,307 +1,434 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include <iostream>
 
 #include "rendertarget.hpp"
+#include "jswrapper.hpp"
 #include "jshost.hpp"
 
-extern JSHost *g_host;
+extern JSWrapper *g_jsWrapper;
 
 // --------------------------------------------------------------- Member Functions
 
-bool RenderTarget_create(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION( RenderTarget_create )
 
-    RenderTarget *target=(RenderTarget *) JS_GetPrivate( &value.toObject() );
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
     target->create();
-    return true;
-}
 
-bool RenderTarget_destroy(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    RenderTarget *target=(RenderTarget *) JS_GetPrivate( &value.toObject() );
+JSWRAPPER_FUNCTION( RenderTarget_destroy )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
     target->destroy();
-    return true;
-}
 
-bool RenderTarget_dispose(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    RenderTarget *target=(RenderTarget *) JS_GetPrivate( &value.toObject() );
+JSWRAPPER_FUNCTION( RenderTarget_dispose )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
     target->dispose();
 
     // --- VG.Renderer().removeResource(this);
     
-    RootedValue *renderer=g_host->executeScript( "VG.Renderer()" );
-    RootedObject rendererObject( cx, &renderer->toObject() );
+    JSWrapperData rendererObject;
+    g_jsWrapper->execute( "VG.Renderer()", &rendererObject );
 
-    RootedValue rc( cx );
-    RootedValue thisValue( cx, value );
+    JSWrapperArguments arguments;
+    arguments.append( thisObject );    
 
-    bool ok=Call( cx, HandleObject( rendererObject ), "removeResource", HandleValueArray( thisValue ), MutableHandleValue( &rc ) );
+    JSWrapperData addObject;
+    rendererObject.object()->get( "removeResource", &addObject );
+    addObject.object()->call( &arguments, rendererObject.object() );
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
-bool RenderTarget_unbind(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION( RenderTarget_unbind )
 
-    RenderTarget *target=(RenderTarget *) JS_GetPrivate( &value.toObject() );
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
     target->unbind();
-    return true;
-}
 
-bool RenderTarget_bind(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    RenderTarget *target=(RenderTarget *) JS_GetPrivate( &value.toObject() );
+JSWRAPPER_FUNCTION( RenderTarget_bind )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
     target->bind();
-    return true;
-}
 
-bool RenderTarget_bindAsTexture(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    RenderTarget *target=(RenderTarget *) JS_GetPrivate( &value.toObject() );
+JSWRAPPER_FUNCTION( RenderTarget_fillPixelBuffer )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
+
+    if ( args.count() == 2 )
+    {
+        int x=0, y=0, width=target->getWidth(), height=target->getHeight();
+
+        if ( args[0].isObject() )
+        {
+            JSWrapperData data;
+            args[0].object()->get( "x", &data );
+            x=data.toNumber();
+            args[0].object()->get( "y", &data );
+            y=data.toNumber();            
+            args[0].object()->get( "width", &data );
+            width=data.toNumber();
+            args[0].object()->get( "height", &data );
+            height=data.toNumber();
+        }
+        
+        bool ok=args[1].object()->isTypedArray();
+        if ( ok ) {
+            unsigned int length; uint8_t *ptr;
+            args[1].object()->getAsUint8Array( &ptr, &length );
+            glReadPixels(x, target->getRealHeight()-(height+y), width, height, GL_RGBA, GL_UNSIGNED_BYTE, ptr );
+        }
+    }
+
+JSWRAPPER_FUNCTION_END
+
+JSWRAPPER_FUNCTION( RenderTarget_bindAsTexture )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
     target->bindAsTexture();
-    return true;
-}
 
-bool RenderTarget_resize(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    if ( argc == 2 )
+JSWRAPPER_FUNCTION( RenderTarget_resize )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
+
+    if ( args.count() == 2 )
+        target->resize( args[0].toNumber(), args[1].toNumber() );
+
+JSWRAPPER_FUNCTION_END
+
+JSWRAPPER_FUNCTION( RenderTarget_setViewport )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
+
+    if ( args.count() == 1 && args[0].isObject() )
     {
-        RenderTarget *target=(RenderTarget *) JS_GetPrivate( &value.toObject() );
-        target->resize( args[0].toInt32(), args[1].toInt32() );
+        double x, y, width, height;
+
+        JSWrapperData data;
+        args[0].object()->get( "x", &data );
+        x=data.toNumber();
+        args[0].object()->get( "y", &data );
+        y=data.toNumber();            
+        args[0].object()->get( "width", &data );
+        width=data.toNumber();
+        args[0].object()->get( "height", &data );
+        height=data.toNumber();
+
+        target->setViewport( x, y, width, height );     
     }
-    return true;
-}
 
-bool RenderTarget_setViewport(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    if ( argc == 1 && args[0].isObject() )
+JSWRAPPER_FUNCTION( RenderTarget_setViewportEx )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
+
+    if ( args.count() == 4 )
+        target->setViewport( args[0].toNumber(), args[1].toNumber(), args[2].toNumber(), args[3].toNumber() );     
+
+JSWRAPPER_FUNCTION_END
+
+JSWRAPPER_FUNCTION( RenderTarget_setScissor )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
+
+    if ( args.count() == 1 && args[0].isObject() )
     {
-        RenderTarget *target=(RenderTarget *) JS_GetPrivate( &value.toObject() );
-        RootedObject object(cx, &args[0].toObject() );
-        RootedValue x(cx), y(cx), width(cx), height(cx);
+        double x, y, width, height;
 
-        JS_GetProperty( cx, HandleObject(object), "x", MutableHandleValue(&x) );
-        JS_GetProperty( cx, HandleObject(object), "y", MutableHandleValue(&y) );
-        JS_GetProperty( cx, HandleObject(object), "width", MutableHandleValue(&width) );
-        JS_GetProperty( cx, HandleObject(object), "height", MutableHandleValue(&height) );   
+        JSWrapperData data;
+        args[0].object()->get( "x", &data );
+        x=data.toNumber();
+        args[0].object()->get( "y", &data );
+        y=data.toNumber();            
+        args[0].object()->get( "width", &data );
+        width=data.toNumber();
+        args[0].object()->get( "height", &data );
+        height=data.toNumber();
 
-        //printf( "setViewport %d, %d\n", width, height );
-
-        target->setViewport( x.toInt32(), y.toInt32(), width.toInt32(), height.toInt32() );     
+        target->setScissor( x, y, width, height );    
+    } else
+    {
+        target->setScissor( 0, 0, 0, 0 );
     }
-    return true;
-}
 
-bool RenderTarget_setScissor(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
-    RenderTarget *target=(RenderTarget *) JS_GetPrivate( &value.toObject() );
+JSWRAPPER_FUNCTION_END
 
-    if ( argc == 1 && args[0].isObject() )
-    {
-        RootedObject object(cx, &args[0].toObject() );
-        RootedValue x(cx), y(cx), width(cx), height(cx);
+JSWRAPPER_FUNCTION( RenderTarget_clear )
 
-        JS_GetProperty( cx, HandleObject(object), "x", MutableHandleValue(&x) );
-        JS_GetProperty( cx, HandleObject(object), "y", MutableHandleValue(&y) );
-        JS_GetProperty( cx, HandleObject(object), "width", MutableHandleValue(&width) );
-        JS_GetProperty( cx, HandleObject(object), "height", MutableHandleValue(&height) );   
-
-        target->setScissor( x.toInt32(), y.toInt32(), width.toInt32(), height.toInt32() );     
-    } else target->setScissor( 0, 0, 0, 0 );  
-
-    return true;
-}
-
-bool RenderTarget_clear(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
-    RenderTarget *target=(RenderTarget *) JS_GetPrivate( &value.toObject() );
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
 
     GLfloat r = -1;
     GLfloat g = -1;
     GLfloat b = -1;
     GLfloat a = -1;
-	
+    
     GLint depth=1.0;
 
-    if ( argc >= 1 && args[0].isObject() )
-    {
-        RootedObject object(cx, &args[0].toObject() );
-        RootedValue red(cx), green(cx), blue(cx), alpha(cx);
-
-        JS_GetProperty( cx, HandleObject(object), "r", MutableHandleValue(&red) );
-        JS_GetProperty( cx, HandleObject(object), "g", MutableHandleValue(&green) );
-        JS_GetProperty( cx, HandleObject(object), "b", MutableHandleValue(&blue) );
-        JS_GetProperty( cx, HandleObject(object), "a", MutableHandleValue(&alpha) );
-
-        r=red.toNumber(); g=green.toNumber(); b=blue.toNumber(); a=alpha.toNumber();
+    if ( args.count() >= 1 && args[0].isObject() ) {
+        JSWrapperData data;
+        args[0].object()->get("r", &data);
+        r=data.toNumber();
+        args[0].object()->get("g", &data);
+        g=data.toNumber();
+        args[0].object()->get("b", &data);
+        b=data.toNumber();
+        args[0].object()->get("a", &data);
+        a=data.toNumber();
     }
 
-    if ( argc >= 2 ) depth=args[1].toInt32();
-
+    if ( args.count() >= 2 && args[1].isNumber() ) depth=args[1].toNumber();
     target->clear( r, g, b, a, depth );
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
-// --------------------------------------------------------------- Properties
+JSWRAPPER_FUNCTION( RenderTarget_getRealWidth )
 
-bool GetRenderTargetProperty( JSContext *cx, Handle<JSObject *> object, Handle<jsid> id, MutableHandle<Value> value )
-{
-    RootedValue val(cx); JS_IdToValue( cx, id, MutableHandleValue(&val) );
-    JSString *propertyString = val.toString(); const char *propertyName=JS_EncodeString(cx, propertyString);   
-    //printf("GetRenderTargetProperty: %s\n", propertyName ); 
-    
-    RenderTarget *target=(RenderTarget *) JS_GetPrivate( object );
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
 
-    if ( !strcmp( propertyName, "w" ) ) {
-        value.set( INT_TO_JSVAL( target->w ) );
-    } else   
-    if ( !strcmp( propertyName, "h" ) ) {
-        value.set( INT_TO_JSVAL( target->h ) );
-    } else
-    if ( !strcmp( propertyName, "autoResize" ) ) {
-        value.set( BOOLEAN_TO_JSVAL( target->autoResize ) );
-    } else
-    if ( !strcmp( propertyName, "main" ) ) {
-        value.set( BOOLEAN_TO_JSVAL( target->main ) );
-    }  
+    JSWrapperData data; data.setNumber( target->getRealWidth() );
+    JSWRAPPER_FUNCTION_SETRC( data )
 
-    return true;    
-}
+JSWRAPPER_FUNCTION_END
 
-bool SetRenderTargetProperty( JSContext *cx, Handle<JSObject *> object, Handle<jsid> id, bool, MutableHandle<Value> value)
-{
-    RootedValue val(cx); JS_IdToValue( cx, id, MutableHandleValue(&val) );
-    JSString *propertyString = val.toString(); const char *propertyName=JS_EncodeString(cx, propertyString);    
-    //printf("SetRenderTargetProperty: %s\n", propertyName ); 
+JSWRAPPER_FUNCTION( RenderTarget_getRealHeight )
 
-    RenderTarget *target=(RenderTarget *) JS_GetPrivate( object );
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
 
-    if ( !strcmp( propertyName, "w" ) ) {
-        target->w=value.toInt32();
-    } else
-    if ( !strcmp( propertyName, "h" ) ) {
-        target->h=value.toInt32();
-    } else
-    if ( !strcmp( propertyName, "autoResize" ) ) {
-        target->autoResize=value.toBoolean();
-    } else
-    if ( !strcmp( propertyName, "main" ) ) {
-        target->main=value.toBoolean();
-    }
+    JSWrapperData data; data.setNumber( target->getRealHeight() );
+    JSWRAPPER_FUNCTION_SETRC( data )
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
-static JSFunctionSpec rendertarget_functions[] = {
-    JS_FS( "create", RenderTarget_create, 0, 0 ),
-    JS_FS( "destroy", RenderTarget_destroy, 0, 0 ),
-    JS_FS( "dispose", RenderTarget_dispose, 0, 0 ),
-    JS_FS( "unbind", RenderTarget_unbind, 0, 0 ),
-    JS_FS( "bind", RenderTarget_bind, 0, 0 ),
-    JS_FS( "bindAsTexture", RenderTarget_bindAsTexture, 0, 0 ),
-    JS_FS( "resize", RenderTarget_resize, 0, 0 ),
-    JS_FS( "setViewport", RenderTarget_setViewport, 0, 0 ),
-    JS_FS( "setScissor", RenderTarget_setScissor, 0, 0 ),
-    JS_FS( "clear", RenderTarget_clear, 0, 0 ),
+JSWRAPPER_FUNCTION( RenderTarget_getWidth )
 
-    JS_FS_END
-};
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
+
+    JSWrapperData data; data.setNumber( target->getWidth() );
+    JSWRAPPER_FUNCTION_SETRC( data )
+
+JSWRAPPER_FUNCTION_END
+
+JSWRAPPER_FUNCTION( RenderTarget_getHeight )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
+
+    JSWrapperData data; data.setNumber( target->getHeight() );
+    JSWRAPPER_FUNCTION_SETRC( data )
+
+JSWRAPPER_FUNCTION_END
+
+JSWRAPPER_FUNCTION( RenderTarget_resetSize )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
+
+    if ( args.count() == 2 )
+        target->resetSize( args[0].toNumber(), args[1].toNumber() );
+
+JSWRAPPER_FUNCTION_END
+
+JSWRAPPER_FUNCTION( RenderTarget_checkStatusComplete )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_FUNCTION_GETCLASS
+    bool status=target->checkStatusComplete();
+
+    JSWrapperData data; data.setBoolean( status );
+    JSWRAPPER_FUNCTION_SETRC( data )
+
+JSWRAPPER_FUNCTION_END
+
+// --------------------------------------------------------------- Getters
+
+JSWRAPPER_GETPROPERTY( GetRenderTargetProperty_w )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_PROPERTY_GETCLASS
+
+    JSWrapperData data; data.setNumber( target->w );
+    JSWRAPPER_GETPROPERTY_SETRC( data )
+
+JSWRAPPER_GETPROPERTY_END
+
+JSWRAPPER_GETPROPERTY( GetRenderTargetProperty_h )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_PROPERTY_GETCLASS
+
+    JSWrapperData data; data.setNumber( target->h );
+    JSWRAPPER_GETPROPERTY_SETRC( data )
+
+JSWRAPPER_GETPROPERTY_END
+
+JSWRAPPER_GETPROPERTY( GetRenderTargetProperty_autoResize )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_PROPERTY_GETCLASS
+
+    JSWrapperData data; data.setBoolean( target->autoResize );
+    JSWRAPPER_GETPROPERTY_SETRC( data )
+
+JSWRAPPER_GETPROPERTY_END
+
+JSWRAPPER_GETPROPERTY( GetRenderTargetProperty_main )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_PROPERTY_GETCLASS
+
+    JSWrapperData data; data.setBoolean( target->main );
+    JSWRAPPER_GETPROPERTY_SETRC( data )
+
+JSWRAPPER_GETPROPERTY_END
+
+JSWRAPPER_GETPROPERTY( GetRenderTargetProperty_imageWidth )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_PROPERTY_GETCLASS
+
+    JSWrapperData data; data.setNumber( target->imageWidth );
+    JSWRAPPER_GETPROPERTY_SETRC( data )
+
+JSWRAPPER_GETPROPERTY_END
+
+JSWRAPPER_GETPROPERTY( GetRenderTargetProperty_imageHeight )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_PROPERTY_GETCLASS
+
+    JSWrapperData data; data.setNumber( target->imageHeight );
+    JSWRAPPER_GETPROPERTY_SETRC( data )
+
+JSWRAPPER_GETPROPERTY_END
+
+// --------------------------------------------------------------- Setters
+
+JSWRAPPER_SETPROPERTY( SetRenderTargetProperty_w )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_PROPERTY_GETCLASS
+    target->w=data.toNumber();
+
+JSWRAPPER_SETPROPERTY_END
+
+JSWRAPPER_SETPROPERTY( SetRenderTargetProperty_h )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_PROPERTY_GETCLASS
+    target->h=data.toNumber();
+
+JSWRAPPER_SETPROPERTY_END
+
+JSWRAPPER_SETPROPERTY( SetRenderTargetProperty_autoResize )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_PROPERTY_GETCLASS
+    target->autoResize=data.toBoolean();
+
+JSWRAPPER_SETPROPERTY_END
+
+JSWRAPPER_SETPROPERTY( SetRenderTargetProperty_main )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_PROPERTY_GETCLASS
+    target->main=data.toBoolean();
+
+JSWRAPPER_SETPROPERTY_END
+
+JSWRAPPER_SETPROPERTY( SetRenderTargetProperty_imageWidth )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_PROPERTY_GETCLASS
+    target->imageWidth=data.toNumber();
+
+JSWRAPPER_SETPROPERTY_END
+
+JSWRAPPER_SETPROPERTY( SetRenderTargetProperty_imageHeight )
+
+    RenderTarget *target=(RenderTarget *) JSWRAPPER_PROPERTY_GETCLASS
+    target->imageHeight=data.toNumber();
+
+JSWRAPPER_SETPROPERTY_END
  
 // --------------------------------------------------------------- 
 
-JSClass RenderTargetClass = 
-{ 
-    "RenderTarget", JSCLASS_HAS_PRIVATE, JS_PropertyStub, NULL,
-    JS_PropertyStub, JS_StrictPropertyStub,
-    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL
-};
-
-bool RenderTargetConstructor( JSContext *cx, unsigned argc, jsval *vp )
-{
-    //printf( "RenderTarget Constructor!%d\n", argc );
-
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
-
-    JSObject *object = JS_NewObjectForConstructor( cx, &RenderTargetClass, args );
-    RootedObject obj(cx, object ); RootedValue v(cx, JS::UndefinedValue() );
-    JS_DefineFunctions( cx, HandleObject(obj), rendertarget_functions );
-    JS_DefineProperty( cx, HandleObject(obj), "w", HandleValue(&v), JSPROP_SHARED, (JSPropertyOp) GetRenderTargetProperty, (JSStrictPropertyOp) SetRenderTargetProperty );
-    JS_DefineProperty( cx, HandleObject(obj), "h", HandleValue(&v), JSPROP_SHARED, (JSPropertyOp) GetRenderTargetProperty, (JSStrictPropertyOp) SetRenderTargetProperty );
-    JS_DefineProperty( cx, HandleObject(obj), "autoResize", HandleValue(&v), JSPROP_SHARED, (JSPropertyOp) GetRenderTargetProperty, (JSStrictPropertyOp) SetRenderTargetProperty );
-    JS_DefineProperty( cx, HandleObject(obj), "main", HandleValue(&v), JSPROP_SHARED, (JSPropertyOp) GetRenderTargetProperty, (JSStrictPropertyOp) SetRenderTargetProperty );
+JSWRAPPER_CONSTRUCTOR( RenderTargetConstructor, "RenderTarget" )
 
     GLint w=0;
     GLint h=0;
     bool main=false;
 
-    if ( argc >= 1 ) w=args[0].toInt32();
-    if ( argc >= 2 ) h=args[1].toInt32();
-    if ( argc >= 3 ) main=args[2].toBoolean();
+    if ( args.count() >= 1 ) w=args[0].toNumber();
+    if ( args.count() >= 2 ) h=args[1].toNumber();
+    if ( args.count() >= 3 ) main=args[2].toBoolean();
 
     RenderTarget *target = new RenderTarget( w, h, main );
 
-    JS_SetPrivate( object, target );
-    args.rval().set( OBJECT_TO_JSVAL( object ) );
+    JSWRAPPER_CONSTRUCTOR_SETCLASS( target )
 
     //VG.Renderer().addResource(this);
 
-    RootedValue rendererRC(cx); RootedObject global( cx,JS_GetGlobalForObject( cx, object ) );
-    bool ok = JS_EvaluateScript( cx, HandleObject( global ), "VG.Renderer()", strlen("VG.Renderer()"), "unknown", 1, MutableHandleValue(&rendererRC) );    
-    if ( ok )
-    {
-        RootedValue objectValue( cx, OBJECT_TO_JSVAL(object) );
-        RootedObject renderer(cx, &rendererRC.toObject() ); MutableHandleValue handleValue( &rendererRC );
-        ok=Call( cx, HandleObject(renderer), "addResource", HandleValueArray( objectValue ), handleValue );
-    }
+    JSWrapperData rendererObject;
+    g_jsWrapper->execute( "VG.Renderer()", &rendererObject );
 
-    return true;
-}
+    JSWrapperArguments arguments;
+    arguments.append( thisObject );    
 
-JSObject *registerRenderTarget( JSContext *cx, JSObject *object )
+    JSWrapperData addObject;
+    rendererObject.object()->get( "addResource", &addObject );
+    addObject.object()->call( &arguments, rendererObject.object() );    
+
+JSWRAPPER_CONSTRUCTOR_END
+
+JSWrapperClass *registerRenderTarget( JSWrapper *jsWrapper )
 {
-    RootedObject obj(cx, object ); RootedObject parentobj(cx);
+    JSWrapperData data;
+    jsWrapper->globalObject()->get( "VG", &data );
+ 
+    JSWrapperClass *renderTargetClass=data.object()->createClass( "RenderTarget", RenderTargetConstructor );
+    renderTargetClass->registerFunction( "create", RenderTarget_create );
+    renderTargetClass->registerFunction( "destroy", RenderTarget_destroy );
+    renderTargetClass->registerFunction( "dispose", RenderTarget_dispose );
+    renderTargetClass->registerFunction( "unbind", RenderTarget_unbind );
+    renderTargetClass->registerFunction( "bind", RenderTarget_bind );
+    renderTargetClass->registerFunction( "fillPixelBuffer", RenderTarget_fillPixelBuffer );
+    renderTargetClass->registerFunction( "bindAsTexture", RenderTarget_bindAsTexture );
+    renderTargetClass->registerFunction( "resize", RenderTarget_resize );
+    renderTargetClass->registerFunction( "setViewport", RenderTarget_setViewport );
+    renderTargetClass->registerFunction( "setViewportEx", RenderTarget_setViewportEx );
+    renderTargetClass->registerFunction( "setScissor", RenderTarget_setScissor );
+    renderTargetClass->registerFunction( "clear", RenderTarget_clear );
+    renderTargetClass->registerFunction( "getRealWidth", RenderTarget_getRealWidth );
+    renderTargetClass->registerFunction( "getRealHeight", RenderTarget_getRealHeight );
+    renderTargetClass->registerFunction( "getWidth", RenderTarget_getWidth );
+    renderTargetClass->registerFunction( "getHeight", RenderTarget_getHeight );
+    renderTargetClass->registerFunction( "resetSize", RenderTarget_resetSize );
+    renderTargetClass->registerFunction( "checkStatusComplete", RenderTarget_checkStatusComplete );
 
-    JSObject * newObject=JS_InitClass( cx, HandleObject(obj), HandleObject(parentobj), &RenderTargetClass,  
-        RenderTargetConstructor, 0,
-        NULL, NULL,
-        NULL, NULL);
+    renderTargetClass->registerProperty( "w", GetRenderTargetProperty_w, SetRenderTargetProperty_w );
+    renderTargetClass->registerProperty( "h", GetRenderTargetProperty_h, SetRenderTargetProperty_h );
+    renderTargetClass->registerProperty( "autoResize", GetRenderTargetProperty_autoResize, SetRenderTargetProperty_autoResize );
+    renderTargetClass->registerProperty( "main", GetRenderTargetProperty_main, SetRenderTargetProperty_main );
+    renderTargetClass->registerProperty( "imageWidth", GetRenderTargetProperty_imageWidth, SetRenderTargetProperty_imageWidth );
+    renderTargetClass->registerProperty( "imageHeight", GetRenderTargetProperty_imageHeight, SetRenderTargetProperty_imageHeight );
 
-    return newObject;
+    renderTargetClass->install();
+
+    return renderTargetClass;
 }

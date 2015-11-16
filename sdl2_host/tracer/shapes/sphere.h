@@ -39,6 +39,7 @@ namespace embree
       r    = parms.getFloat("r");
       numTheta = parms.getInt("numTheta");
       numPhi   = parms.getInt("numPhi");
+      printf("%d %d\n", numTheta, numPhi);
       triangulate();
     }
 

@@ -99,23 +99,7 @@ ELSE (WIN32)
   # Feel free to tighten up these conditions if you don't 
   # think this is always true.
 
-  IF (OPENGL_gl_LIBRARY)
-    INCLUDE( ${VXL_CMAKE_DIR}/NewCMake/FindX11.cmake )
-    IF (X11_FOUND)
-      SET (OPENGL_LIBRARIES ${X11_LIBRARIES})
-    ENDIF (X11_FOUND)
-  ENDIF (OPENGL_gl_LIBRARY)
 
-  FIND_LIBRARY(OPENGL_glu_LIBRARY
-    NAMES MesaGLU GLU
-    PATHS ${OPENGL_gl_LIBRARY}
-          /usr/lib64
-          /usr/lib
-          /usr/local/lib
-          /opt/graphics/OpenGL/lib
-          /usr/openwin/lib
-          /usr/X11R6/lib
-  )
 
 ENDIF (WIN32)
 

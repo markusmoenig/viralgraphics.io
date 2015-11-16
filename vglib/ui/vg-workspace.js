@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 VG.UI.Workspace=function()
@@ -49,10 +52,7 @@ VG.UI.Workspace=function()
     /** The VG.Canvas for the Workspace, used for all drawing operations.
      *  @member {object} */    
     this.canvas=VG.Canvas();
-
-    /** The Style object for the Workspace, used to implement the style (drawing) and skin (colors/fonts) of every Widget in the Workspace.
-     *  @member {object} */   
-    this.canvas.style=VG.context.style;
+    this.canvas.style=VG.UI.stylePool.current;
 
     this.shortcutManager=VG.Shortcut.Manager();
 
@@ -67,7 +67,7 @@ VG.UI.Workspace=function()
     this.toolbars=[];
     this.windows=[];
     this.widgets3d=[];
-    this.statusbar=null;
+    this.statusBar=null;
     this.layout=VG.UI.SplitLayout();
     this.layout.margin.set( 0, 0, 0, 0 );
 
@@ -79,10 +79,11 @@ VG.UI.Workspace=function()
     this.loginDialog=null;
     this.signupDialog=null;
     this.userName="";
-    this.userId=-1;
+    this.userId=undefined;
     this.userIsAdmin=false;
-    this.userNamePopup=VG.UI.ToolPanelPopupButton();
-    this.userNamePopup.addItems( "Settings", "Logout" );
+
+    this.modelToolButtonRoles=[];
+    this.modelMenuItemRoles=[];
 
     this.dataCollectionForLoadSave=null;
     this.dataCollectionForUndoRedo=null;
@@ -95,8 +96,11 @@ VG.UI.Workspace=function()
     this.textClipboard="";
     this.nodesClipboard="";
 
-    // --- Force a redraw every 1000ms
-    this.autoRedrawInterval=1000;
+    this.singleShotCallbacks=[];
+    this.aboutToSaveCallbacks=[];
+
+    // --- Force a redraw every 2000ms
+    this.autoRedrawInterval=2000;
 
     // --- Send an isLoggedIn request to the server to check if we are logged in or not.
 
@@ -117,7 +121,22 @@ VG.UI.Workspace=function()
         }    
     }.bind(this), "GET" );
 
+    // --- Default Events
+
+    this.mainMoveEvent=VG.Events.MouseMoveEvent();
+
     // ---
+
+    this.toolTipWidget=VG.UI.ToolTipWidget();
+
+    // --- Adjust the CSS Background Color to the StatusBar if running on the Web
+
+    if ( VG.getHostProperty( VG.HostProperty.Platform ) === VG.HostProperty.PlatformWeb ) {
+        var canvas=document.getElementById( 'webgl' );
+        var body=document.body;
+          
+        body.style["background-color"]=this.canvas.style.skin.StatusBar.BackColor.toHex();
+    }    
 };
 
 VG.UI.Workspace.prototype=VG.UI.Widget();
@@ -193,6 +212,14 @@ VG.UI.Workspace.prototype.addDockWidget=function( dockWidget, location, percent 
     this.recalcLayoutPercentages();
 };
 
+VG.UI.Workspace.prototype.removeDockWidget=function( dockWidget )
+{
+    /**Removes the given dock widget from the Workspace.
+     * @param {VG.UI.DockWidget} widget - The DockWidget to remove from the Workspace.
+     */
+    this.layout.removeChild( dockWidget );
+};
+
 VG.UI.Workspace.prototype.detachDockWidget=function( dockWidget )
 {
     /**Detaches a Dock widget from the Workspace.
@@ -255,18 +282,18 @@ VG.UI.Workspace.prototype.recalcLayoutPercentages=function()
         this.layout.setChildPercentAt( contentOffset, percent );
 };
 
-VG.UI.Workspace.prototype.addToolbar=function( toolbar )
+VG.UI.Workspace.prototype.addToolBar=function( toolbar )
 {
-    /**Adds a VG.UI.Toolbar to the top of the Workspace
-     * @param {VG.UI.Toolbar} toolbar - The toolbar to add. Several Toolbars can be added to each Workspace
+    /**Adds a VG.UI.ToolBar to the top of the Workspace
+     * @param {VG.UI.ToolBar} toolbar - The toolbar to add. Several Toolbars can be added to each Workspace
      */    
     this.toolbars.push( toolbar );
 };
 
-VG.UI.Workspace.prototype.addMenubar=function( menubar )
+VG.UI.Workspace.prototype.addMenuBar=function( menubar )
 {
-    /**Adds a VG.UI.Menubar to the top of the Workspace
-     * @param {VG.UI.Menubar} menubar - The Menubar to add. Several Toolbars can be added to each Workspace
+    /**Adds a VG.UI.MenuBar to the top of the Workspace
+     * @param {VG.UI.MenuBar} menubar - The VG.UI.MenuBar to add. Several MenuBars can be added to each Workspace.
      */      
     this.menubars.push( menubar );
     this.paintMenubar=VG.getHostProperty( VG.HostProperty.DrawMenus );
@@ -275,6 +302,45 @@ VG.UI.Workspace.prototype.addMenubar=function( menubar )
 VG.UI.Workspace.prototype.enableEmbeddedMode=function( callback )
 {
     this.embeddedModeCallback=callback;
+};
+
+VG.UI.Workspace.prototype.createDecoratedToolBar=function()
+{
+    this.decoratedToolBar=VG.UI.DecoratedToolBar();
+
+    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.QuickMenu );
+    var spacer30px=VG.UI.LayoutHSpacer();
+    spacer30px.maximumSize.width=30;
+    this.decoratedToolBar.addItem( spacer30px );
+    this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
+    //this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
+    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.New );
+    this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
+    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Open );
+    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Save );
+    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.SaveAs );
+    this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );    
+    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Undo );
+    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Redo );
+    this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
+    this.decoratedToolBar.addItem( VG.UI.LayoutHSpacer() );
+    this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
+    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Login );
+    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Signup );
+    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.UserTool );
+};
+
+VG.UI.Workspace.prototype.addQuickMenuItem=function( text, callback )
+{
+    if ( this.quickMenu )
+    {
+        var item=VG.UI.DecoratedQuickMenuItem( text, callback );
+        this.quickMenu.items.push( item );
+
+        return item;
+    }
+
+    return undefined;
 };
 
 // --- paintWidget
@@ -302,7 +368,7 @@ VG.UI.Workspace.prototype.paintWidget=function()
             var menubar=this.menubars[i];
 
             menubar.rect.x=this.contentRect.x; menubar.rect.y=this.contentRect.y;
-            menubar.rect.setSize( this.rect.width, VG.context.style.skin.Menubar.Height );
+            menubar.rect.setSize( this.rect.width, VG.UI.stylePool.current.skin.MenuBar.Height );
 
             menubar.paintWidget( this.canvas );
 
@@ -311,149 +377,46 @@ VG.UI.Workspace.prototype.paintWidget=function()
         }
     }
 
+    // --- Draw Decorated ToolBar
+
+    if ( this.decoratedToolBar )
+    {
+        this.decoratedToolBar.rect.copy( this.contentRect );
+        this.decoratedToolBar.rect.height=VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
+        this.decoratedToolBar.paintWidget( this.canvas );
+
+        //this.contentRect.shrink( 0, VG.context.style.skin.DecoratedToolbar.Height, this.contentRect );
+
+        this.contentRect.y+=VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
+        this.contentRect.height-=VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
+    }
+
     // --- Draw Toolbar
     
     for ( var i=0; i < this.toolbars.length; ++i)
     {
         var toolbar=this.toolbars[i];
 
-        var showLoginArea=(this.platform === VG.HostProperty.PlatformWeb || this.platform === VG.HostProperty.PlatformDesktop ) && !this.noLoginInToolbar;
+        toolbar.rect.x=this.contentRect.x; toolbar.rect.y=this.contentRect.y;
+        toolbar.rect.setSize( this.rect.width, VG.UI.stylePool.current.skin.ToolBar.Height );
 
-        if ( i === 0 )  {
-            // --- VG logo on first toolbar
-            toolbar.layout.margin.left=VG.context.style.skin.Toolbar.Margin.left + 15;
-
-            if ( showLoginArea || this.userName.length > 0 ) 
-            {
-                this.canvas.pushFont( this.canvas.style.skin.LoginFont );
-                if ( !this.userName.length ) {
-
-                    var loginButtonSize=this.loginButton.calcSize( this.canvas );
-                    var signupButtonSize=this.signupButton.calcSize( this.canvas );
-                    var textSize=VG.Core.Size();
-                    this.canvas.getTextSize( " ", textSize );
-
-                    toolbar.layout.margin.right=loginButtonSize.width + textSize.width + signupButtonSize.width + 4;
-                } else
-                {
-                    var textSize=VG.Core.Size();
-                    this.canvas.getTextSize( this.userName, textSize );
-                    toolbar.layout.margin.right=textSize.width + 4;                    
-                }
-                this.canvas.popFont();
-            }
-        }
-
-        toolbar.rect.y=this.contentRect.y;
-        toolbar.rect.setSize( this.rect.width, VG.context.style.skin.Toolbar.Height );
         toolbar.paintWidget( this.canvas );
         this.contentRect.y+=toolbar.rect.height;
-        this.contentRect.height-=toolbar.rect.height;
-
-        if ( i === 0 )  {
-            // --- VG logo on first toolbar
-
-            if ( !this.vgFont ) {
-                this.vgFont=VG.Font.Font( "Visual Graphics", VG.context.style.skin.Toolbar.Logo.Size );
-                this.logoRect=VG.Core.Rect( toolbar.rect ); 
-                this.logoRect.width=VG.context.style.skin.Toolbar.Margin.left;
-            } else if ( VG.context.style.skin.Toolbar.Logo.Size !== this.vgFont.size ) { 
-                this.vgFont.setSize( VG.context.style.skin.Toolbar.Logo.Size );
-                this.logoRect.copy( toolbar.rect );
-                this.logoRect.width=VG.context.style.skin.Toolbar.Margin.left;                
-            }
-
-            if ( !this.appIconImage ) 
-            {
-                this.canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.logoRect, VG.context.style.skin.Toolbar.Logo.BackgroundColor );
-
-                this.canvas.pushFont( this.vgFont );            
-                this.canvas.drawTextRect( "a", this.logoRect, VG.context.style.skin.Toolbar.Logo.Color, 1, 1 ); 
-                this.canvas.popFont();
-            } else
-            {
-                this.canvas.drawImage( VG.Core.Point( this.logoRect.x + this.logoRect.width - this.appIconImage.width,
-                    this.logoRect.y + (this.logoRect.height - this.appIconImage.height ) / 2 ), this.appIconImage );
-            }
-
-            if ( showLoginArea || this.userName.length > 0 ) 
-            {
-                this.canvas.pushFont( this.canvas.style.skin.LoginFont );
-
-                if ( !this.userName.length ) {
-
-                    // --- User is not logged in, show the Login / Logout buttons.
-
-                    this.loginButton.visible=true;
-                    this.signupButton.visible=true;
-                    this.userNamePopup.visible=false;
-
-                    // --- Draw Login Button
-
-                    this.loginButton.rect.x=toolbar.rect.x + toolbar.rect.width - loginButtonSize.width - textSize.width - signupButtonSize.width - 2 - 15;     
-                    this.loginButton.rect.y=toolbar.rect.y + (toolbar.rect.height - loginButtonSize.height) / 2;
-                    this.loginButton.rect.width=loginButtonSize.width;    
-                    this.loginButton.rect.height=loginButtonSize.height;
-
-                    this.loginButton.paintWidget( this.canvas );   
-
-                    // --- Draw " / " Text
-
-                    var textRect=VG.Core.Rect( toolbar.rect );
-
-                    textRect.x=toolbar.rect.x + toolbar.rect.width - textSize.width - signupButtonSize.width - 2;     
-                    textRect.width=textSize.width;    
-                    this.canvas.drawTextRect( " ", textRect, VG.context.style.skin.Widget.TextColor, 0, 1 ); 
-
-                    // --- Draw Signin Button
-
-                    this.signupButton.rect.x=toolbar.rect.x + toolbar.rect.width - signupButtonSize.width - 2 - 15;     
-                    this.signupButton.rect.y=toolbar.rect.y + (toolbar.rect.height - signupButtonSize.height) / 2;
-                    this.signupButton.rect.width=signupButtonSize.width;    
-                    this.signupButton.rect.height=signupButtonSize.height;
-
-                    this.signupButton.paintWidget( this.canvas );    
-                } else
-                {
-                    // --- User is logged in, show username.
-
-                    this.loginButton.visible=false;
-                    this.signupButton.visible=false;
-                    this.userNamePopup.visible=true;
-
-                    var size=this.userNamePopup.calcSize();
-
-                    this.userNamePopup.rect.set( toolbar.rect.right() - size.width - 10, toolbar.rect.y + (toolbar.rect.height - size.height) / 2, size.width, size.height );
-                    this.userNamePopup.paintWidget( this.canvas );
-
-                    /*
-                    var textSize=VG.Core.Size();
-                    this.canvas.getTextSize( this.userName, textSize );
-
-                    var userNameRect=VG.Core.Rect( toolbar.rect );
-                    userNameRect.width-=2;
-
-                    this.canvas.drawTextRect( this.userName, userNameRect, VG.context.style.skin.Widget.TextColor, 2, 1 );
-                    */
-                }
-
-                this.canvas.popFont();
-            }
-        }        
+        this.contentRect.height-=toolbar.rect.height;  
     }
 
     // --- Draw Statusbar
     
-    if ( this.statusbar )
+    if ( this.statusBar )
     {
-        this.statusbar.rect.set( 0, this.rect.height - VG.context.style.skin.Statusbar.Height, this.rect.width, VG.context.style.skin.Statusbar.Height );
-        this.statusbar.paintWidget( this.canvas );
-        this.contentRect=this.contentRect.add( 0, 0, 0, -VG.context.style.skin.Statusbar.Height );
+        this.statusBar.rect.set( this.rect.x, this.rect.y + this.rect.height - VG.UI.stylePool.current.skin.StatusBar.Height, this.rect.width, VG.UI.stylePool.current.skin.StatusBar.Height );
+        this.statusBar.paintWidget( this.canvas );
+        this.contentRect=this.contentRect.add( 0, 0, 0, -VG.UI.stylePool.current.skin.StatusBar.Height );
     }
     
     // --- Draw Layout
 
-    this.canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.contentRect, VG.context.style.skin.Widget.BackgroundColor );
+    this.canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.contentRect, VG.UI.stylePool.current.skin.Widget.BackgroundColor );
 
     if ( this.layout ) {
         this.layout.rect.set( this.contentRect );
@@ -491,7 +454,7 @@ VG.UI.Workspace.prototype.paintWidget=function()
 
 VG.UI.Workspace.prototype.mouseMove=function( x, y )
 {
-    var event=VG.Events.MouseMoveEvent();
+    var event=this.mainMoveEvent;
     event.pos.set( x, y );
 
     // --- If a widget is tracking the mouse, this has priority
@@ -515,6 +478,7 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
 
     for( var i=0; i < this.windows.length; ++i ) {       
         var window=this.windows[i];
+
         if ( window.visible && window.rect.contains( event.pos ) ) {
 
             windowUnderMouse=window;
@@ -544,8 +508,8 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
             // --- Search optional childWidgets
 
             if ( window.childWidgets ) {
-                for ( var i=0; i < window.childWidgets.length; ++i) {
-                    var child=window.childWidgets[i];
+                for ( var cw=0; cw < window.childWidgets.length; ++cw) {
+                    var child=window.childWidgets[cw];
                     if ( child.rect.contains( event.pos ) )
                         widgetUnderMouse=child;
                 }
@@ -558,6 +522,7 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
         if ( window.visible && (window instanceof VG.UI.Dialog ) ) {
             this.modalDialog=window;
         }
+
     }
 
     // --- Search for the widget or layout under the mouse
@@ -573,6 +538,15 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
         }
     }
 
+    // --- Search the decorated toolbar
+
+    if ( this.decoratedToolBar )
+    {
+        var found=this.findLayoutItemAtMousePos( this.decoratedToolBar.layout, event.pos );
+        if ( found && found.isWidget )
+            widgetUnderMouse=found;
+    }    
+
     // --- Search the toolbars
 
     if ( !windowUnderMouse && !widgetUnderMouse ) {
@@ -585,32 +559,14 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
                 if ( found && found.isWidget ) {
                     widgetUnderMouse=found;            
                 }           
-            }
-
-            if ( !widgetUnderMouse && this.loginButton.visible ) {
-                if ( this.loginButton.rect.contains( event.pos ) ) {
-                    widgetUnderMouse=this.loginButton;                
-                }
-            }
-
-            if ( !widgetUnderMouse && this.signupButton.visible ) {
-                if ( this.signupButton.rect.contains( event.pos ) ) {
-                    widgetUnderMouse=this.signupButton;                
-                }
-            }     
-
-            if ( !widgetUnderMouse && this.userNamePopup.visible ) {
-                if ( this.userNamePopup.rect.contains( event.pos ) ) {
-                    widgetUnderMouse=this.userNamePopup;                
-                }
-            }   
+            } 
         } else 
         {
             // --- Search the main layout
 
             var found=this.findLayoutItemAtMousePos( this.layout, event.pos );
             if ( found ) {
-                //console.log( "Found:" + found.name );
+                //VG.log( "Found:" + found.name );
 
                 if ( found.isWidget ) {
                     widgetUnderMouse=found;
@@ -654,6 +610,29 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
     if ( this.layoutUnderMouse && this.layoutUnderMouse.mouseMove )
         this.layoutUnderMouse.mouseMove( event );
 
+    // --- Drag and Drop
+
+    if ( this.dndOperation )
+    {
+        this.dndValidDragTarget=undefined;
+
+        if ( widgetUnderMouse.checkDragSourceItemId ) {
+            var accepts=widgetUnderMouse.checkDragSourceItemId( event.pos, this.dndItemId );
+            if ( accepts && widgetUnderMouse.acceptDragSourceItem ) {
+
+                // set mouse ptr to accept mode
+
+                this.dndValidDragTarget=widgetUnderMouse;
+            }
+        }
+        this.mousePos.set( x, y );
+
+        if ( this.dndValidDragTarget ) VG.setMouseCursor( "pointer" );
+        else VG.setMouseCursor( "no-drop" );
+
+        return;
+    }    
+
     // --- Evalutate the widget under the mouse
     
     if ( widgetUnderMouse !== this.widgetUnderMouse ) {
@@ -663,6 +642,8 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
             // --- New Widget has Hover
             if ( !widgetUnderMouse.disabled && widgetUnderMouse.visualState === VG.UI.Widget.VisualState.Normal ) {
                 widgetUnderMouse.visualState=VG.UI.Widget.VisualState.Hover;
+                widgetUnderMouse.hasHoverState=true;
+                widgetUnderMouse.hasFocusState=false;
                 this.canvas.update();
             }
 
@@ -674,10 +655,15 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
         if ( this.widgetUnderMouse ) 
         {
             // --- This Widget has lost Hover
-            if ( this.focusWidget === this.widgetUnderMouse )
+            if ( this.focusWidget === this.widgetUnderMouse ) {
                 this.widgetUnderMouse.visualState=VG.UI.Widget.VisualState.Focus;
-            else
+                this.widgetUnderMouse.hasFocusState=true;
+                this.widgetUnderMouse.hasHoverState=false;                
+            } else {
                 this.widgetUnderMouse.visualState=VG.UI.Widget.VisualState.Normal;
+                this.widgetUnderMouse.hasFocusState=false;
+                this.widgetUnderMouse.hasHoverState=false;
+            }
 
             // --- Send mouseLeave
             if ( !this.widgetUnderMouse.disabled && this.widgetUnderMouse.mouseLeave )
@@ -700,6 +686,7 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
     if ( this.widgetUnderMouse && this.widgetUnderMouse.mouseMove )
         this.widgetUnderMouse.mouseMove( event );     
     
+    this.lastMouseMove=Date.now();
     this.mousePos.set( x, y );
 };
 
@@ -754,12 +741,26 @@ VG.UI.Workspace.prototype.mouseDown=function( button )
     if ( this.focusWidget && this.focusWidget.mouseDown && this.focusWidget.rect.contains( this.mousePos ) )
         this.focusWidget.mouseDown( event );   
 
-    this.canvas.update();    
+    if ( this.customEventWidget && this.customEventWidget.mouseDown && this.customEventWidget.rect.contains( this.mousePos ) )
+        this.customEventWidget.mouseDown( event );
+
+    this.canvas.update();
 };
 
 VG.UI.Workspace.prototype.mouseUp=function( button )
 {
     //console.log( "mouseUp();", button );
+
+    // --- Handle possible DnD Operation
+
+    if ( this.dndOperation ) {
+        if ( this.dndValidDragTarget )
+            this.dndValidDragTarget.acceptDragSourceItem( this.mousePos, this.dndItemId, this.dndItem );
+
+        VG.setMouseCursor( "default" );
+    }
+
+    this.dndOperation=false;
 
     // --- Send mouseUp event
 
@@ -771,6 +772,8 @@ VG.UI.Workspace.prototype.mouseUp=function( button )
 
     if ( this.mouseTrackerWidget ) {
         this.mouseTrackerWidget.mouseUp( event );
+        this.mouseDownWidget=undefined;
+        this.lastMouseMove=-1;
         return;
     }   
 
@@ -786,7 +789,10 @@ VG.UI.Workspace.prototype.mouseUp=function( button )
     // --- If the widget handles click events (buttons), send one.
 
     if ( this.mouseDownWidget && this.mouseDownWidget === this.widgetUnderMouse && this.mouseDownWidget.clicked && !this.mouseDownWidget.disabled ) 
-        this.mouseDownWidget.clicked.call( VG.context );
+        this.mouseDownWidget.clicked.call( VG.context, this.mouseDownWidget );
+
+    this.mouseDownWidget=undefined;
+    this.lastMouseMove=-1;
 
     this.canvas.update();
 };
@@ -811,9 +817,44 @@ VG.UI.Workspace.prototype.mouseDoubleClick=function()
 };
 
 VG.UI.Workspace.prototype.mouseWheel=function( step )
-{
-    if ( this.widgetUnderMouse && !this.widgetUnderMouse.disabled && this.widgetUnderMouse.mouseWheel )
-        return this.widgetUnderMouse.mouseWheel( step );
+{    
+    if ( this.layoutUnderMouse && this.layoutUnderMouse.mouseWheel ) {
+        var rc=this.layoutUnderMouse.mouseWheel( step ); 
+        if ( rc === true ) return true;
+    }
+
+    if ( this.widgetUnderMouse && !this.widgetUnderMouse.disabled && this.widgetUnderMouse.mouseWheel ) {
+        var rc=this.widgetUnderMouse.mouseWheel( step );
+        if ( rc === true ) return true;
+    }
+
+    if ( this.widgetUnderMouse ) {
+        var widget=this.widgetUnderMouse.parent;
+        while ( widget ) 
+        {
+            //VG.log( "iter widget", widget.name );
+            if ( widget && !widget.disabled && widget.mouseWheel )
+            {
+                var rc=widget.mouseWheel( step );
+                if ( rc === true ) return true;
+            }
+            widget=widget.parent;
+        }
+    }
+
+    if ( this.layoutUnderMouse ) {
+        var widget=this.layoutUnderMouse.parent;
+        while ( widget ) 
+        {
+            //VG.log( "iter layout", widget.name );
+            if ( widget && widget.mouseWheel )
+            {
+                var rc=widget.mouseWheel( step );
+                if ( rc === true ) return true;
+            }
+            widget=widget.parent;
+        }
+    }
 
     return false;
 };
@@ -862,7 +903,9 @@ VG.UI.Workspace.prototype.keyDown=function( keyCode )
     }
 
     if ( !shortCutFound && this.keysDown.length && this.focusWidget && this.focusWidget.contextMenu ) {
-        this.ignoreTextInput=this.shortcutManager.verifyMenu( String.fromCharCode( keyCode ), this.keysDown, this.focusWidget.contextMenu );    
+        this.ignoreTextInput=this.shortcutManager.verifyMenu( String.fromCharCode( keyCode ), this.keysDown, this.focusWidget.contextMenu );
+
+        if ( this.ignoreTextInput ) VG.log( "ignored key input", keyCode, this.keysDown.toString(), 1 );
     }
 
     // ---
@@ -899,10 +942,14 @@ VG.UI.Workspace.prototype.setFocus=function( widget )
          widget.visualState !== VG.UI.Widget.VisualState.Focus ) 
     {
         widget.visualState=VG.UI.Widget.VisualState.Focus;
+        widget.hasFocusState=true;
+        widget.hasHoverState=false;
         
         if ( this.focusWidget ) {
             if ( this.focusWidget.focusOut ) this.focusWidget.focusOut();
-                this.focusWidget.visualState=VG.UI.Widget.VisualState.Normal;
+            this.focusWidget.visualState=VG.UI.Widget.VisualState.Normal;
+            this.focusWidget.hasHoverState=false;
+            this.focusWidget.hasFocusState=false;
         }
 
         if ( widget.focusIn )
@@ -921,9 +968,11 @@ VG.UI.Workspace.prototype.widgetLostFocus=function( widget )
             this.focusWidget.focusOut();
 
         this.focusWidget.visualState=VG.UI.Widget.VisualState.Normal;
+        this.focusWidget.hasHoverState=false;
+        this.focusWidget.hasFocusState=false;
         this.focusWidget=0;            
         this.canvas.update();        
-    } else console.log( "Unknown widget called widgetLostFocus()" );
+    } else VG.log( "Unknown widget called widgetLostFocus()" );
 }
 
 VG.UI.Workspace.prototype.cycleFocus=function( widget )
@@ -952,14 +1001,53 @@ VG.UI.Workspace.prototype.cycleFocus=function( widget )
             this.setFocus( newFocusWidget );
         }
 
-    } else console.log( "Unknown widget called cycleFocus()" );
+    } else VG.log( "Unknown widget called cycleFocus()" );
 };
 
 VG.UI.Workspace.prototype.tick=function( needsRedraw )
 {
     var redraw=false;    
     var current = Date.now();
-    
+
+    // --- ToolTips Controller
+
+    if ( this.lastMouseMove !== -1 && current - this.lastMouseMove > 1000 && this.widgetUnderMouse && !this.widgetUnderMouse.disabled && 
+        this.widgetUnderMouse.toolTip && this.mouseDownWidget === undefined ) {
+
+        this.toolTipWidget.rect.x=this.mousePos.x;
+        this.toolTipWidget.rect.y=this.mousePos.y;
+
+        if ( this.canvas.delayedPaintWidgets.indexOf( this.toolTipWidget ) === -1 )
+            this.canvas.delayedPaintWidgets.push( this.toolTipWidget );
+
+        if ( !this.toolTipWidget.visible ) { 
+            needsRedraw=true;
+            this.toolTipWidget.visible=true;
+            this.toolTipWidget.setToolTip( this.canvas, this.widgetUnderMouse );
+        }
+    } else
+    if ( this.toolTipWidget.visible ) { 
+        needsRedraw=true;
+        this.toolTipWidget.visible=false;
+        this.canvas.delayedPaintWidgets=[];
+    }
+
+    // --- StatusTips
+
+    if ( this.statusBar && this.widgetUnderMouse && !this.widgetUnderMouse.disabled && this.widgetUnderMouse.statusTip ) {
+        this.statusBar.message( this.widgetUnderMouse.statusTip, 4000 )
+    }
+
+    // ---
+
+    if ( this.singleShotCallbacks.length ) {
+        for( var i=0; i < this.singleShotCallbacks.length; ++i ) {
+            this.singleShotCallbacks[i]();
+        }
+        if ( this.singleShotCallbacks ) delete this.singleShotCallbacks;        
+        this.singleShotCallbacks=[];
+    }
+
     if ( ( ( current - this.lastRedrawTime ) > this.autoRedrawInterval ) || needsRedraw ) redraw=true;
     else
     {
@@ -987,6 +1075,7 @@ VG.UI.Workspace.prototype.tick=function( needsRedraw )
             }
                     
             // --- Replace the redrawList array
+            if ( this.redrawList ) delete this.redrawList;
             this.redrawList=array;
         } 
     }
@@ -1010,6 +1099,16 @@ VG.UI.Workspace.prototype.tick=function( needsRedraw )
 VG.UI.Workspace.prototype.findLayoutItemAtMousePos=function( layout, pos )
 {
     //console.log( "findLayoutItemAtMousePos: " + layout.name );
+
+    // --- Check if top layout is a StackedWidget and if yes do the proper forwarding
+    if ( layout instanceof VG.UI.StackedLayout ) {
+        while ( layout instanceof VG.UI.StackedLayout )
+            layout=layout.current;
+
+        if ( layout === undefined || layout === null ) return layout;
+        else if ( layout.isWidget ) return layout;
+    }
+
     if ( layout )
     {
         if ( layout.specialLayoutHitTest && layout.specialLayoutHitTest( pos ) )
@@ -1019,6 +1118,8 @@ VG.UI.Workspace.prototype.findLayoutItemAtMousePos=function( layout, pos )
         {
             for ( var i=0; i < layout.children.length; ++i ) {
                 var child=layout.children[i];
+
+                if ( !child.visible ) continue;
 
                 // --- Check for StackedLayout Forwarding for childs
                 if ( child instanceof VG.UI.StackedLayout ) 
@@ -1041,9 +1142,11 @@ VG.UI.Workspace.prototype.findLayoutItemAtMousePos=function( layout, pos )
                     if ( child === null ) continue;
                 }                
 
+                if ( !child ) continue;
+
                 if ( child.isWidget ) {
                     if ( child.visible && child.rect.contains( pos ) ) {
-                        if ( child.layout && child.layout.rect.contains( pos ) ) {
+                        if ( child.layout && child.layout.visible && child.layout.rect.contains( pos ) ) {
                             var found=this.findLayoutItemAtMousePos( child.layout, pos );
                             if ( found ) return found;
                             else return child.layout;
@@ -1051,13 +1154,13 @@ VG.UI.Workspace.prototype.findLayoutItemAtMousePos=function( layout, pos )
                         if ( child.childWidgets ) {
                             for ( var i=0; i < child.childWidgets.length; ++i ) {
                                 var widget=child.childWidgets[i];
-                                if ( widget.rect.contains( pos ) ) {
+                                if ( widget.visible && widget.rect.contains( pos ) ) {
                                     if ( !widget.childWidgets ) return widget;
                                     else
                                     {
                                         for ( var w=0; w < widget.childWidgets.length; ++w ) {
                                             var subChild=widget.childWidgets[w];
-                                            if ( subChild.rect.contains( pos ) ) return subChild;
+                                            if ( subChild.visible && subChild.rect.contains( pos ) ) return subChild;
                                         }
                                         return widget;
                                     }
@@ -1070,6 +1173,10 @@ VG.UI.Workspace.prototype.findLayoutItemAtMousePos=function( layout, pos )
                 if ( child.isLayout ) {
                     var found=this.findLayoutItemAtMousePos( child, pos );
                     if ( found ) return found;
+
+                    // --- If inside a LabelLayout and did not find any child, return the LabelLayout itself
+                    if ( child instanceof VG.UI.LabelLayout && child.rect.contains( pos ) )
+                        return child;
                 }
             }
         }
@@ -1175,16 +1282,15 @@ VG.UI.Workspace.prototype.modelOpenLocalCallback=function()
         } else
         if ( this.callbackForOpen ) 
         {
-            this.callbackForOpen( data );
+            this.callbackForOpen( path, data );
         }
 
         // --- Update the model
         this.dataCollectionForUndoRedo.updateTopLevelBindings();
 
         this.filePath=path;
-
         if ( this.platform === VG.HostProperty.PlatformDesktop )
-            VG.setWindowTitle( this.filePath.replace(/^.*(\\|\/|\:)/, ''), this.filePath );
+            VG.setWindowTitle( VG.Utils.fileNameFromPath( this.filePath ), this.filePath );
 
         VG.update();
     }.bind( this ) );
@@ -1195,6 +1301,8 @@ VG.UI.Workspace.prototype.modelSaveCallback=function()
     if ( !this.filePath ) return;
 
     var data;
+
+    this.modelNotifyAboutToSaveCallbacks();
     if ( this.dataCollectionForLoadSave ) data=VG.Utils.compressToBase64( JSON.stringify( this.dataCollectionForLoadSave ) );
     else if ( this.callbackForSave ) data=this.callbackForSave();
 
@@ -1206,13 +1314,15 @@ VG.UI.Workspace.prototype.modelSaveLocalCallback=function()
     if ( !this.filePath ) return;
 
     var data;
+
+    this.modelNotifyAboutToSaveCallbacks();
     if ( this.dataCollectionForLoadSave ) data=VG.Utils.compressToBase64( JSON.stringify( this.dataCollectionForLoadSave ) );
     else if ( this.callbackForSave ) data=this.callbackForSave();
 
     var success=VG.saveFile( this.filePath, data );
 
-    if ( this.statusbar ) {
-        if ( success ) this.statusbar.message( VG.Utils.fileNameFromPath( this.filePath ) + " has been saved successfully.", 2000 )
+    if ( this.statusBar ) {
+        if ( success ) this.statusBar.message( VG.Utils.fileNameFromPath( this.filePath ) + " has been saved successfully.", 2000 )
     }
 };
 
@@ -1246,6 +1356,7 @@ VG.UI.Workspace.prototype.modelSaveAs=function( callbackObject )
     if ( path.length > 0 ) {
         var data;
 
+        this.modelNotifyAboutToSaveCallbacks();
         if ( this.dataCollectionForLoadSave ) data=VG.Utils.compressToBase64( JSON.stringify( this.dataCollectionForLoadSave ) );
         else if ( this.callbackForSave ) data=this.callbackForSave();
 
@@ -1268,6 +1379,7 @@ VG.UI.Workspace.prototype.modelSaveAsLocalCallback=function()
 {
     var data;
 
+    this.modelNotifyAboutToSaveCallbacks();
     if ( this.dataCollectionForLoadSave ) data=VG.Utils.compressToBase64( JSON.stringify( this.dataCollectionForLoadSave ) );
     else if ( this.callbackForSave ) data=this.callbackForSave();    
 
@@ -1277,8 +1389,8 @@ VG.UI.Workspace.prototype.modelSaveAsLocalCallback=function()
     {
         this.filePath=path;
 
-        if ( this.statusbar )
-            this.statusbar.message( VG.Utils.fileNameFromPath( this.filePath ) + " has been saved successfully.", 2000 );
+        if ( this.statusBar )
+            this.statusBar.message( VG.Utils.fileNameFromPath( this.filePath ) + " has been saved successfully.", 2000 );
 
         if ( this.platform === VG.HostProperty.PlatformDesktop )
             VG.setWindowTitle( this.filePath.replace(/^.*(\\|\/|\:)/, ''), this.filePath );
@@ -1287,20 +1399,38 @@ VG.UI.Workspace.prototype.modelSaveAsLocalCallback=function()
     }
 };
 
-VG.UI.Workspace.prototype.modelCutCallback=function()
-{   
+VG.UI.Workspace.prototype.modelNotifyAboutToSaveCallbacks=function()
+{
+    for( var i=0; i < this.aboutToSaveCallbacks.length; ++i )
+    {
+        var callback=this.aboutToSaveCallbacks[i];
+        if ( callback ) callback();
+    }
+};
+
+VG.UI.Workspace.prototype.modelCutCallback=function( hostCall )
+{
+    if ( hostCall ) this.shortCutHostCall=true;
+    else if ( this.shortCutHostCall ) { this.shortCutHostCall=undefined; return; }
+
     if ( this.focusWidget && this.focusWidget.clipboardCut ) 
         this.focusWidget.clipboardCut();
 };
 
-VG.UI.Workspace.prototype.modelCopyCallback=function()
+VG.UI.Workspace.prototype.modelCopyCallback=function( hostCall )
 { 
+    if ( hostCall ) this.shortCutHostCall=true;
+    else if ( this.shortCutHostCall ) { this.shortCutHostCall=undefined; return; }
+
     if ( this.focusWidget && this.focusWidget.clipboardCopy ) 
         this.focusWidget.clipboardCopy();
 };
 
-VG.UI.Workspace.prototype.modelPasteCallback=function()
+VG.UI.Workspace.prototype.modelPasteCallback=function( hostCall )
 { 
+    if ( hostCall ) this.shortCutHostCall=true;
+    else if ( this.shortCutHostCall ) { this.shortCutHostCall=undefined; return; }
+
     if ( this.focusWidget && this.focusWidget.clipboardPaste ) 
         this.focusWidget.clipboardPaste();
 };
@@ -1319,39 +1449,65 @@ VG.UI.Workspace.prototype.modelSelectAllCallback=function()
 
 VG.UI.Workspace.prototype.modelLoggedStateChanged=function( logged, userName, userId )
 {
+    var userNamePopup=this.getToolButtonOfRole( VG.UI.ActionItemRole.UserTool );
+    var loginButton=this.getToolButtonOfRole( VG.UI.ActionItemRole.Login );
+    var signupButton=this.getToolButtonOfRole( VG.UI.ActionItemRole.Signup );
+    
+    if ( userNamePopup ) userNamePopup.visible=logged;
+    if ( loginButton ) loginButton.visible=!logged;
+    if ( signupButton ) signupButton.visible=!logged;
+
     if ( !logged ) return;
 
-    this.userNamePopup.clear();
-    this.userNamePopup.addItems( userName, "Settings", "Logout" );
-    this.userNamePopup.indexChanged=function( index ) {
-        
-        if ( index === 1 ) {
-            this.showUserSettingsDialog();
-            this.userNamePopup.index=0;
-        } else        
-        if ( index === 2 ) {
-            VG.DB.userLogOut( function() {
-                this.userName="";
-                this.userId=-1;
-                this.userIsAdmin=false;
-                VG.update();
-            }.bind( this ) );
+    if ( userNamePopup )
+    {
+        userNamePopup.clear();
+        userNamePopup.addItems( userName, "Settings", "Logout" );
+        var size=userNamePopup.calcSize( this.canvas );
+        userNamePopup.minimumSize.set( size );
+        userNamePopup.maximumSize.set( size );
+
+        if ( !userNamePopup.changed )
+        {
+            userNamePopup.changed=function( index ) 
+            {
+               if ( index === 1 ) 
+               {
+                    this.showUserSettingsDialog();
+
+                    var userNamePopup=this.getToolButtonOfRole( VG.UI.ActionItemRole.UserTool );
+                    if ( userNamePopup ) userNamePopup.index=0;
+                } else        
+                if ( index === 2 ) 
+                {
+                    VG.DB.userLogOut( function() {
+                        this.userName="";
+                        this.userId=undefined;
+                        this.userIsAdmin=false;
+
+                        this.modelLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName, this.userId );    
+
+                        if ( this.callbackForLoggedStateChanged )
+                            this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false );
+
+                        VG.update();
+                    }.bind( this ) );
+                }
+            }.bind( this );
         }
-    }.bind( this );
+    }
 
     // --- Get the appId of the current application
     VG.DB.getAppId( function( appId ) { 
         this.appId=appId;
 
-
-    //VG.DB.createFolder( appId, "filters", "", true, false, this.userId, function( isAppAdmin ) {
-    //    VG.log( "result", isAppAdmin );
-    //}.bind( this ) );
-
         // --- Check if the logged user is an admin of this app
-        if ( this.userId !== -1 ) {
+        if ( this.userId !== undefined ) {
             VG.DB.userIsAppAdmin( appId, this.userId, function( isAppAdmin ) {
                 this.userIsAppAdmin=isAppAdmin;
+
+                if ( this.callbackForLoggedStateChanged )
+                    this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName, this.userId, isAppAdmin );
             }.bind( this ) );
         }
     }.bind( this ) );
@@ -1411,12 +1567,24 @@ VG.UI.Workspace.prototype.registerDataCollection=function( dataCollection, roles
     if ( roles & VG.UI.DataCollectionRole.LoadSaveRole )
     {
         this.dataCollectionForLoadSave=dataCollection;
+
+        var button=this.getToolButtonOfRole( VG.UI.ActionItemRole.Open );
+        if ( button ) button.disabled=false;
+        button=this.getToolButtonOfRole( VG.UI.ActionItemRole.Save );
+        if ( button ) button.disabled=false;
+        button=this.getToolButtonOfRole( VG.UI.ActionItemRole.SaveAs );
+        if ( button ) button.disabled=false;
     }
 
     if ( roles & VG.UI.DataCollectionRole.UndoRedoRole ) 
     {
         this.dataCollectionForUndoRedo=dataCollection;
         dataCollection.__vgUndo=VG.Data.Undo();
+
+        var button=this.getToolButtonOfRole( VG.UI.ActionItemRole.Undo );
+        if ( button ) button.disabled=false;
+        button=this.getToolButtonOfRole( VG.UI.ActionItemRole.Redo );
+        if ( button ) button.disabled=false;
     }
 };
 
@@ -1430,6 +1598,8 @@ VG.UI.Workspace.prototype.registerCallback=function( type, callback )
 
         case VG.UI.CallbackType.New: 
             if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.callbackForClear=callback;
+            var button=this.getToolButtonOfRole( VG.UI.ActionItemRole.New );
+            if ( button ) button.disabled=false;
         break;
 
         case VG.UI.CallbackType.UndoRedo: 
@@ -1438,6 +1608,8 @@ VG.UI.Workspace.prototype.registerCallback=function( type, callback )
 
         case VG.UI.CallbackType.Open: 
             this.callbackForOpen=callback;
+            var button=this.getToolButtonOfRole( VG.UI.ActionItemRole.Open );
+            if ( button ) button.disabled=false;
         break;   
 
         case VG.UI.CallbackType.Save: 
@@ -1446,7 +1618,7 @@ VG.UI.Workspace.prototype.registerCallback=function( type, callback )
 
         case VG.UI.CallbackType.LoggedStateChanged: 
             this.callbackForLoggedStateChanged=callback;
-            this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName );
+            this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName, this.userId );
         break;              
     }
 };
@@ -1456,11 +1628,24 @@ VG.UI.Workspace.prototype.addToolButtonRole=function( toolbar, role )
     /**Creates a VG.UI.ToolButton, adds a specified default role to it and inserts it to the specified toolbar.
      * @param {VG.UI.Toolbar} toolbar - The toolbar to add the new VG.UI.ToolButton to.
      * @param {VG.UI.ActionItemRole} role - The role to apply
-     */        
-    var button=VG.UI.ToolButton( "" );
+     */ 
+    var button;
+
+    if ( role === VG.UI.ActionItemRole.QuickMenu )
+        button=VG.UI.DecoratedQuickMenu( "" );
+    else      
+    if ( role === VG.UI.ActionItemRole.UserTool ) {
+        button=VG.UI.DropDownMenu();
+        button.supportsFocus=false;
+        button.addItems( "Settings", "Logout" );
+    } else
+    if ( role !== VG.UI.ActionItemRole.UserTool )
+        button=VG.UI.ToolButton( "" );      
 
     this.setupActionItemRole( button, role );
     button.role=role;
+
+    this.modelToolButtonRoles.push( button );
 
     toolbar.addItem( button );
     return button;
@@ -1481,41 +1666,88 @@ VG.UI.Workspace.prototype.addMenuItemRole=function( menu, role )
     return menuItem;
 };
 
+VG.UI.Workspace.prototype.getToolButtonOfRole=function( role )
+{
+    for ( var i=0; i < this.modelToolButtonRoles.length; ++i )
+    {
+        var button=this.modelToolButtonRoles[i];
+        if ( button.role === role ) return button;
+    }
+    return undefined;
+};
+
 VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
 {
     switch ( role ) {
 
         case VG.UI.ActionItemRole.New: 
             object.text="New"; 
-            object.iconName="new.png"; 
+            object.svgName="glyphs.svg"; 
+            //object.svgGroupName="New"; 
+            object.toolTip="Clears the current Project, i.e. resets the Application State.";
+            if ( parent instanceof VG.UI.Menu ) object.statusTip="Clears the current Project, i.e. resets the Application State.";
             object.clicked=this.modelNewCallback.bind( this );
             if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.addNewWidget( object );
+            else object.disabled=true;
+            //object.svgName="glyphs.svg";
+            //object.svgGroupName="new";             
         break;
 
         case VG.UI.ActionItemRole.Open: 
             object.text="Open..."; 
-            object.iconName="open.png"; 
-            if ( this.platform === VG.HostProperty.PlatformWeb ) object.clicked=this.modelOpenCallback.bind( this );
-            else object.clicked=this.modelOpenLocalCallback.bind( this );
+            object.svgName="glyphs.svg"; 
+            object.svgGroupName="Open"; 
 
-            if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Open );            
+            if ( parent instanceof VG.UI.Menu ) {
+                if ( this.platform === VG.HostProperty.PlatformWeb ) {
+                    object.statusTip="Opens a Cloud based Project.";
+                } else {
+                    object.statusTip="Opens a Project.";
+                }
+            }
+
+            if ( this.platform === VG.HostProperty.PlatformWeb ) {
+                object.clicked=this.modelOpenCallback.bind( this );
+                object.toolTip="Opens a Project from the Cloud. If you want to open a local Project please choose \"Open Local ...\" in the File Menu. " +
+                "You have to be logged in to use this function.";
+            } else {
+                object.toolTip="Opens a local Project.";
+                object.clicked=this.modelOpenLocalCallback.bind( this );
+            }
+
+            if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Open );
+            else object.disabled=true;
+
+            if ( this.callbackForOpen ) object.disabled=false;
 
         break;     
 
         case VG.UI.ActionItemRole.Open_Local: 
             object.text="Open Local..."; 
+            object.statusTip="Opens a Local Project.";
+
             //object.iconName="open.png"; 
             object.clicked=this.modelOpenLocalCallback.bind( this );
         break;           
 
         case VG.UI.ActionItemRole.Save: 
             object.text="Save"; 
-            //object.iconName="save.png"; 
+            object.svgName="glyphs.svg"; 
+            object.svgGroupName="Save"; 
+
+            if ( parent instanceof VG.UI.Menu ) {
+                if ( this.platform === VG.HostProperty.PlatformWeb ) {
+                    object.statusTip="Save the Project to the Cloud.";
+                } else {
+                    object.statusTip="Save the Project.";
+                }
+            }
 
             if ( this.platform === VG.HostProperty.PlatformWeb ) object.clicked=this.modelSaveCallback.bind( this );
             else object.clicked=this.modelSaveLocalCallback.bind( this );
 
             if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.addSaveWidget( object );
+            else object.disabled=true;
 
             if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Save );            
 
@@ -1523,11 +1755,26 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
 
         case VG.UI.ActionItemRole.SaveAs: 
             object.text="Save As..."; 
-            object.iconName="save.png"; 
+            object.svgName="glyphs.svg"; 
+            object.svgGroupName="SaveAs"; 
 
-            if ( this.platform === VG.HostProperty.PlatformWeb ) object.clicked=this.modelSaveAsCallback.bind( this );
-            else object.clicked=this.modelSaveAsLocalCallback.bind( this );
+            if ( parent instanceof VG.UI.Menu ) {
+                if ( this.platform === VG.HostProperty.PlatformWeb ) {
+                    object.statusTip="Save the Project to the Cloud. Select Download in the File Requester if you want to Dowload the Project.";
+                } else {
+                    object.statusTip="Save the Project.";
+                }
+            }
+
+            if ( this.platform === VG.HostProperty.PlatformWeb ) { 
+                object.clicked=this.modelSaveAsCallback.bind( this );
+                object.toolTip="Saves the current Project to the Cloud. If you want to download the Project choose Download in the File Requester. " +
+                "You have to be logged in to use this function.";
+            } else {
+                object.clicked=this.modelSaveAsLocalCallback.bind( this );
+            }
             if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.addSaveWidget( object );
+            else object.disabled=true;
 
             if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.SaveAs );            
 
@@ -1535,49 +1782,98 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
 
         case VG.UI.ActionItemRole.Undo: 
             object.text="Undo"; 
-            object.iconName="undo.png";             
+            object.iconName="undo.png";  
+            object.toolTip="Undoes the last user action in the Application.";
+            if ( parent instanceof VG.UI.Menu ) object.statusTip=object.toolTip;
             if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.addUndoWidget( object );
-            if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Undo );            
+            else object.disabled=true;
+            if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Undo );  
+
+            object.svgName="glyphs.svg";
+            object.svgGroupName="Undo";
         break;
 
         case VG.UI.ActionItemRole.Redo: 
             object.text="Redo"; 
-            object.iconName="redo.png";                         
+            object.iconName="redo.png";   
+            object.toolTip="Redoes the last user action, previously undone via Undo.";
+            if ( parent instanceof VG.UI.Menu ) object.statusTip=object.toolTip;     
             if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.addRedoWidget( object );
+            else object.disabled=true;
             if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Redo );
+
+            object.svgName="glyphs.svg";
+            object.svgGroupName="Redo";
         break;
 
         case VG.UI.ActionItemRole.Cut: 
             object.text="Cut"; 
+
+            if ( parent instanceof VG.UI.Menu ) object.statusTip="Deletes the selected Data and copies it into the Clipboard.";
             if ( parent instanceof VG.UI.Menu ) parent.aboutToShow=this.modelMenuActionRoleValidationCallback.bind( this );
             object.clicked=this.modelCutCallback.bind( this );                                   
             if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Cut );            
         break;
 
         case VG.UI.ActionItemRole.Copy: 
-            object.text="Copy"; 
+            object.text="Copy";
+            if ( parent instanceof VG.UI.Menu ) object.statusTip="Copy the selected Data into the Clipboard.";
             object.clicked=this.modelCopyCallback.bind( this );
             if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Copy );
         break;    
 
         case VG.UI.ActionItemRole.Paste: 
             object.text="Paste"; 
+            if ( parent instanceof VG.UI.Menu ) object.statusTip="Pastes the Data in the Clipboard into the current Widget.";
             object.clicked=this.modelPasteCallback.bind( this );
             if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Paste );            
         break;  
 
         case VG.UI.ActionItemRole.Delete: 
             object.text="Delete"; 
+            if ( parent instanceof VG.UI.Menu ) object.statusTip="Deletes the current Selection.";
             if ( parent instanceof VG.UI.Menu ) parent.aboutToShow=this.modelMenuActionRoleValidationCallback.bind( this, parent );  
             object.clicked=this.modelDeleteCallback.bind( this );
         break;   
 
         case VG.UI.ActionItemRole.SelectAll: 
             object.text="Select All"; 
+            if ( parent instanceof VG.UI.Menu ) object.statusTip="Selects all Data in the current Widget.";
             if ( parent instanceof VG.UI.Menu ) parent.aboutToShow=this.modelMenuActionRoleValidationCallback.bind( this, parent );  
             object.clicked=this.modelSelectAllCallback.bind( this );
             if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.SelectAll );            
         break;          
+
+        case VG.UI.ActionItemRole.Login: 
+            object.text="LOGIN";
+            object.clicked=this.showLoginDialog.bind( this );
+            object.visible=!this.userId;
+            object.svgName="glyphs.svg";
+            object.svgGroupName="User";
+        break;    
+
+        case VG.UI.ActionItemRole.Signup: 
+            object.text="SIGNUP";
+            object.clicked=this.showSignupDialog.bind( this );
+            object.visible=!this.userId;
+            object.svgName="glyphs.svg";
+            object.svgGroupName="SignUp";            
+        break;
+
+        case VG.UI.ActionItemRole.UserTool:
+            object.visible=this.userId;
+
+            var size=object.calcSize( this.canvas );
+            object.minimumSize.set( size );
+            object.maximumSize.set( size );
+        break;
+
+        case VG.UI.ActionItemRole.QuickMenu: 
+            object.text="QuickMenu";
+            object.svgName="glyphs.svg";
+            object.svgGroupName="quickmenu";
+            this.quickMenu=object;        
+        break;
 
         default: 
             object.text="Unknown Role"; 
@@ -1633,18 +1929,62 @@ VG.UI.Workspace.prototype.showWindow=function( window )
     this.windows.push( window );
 };
 
-VG.UI.Workspace.prototype.switchToStyle=function( style )
+VG.UI.Workspace.prototype.tryToLogin=function( userName, password )
 {
-    VG.context.style=style;
-    VG.context.workspace.canvas.style=style;
+    VG.DB.userLogIn( userName, password, function( success, userName, userId, isAdmin ) 
+    {
+        if ( success ) 
+        {
+            this.userName=userName;
+            this.userId=userId;
+            this.userIsAdmin=isAdmin;
+
+            this.modelLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName, this.userId );
+
+            if ( this.callbackForLoggedStateChanged )
+                this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName, this.userId );  
+
+        }
+    }.bind( this ) );
+};
+
+VG.UI.Workspace.prototype.switchToStyle=function( style, skin )
+{
+    VG.UI.stylePool.current=style;
+    this.canvas.style=style;
+
+    if ( skin ) style.skin=skin;
 
     // --- Adjust the CSS background color to the statusbar end color
     if ( VG.getHostProperty( VG.HostProperty.Platform ) === VG.HostProperty.PlatformWeb ) {
         var canvas=document.getElementById( 'webgl' );
         var body=document.body;
           
-        body.style["background-color"]=VG.context.style.skin.Statusbar.GradientColor2.toHex();
+        body.style["background-color"]=this.canvas.style.skin.StatusBar.BackColor.toHex();
+    }
+    return;
+    VG.context.style=style;
+    VG.context.workspace.canvas.style=style;
+
+    if ( skin ) style.skin=skin;
+
+    // --- Adjust the CSS background color to the statusbar end color
+    if ( VG.getHostProperty( VG.HostProperty.Platform ) === VG.HostProperty.PlatformWeb ) {
+        var canvas=document.getElementById( 'webgl' );
+        var body=document.body;
+          
+        body.style["background-color"]=VG.context.style.skin.StatusBar.GradientColor2.toHex();
     }
             
     VG.update();
+};
+
+VG.UI.Workspace.prototype.dragOperationStarted=function( source, itemId, item )
+{
+    if ( !this.dndOperation ) {
+        this.dndOperation=true;
+        this.dndSource=source;
+        this.dndItemId=itemId;
+        this.dndItem=item;
+    }
 };

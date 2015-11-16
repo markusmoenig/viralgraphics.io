@@ -1,29 +1,28 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include <iostream>
-
 #include "gl.hpp"
-
-#include <jsapi.h>
-using namespace JS;
 
 class RenderTarget 
 {
@@ -43,7 +42,7 @@ public:
 
         this->main = main;
 
-        autoResize = w == 0 || h == 0;
+        this->imageWidth=0; this->imageHeight=0;
 
         id = 0;
         rbid = 0;
@@ -105,7 +104,6 @@ public:
 
     void destroy()
     {
-        /** Realeses the frame buffer from gpu */
         if (id == 0) return;
 
         glDeleteFramebuffers(1, &id);
@@ -117,6 +115,39 @@ public:
         texid = 0;
     }
 
+    GLint getRealWidth()
+    {
+        /** Get the real width of the image (power of two).
+         * @returns {int}
+         */
+        return this->w;
+    };
+    
+    GLint getRealHeight()
+    {
+        /** Get the real height of the image (power of two).
+         * @returns {int}
+         */
+        return this->h;
+    };
+    
+    GLint getWidth()
+    {
+        /** Get the user specified width of the Image.
+         * @returns {int}
+         */
+        
+        return this->imageWidth ? this->imageWidth : this->w;
+    };
+    
+    GLint getHeight()
+    {
+        /** Get the user specified height of the Image.
+         * @returns {int}
+         */
+        return this->imageHeight ? this->imageHeight : this->h;
+    };
+    
     void dispose()
     {
         /** Disposes the render target */
@@ -170,27 +201,43 @@ public:
         this->create();
     }
 
-    void setViewport( GLint x, GLint y, GLint width, GLint height )
+    void resetSize( GLint w, GLint h )
+    {
+        /** Resizes the frame buffer, it must not be binded as this recreates
+         *  the interal data */
+
+        if ( !id || this->w != w || this->h != h )
+            resize( w, h );
+        else
+        {
+            bind();
+            clear( -1, -1, -1, -1, 0 );
+            unbind();
+        }
+    }
+
+    void setViewport( GLfloat x, GLfloat y, GLfloat width, GLfloat height )
     {
         /** Sets the drawing viewport for the next draw call and on 
          *  @param {VG.Core.Rect} rect - The rect to be used */
 
-        glViewport( x, y, width, height );
+        glViewport( x, h - (y+height), width, height );
     }
 
-    void setScissor( GLint x, GLint y, GLint width, GLint height )
+    void setScissor( GLfloat x, GLfloat y, GLfloat width, GLfloat height )
     {
         /** Sets the scissor for the next draw call and on, it discards pixels outside the rect
          *  @param {VG.Core.Rect} rect - The rect, if null/false then it clears it.*/
-
-        if ( width && height )
+        if ( width > 0 && height > 0 )
         {
             glEnable( GL_SCISSOR_TEST );
             glScissor(x, h - (y+height), width, height);
         }
         else
         {
-            //disable scissor
+            if (width < 0 || height < 0) {
+                printf("RenderTarget.setScissor(glScissor) gets invalid rect(x, y, width, height) paramters : rect(%f, %f, %f, %f\n", x, y, width, height);
+            }
             glDisable( GL_SCISSOR_TEST );
         }
     }
@@ -200,7 +247,6 @@ public:
         /** Clears the frame buffer
          *  @param {VG.Core.Color} color  - The color to clear to 
          *  @param {numbeR} depth - If defined then the depth buffer is cleared with this value */
-
 
         GLuint clearBits = 0;
 
@@ -212,12 +258,19 @@ public:
 
         //if ( depth != -1 )
         {
-            glClearDepthf(depth);
+            glClearDepth(depth);
             clearBits |= GL_DEPTH_BUFFER_BIT;
         }
 
 
         glClear(clearBits);
+    }
+
+    bool checkStatusComplete()
+    {
+        //if ( glCheckFramebufferStatus( id ) == GL_FRAMEBUFFER_COMPLETE ) return true;
+        //else return false;
+        return true;
     }
 
     ~RenderTarget() 
@@ -230,6 +283,7 @@ public:
     GLuint id;
     GLint w;
     GLint h;
+    GLint imageWidth, imageHeight;
     GLuint rbid;
     bool autoResize, main;
     GLuint texid;

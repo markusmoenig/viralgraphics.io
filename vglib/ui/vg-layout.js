@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 // ----------------------------------------------------------------- VG.UI.LayoutHSeparator
@@ -89,14 +92,15 @@ VG.UI.LayoutHSpacer=function()
 
     this.horizontalExpanding=true;
     this.verticalExpanding=false;
+
+    this.preferredSize.set( 1,1 );
 };
 
 VG.UI.LayoutHSpacer.prototype=VG.UI.Widget();
 
 VG.UI.LayoutHSpacer.prototype.calcSize=function()
 {
-    var size=VG.Core.Size( 1,1 );
-    return size;
+    return this.preferredSize;
 };
 
 VG.UI.LayoutHSpacer.prototype.paintWidget=function( canvas )
@@ -106,15 +110,18 @@ VG.UI.LayoutHSpacer.prototype.paintWidget=function( canvas )
 
 // ----------------------------------------------------------------- VG.UI.LayoutVSpacer
 
-VG.UI.LayoutVSpacer=function()
+VG.UI.LayoutVSpacer=function( maxSize )
 {
-    if ( !(this instanceof VG.UI.LayoutVSpacer )) return new VG.UI.LayoutVSpacer();
+    if ( !(this instanceof VG.UI.LayoutVSpacer )) return new VG.UI.LayoutVSpacer( maxSize );
 
     VG.UI.Widget.call( this );
     this.name="LayoutVSpacer";
 
     this.horizontalExpanding=false;
     this.verticalExpanding=true;
+
+    if ( maxSize !== undefined )
+        this.maximumSize.height=maxSize;
 };
 
 VG.UI.LayoutVSpacer.prototype=VG.UI.Widget();
@@ -139,13 +146,9 @@ VG.UI.Layout=function()
         this.children=[];
         this.spacing=4;
 
-        this.hoverIn=0;
-        this.hoverOut=0;
-
-        this.mouseDown=0;
-        this.mouseUp=0;
-
         this.rect=VG.Core.Rect();
+        this.workRect=VG.Core.Rect();
+        this.contentRect=VG.Core.Rect();
         this.margin=VG.Core.Margin( 8, 8, 8, 8 );
         this.minimumSize=VG.Core.Size( 100, 100 );
         this.maximumSize=VG.Core.Size( VG.UI.MaxLayoutSize, VG.UI.MaxLayoutSize );
@@ -160,11 +163,20 @@ VG.UI.Layout=function()
         this._vertical=false;
         this.initLayoutAccessors();
 
+        this.hOffset=0; this.vOffset=0;
+
         for( var i=0; i < arguments.length; ++i )
             this.addChild( arguments[i] );
 
     } else return VG.UI.Layout.creator( arguments );
 };
+
+Object.defineProperty( VG.UI.Layout.prototype, "length", 
+{
+    get: function() {
+        return this.children.length;
+    } 
+});
 
 Object.defineProperty( VG.UI.Layout.prototype, "disabled", 
 {
@@ -271,6 +283,11 @@ VG.UI.Layout.prototype.initLayoutAccessors=function()
     }
 };
 
+VG.UI.Layout.prototype.addTitle=function( title )
+{
+    this.title=title;
+};
+
 VG.UI.Layout.prototype.insertAt=function( index, child )
 {
     this.children.splice( index, 0, child );
@@ -281,6 +298,13 @@ VG.UI.Layout.prototype.addChild=function( child )
 {
     this.children.push( child );
     child.parent=this;
+};
+
+
+VG.UI.Layout.prototype.addChilds=function()
+{
+    for( var i=0; i < arguments.length; ++i )
+        this.addChild( arguments[i] );
 };
 
 VG.UI.Layout.prototype.childAt=function( index )
@@ -294,6 +318,102 @@ VG.UI.Layout.prototype.removeChild=function( child )
     if ( index >= 0 ) {
         this.children.splice( index, 1 );
     }    
+};
+
+VG.UI.Layout.prototype.contains=function( child )
+{
+    if ( this.children.indexOf( child ) === -1 ) return false;
+    else return;
+};
+
+VG.UI.Layout.prototype.hHandleMoved=function( offsetInScrollbarSpace, customLine )
+{
+    this.hOffset=offsetInScrollbarSpace * this.hScrollbar.totalSize / this.hScrollbar.visibleSize;
+};
+
+VG.UI.Layout.prototype.vHandleMoved=function( offsetInScrollbarSpace, customLine )
+{
+    this.vOffset=offsetInScrollbarSpace * this.vScrollbar.totalSize / this.vScrollbar.visibleSize;
+};
+
+VG.UI.Layout.prototype.specialLayoutHitTest=function( pt )
+{
+    if ( !this.hScrollbar && !this.vScrollbar ) return false;
+
+    if ( this.needsHScrollbar && this.hScrollbar.rect.contains( pt ) )
+        return true;
+    else
+    if ( this.needsVScrollbar && this.vScrollbar.rect.contains( pt ) )
+        return true;
+    else
+    {
+        if ( ( this.hScrollbar && this.hScrollbar.visualState === VG.UI.Widget.VisualState.Hover ) || ( this.vScrollbar && this.vScrollbar.visualState === VG.UI.Widget.VisualState.Hover ) ) 
+            return true;
+    }
+    return false;
+};
+
+VG.UI.Layout.prototype.mouseMove=function( event )
+{  
+    if ( this.needsHScrollbar && this.hScrollbar )
+    {
+        if ( this.hScrollbar.rect.contains( event.pos ) ) {
+            this.hScrollbar.mouseMove( event );
+            return;
+        } else
+        {
+            if ( this.hScrollbar.visualState === VG.UI.Widget.VisualState.Hover ) {
+                this.hScrollbar.visualState=VG.UI.Widget.VisualState.Normal;
+                VG.update();
+            }
+        }
+    }
+
+    if ( this.needsVScrollbar && this.vScrollbar )
+    {
+        if ( this.vScrollbar.rect.contains( event.pos ) ) {
+            this.vScrollbar.mouseMove( event );
+            return;
+        } else
+        {
+            if ( this.vScrollbar.visualState === VG.UI.Widget.VisualState.Hover ) {
+                this.vScrollbar.visualState=VG.UI.Widget.VisualState.Normal;
+                VG.update();
+            }
+        }
+    }
+};
+
+VG.UI.Layout.prototype.mouseWheel=function( step )
+{
+    if ( !this.needsVScrollbar ) return false;
+
+    if ( step > 0 ) {
+        this.vOffset-=1 + this.spacing;
+        this.vScrollbar.scrollTo( this.vOffset );
+        return true;
+    } else
+    {
+        this.vOffset+=1 + this.spacing;
+        this.vScrollbar.scrollTo( this.vOffset );
+        return true;
+    }
+};
+
+VG.UI.Layout.prototype.mouseDown=function( event )
+{
+    if ( this.needsHScrollbar && this.hScrollbar.rect.contains( event.pos ) ) {
+        this.hScrollbar.mouseDown( event );
+    } else
+    if ( this.needsVScrollbar && this.vScrollbar.rect.contains( event.pos ) ) {
+        this.vScrollbar.mouseDown( event );
+    }
+};
+
+VG.UI.Layout.prototype.autoScrollStart=function( event )
+{
+    if ( this.needsVScrollbar )
+        this.vScrollbar.autoScrollStart( event );    
 };
 
 VG.UI.Layout.prototype.calcSize=function( canvas )
@@ -353,12 +473,73 @@ VG.UI.Layout.prototype.calcSize=function( canvas )
 
 VG.UI.Layout.prototype.layout=function( canvas, dontDraw )
 {
+    if ( !this.visible ) return;
+
+    if ( !dontDraw && this.title ) {
+        this.contentRect.copy( this.rect ); this.contentRect.height=VG.UI.stylePool.current.skin.TitleBar.Height;
+        VG.UI.stylePool.current.drawTitleBar( canvas, this.contentRect, this.title );        
+    }
+
     if ( !this.children.length ) return;
 
     if ( this.animationIsRunning == true ) {
         this.animate( canvas );
         return;
     }
+
+    this.contentRect.copy( this.rect );
+    if ( this.title ) { 
+        this.contentRect.y+=VG.UI.stylePool.current.skin.TitleBar.Height; 
+        this.contentRect.height-=VG.UI.stylePool.current.skin.TitleBar.Height;
+    }
+
+    canvas.pushClipRect( this.contentRect );
+/*
+    if ( this.children.length === 1 && this.children[0].isLayout )
+    {
+        var child=this.children[0];
+
+        child.rect.set( this.rect );
+        child.rect.x+=this.margin.left; child.rect.width-=this.margin.left + this.margin.right;
+        child.rect.y+=this.margin.top; child.rect.height-=this.margin.top + this.margin.bottom;        
+        child.layout( canvas );
+
+        canvas.popClipRect();
+
+        return;
+    }*/
+
+    var primaryOffset=0, secondaryOffset=0;
+
+    // --- Check for H Scrollbar
+    if ( this.allowScrollbars && this.contentRect.width < this.minimumSize.width ) { 
+        this.needsHScrollbar=true;
+        //VG.log( "VG.UI.Layout needs HScrollbar", this.rect.width, this.size.width );
+        this.contentRect.height-=/*this.rect.height - */VG.UI.stylePool.current.skin.ScrollBar.Size;
+
+        if ( !this.hScrollbar ) {
+            this.hScrollbar=VG.UI.ScrollBar( "Horizontal LabelLayout" );
+            this.hScrollbar.direction=VG.UI.ScrollBar.Direction.Horizontal;
+            this.hScrollbar.callbackObject=this;
+        }
+        if ( this.primaryCoord === "x" ) primaryOffset=this.hOffset;
+        else secondaryOffset=this.hOffset;        
+    } else this.needsHScrollbar=false;
+
+    // --- Check for V Scrollbar
+    if ( this.allowScrollbars && this.contentRect.height< this.minimumSize.height ) { 
+        this.needsVScrollbar=true;
+        //VG.log( "VG.UI.Layout needs VScrollbar", this.rect.height, this.minimumSize.height );
+        this.contentRect.width-=/*this.rect.width -*/ VG.UI.stylePool.current.skin.ScrollBar.Size;
+
+        if ( !this.vScrollbar ) {
+            this.vScrollbar=VG.UI.ScrollBar( "Vertical LabelLayout" );
+            this.vScrollbar.direction=VG.UI.ScrollBar.Direction.Vertical;
+            this.vScrollbar.callbackObject=this;
+        }
+        if ( this.primaryCoord === "y" ) primaryOffset=this.vOffset;
+        else secondaryOffset=this.vOffset;
+    } else this.needsVScrollbar=false;
 
     // --- Visible Children
 
@@ -374,7 +555,7 @@ VG.UI.Layout.prototype.layout=function( canvas, dontDraw )
 
     // ---
 
-    var rect=this.rect;
+    var rect=this.contentRect;
     var totalSpacing=(visibleChildren-1) * this.spacing;
     
     var availableSpace=rect[this.primarySize] - totalSpacing - this.margin[this.primaryLesserMargin] - this.margin[this.primaryGreaterMargin];
@@ -435,8 +616,8 @@ VG.UI.Layout.prototype.layout=function( canvas, dontDraw )
                 var secondaryCoord=rect[this.secondaryCoord] + this.margin[this.secondaryLesserMargin] + ( rect[this.secondarySize] - 
                     this.margin[this.secondaryLesserMargin] - this.margin[this.secondaryGreaterMargin] - size[this.secondarySize] ) / 2;
 
-                child.rect[this.primaryCoord]=pos;
-                child.rect[this.secondaryCoord]=secondaryCoord;
+                child.rect[this.primaryCoord]=pos - primaryOffset;
+                child.rect[this.secondaryCoord]=secondaryCoord - secondaryOffset;
 
                 if ( child[this.secondaryLayoutExpanding] === false ) {
                     child.rect.setSize( size.width, size.height );
@@ -462,8 +643,8 @@ VG.UI.Layout.prototype.layout=function( canvas, dontDraw )
                     secondarySize=rect[this.secondarySize] - this.margin[this.secondaryLesserMargin] - this.margin[this.secondaryGreaterMargin];
                 }
                     
-                child.rect[this.primaryCoord]=pos;
-                child.rect[this.secondaryCoord]=secondaryCoord;
+                child.rect[this.primaryCoord]=pos - primaryOffset;
+                child.rect[this.secondaryCoord]=secondaryCoord - secondaryOffset;
 
                 if ( child.maximumSize[this.primarySize] === VG.UI.MaxLayoutSize ) 
                     child.rect[this.primarySize]=expandingChildSpace;
@@ -505,6 +686,34 @@ VG.UI.Layout.prototype.layout=function( canvas, dontDraw )
     }
 
     this.minimumSize[this.secondarySize]+=this.margin[this.secondaryLesserMargin] + this.margin[this.secondaryGreaterMargin];    
+
+    if ( this.needsHScrollbar ) {
+        this.setHScrollbarDimensions( canvas );
+        this.hScrollbar.paintWidget( canvas );
+    }
+
+    if ( this.needsVScrollbar ) {
+        this.setVScrollbarDimensions( canvas );
+        this.vScrollbar.paintWidget( canvas );
+    }
+
+    canvas.popClipRect();
+};
+
+VG.UI.Layout.prototype.setHScrollbarDimensions=function( canvas )
+{
+    this.hScrollbar.rect=VG.Core.Rect( this.contentRect.x + 1, this.contentRect.bottom(), 
+        this.contentRect.width - 2, VG.UI.stylePool.current.skin.Scrollbar.Size );
+
+    this.hScrollbar.setScrollBarContentSize( this.minimumSize.width, this.contentRect.width-2 );
+};
+
+VG.UI.Layout.prototype.setVScrollbarDimensions=function( canvas )
+{
+    this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() /*- VG.UI.stylePool.current.skin.ScrollBar.Size*/, this.contentRect.y + 1, 
+        VG.UI.stylePool.current.skin.ScrollBar.Size, this.contentRect.height-2 );
+
+    this.vScrollbar.setScrollBarContentSize( this.minimumSize.height, this.contentRect.height );
 };
 
 VG.UI.LayoutAnimationItem=function( widget )
@@ -591,8 +800,8 @@ VG.UI.Layout.prototype.animate=function( canvas )
                 sItem.widget.paintWidget( VG.context.workspace.canvas );    
 
                 if ( sItem.label ) {
-                    canvas.pushFont( VG.context.style.skin.DefaultFont );
-                    VG.context.workspace.canvas.drawTextRect( sItem.label, sItem.labelRect, VG.context.style.skin.Widget.TextColor, 2, sItem.labelVAlignment );
+                    canvas.pushFont( VG.UI.stylePool.current.skin.Widget.Font );
+                    VG.context.workspace.canvas.drawTextRect( sItem.label, sItem.labelRect, VG.UI.stylePool.current.skin.Widget.TextColor, 2, sItem.labelVAlignment );
                     canvas.popFont();
                 }
             } else
@@ -620,9 +829,9 @@ VG.UI.Layout.prototype.animate=function( canvas )
                 item.widget.paintWidget( VG.context.workspace.canvas );
 
                 if ( item.label ) {
-                    canvas.pushFont( VG.context.style.skin.DefaultFont );
+                    canvas.pushFont( VG.UI.stylePool.current.skin.Widget.Font );
                     if ( fadeLabel ) canvas.setAlpha( percent / 100.0 );                    
-                    canvas.drawTextRect( item.label, item.labelRect, VG.context.style.skin.Widget.TextColor, 2, item.labelVAlignment );                
+                    canvas.drawTextRect( item.label, item.labelRect, VG.UI.stylePool.current.skin.Widget.TextColor, 2, item.labelVAlignment );                
                     canvas.popFont();
                 }
             }
@@ -657,20 +866,13 @@ VG.UI.SplitLayout=function()
     
     this.minimumSize.set( 200, 200 );
 
-    this.hoverIn=VG.UI.SplitLayout.hoverIn;
-    this.hoverOut=VG.UI.SplitLayout.hoverOut;
-
-    this.mouseDown=VG.UI.SplitLayout.mouseDown;
-    this.mouseUp=VG.UI.SplitLayout.mouseUp;
-    this.mouseMove=VG.UI.SplitLayout.mouseMove;
-
     this.dragOpStart=VG.Core.Point();
 
     this.dragOpItemIndex=0;
     this.dragOp=false;
 
     this.items=[];
-    this.spacing=VG.context.style.skin.SplitLayout.Separator.Size;
+    this.spacing=VG.UI.stylePool.current.skin.SplitLayout.Size;
 
     for( var i=0; i < arguments.length; i+=2 )
         this.addChild( arguments[i], arguments[i+1] );    
@@ -746,26 +948,35 @@ VG.UI.SplitLayout.prototype.specialLayoutHitTest=function( pt )
             if ( this.horizontal ) VG.setMouseCursor( "col-resize" );
             else VG.setMouseCursor( "row-resize" );
 
+            if ( !this.hasHoverState ) {
+                this.hasHoverState=true;
+                VG.update();
+            }
+
             return true;      
         }
     }
     VG.setMouseCursor( "default" );
+    if ( this.hasHoverState ) {
+        this.hasHoverState=false;
+        VG.update();
+    }
     return false;
 };
 
-VG.UI.SplitLayout.hoverIn=function()
+VG.UI.SplitLayout.prototype.hoverIn=function()
 {
     //console.log( "hoverIn" );
 };
 
-VG.UI.SplitLayout.hoverOut=function()
+VG.UI.SplitLayout.prototype.hoverOut=function()
 {
     //console.log( "hoverOut" );
 
     //this.dragOp=0;
 };
 
-VG.UI.SplitLayout.mouseMove=function( event )
+VG.UI.SplitLayout.prototype.mouseMove=function( event )
 {
     //console.log( "mouseMove" );
 
@@ -790,11 +1001,11 @@ VG.UI.SplitLayout.mouseMove=function( event )
             if ( (this.dragOpItemIndex + 1 ) < ( this.items.length - 1 ) ) {
                 // --- There is another item to the right / bottom, use it as the greater border.
                 var rightWidget=this.children[this.dragOpItemIndex + 2];
-                greaterBorder=rightWidget.rect[this.primaryCoord] - VG.context.style.skin.SplitLayout.Separator.Size - nextWidget.minimumSize[this.primarySize];
+                greaterBorder=rightWidget.rect[this.primaryCoord] - VG.UI.stylePool.current.skin.SplitLayout.Size - nextWidget.minimumSize[this.primarySize];
             } else {
                 // --- greater border is rect
                 greaterBorder=this.rect[this.primaryCoord] + this.rect[this.primarySize] - this.margin[this.primaryGreaterMargin] - 
-                VG.context.style.skin.SplitLayout.Separator.Size - nextWidget.minimumSize[this.primarySize];
+                VG.UI.stylePool.current.skin.SplitLayout.Size - nextWidget.minimumSize[this.primarySize];
             }
 
             if ( event.pos[this.primaryCoord] > greaterBorder ) {
@@ -812,7 +1023,7 @@ VG.UI.SplitLayout.mouseMove=function( event )
             if ( event.pos[this.primaryCoord] < lesserBorder ) offset-=lesserBorder - event.pos[this.primaryCoord];
 
             item.offset=-offset;
-            nextItem.offset=+offset;
+            nextItem.offset=offset;
         }
 
         if ( ( oldItemOffset != item.offet ) || ( oldNextItemOffset != nextItem.offset ) )
@@ -820,11 +1031,11 @@ VG.UI.SplitLayout.mouseMove=function( event )
     }
 };
 
-VG.UI.SplitLayout.mouseDown=function( event )
+VG.UI.SplitLayout.prototype.mouseDown=function( event )
 {
     var widget=this.children[this.dragOpItemIndex];
 
-    if ( event.pos[this.primaryCoord] > ( widget.rect[this.primaryCoord] + widget.rect[this.primarySize] - VG.context.style.skin.SplitLayout.Separator.Size ) ) {
+    if ( event.pos[this.primaryCoord] > ( widget.rect[this.primaryCoord] + widget.rect[this.primarySize] - VG.UI.stylePool.current.skin.SplitLayout.Size ) ) {
 
         this.dragOp=true;
         this.dragOpStart.set( event.pos ); 
@@ -833,7 +1044,7 @@ VG.UI.SplitLayout.mouseDown=function( event )
     }
 };
 
-VG.UI.SplitLayout.mouseUp=function( event )
+VG.UI.SplitLayout.prototype.mouseUp=function( event )
 {
     //console.log( "mouseUp" );
     this.dragOp=0;  
@@ -853,8 +1064,12 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
 {
     if ( !this.children.length ) return;
 
+    this.rect.round();
+    var sepSize=VG.UI.stylePool.current.skin.SplitLayout.Size;
+    this.spacing=sepSize;
+
     var rect=this.rect;
-    var totalSpacing=(this.items.length-1) * VG.context.style.skin.SplitLayout.Separator.Size;
+    var totalSpacing=(this.items.length-1) * sepSize;
 
     var availableSpace=rect[this.primarySize] - totalSpacing - this.margin[this.primaryLesserMargin] - this.margin[this.primaryGreaterMargin];
     var expandingChilds=0;
@@ -882,7 +1097,7 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
     for( var i=0; i < this.children.length; ++i )
     {
         var child=this.children[i];
-        var childRect=VG.Core.Rect();
+        var childRect=this.workRect;
 
         if ( child.isWidget )
         {
@@ -907,6 +1122,7 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
                     child.rect[this.secondarySize]=rect[this.secondarySize];
                 }
 
+                child.rect.round();
                 child.paintWidget( canvas );    
                 childRect.set( child.rect );   
             } else
@@ -946,7 +1162,7 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
                 if ( i < (this.children.length-1) ) {
                     var nextChild=this.children[i+1];
                     if ( nextChild.isWidget && nextChild[this.primaryLayoutExpanding] === false )
-                        primarySize+=VG.context.style.skin.SplitLayout.Separator.Size;
+                        primarySize+=sepSize;
                 }
 
                 // ---
@@ -982,12 +1198,13 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
             if ( i < (this.children.length-1) ) {
                 var nextChild=this.children[i+1];
                 if ( nextChild.isWidget && nextChild[this.primaryLayoutExpanding] === false )
-                    primarySize+=VG.context.style.skin.SplitLayout.Separator.Size;
+                    primarySize+=sepSize;
             }
 
             childRect[this.primarySize]=primarySize;
 
-            child.rect.set( childRect.round() );
+            child.rect.set( childRect );
+            child.rect.round();            
             child.layout( canvas );
         }
 
@@ -1005,11 +1222,11 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
 
             if ( drawSplitbar ) {
 
-                VG.context.style.drawSplitHandle( canvas, this, pos, item.rect, childRect, this.dragOp && this.dragOpItemIndex === i );
+                VG.UI.stylePool.current.drawSplitHandle( canvas, this, pos, item.rect, childRect, this.dragOp && this.dragOpItemIndex === i, this.hasHoverState && this.dragOpItemIndex === i );
 
                 item.rect[this.primaryCoord]=pos + childRect[this.primarySize];
                 item.rect[this.secondaryCoord]=this.margin[this.secondaryLesserMargin] + rect[this.secondaryCoord];
-                item.rect[this.primarySize]=VG.context.style.skin.SplitLayout.Separator.Size;
+                item.rect[this.primarySize]=sepSize;
                 item.rect[this.secondarySize]=rect[this.secondarySize] - this.margin[this.secondaryLesserMargin] - this.margin[this.secondaryGreaterMargin];
                 item.canDrag=true;
             } else
@@ -1019,7 +1236,7 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
         }
 
         pos+=childRect[this.primarySize];
-        if ( drawSplitbar ) pos+=VG.context.style.skin.SplitLayout.Separator.Size;
+        if ( drawSplitbar ) pos+=sepSize;
     }
 };
 
@@ -1055,8 +1272,12 @@ VG.UI.LabelLayout=function()
     this.labelAlignment=VG.UI.HAlignment.Right;
     this.mode=VG.UI.LabelLayout.Mode.WidgetMax;
 
+    this.size=VG.Core.Size();
+
     for( var i=0; i < arguments.length; i+=2 )
-        this.addChild( arguments[i], arguments[i+1] );        
+        this.addChild( arguments[i], arguments[i+1] );
+
+    this.hOffset=0; this.vOffset=0;
 };
 
 VG.UI.LabelLayout.prototype=VG.UI.Layout();
@@ -1065,11 +1286,10 @@ VG.UI.LabelLayout.Mode={ "WidgetMax" : 0, "Centered" : 1 };
 
 VG.UI.LabelLayout.prototype.calcSize=function( canvas )
 {
-    var size=VG.Core.Size();
-    this.layout( VG.context.workspace.canvas, true );
-    size.set( this.minimumSize );
+    this.layout( canvas, true );
+    this.size.set( this.minimumSize );
 
-    return size;
+    return this.size;
 };
 
 VG.UI.LabelLayout.prototype.addChild=function( label, widget )
@@ -1081,8 +1301,104 @@ VG.UI.LabelLayout.prototype.addChild=function( label, widget )
     widget.parent=this;
 };
 
+VG.UI.LabelLayout.prototype.hHandleMoved=function( offsetInScrollbarSpace, customLine )
+{
+    this.hOffset=offsetInScrollbarSpace * this.hScrollbar.totalSize / this.hScrollbar.visibleSize;
+};
+
+VG.UI.LabelLayout.prototype.vHandleMoved=function( offsetInScrollbarSpace, customLine )
+{
+    this.vOffset=offsetInScrollbarSpace * this.vScrollbar.totalSize / this.vScrollbar.visibleSize;
+};
+
+VG.UI.LabelLayout.prototype.specialLayoutHitTest=function( pt )
+{
+    if ( !this.hScrollbar && !this.vScrollbar ) return false;
+
+    if ( this.needsHScrollbar && this.hScrollbar.rect.contains( pt ) )
+        return true;
+    else
+    if ( this.needsVScrollbar && this.vScrollbar.rect.contains( pt ) )
+        return true;
+    else
+    {
+        if ( ( this.hScrollbar && this.hScrollbar.visualState === VG.UI.Widget.VisualState.Hover ) || ( this.vScrollbar && this.vScrollbar.visualState === VG.UI.Widget.VisualState.Hover ) ) 
+            return true;
+    }
+    return false;
+};
+
+VG.UI.LabelLayout.prototype.mouseMove=function( event )
+{  
+    if ( this.needsHScrollbar && this.hScrollbar )
+    {
+        if ( this.hScrollbar.rect.contains( event.pos ) ) {
+            this.hScrollbar.mouseMove( event );
+            return;
+        } else
+        {
+            if ( this.hScrollbar.visualState === VG.UI.Widget.VisualState.Hover ) {
+                this.hScrollbar.visualState=VG.UI.Widget.VisualState.Normal;
+                VG.update();
+            }
+        }
+    }
+
+    if ( this.needsVScrollbar && this.vScrollbar )
+    {
+        if ( this.vScrollbar.rect.contains( event.pos ) ) {
+            this.vScrollbar.mouseMove( event );
+            return;
+        } else
+        {
+            if ( this.vScrollbar.visualState === VG.UI.Widget.VisualState.Hover ) {
+                this.vScrollbar.visualState=VG.UI.Widget.VisualState.Normal;
+                VG.update();
+            }
+        }
+    }
+};
+
+VG.UI.LabelLayout.prototype.mouseWheel=function( step )
+{
+    if ( !this.needsVScrollbar ) return false;
+
+    if ( step > 0 ) {
+        this.vOffset-=1 + this.spacing;
+        this.vScrollbar.scrollTo( this.vOffset );
+        return true;
+    } else
+    {
+        this.vOffset+=1 + this.spacing;
+        this.vScrollbar.scrollTo( this.vOffset );
+        return true;
+    }
+};
+
+VG.UI.LabelLayout.prototype.mouseDown=function( event )
+{
+    if ( this.needsHScrollbar && this.hScrollbar.rect.contains( event.pos ) ) {
+        this.hScrollbar.mouseDown( event );
+    } else
+    if ( this.needsVScrollbar && this.vScrollbar.rect.contains( event.pos ) ) {
+        this.vScrollbar.mouseDown( event );
+    }
+};
+
+VG.UI.LabelLayout.prototype.mouseUp=function( event )
+{
+    //console.log( "mouseUp" );
+};
+
 VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
 {
+    if ( !this.visible ) return;
+
+    if ( !dontDraw && this.title ) {
+        this.contentRect.copy( this.rect ); this.contentRect.height=VG.UI.stylePool.current.skin.TitleBar.Height;
+        VG.UI.stylePool.current.drawTitleBar( canvas, this.contentRect, this.title );        
+    }
+
     if ( !this.children.length ) return;
 
     if ( this.animationIsRunning == true ) {
@@ -1090,9 +1406,44 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
         return;
     }
 
-    canvas.pushFont( VG.context.style.skin.DefaultFont );
+    this.rect.round();
+    this.contentRect.copy( this.rect );
+    if ( this.title ) { 
+        this.contentRect.y+=VG.UI.stylePool.current.skin.TitleBar.Height; 
+        this.contentRect.height-=VG.UI.stylePool.current.skin.TitleBar.Height;
+    }
 
-    var rect=this.rect;
+    // --- Check for H Scrollbar
+    if ( Math.floor( this.rect.width ) < Math.floor( this.size.width ) ) { 
+        this.needsHScrollbar=true;
+        //VG.log( "VG.UI.LabelLayout needs HScrollbar", this.rect.width, this.size.width );
+        this.contentRect.height-=/*this.rect.height -*/ VG.UI.stylePool.current.skin.ScrollBar.Size;
+
+        if ( !this.hScrollbar ) {
+            this.hScrollbar=VG.UI.ScrollBar( "Horizontal LabelLayout" );
+            this.hScrollbar.direction=VG.UI.ScrollBar.Direction.Horizontal;
+            this.hScrollbar.callbackObject=this;
+        }    
+    } else this.needsHScrollbar=false;
+
+    // --- Check for V Scrollbar
+    if ( Math.floor( this.rect.height ) < Math.floor( this.size.height ) ) { 
+        this.needsVScrollbar=true;
+        //VG.log( "VG.UI.LabelLayout needs VScrollbar", this.rect.height, this.size.height );
+        this.contentRect.width-=/*this.rect.width -*/ VG.UI.stylePool.current.skin.ScrollBar.Size;
+
+        if ( !this.vScrollbar ) {
+            this.vScrollbar=VG.UI.ScrollBar( "Vertical LabelLayout" );
+            this.vScrollbar.direction=VG.UI.ScrollBar.Direction.Vertical;
+            this.vScrollbar.callbackObject=this;
+        }    
+    } else this.needsVScrollbar=false;
+
+    canvas.pushClipRect( this.contentRect );
+
+    canvas.pushFont( VG.UI.stylePool.current.skin.Widget.Font );
+
+    var rect=this.contentRect;
     var rectWidth=rect.width - this.margin.left - this.margin.right;
 
     var y=rect.y + this.margin.top;
@@ -1166,15 +1517,21 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
         widgetRect.width=sideWidth;    
     }
 
+    labelRect.x-=this.hOffset;
+    widgetRect.x-=this.hOffset;
+
     // ---
 
     for( var i=0; i < this.items.length; ++i ) {
         var child=this.items[i];
         var widget=child.widget;
 
+        if ( widget.isLayout && widget instanceof VG.UI.StackedLayout && widget.current )
+            widget=widget.current;
+
         if ( !widget.visible ) continue;
 
-        var widgetSize=child.widget.calcSize( canvas );
+        var widgetSize=widget.calcSize( canvas );
         var height;
         var textVAlignment=1;
 
@@ -1183,7 +1540,7 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
         else {
 
             if ( widget.maximumSize.height === VG.UI.MaxLayoutSize ) 
-                height=expandingChildSpace
+                height=expandingChildSpace;
             else height=widget.maximumSize.height;
             textVAlignment=0;
         }
@@ -1191,7 +1548,7 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
         if ( height < minHeight )
             height=minHeight;
 
-        labelRect.y=y;
+        labelRect.y=y - this.vOffset;
         labelRect.height=height;
         child.labelRect.set( labelRect );
         child.labelVAlignment=textVAlignment;
@@ -1199,12 +1556,12 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
         labelRect.round();
 
         if ( arguments.length === 1 ) {
-            if ( !this.disabled ) canvas.drawTextRect( child.label, labelRect, VG.context.style.skin.Widget.TextColor, this.labelAlignment, textVAlignment );
-            else canvas.drawTextRect( child.label, labelRect, VG.context.style.skin.Widget.DisabledTextColor, this.labelAlignment, textVAlignment );
+            if ( !this.disabled && !widget.disabled ) canvas.drawTextRect( child.label, labelRect, VG.UI.stylePool.current.skin.Widget.TextColor, this.labelAlignment, textVAlignment );
+            else canvas.drawTextRect( child.label, labelRect, VG.UI.stylePool.current.skin.Widget.DisabledTextColor, this.labelAlignment, textVAlignment );
         }
 
         widget.rect.x=widgetRect.x;
-        widget.rect.y=y;
+        widget.rect.y=y - this.vOffset;
 
         if ( widgetRect.width > widget.maximumSize.width )
         {
@@ -1225,7 +1582,7 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
         widget.rect.round();
 
         if ( arguments.length === 1 )
-            child.widget.paintWidget( canvas );
+            widget.paintWidget( canvas );
 
         // --- Minimum Size: Width
 
@@ -1239,7 +1596,34 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
     }
 
     canvas.popFont();
+    canvas.popClipRect();
+
+    if ( this.needsHScrollbar ) {
+        this.setHScrollbarDimensions( canvas );
+        this.hScrollbar.paintWidget( canvas );
+    }
+
+    if ( this.needsVScrollbar ) {
+        this.setVScrollbarDimensions( canvas );
+        this.vScrollbar.paintWidget( canvas );
+    }
 }
+
+VG.UI.LabelLayout.prototype.setHScrollbarDimensions=function( canvas )
+{
+    this.hScrollbar.rect=VG.Core.Rect( this.contentRect.x + 1, this.contentRect.bottom(), 
+        this.contentRect.width - 2, VG.UI.stylePool.current.skin.ScrollBar.Size );
+
+    this.hScrollbar.setScrollBarContentSize( this.size.width, this.contentRect.width-2 );
+};
+
+VG.UI.LabelLayout.prototype.setVScrollbarDimensions=function( canvas )
+{
+    this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right(), this.contentRect.y + 1, 
+        VG.UI.stylePool.current.skin.ScrollBar.Size, this.contentRect.height - 2 );
+
+    this.vScrollbar.setScrollBarContentSize( this.size.height, this.contentRect.height );
+};
 
 // ----------------------------------------------------------------- VG.UI.StackedLayout
 
@@ -1283,6 +1667,11 @@ VG.UI.StackedLayout.prototype.addChild=function( child )
     if ( !this.current ) this.current=child;
 };
 
+VG.UI.StackedLayout.prototype.childAt=function( index )
+{
+    return this.children[index];
+};
+
 VG.UI.StackedLayout.prototype.calcSize=function( canvas )
 {
     if ( this.current ) {
@@ -1308,8 +1697,10 @@ VG.UI.StackedLayout.prototype.layout=function( canvas )
 
         child.rect.set( this.rect );
 
-        if ( child === this.current ) child.visible=true;
-        else child.visible=false;        
+        if ( child === this.current ) {
+            if ( !child._visible && child.aboutToShow ) child.aboutToShow();
+            child.visible=true;
+        } else child.visible=false;        
     }
 
     // --- Layout the current item

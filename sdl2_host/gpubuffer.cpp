@@ -1,391 +1,401 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include <iostream>
 #include "gpubuffer.hpp"
 #include "jshost.hpp"
 
-extern JSHost *g_host;
+extern JSWrapper *g_jsWrapper;
 
 std::vector<int> GPUBuffer::enabledAttribs;
 
 void GPUBuffer::enableAttrib(int index)
 {
+	glEnableVertexAttribArray(index);
     enabledAttribs.push_back(index);
-    glEnableVertexAttribArray(index);
-	GL_ASSERT();
 }
 
 void GPUBuffer::purgeAttribs()
-{ 
-    for (size_t i = 0; i < enabledAttribs.size(); i++)
-    {
-        int index = enabledAttribs[i];
-
-        if (index == 0) continue;
-
-        glDisableVertexAttribArray(index);
-		GL_ASSERT();
-    } 
-
+{
+    for (int i = 0; i < enabledAttribs.size(); i++) {
+        glDisableVertexAttribArray(enabledAttribs[i]);
+        GL_ASSERT();
+    }
     enabledAttribs.clear();
 }
 
+char *GPUBuffer::getDataFromDataBuffer( JSWrapperObject *object )
+{
+    // --- Get the Data Buffer
+
+    JSWrapperData dataBuffer;
+    object->get("dataBuffer", &dataBuffer);
+
+    JSWrapperData data;
+    dataBuffer.object()->get("data", &data);
+
+    unsigned int length; char *dataPtr=0;
+
+    if ( elemType == GL_FLOAT )
+    {
+        float *ptr;
+        data.object()->getAsFloat32Array( &ptr, &length );
+        dataPtr=(char *) ptr;        
+    } else
+    if ( elemType == GL_UNSIGNED_BYTE )    
+    {
+        uint8_t *ptr;
+        data.object()->getAsUint8Array( &ptr, &length );
+        dataPtr=(char *) ptr;
+    } else
+    if ( elemType == GL_UNSIGNED_SHORT )    
+    {
+        uint16_t *ptr;
+        data.object()->getAsUint16Array( &ptr, &length );
+        dataPtr=(char *) ptr;
+    } else 
+    if ( elemType == GL_UNSIGNED_INT )    
+    {
+        uint32_t *ptr;
+        data.object()->getAsUint32Array( &ptr, &length );
+        dataPtr=(char *) ptr;
+    }  
+
+    return dataPtr;
+} 
+
 // --------------------------------------------------------------- Member Functions
 
-bool GPUBuffer_getSize(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION( GPUBuffer_getStride )
 
-    GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( &value.toObject() );
-     args.rval().set( INT_TO_JSVAL( buffer->getSize() ) );
-    return true;
-}
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_FUNCTION_GETCLASS
 
-bool GPUBuffer_getStride(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+    JSWrapperData data; data.setNumber( buffer->getStride() );
+    JSWRAPPER_FUNCTION_SETRC( data )
 
-    GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( &value.toObject() );
-     args.rval().set( INT_TO_JSVAL( buffer->getStride() ) );
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
-bool GPUBuffer_create(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION( GPUBuffer_create )
 
-    GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( &value.toObject() );
-    buffer->create();
-    return true;
-}
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_FUNCTION_GETCLASS
 
-bool GPUBuffer_setBuffer(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+    char *data=buffer->getDataFromDataBuffer( thisObject );
 
-    if ( argc == 2 )
-    {
-        GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( &value.toObject() );
+    // ---
 
-        GLuint offset; JS::ToUint32( cx, args[0], &offset );
-        buffer->setBuffer( offset, args[1].toNumber() );
-    }
-    return true;
-}
+    buffer->create( data );
 
-bool GPUBuffer_getBuffer(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    if ( argc == 1 )
-    {
-        GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( &value.toObject() );
+JSWRAPPER_FUNCTION( GPUBuffer_getDataBuffer )
 
-        GLuint offset; JS::ToUint32( cx, args[0], &offset );
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_FUNCTION_GETCLASS
 
-        switch ( buffer->type )
-        {
-            case 0://VG.Type.Float:
-            {
-                GLfloat *buf=(GLfloat*) buffer->data;
-                args.rval().set( JS_NumberValue( buf[offset] ) );
-                break;
-            }
-            case 1://VG.Type.Uint8:
-            {
-                args.rval().set( INT_TO_JSVAL( buffer->data[offset] ) );
-                break;
-            }
-            case 2://VG.Type.Uint16:
-            {
-                GLushort *buf=(GLushort*)buffer->data;
-                args.rval().set( INT_TO_JSVAL( buf[offset] ) );
-                break;
-            }
-        }
-        
-    }
+    JSWrapperData data;
+    thisObject->get( "dataBuffer", &data );
 
-    return true;
-}
+    JSWRAPPER_FUNCTION_SETRC( data )
 
-bool GPUBuffer_bind(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( &value.toObject() );
+JSWRAPPER_FUNCTION( GPUBuffer_bind )
+
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_FUNCTION_GETCLASS
     buffer->bind();
-    return true;
-}
 
-bool GPUBuffer_update(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
+
+JSWRAPPER_FUNCTION( GPUBuffer_update )
+
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_FUNCTION_GETCLASS
 
     GLuint offset=0, count=0;
     bool nobind=false;
 
-    if ( argc >= 1 ) JS::ToUint32( cx, args[0], &offset );
-    if ( argc >= 2 ) JS::ToUint32( cx, args[1], &count );
-    if ( argc >= 3 ) nobind=args[2].toBoolean();
+    if ( args.count() >= 1 ) offset=(GLuint) args[0].toNumber();
+    if ( args.count() >= 2 ) count=(GLuint) args[1].toNumber();
+    if ( args.count() >= 3 ) nobind=args[2].toBoolean();
 
-    GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( &value.toObject() );
-    buffer->update( offset, count, nobind );
-    return true;
-}
+    char *data=buffer->getDataFromDataBuffer( thisObject);    
+    buffer->update( offset, count, nobind, data );
 
-bool GPUBuffer_destroy(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( &value.toObject() );
+JSWRAPPER_FUNCTION( GPUBuffer_destroy )
+
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_FUNCTION_GETCLASS
     buffer->destroy();
-    return true;
-}
 
-bool GPUBuffer_dispose(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( &value.toObject() );
+JSWRAPPER_FUNCTION( GPUBuffer_dispose )
+
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_FUNCTION_GETCLASS
     buffer->dispose();
 
     // --- VG.Renderer().removeResource(this);
-        
-    RootedValue *renderer=g_host->executeScript( "VG.Renderer()" );
-    RootedObject rendererObject( cx, &renderer->toObject() );
+    
+    JSWrapperData rendererObject;
+    g_jsWrapper->execute( "VG.Renderer()", &rendererObject );
 
-    RootedValue rc( cx );
-    RootedValue thisValue( cx, value );
+    JSWrapperArguments arguments;
+    arguments.append( thisObject );    
 
-    bool ok=Call( cx, HandleObject( rendererObject ), "removeResource", HandleValueArray( thisValue ), MutableHandleValue( &rc ) );
+    JSWrapperData addObject;
+    rendererObject.object()->get( "removeResource", &addObject );
+    addObject.object()->call( &arguments, rendererObject.object() );
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
-bool GPUBuffer_vertexAttrib(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION( GPUBuffer_vertexAttrib )
 
-    if ( argc == 5 )
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_FUNCTION_GETCLASS
+
+    if ( args.count() == 5 )
     {
-        GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( &value.toObject() );
-
         GLuint index, size, stride, offset;
         bool norm=args[2].toBoolean();
 
-        JS::ToUint32( cx, args[0], &index );
-        JS::ToUint32( cx, args[1], &size );
-        JS::ToUint32( cx, args[3], &stride );
-        JS::ToUint32( cx, args[4], &offset );
+        index=(GLuint) args[0].toNumber();
+        size=(GLuint) args[1].toNumber();
+        stride=(GLuint) args[3].toNumber();
+        offset=(GLuint) args[4].toNumber();
 
         buffer->vertexAttrib( index, size, norm, stride, offset );
     }
-    return true;
-}
 
-bool GPUBuffer_draw(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    if ( argc >= 3 )
-    {
-        GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( &value.toObject() );
+JSWRAPPER_FUNCTION( GPUBuffer_purgeAttribs )
+    GPUBuffer::purgeAttribs();
+JSWRAPPER_FUNCTION_END
 
-        GLint primType=args[0].toInt32();
-        GLuint offset, count;
-        bool nobind=false;
-        if ( argc >= 4 ) nobind=args[3].toBoolean();
-
-        JS::ToUint32( cx, args[1], &offset );
-        JS::ToUint32( cx, args[2], &count );
-
-        buffer->draw( primType, offset, count, nobind );
-    }
-    return true;
-}
-
-bool GPUBuffer_drawIndexed(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
-
-    if ( argc >= 4 )
-    {
-        GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( &value.toObject() );
-
-        GLint primType=args[0].toInt32(), offset=args[1].toInt32(), count=args[2].toInt32();
-        //GLint indexType=args[3].toInt32();
-
-        bool nobind=false;
-        if ( argc >= 5 ) nobind=args[4].toBoolean();
-        
-        // TODO 4
-        buffer->drawIndexed( primType, offset, count, 0, nobind );
-    }
-    return true;
-}
-
-// --------------------------------------------------------------- Properties
-
-bool GetGPUBufferProperty( JSContext *cx, Handle<JSObject *> object, Handle<jsid> id, MutableHandle<Value> value )
-{
-    RootedValue val(cx); JS_IdToValue( cx, id, MutableHandleValue(&val) );
-    JSString *propertyString = val.toString(); const char *propertyName=JS_EncodeString(cx, propertyString);    
-    printf("GPUBufferProperty: %s\n", propertyName ); 
+JSWRAPPER_FUNCTION( GPUBuffer_drawBuffer )
     
-    GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( object );
-
-    if ( !strcmp( propertyName, "usage" ) ) {
-        value.set( INT_TO_JSVAL( buffer->usage ) );
-    }
-    if ( !strcmp( propertyName, "target" ) ) {
-        value.set( INT_TO_JSVAL( buffer->target ) );
-    }
-    if ( !strcmp( propertyName, "size" ) ) {
-        value.set( INT_TO_JSVAL( buffer->size ) );
-    }
-    if ( !strcmp( propertyName, "elemType" ) ) {
-        value.set( INT_TO_JSVAL( buffer->elemType ) );
-    }
-    if ( !strcmp( propertyName, "stride" ) ) {
-        value.set( INT_TO_JSVAL( buffer->stride ) );
-    }
-    if ( !strcmp( propertyName, "type" ) ) {
-        value.set( INT_TO_JSVAL( buffer->type ) );
-    }
-
-    return true;    
-}
-
-bool SetGPUBufferProperty( JSContext *cx, Handle<JSObject *> object, Handle<jsid> id, bool, MutableHandle<Value> value)
-{
-    RootedValue val(cx); JS_IdToValue( cx, id, MutableHandleValue(&val) );
-    JSString *propertyString = val.toString(); const char *propertyName=JS_EncodeString(cx, propertyString);    
-    printf("SetGPUBufferProperty: %s\n", propertyName ); 
-
-    GPUBuffer *buffer=(GPUBuffer *) JS_GetPrivate( object );
-
-    if ( !strcmp( propertyName, "usage" ) ) {
-        JS::ToUint32( cx, val, &buffer->usage );
-    }
-    if ( !strcmp( propertyName, "target" ) ) {
-        JS::ToUint32( cx, value, &buffer->target );
-    }
-    if ( !strcmp( propertyName, "size" ) ) {
-        JS::ToUint32( cx, value, &buffer->size );
-    }
-    if ( !strcmp( propertyName, "elemType" ) ) {
-        JS::ToUint32( cx, value, &buffer->elemType );
-    }
-    if ( !strcmp( propertyName, "stride" ) ) {
-        JS::ToUint32( cx, value, &buffer->stride );
-    }
-    if ( !strcmp( propertyName, "type" ) ) {
-        JS::ToUint32( cx, value, &buffer->type );
+    if ( args.count() >= 3)
+    {        
+        GLint primType=args[0].toNumber(), offset=args[1].toNumber(), count=args[2].toNumber();
+        
+        GLenum mode = GL_TRIANGLES;
+        
+        switch (primType)
+        {
+            case 1: mode = GL_LINES; break;
+            case 3: mode = GL_LINE_STRIP; break;
+            case 2: mode = GL_TRIANGLE_STRIP; break;
+        }
+        
+        bool indexed = false;
+        
+        if ( args.count() > 3)
+            indexed = args[3].toBoolean();
+        
+        if (indexed) {
+            GLint elemType = args[4].toNumber();
+            glDrawElements(mode, count, elemType, (const GLvoid*)offset);
+        } else {
+            glDrawArrays(mode, offset, count);
+        }
+        GL_ASSERT();
     }
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
-static JSFunctionSpec gpubuffer_functions[] = {
-    JS_FS( "getSize", GPUBuffer_getSize, 0, 0 ),
-    JS_FS( "getStride", GPUBuffer_getStride, 0, 0 ),
-    JS_FS( "create", GPUBuffer_create, 0, 0 ),
-    JS_FS( "setBuffer", GPUBuffer_setBuffer, 0, 0 ),
-    JS_FS( "getBuffer", GPUBuffer_getBuffer, 0, 0 ),
-    JS_FS( "bind", GPUBuffer_bind, 0, 0 ),
-    JS_FS( "update", GPUBuffer_update, 0, 0 ),
-    JS_FS( "destroy", GPUBuffer_destroy, 0, 0 ),
-    JS_FS( "dispose", GPUBuffer_dispose, 0, 0 ),
-    JS_FS( "vertexAttrib", GPUBuffer_vertexAttrib, 0, 0 ),
-    JS_FS( "draw", GPUBuffer_draw, 0, 0 ),
-    JS_FS( "drawIndexed", GPUBuffer_drawIndexed, 0, 0 ),
+// --------------------------------------------------------------- Getters
 
-    JS_FS_END
-};
- 
+JSWRAPPER_GETPROPERTY( GetGPUBufferProperty_usage )
+
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_PROPERTY_GETCLASS
+
+    JSWrapperData data; data.setNumber( buffer->usage );
+    JSWRAPPER_GETPROPERTY_SETRC( data )
+
+JSWRAPPER_GETPROPERTY_END
+
+JSWRAPPER_GETPROPERTY( GetGPUBufferProperty_target )
+
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_PROPERTY_GETCLASS
+
+    JSWrapperData data; data.setNumber( buffer->target );
+    JSWRAPPER_GETPROPERTY_SETRC( data )
+
+JSWRAPPER_GETPROPERTY_END
+
+JSWRAPPER_GETPROPERTY( GetGPUBufferProperty_size )
+
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_PROPERTY_GETCLASS
+
+    JSWrapperData data; data.setNumber( buffer->size );
+    JSWRAPPER_GETPROPERTY_SETRC( data )
+
+JSWRAPPER_GETPROPERTY_END
+
+JSWRAPPER_GETPROPERTY( GetGPUBufferProperty_elemType )
+
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_PROPERTY_GETCLASS
+
+    JSWrapperData data; data.setNumber( buffer->elemType );
+    JSWRAPPER_GETPROPERTY_SETRC( data )
+
+JSWRAPPER_GETPROPERTY_END
+
+JSWRAPPER_GETPROPERTY( GetGPUBufferProperty_stride )
+
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_PROPERTY_GETCLASS
+
+    JSWrapperData data; data.setNumber( buffer->stride );
+    JSWRAPPER_GETPROPERTY_SETRC( data )
+
+JSWRAPPER_GETPROPERTY_END
+
+JSWRAPPER_GETPROPERTY( GetGPUBufferProperty_type )
+
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_PROPERTY_GETCLASS
+
+    JSWrapperData data; data.setNumber( buffer->type );
+    JSWRAPPER_GETPROPERTY_SETRC( data )
+
+JSWRAPPER_GETPROPERTY_END
+
+// --------------------------------------------------------------- Setters
+
+JSWRAPPER_SETPROPERTY( SetGPUBufferProperty_usage )
+
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_PROPERTY_GETCLASS
+    buffer->usage=data.toNumber();
+
+JSWRAPPER_SETPROPERTY_END
+
+JSWRAPPER_SETPROPERTY( SetGPUBufferProperty_target )
+
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_PROPERTY_GETCLASS
+    buffer->target=data.toNumber();
+
+JSWRAPPER_SETPROPERTY_END
+
+JSWRAPPER_SETPROPERTY( SetGPUBufferProperty_size )
+
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_PROPERTY_GETCLASS
+    buffer->size=data.toNumber();
+
+JSWRAPPER_SETPROPERTY_END
+
+JSWRAPPER_SETPROPERTY( SetGPUBufferProperty_elemType )
+
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_PROPERTY_GETCLASS
+    buffer->elemType=data.toNumber();
+
+JSWRAPPER_SETPROPERTY_END
+
+JSWRAPPER_SETPROPERTY( SetGPUBufferProperty_stride )
+
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_PROPERTY_GETCLASS
+    buffer->stride=data.toNumber();
+
+JSWRAPPER_SETPROPERTY_END
+
+JSWRAPPER_SETPROPERTY( SetGPUBufferProperty_type )
+
+    GPUBuffer *buffer=(GPUBuffer *) JSWRAPPER_PROPERTY_GETCLASS
+    buffer->type=data.toNumber();
+
+JSWRAPPER_SETPROPERTY_END
+
 // --------------------------------------------------------------- 
 
-JSClass GPUBufferClass = 
-{ 
-    "GPUBuffer", JSCLASS_HAS_PRIVATE, JS_PropertyStub, NULL,
-    JS_PropertyStub, JS_StrictPropertyStub,
-    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL
-};
+JSWRAPPER_CONSTRUCTOR( GPUBufferConstructor, "GPUBuffer" )
 
-bool GPUBufferConstructor( JSContext *cx, unsigned argc, jsval *vp )
-{
-    //printf( "GPUBuffer Constructor!%d\n", argc );
+    if ( args.count() >= 3 ) {
 
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
-
-    JSObject *object = JS_NewObjectForConstructor( cx, &GPUBufferClass, args );
-    RootedObject obj(cx, object ); RootedValue v(cx, JS::UndefinedValue() );
-    JS_DefineFunctions( cx, HandleObject(obj), gpubuffer_functions );
-
-    JS_DefineProperty( cx, HandleObject(obj), "usage", HandleValue(&v), JSPROP_SHARED, (JSPropertyOp) GetGPUBufferProperty, (JSStrictPropertyOp) SetGPUBufferProperty );
-    JS_DefineProperty( cx, HandleObject(obj), "target", HandleValue(&v), JSPROP_SHARED, (JSPropertyOp) GetGPUBufferProperty, (JSStrictPropertyOp) SetGPUBufferProperty );
-    JS_DefineProperty( cx, HandleObject(obj), "size", HandleValue(&v), JSPROP_SHARED, (JSPropertyOp) GetGPUBufferProperty, (JSStrictPropertyOp) SetGPUBufferProperty );
-    JS_DefineProperty( cx, HandleObject(obj), "elemType", HandleValue(&v), JSPROP_SHARED, (JSPropertyOp) GetGPUBufferProperty, (JSStrictPropertyOp) SetGPUBufferProperty );
-    JS_DefineProperty( cx, HandleObject(obj), "stride", HandleValue(&v), JSPROP_SHARED, (JSPropertyOp) GetGPUBufferProperty, (JSStrictPropertyOp) SetGPUBufferProperty );
-    JS_DefineProperty( cx, HandleObject(obj), "type", HandleValue(&v), JSPROP_SHARED, (JSPropertyOp) GetGPUBufferProperty, (JSStrictPropertyOp) SetGPUBufferProperty );
-
-    if ( argc >= 3 ) {
-        JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
-
-        int type=args[0].toInt32();
-        GLuint size; JS::ToUint32( cx, args[1], &size );
-        int dynamic=args[2].toInt32();
+        int type=args[0].toNumber();
+        GLuint size=(GLuint) args[1].toNumber();
+        int dynamic=args[2].toNumber();
 
         bool isIndexBuffer=false;
-        if ( argc >= 4 ) isIndexBuffer=args[3].toBoolean();
+        if ( args.count() >= 4 ) isIndexBuffer=args[3].toBoolean();
 
         GPUBuffer *buffer = new GPUBuffer( type, size, dynamic, isIndexBuffer );
 
-        JS_SetPrivate( object, buffer );
-        args.rval().set( OBJECT_TO_JSVAL( object ) );
+        // --- Allocate Data Buffer on the Script side
+
+        JSWrapperData coreObject;
+        g_jsWrapper->execute( "VG.Core", &coreObject );
+
+        JSWrapperData typedData;
+        coreObject.object()->get( "TypedArray", &typedData );
+
+        JSWrapperArguments arguments;
+        arguments.append( args[0].toNumber() );
+        arguments.append( args[1].toNumber() );
+
+        JSWrapperData data;
+        typedData.object()->call( &arguments, coreObject.object(), &data );
+        thisObject->set( "dataBuffer", data );
+
+        // ---
+
+        JSWRAPPER_CONSTRUCTOR_SETCLASS( buffer )
     }
 
     //VG.Renderer().addResource(this);
 
-    RootedValue rendererRC(cx); RootedObject global( cx,JS_GetGlobalForObject( cx, object ) );
-    bool ok = JS_EvaluateScript( cx, HandleObject( global ), "VG.Renderer()", strlen("VG.Renderer()"), "unknown", 1, MutableHandleValue(&rendererRC) );    
-    if ( ok )
-    {
-        RootedValue objectValue( cx, OBJECT_TO_JSVAL(object) );
-        RootedObject renderer(cx, &rendererRC.toObject() ); MutableHandleValue handleValue( &rendererRC );
-        ok=Call( cx, HandleObject(renderer), "addResource", HandleValueArray( objectValue ), handleValue );
-    }
+    JSWrapperData rendererObject;
+    g_jsWrapper->execute( "VG.Renderer()", &rendererObject );
 
-    return true;
-}
+    JSWrapperArguments arguments;
+    arguments.append( thisObject );    
 
-JSObject *registerGPUBuffer( JSContext *cx, JSObject *object )
+    JSWrapperData addObject;
+    rendererObject.object()->get( "addResource", &addObject );
+    addObject.object()->call( &arguments, rendererObject.object() );    
+
+JSWRAPPER_CONSTRUCTOR_END
+
+JSWrapperClass *registerGPUBuffer( JSWrapper *jsWrapper )
 {
-    RootedObject obj(cx, object ); RootedObject parentobj(cx);
+    JSWrapperData data;
+    jsWrapper->globalObject()->get( "VG", &data );
+ 
+    JSWrapperClass *gpuBufferClass=data.object()->createClass( "GPUBuffer", GPUBufferConstructor );
+    gpuBufferClass->registerFunction( "getStride", GPUBuffer_getStride );
+    gpuBufferClass->registerFunction( "create", GPUBuffer_create );
+    gpuBufferClass->registerFunction( "getDataBuffer", GPUBuffer_getDataBuffer );
+    gpuBufferClass->registerFunction( "bind", GPUBuffer_bind );
+    gpuBufferClass->registerFunction( "update", GPUBuffer_update );
+    gpuBufferClass->registerFunction( "destroy", GPUBuffer_destroy );
+    gpuBufferClass->registerFunction( "dispose", GPUBuffer_dispose );
+    gpuBufferClass->registerFunction( "vertexAttrib", GPUBuffer_vertexAttrib );
+    gpuBufferClass->registerFunction( "purgeAttribs", GPUBuffer_purgeAttribs );
+    gpuBufferClass->registerFunction( "drawBuffer", GPUBuffer_drawBuffer );
 
-    JSObject * newObject=JS_InitClass( cx, HandleObject(obj), HandleObject(parentobj), &GPUBufferClass,  
-        GPUBufferConstructor, 0,
-        NULL, NULL,
-        NULL, NULL);
+    gpuBufferClass->registerProperty( "usage", GetGPUBufferProperty_usage, SetGPUBufferProperty_usage );
+    gpuBufferClass->registerProperty( "target", GetGPUBufferProperty_target, SetGPUBufferProperty_target );
+    gpuBufferClass->registerProperty( "size", GetGPUBufferProperty_size, SetGPUBufferProperty_size );
+    gpuBufferClass->registerProperty( "elemType", GetGPUBufferProperty_elemType, SetGPUBufferProperty_elemType );
+    gpuBufferClass->registerProperty( "stride", GetGPUBufferProperty_stride, SetGPUBufferProperty_stride );
+    gpuBufferClass->registerProperty( "type", GetGPUBufferProperty_type, SetGPUBufferProperty_type );
 
-    return newObject;    
+    gpuBufferClass->install();
+
+    return gpuBufferClass;
 }

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Visual Graphics Application Framework</title>  
+    <style>
+      body, html { 
+        width: 100%;
+        height: 100%;
+        border: 0px;
+        padding: 0px;
+        margin: 0px;
+        background-color: #cdcdcd;        
+      }
+      #webgl {
+        width: 100%;
+        height: 99.5%;
+      }    
+
+      #drop_zone {
+        width: 100%;
+        height: 100%;
+      }  
+
+    </style>      
+  </head>
+
+  <body onload="main()">
+    <canvas id="webgl" style="position: absolute; left: 0; top: 0; z-index: 0;">Please use a browser that supports "canvas"</canvas>
+    <canvas id="textureCanvas" style="display:none" width="256" height="256"></canvas>
+    <canvas id="dropZone" style="position: absolute; left: 0; top: 0; z-index: 1; display:none" width="256" height="256">
+        <div id="drop_zone">Drop files here</div>
+    </canvas>
+
+    <script src="../../vglib/utils/typeface-0.15.js"></script>
+    <script src="../../fonts/open_sans/open_sans_semibold.typeface.js"></script>
+    <script src="../../fonts/open_sans/open_sans_semibold_italic.typeface.js"></script>
+    <script src="../../fonts/open_sans/open_sans_bold.typeface.js"></script>
+    <script src="../../fonts/roboto/roboto_regular.typeface.js"></script>    
+    <script src="../../fonts/visualgraphics_regular.typeface.js"></script>
+
+    <script src="../../web/lib/webgl-utils.js"></script>
+    <script src="../../vglib/vg-defines.js"></script>
+    <script src="../../vglib/vg-core.js"></script>
+    <script src="../../vglib/vg-math.js"></script>
+    <script src="../../vglib/vg-data.js"></script>
+    <script src="../../vglib/vg-undo.js"></script>
+    <script src="../../vglib/vg-controller.js"></script>
+    <script src="../../vglib/vg-font.js"></script>
+    <script src="../../vglib/vg-sax.js"></script>
+    <script src="../../vglib/vg-svg.js"></script>
+    <script src="../../vglib/vg-renderer.js"></script>
+    <script src="../../vglib/vg-canvas.js"></script>
+    <script src="../../web/vg-webgl.js"></script>
+    <script src="../../web/vg-system.js"></script>
+    <script src="../../vglib/vg-events.js"></script>
+    <script src="../../vglib/vg-shortcut.js"></script>
+
+    <script> VG.localVGLibPrefix="../../"; </script>
+
+    <script src="../../vglib/utils/vg-compressor.js"></script>
+    <script src="../../vglib/utils/vg-utils.js"></script>
+
+    <script src="../../vglib/db/vg-db.js"></script>
+    <script src="../../vglib/db/vg-folder.js"></script>
+
+    <script src="../../vglib/ui/vg-defines.js"></script>
+    <script src="../../vglib/ui/styles/visualgraphics/vg-desktop.js"></script>
+    <script src="../../vglib/ui/styles/visualgraphics/desktop_gray/vg-skin.js"></script>    
+    <script src="../../vglib/ui/vg-widgets.js"></script>
+    <script src="../../vglib/ui/vg-menu.js"></script>
+    <script src="../../vglib/ui/vg-listwidget.js"></script>
+    <script src="../../vglib/ui/vg-treewidget.js"></script>
+    <script src="../../vglib/ui/vg-textwidgets.js"></script>
+    <script src="../../vglib/ui/vg-htmlView.js"></script>    
+    <script src="../../vglib/ui/vg-numericalwidgets.js"></script>
+    <script src="../../vglib/ui/vg-toolbar.js"></script>
+    <script src="../../vglib/ui/vg-layout.js"></script>
+    <script src="../../vglib/ui/vg-tablewidget.js"></script>
+    <script src="../../vglib/ui/vg-window.js"></script>
+    <script src="../../vglib/ui/vg-dockwidget.js"></script>
+    <script src="../../vglib/ui/vg-workspace.js"></script>
+    <script src="../../vglib/ui/vg-workspace_dialogs.js"></script>
+
+    <script src="../../vglib/nodes/vg-controller.js"></script>
+    <script src="../../vglib/nodes/vg-parameter.js"></script>
+    <script src="../../vglib/nodes/vg-terminal.js"></script>
+    <script src="../../vglib/nodes/vg-node.js"></script>
+    <script src="../../vglib/nodes/vg-nodes.js"></script>
+    <script src="../../vglib/nodes/vg-material.js"></script>
+    <script src="../../vglib/nodes/vg-graph.js"></script>
+    <script src="../../vglib/nodes/vg-parameteredit.js"></script>    
+    <script src="../../vglib/nodes/vg-graphedit.js"></script>
+    <script src="../../vglib/nodes/vg-materialwidget.js"></script>    
+
+    <script src="../../vglib/render/vg-material.js"></script>
+    <script src="../../vglib/render/vg-pipeline.js"></script>
+    <script src="../../vglib/render/vg-scene.js"></script>
+    <script src="../../vglib/render/vg-camera.js"></script>
+    <script src="../../vglib/render/vg-mesh.js"></script>
+    <script src="../../vglib/render/vg-light.js"></script>
+    <script src="../../vglib/render/vg-import.js"></script>
+
+    <script src="../../web/vg-dialogs.js"></script>
+
+    <script src="cornellbox.js"></script>
+    <script src="../../web/visualgraphics.js"></script>
+  </body>
+</html>

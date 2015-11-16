@@ -17,6 +17,8 @@
 #ifndef __EMBREE_DEFAULT_H__
 #define __EMBREE_DEFAULT_H__
 
+#include <algorithm>
+
 #include "sys/platform.h"
 #include "sys/ref.h"
 #include "sys/intrinsics.h"

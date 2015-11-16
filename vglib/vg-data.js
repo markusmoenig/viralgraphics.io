@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 VG.Data = {};
@@ -124,20 +127,38 @@ VG.Data.Base.prototype.dataForPath=function( path )
     return null;
 };
 
-VG.Data.Base.prototype.storeDataForPath=function( path, value, noUndo )
+VG.Data.Base.prototype.storeDataForPath=function( path, value, noUndo, forceStorage )
 {
-    if ( path.indexOf( '.' ) === -1 ) this[path]=value;
-    else {
+    /**Stores a given value for the given path and creates an undo step. Widgets like a Checkbox widget use this function to store
+     * user changes inside the model. However this function can also be used directly to store value changes.
+     * @param {string} path - The path of the value to store.
+     * @param {object} value - The data value to store inside the model.
+     * @param {boolean} noUndo - Optional, if true blocks the creation of an undo step for the value change.
+     * @param {boolean} forceStorage - Optional, if true forces storing of the value. Normally if the model value is the same as the new value
+     * this function will not store it, however to make sure this value is always stored set forceStorage to true. This is useful for undo groups
+     * where the initial value may be the same as in the model but other value changes inside the group will change values.
+     * @returns {VG.Data.UndoItem} The undo item created for this data value step. To add further undo steps into this group just call addSubItem() on the
+     * undo item. 
+     */
+
+    var undo=undefined;
+    if ( path.indexOf( '.' ) === -1 ) 
+    {
+        if ( this.__vgUndo && !noUndo ) undo=this.__vgUndo.pathValueAboutToChange( this, path, value );        
+        this[path]=value;
+    } else 
+    {
     	var object=this.objectForPath( path );
     	if ( object ) {
 
-            if ( object[this.valueSegmentOfPath(path)] !== value ) {
+            if ( object[this.valueSegmentOfPath(path)] !== value || forceStorage ) {
 
-                if ( this.__vgUndo && !noUndo ) this.__vgUndo.pathValueAboutToChange( this, path, value );
+                if ( this.__vgUndo && !noUndo ) undo=this.__vgUndo.pathValueAboutToChange( this, path, value );
                 object[this.valueSegmentOfPath(path)]=value;
             }
     	}
     }
+    return undo;
 };
 
 VG.Data.Base.prototype.objectForPath=function( path )
@@ -186,6 +207,14 @@ VG.Data.Base.prototype.updateTopLevelBindings=function()
 
         if ( cont.object.modelChanged ) cont.object.modelChanged();
     }
+
+    for( var i=0; i < this.__vgValueBindings.length; ++i ) {
+        var val=this.__vgValueBindings[i];
+
+        if  ( val.path.indexOf(".") === -1 ) {
+            val.object.valueFromModel( this.dataForPath( val.path ) );
+        }
+    }    
 };
 
 VG.Data.Base.prototype.clearUndo=function()

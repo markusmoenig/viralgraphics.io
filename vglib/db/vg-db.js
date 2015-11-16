@@ -112,7 +112,7 @@ VG.DB.userIsAppAdmin=function( appId, userId, callback )
 
 	VG.sendBackendRequest( "/group/app/" + appId, "", function( responseText ) {
 		var response=JSON.parse( responseText );
-		
+
 		if ( response.status === "ok" )
 		{
 			for( var g=0; g < response.groups.length; ++g ) 
@@ -134,4 +134,50 @@ VG.DB.userIsAppAdmin=function( appId, userId, callback )
         }
         if ( callback ) callback( false );
     }, "GET" );	
+};
+
+VG.DB.getAppChatMessages=function( appId, callback, since )
+{
+    /**Retrieves all chat messages for the given Application, optionally since a given timestamp.
+     * @param {string} appId - The id of the application.
+     * @param {function} Callback - The callback to be called when the operation finishes. The callback will be passed the list of messages as its first argument.
+     * @param {string} since - Optional, the ISO String Date timestamp indicating only to get messages since the given date. Otherwise get all messages.
+     */
+
+    var cmd="/chat/" + appId;
+    if ( since ) cmd+="?msgdate=" + since;
+
+    VG.sendBackendRequest( cmd, "", function( responseText ) {
+        var response=JSON.parse( responseText );
+        if ( callback ) callback( response );
+    }, "GET" );    
+};
+
+VG.DB.postAppChatMessage=function( appId, message )
+{
+    /**Posts a community chat message for the given Application.
+     * @param {string} appId - The id of the application to receive the chat message.
+     * @param {string} message - The chat message.
+     */
+
+    var parameters={ msg: message };
+    VG.sendBackendRequest( "/chat/" + appId, JSON.stringify( parameters ), function( responseText ) {
+        var response=JSON.parse( responseText );
+    }, "POST" );
+};
+
+VG.DB.getAppSource=function( appId, callback )
+{
+    /**Retrieves the vide file for the given appId.
+     * @param {string} appId - The id of the application.
+     * @param {function} Callback - The callback to be called when the operation finishes. The callback will be passed the string containing the vide content as the first argument.
+     */
+
+    var cmd="/app/source/" + appId;
+
+    VG.sendBackendRequest( cmd, "", function( responseText ) {
+        var response=JSON.parse( responseText );
+        //VG.log( responseText );
+        if ( callback ) callback( response );
+    }, "GET" );    
 };

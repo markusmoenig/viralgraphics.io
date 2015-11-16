@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 // --------------------------------------------- VG.Canvas
@@ -71,13 +74,14 @@ VG.Canvas=function()
     this.primShader.blendType = VG.Shader.Blend.Alpha;
     this.primShader.create();
 
-    this.triBuffer=new VG.GPUBuffer(VG.Type.Float, (6 * 3) * 256, true);
+    this.triBuffer=new VG.GPUBuffer(VG.Type.Float, (6 * 3) * 256 * 4, true);
+    this.triBufferDB = this.triBuffer.getDataBuffer();
     this.triBuffer.create();
     this.triCount=0;
 
     
     this.fonts=[];
-    this.fonts.push( VG.context.style.skin.DefaultFont );
+    this.fonts.push( VG.UI.stylePool.current.skin.Widget.Font );
     this.fontIndex=0;
 
     this.delayedPaintWidgets=[];
@@ -140,12 +144,12 @@ VG.Canvas=function()
     //render target
     this.rt = VG.Renderer().mainRT;
 
-    // Current clipRect
-    this.clipRect=VG.Core.Rect();
+    this.clipRects=[];
 };
 
-VG.Canvas.Shape2D={ "Rectangle" : 0, "VerticalGradient" : 1, "HorizontalGradient" : 2, "RectangleOutline" : 3, "RoundedRectangleOutline1px" : 4, "RoundedRectangle2px" : 5, 
-                    "FlippedTriangle" : 6, "ArrowLeft" : 7, "ArrowRight" : 8, "Circle": 9, "ArrowRightGradient": 10, "DropShadow_NoTop7px" : 11, "Docs.Enum" : 9000 };
+VG.Canvas.Shape2D={ "Rectangle" : 0, "VerticalGradient" : 1, "HorizontalGradient" : 2, "RectangleOutline" : 3,  "RectangleOutlineMin1px" : 4,  "RectangleOutlineMin2px" : 5,  
+                    "RoundedRectangleOutline1px" : 6, "RoundedRectangle2px" : 7, "RectangleCorners" : 8, 
+                    "FlippedTriangle" : 9, "ArrowLeft" : 10, "ArrowRight" : 11, "Circle": 12, "ArrowRightGradient": 13, "DropShadow_NoTop7px" : 14, "Docs.Enum" : 9000 };
 
 VG.Canvas.prototype.pushFont=function( font )
 {
@@ -177,32 +181,56 @@ VG.Canvas.prototype.setAlpha=function( alpha )
     this.alpha = alpha;
 };
 
-VG.Canvas.prototype.setClipRect=function( rect, intersect )
+VG.Canvas.prototype.pushClipRect=function( rect )
 {
     /**Sets a new clipping rectangle. All drawing outside this rectangle will be ignored. Pass null to reset to no clipping.
      * @param {VG.Core.Rect} rect - The new clipping rectangle to use or null to reset to no clipping.
-     * @param {bool} intersect - If true set the new clipping rectangle to be the intersection of the current rectangle and rect.  
      */
 
     this.flush();
 
-    if ( intersect && this.clipRect.width && this.clipRect.height ) {
+    if ( rect ) 
+    {
+        if ( this.clipRects.length ) 
+        {
+            var lastRect=this.clipRects[this.clipRects.length-1];
+            var intersectRect = lastRect.intersect( rect );
 
-        var intersectRect = this.clipRect.intersect( rect );
+            if ( !intersectRect ) {
+                //VG.log( "intersect is null", lastRect.toString(), rect.toString() );
 
-        if( intersectRect ) {
+                this.clipRects.push( VG.Core.Rect( lastRect ) );
+                return;
+            } else {
+                this.clipRects.push( intersectRect );
+                this.rt.setScissor( intersectRect );   
+            }
 
-            this.clipRect = intersectRect;
-            this.rt.setScissor( intersectRect );
+        } else {
+            this.clipRects.push( rect );
+            this.rt.setScissor( rect );
         }
     }
-    else {
 
-        if ( rect ) this.clipRect.set( rect );
-        else { this.clipRect.width=0; this.clipRect.height=0; }
+/*
+    VG.log( "--", this.clipRects.length );
+    for ( var i=0; i < this.clipRects.length; ++i )
+    {
+        VG.log( i, this.clipRects[i].toString() );
+    }*/
+};
 
-        this.rt.setScissor(rect);
-    }
+VG.Canvas.prototype.popClipRect=function()
+{
+    if ( this.clipRects.length <= 0 ) { VG.error( "popClipRect -- Stack Underflow"); return; }
+
+    this.flush();
+
+    this.clipRects.splice(-1,1);
+
+    var last=this.clipRects[this.clipRects.length-1];
+    if ( last ) this.rt.setScissor( last );
+    else this.rt.setScissor();
 };
 
 VG.Canvas.prototype.flush=function()
@@ -226,41 +254,34 @@ VG.Canvas.prototype.addTriangle2D=function( x1, y1, x2, y2, x3, y3, col1, col2, 
      * @param {number} col3 - The color at the x3, y3 coordinate
      */
 
-    var b = this.triBuffer;
+    var db = this.triBufferDB;
 
-    b.setBuffer(this.triCount++, x1);
-    b.setBuffer(this.triCount++, y1);
+    db.set(this.triCount++, x1);
+    db.set(this.triCount++, y1);
 
-    b.setBuffer(this.triCount++, col1.r);
-    b.setBuffer(this.triCount++, col1.g);
-    b.setBuffer(this.triCount++, col1.b);
-    b.setBuffer(this.triCount++, col1.a);
+    db.set(this.triCount++, col1.r);
+    db.set(this.triCount++, col1.g);
+    db.set(this.triCount++, col1.b);
+    db.set(this.triCount++, col1.a);
 
+    db.set(this.triCount++, x2);
+    db.set(this.triCount++, y2);
 
+    db.set(this.triCount++, col2.r);
+    db.set(this.triCount++, col2.g);
+    db.set(this.triCount++, col2.b);
+    db.set(this.triCount++, col2.a);
 
-    b.setBuffer(this.triCount++, x2);
-    b.setBuffer(this.triCount++, y2);
+    db.set(this.triCount++, x3);
+    db.set(this.triCount++, y3);
 
-    b.setBuffer(this.triCount++, col2.r);
-    b.setBuffer(this.triCount++, col2.g);
-    b.setBuffer(this.triCount++, col2.b);
-    b.setBuffer(this.triCount++, col2.a);
+    db.set(this.triCount++, col3.r);
+    db.set(this.triCount++, col3.g);
+    db.set(this.triCount++, col3.b);
+    db.set(this.triCount++, col3.a);
 
-
-
-    b.setBuffer(this.triCount++, x3);
-    b.setBuffer(this.triCount++, y3);
-
-    b.setBuffer(this.triCount++, col3.r);
-    b.setBuffer(this.triCount++, col3.g);
-    b.setBuffer(this.triCount++, col3.b);
-    b.setBuffer(this.triCount++, col3.a);
-
-
-    if (this.triCount >= b.getSize())
-    {
+    if (this.triCount >= db.getSize())
         this.flushTris();
-    }
 }
 
 VG.Canvas.prototype.addSolidRectangle2D=function( x1, y1, x2, y2, col )
@@ -295,7 +316,9 @@ VG.Canvas.prototype.flushTris=function()
     shader.setMatrix("pM", VG.Renderer().proj2d.elements);
 
     //buffer already binded at b.update(), force no bind
-    b.draw(VG.Renderer.Primitive.Triangles, 0, this.triCount / 6, true);
+    b.drawBuffer(VG.Renderer.Primitive.Triangles, 0, this.triCount / 6);
+
+	b.purgeAttribs();
 
     this.triCount = 0;
 }
@@ -339,7 +362,29 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
             this.addSolidRectangle2D( rect.x, rect.y, rect.x+1, rect.bottom(), col1 );
             // --- Right
             this.addSolidRectangle2D( rect.right()-1, rect.y, rect.right(), rect.bottom(), col1 );
-        break;  
+        break;
+
+        case VG.Canvas.Shape2D.RectangleOutlineMin1px:
+            // --- Top
+            this.addSolidRectangle2D( rect.x + 1, rect.y, rect.right()-1, rect.y+1, col1 );
+            // --- Bottom
+            this.addSolidRectangle2D( rect.x + 1, rect.bottom()-1, rect.right()-1, rect.bottom(), col1 );
+            // --- Left
+            this.addSolidRectangle2D( rect.x, rect.y+1, rect.x+1, rect.bottom()-1, col1 );
+            // --- Right
+            this.addSolidRectangle2D( rect.right()-1, rect.y+1, rect.right(), rect.bottom()-1, col1 );
+        break;        
+
+        case VG.Canvas.Shape2D.RectangleOutlineMin2px:
+            // --- Top
+            this.addSolidRectangle2D( rect.x + 2, rect.y, rect.right()-2, rect.y+1, col1 );
+            // --- Bottom
+            this.addSolidRectangle2D( rect.x + 2, rect.bottom()-1, rect.right()-2, rect.bottom(), col1 );
+            // --- Left
+            this.addSolidRectangle2D( rect.x, rect.y+2, rect.x+1, rect.bottom()-2, col1 );
+            // --- Right
+            this.addSolidRectangle2D( rect.right()-1, rect.y+2, rect.right(), rect.bottom()-2, col1 );
+        break;         
 
         case VG.Canvas.Shape2D.RoundedRectangleOutline1px:
             // --- Top
@@ -406,6 +451,17 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
             this.addSolidRectangle2D( rect.right()-1, rect.bottom()-2, rect.right(), rect.bottom()-1, pixelColor );
             pixelColor.a=1.0;
             this.addSolidRectangle2D( rect.right()-2, rect.bottom()-2, rect.right()-1, rect.bottom()-1, pixelColor );    
+        break;  
+
+        case VG.Canvas.Shape2D.RectangleCorners:
+            // --- Top Left
+            this.addSolidRectangle2D( rect.x, rect.y, rect.x+1, rect.y+1, col1 );
+            // --- Bottom Left
+            this.addSolidRectangle2D( rect.x, rect.bottom()-1, rect.x+1, rect.bottom(), col1 );
+            // --- Top Right
+            this.addSolidRectangle2D( rect.right()-1, rect.y, rect.right(), rect.y+1, col1 );
+            // --- Bottom Right
+            this.addSolidRectangle2D( rect.right()-1, rect.bottom()-1, rect.right(), rect.bottom(), col1 );
         break;  
 
         case VG.Canvas.Shape2D.FlippedTriangle:
@@ -582,19 +638,18 @@ VG.Canvas.prototype.drawImage=function( pt, image, size )
      * @param {VG.Core.Image} image - The image to draw.
      * @param {VG.Core.Size} size - The size to scale the image to, optional.
      */
-
-
     this.flush();
+	
+	var tex = this.renderer.getTexture(image);
 
-    var width=image.realWidth, height=image.realHeight;
+    var width=tex.getRealWidth();
+	var height=tex.getRealHeight();
 
     if ( size ) 
     {
-        width=size.width + (image.realWidth - image.width) * size.width / image.width; 
-        height=size.height + (image.realHeight - image.height) * size.height / image.height;
+        width=size.width + (image.getRealWidth() - image.getWidth()) * size.width / image.getWidth(); 
+        height=size.height + (image.getRealHeight() - image.getHeight()) * size.height / image.getHeight();
     }
-
-    var tex = VG.Renderer().getTexture(image);
 
     //using the renderer's routine, as drawing textured 2d quads is very common
     this.renderer.drawQuad(tex, width, height, pt.x, pt.y, this.alpha);
@@ -623,6 +678,42 @@ VG.Canvas.prototype.drawScaledImage=function( rect, image )
     var xOffset=(rect.width - newWidth)/2;
     var yOffset=(rect.height - newHeight)/2;    
     this.drawImage( VG.Core.Point( rect.x + xOffset, rect.y + yOffset ), image, VG.Core.Size( newWidth, newHeight ) );
+};
+
+// --------------------------------------------- VG.Canvas.prototype.drawTiledImage
+
+VG.Canvas.prototype.drawTiledImage=function( fillRect, image, horizontal, vertical, horOffset, verOffset )
+{
+    /**Fills the given fillRect with the given image. The image is tiled optionally in the horizontal and vertical directions.
+     * @param {VG.Core.Rect} rect - The rectangle to fill.
+     * @param {VG.Core.Image} image - The image to tile
+     * @param {bool} horizontal - True if the image should be tiled horizontally.
+     * @param {bool} vertical - True if the image should be tiled vertically.
+     * @param {number} horOffset - Optional, the horizontal offset can be adjusted with this value, for example a value of -10 would adjust the image 10 pixels to the left on each iteration.
+     * @param {number} verOffset - Optional, adjust the vertical offset.
+     */     
+
+    if ( !image.isValid() ) return;
+    var rect=VG.Core.Rect( fillRect.x, fillRect.y, image.width, image.height );
+    this.pushClipRect( fillRect );
+
+    do
+    {
+        rect.x=fillRect.x;
+        while( rect.x < fillRect.right() )
+        {
+            this.drawImage( rect, image );
+
+            if ( !horizontal ) break;
+            rect.x+=image.width;
+            if ( horOffset ) rect.x+=horOffset;
+        }
+
+        if ( !vertical ) break;
+        rect.y+=image.height;
+    } while( rect.y < fillRect.bottom() );
+
+    this.popClipRect();
 };
 
 // --------------------------------------------- VG.Canvas.prototype.getTextSize
@@ -658,7 +749,7 @@ VG.Canvas.prototype.getTextSize=function( text, size )
 
 // --------------------------------------------- VG.Canvas.prototype.wordWrap
 
-VG.Canvas.prototype.wordWrap=function( text, start, width, textLines)
+VG.Canvas.prototype.wordWrap=function( text, start, width, textLines, dontAppendBreakSymbol )
 {
     var font=this.fonts[this.fontIndex];
     var lineWidth=start;
@@ -718,7 +809,8 @@ VG.Canvas.prototype.wordWrap=function( text, start, width, textLines)
                 {
                     // Clearly this word doesnt fit in one line.
                     var snipLocation = i-1 > 0 ? i-1 : i;
-                    textLines.push( text.substring ( 0, snipLocation) + "-" );
+                    if ( dontAppendBreakSymbol ) textLines.push( text.substring ( 0, snipLocation) );
+                    else textLines.push( text.substring ( 0, snipLocation) + "-" );
                     text=text.substring( snipLocation )
                     lineWidth = 0;
                     i = 0;
@@ -776,14 +868,15 @@ VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angl
         var v = font.triFont.tris;
 
         //Static gpu buffer
-        var b = new VG.GPUBuffer(VG.Type.Float, 2 * 3 * v.length, false);
+        var b = new VG.GPUBuffer(VG.Type.Float, 2 * v.length, false);
 
         var j = 0;
+        var db=b.getDataBuffer();
 
         for (var i = 0; i < v.length; i++)
         {
-            b.setBuffer(j++, v[i].x);
-            b.setBuffer(j++, v[i].y);
+            db.set(j++, v[i].x);
+            db.set(j++, v[i].y);
         }
 
         if (j != v.length * 2) throw [j, v.length, "buffer length missmatch"];
@@ -822,7 +915,8 @@ VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angl
     }
 
     if ( xalign === 1 ) {
-        startX=rect.x + (rect.width - textSize.width) / 2;
+        if ( textSize.width > rect.width ) startX=rect.x;
+        else startX=rect.x + (rect.width - textSize.width) / 2;
     } else
     if ( xalign === 2 ) {
         startX=rect.x + rect.width - textSize.width;
@@ -853,8 +947,8 @@ VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angl
     this.fontShader.setFloat("uniformAlpha", this.alpha);
     this.fontShader.setColor("color", col);
 
-    b.bind();    
-    b.vertexAttrib(this.fontShader.getAttrib("vPos"), 2, false, 8, 0);
+    b.bind();
+	b.vertexAttrib(this.fontShader.getAttrib("vPos"), 2, false, 8, 0);
 
     var tM = this.cacheM1;
 
@@ -885,14 +979,127 @@ VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angl
         this.fontShader.setMatrix("tM", tM.elements);
  
         if (g.size > 0)
-        {
-            b.draw(VG.Renderer.Primitive.Triangles, g.offset, g.size, false);
-        }
-                
+            b.drawBuffer(VG.Renderer.Primitive.Triangles, g.offset, g.size);
+
         x+=g.width * font.scale;
     }
 
+	b.purgeAttribs();
+
     return x;
+};
+
+// --------------------------------------------- VG.Canvas.prototype.drawSVG
+
+VG.Canvas.prototype.drawSVG=function( svg, svgGroup, rect, col, angle, crX, crY)
+{    
+    /**Draws one line of text using the current canvas font aligned inside the given rectangle. Optionally rotates the font.
+     * @returns {string} text - The text to draw.
+     * @returns {VG.Core.Rect} rect - The rectangle to align the text into
+     * @returns {VG.Core.Color} col - The color to use for the text drawing
+     * @returns {number} halign - The horizontal alignment method: 0 is left, 1 centered and 2 is right. TODO: Move into enum
+     * @returns {number} valign - The vertical alignment method: 0 is top (plus font descender), 1 centered, 2 is bottom and 3 is top without descender. TODO: Move into enum
+     */ 
+
+    var b=svg.buffer;
+
+    //create the gpu buffer if not present
+    if (!b)
+    {
+        var v = svg.tris;
+
+        //Static gpu buffer
+        var b = new VG.GPUBuffer(VG.Type.Float, v.length, true);
+
+        var j = 0;
+        var db=b.getDataBuffer();
+
+        for (var i = 0; i < v.length; i++)
+            db.set(j++, v[i] );
+
+        if (j != v.length ) throw [j, v.length, "buffer length missmatch"];
+
+        b.create();
+
+        svg.buffer = b;
+
+        /* makes sure that there's no rederences left on the triangle array as 
+         *  the buffer has a copy already, from this point on it's not needed */
+
+
+        delete svg.tris;
+        v = null;
+    }
+
+
+    if ( !svgGroup ) group=svg.groups[0];
+    else group=svgGroup;    
+
+    //if angle not defined assume no rotation
+    if (!angle) {
+        angle = 0;
+    }
+
+    var posX=rect.x, posY=rect.y;
+    var scale=1;
+
+    if ( rect.width && rect.height )
+    {
+        var aspectRatio=group.height / group.width;
+        var scaleX=rect.width / group.width;
+        var scaleY=rect.height / group.height;
+
+        scale=Math.min( scaleX, scaleY );
+
+        var newWidth=group.width * scale;//aspectRatio;
+        var newHeight=group.height * scale;//aspectRatio;
+
+        posX+=(group.width*scaleX - newWidth)/2 - group.bbox.minX * scale;
+        posY+=(group.height*scaleY - newHeight)/2 - group.bbox.minY * scale;
+    }
+
+    posX=Math.round( posX ); posY=Math.round( posY );
+
+    // --- Draw it
+
+    // fix rotation at center for now
+    crX = crX ? crX : rect.x + rect.width / 2;
+    crY = crY ? crY : rect.y + rect.height / 2;
+
+    this.flush();
+
+    this.fontShader.bind();
+    this.fontShader.setFloat("uniformAlpha", this.alpha);
+    this.fontShader.setColor("color", col);
+
+    b.bind();
+    b.vertexAttrib(this.fontShader.getAttrib("vPos"), 2, false, 8, 0);
+
+    var tM = this.cacheM1;
+
+    tM.setIdentity();
+
+    this.fontShader.setMatrix("pM", VG.Renderer().proj2d.elements);
+
+    tM.setIdentity();
+
+    if (angle != 0.0)
+    {
+        tM.translate(crX, crY, 0);
+        tM.rotate(-angle, 0, 0, 1);
+        tM.translate(-crX, -crY, 0);
+    }
+
+    tM.translate( posX, posY, 0);
+    tM.translate( 0, 0, 0);
+    tM.scale(scale, scale, scale);
+
+    this.fontShader.setMatrix("tM", tM.elements);
+
+    if (group.triSize > 0)
+        b.drawBuffer(VG.Renderer.Primitive.Triangles, Math.round( group.triOffset/2 ), Math.round( group.triSize/2 ) );
+
+    b.purgeAttribs();
 };
 
 // --------------------------------------------- VG.Canvas.prototype.update

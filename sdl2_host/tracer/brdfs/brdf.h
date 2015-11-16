@@ -89,6 +89,16 @@ namespace embree {
             return(cosineSampleHemispherePDF(wi, dg.Ns));
 
         }
+        
+        virtual bool isEmissive() const
+        {
+            return false;
+        }
+        
+        virtual bool isDiffuse() const
+        {
+            return false;
+        }
 
         /*! BRDF type hint to the integrator */
         BRDFType type;

@@ -18,6 +18,7 @@
 
 /* include all integrators */
 #include "integrators/pathtraceintegrator.h"
+#include "integrators/whittedintegrator.h"
 
 /* include all samplers */
 #include "samplers/sampler.h"
@@ -26,6 +27,8 @@
 #include "filters/boxfilter.h"
 #include "filters/bsplinefilter.h"
 
+#define JITTER
+
 namespace embree
 {
   IntegratorRenderer::IntegratorRenderer(const Parms& parms)
@@ -33,9 +36,11 @@ namespace embree
   {
     /*! create integrator to use */
     std::string _integrator = parms.getString("integrator","pathtracer");
-    if (_integrator == "pathtracer") integrator = new PathTraceIntegrator(parms);
-    else throw std::runtime_error("unknown integrator type: "+_integrator);
-
+    // TODO: Allow for instatiation of different tracers
+    //if (_integrator == "pathtracer") integrator = new PathTraceIntegrator(parms);
+    //else throw std::runtime_error("unknown integrator type: "+_integrator);
+    integrator = new PathTraceIntegrator(parms);
+    
     /*! create sampler to use */
     std::string _samplers = parms.getString("sampler","multijittered");
     if (_samplers == "multijittered"   ) samplers = new SamplerFactory(parms);
@@ -176,9 +181,14 @@ namespace embree
           for (size_t s=0; s<spp; s++)
           {
             PrecomputedSample& sample = renderer->samplers->samples[set][s];
+#ifdef JITTER
             const float fx = (float(x) + sample.pixel.x)*rcpWidth;
             const float fy = (float(y) + sample.pixel.y)*rcpHeight;
-
+#else
+            const float fx = (float(x))*rcpWidth;
+            const float fy = (float(y))*rcpHeight;
+#endif
+            
             Ray primary; camera->ray(Vec2f(fx,fy), sample.getLens(), primary);
             primary.time = sample.getTime();
             

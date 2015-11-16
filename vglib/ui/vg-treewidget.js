@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 // ----------------------------------------------------------------- VG.UI.TreeWidget
@@ -36,7 +39,10 @@ VG.UI.TreeWidget=function()
     this.name="TreeWidget";
 
     this.offset=0;
-    this.spacing=3;//VG.context.style.skin.ListWidgetItemDistance;
+
+    this.toolLayout=VG.UI.Layout();
+    this.layout=this.toolLayout;
+    this.toolLayout.margin.set( 1, 1, 1, 1 );
 
     this.minimumSize.set( 100, 100 );
     this.supportsFocus=true;
@@ -62,6 +68,17 @@ VG.UI.TreeWidget.prototype.bind=function( collection, path )
     this.controller.addObserver( "selectionChanged", this.selectionChanged, this );
 
     return this.controller;
+};
+
+VG.UI.TreeWidget.prototype.addToolWidget=function( widget )
+{
+    widget.supportsFocus=false;
+    this.toolLayout.addChild( widget );
+};
+
+VG.UI.TreeWidget.prototype.removeToolWidget=function( widget )
+{
+    this.toolLayout.removeChild( widget );
 };
 
 VG.UI.TreeWidget.prototype.focusIn=function()
@@ -116,10 +133,16 @@ VG.UI.TreeWidget.prototype.keyDown=function( keyCode )
 
 VG.UI.TreeWidget.prototype.mouseMove=function( event )
 {
+    if ( this.mouseIsDown && this.dragSourceId && this.possibleDnDSource )
+    {
+        VG.context.workspace.dragOperationStarted( this, this.dragSourceId, this.possibleDnDSource.item );
+    }
 };
 
 VG.UI.TreeWidget.prototype.mouseDown=function( event )
 {
+    this.possibleDnDSource=undefined;
+
     if ( this.needsVScrollbar && this.vScrollbar && this.vScrollbar.rect.contains( event.pos ) ) {
         this.vScrollbar.mouseDown( event );
         return;
@@ -127,22 +150,41 @@ VG.UI.TreeWidget.prototype.mouseDown=function( event )
 
     if ( !this.rect.contains( event.pos ) ) return;
 
-    var item=this.getItemAtPos( event.pos );
-    if ( item ) {
-        if ( item.children ) {
-            item.open=item.open ? false : true;
+    var treeItem=this.getItemAtPos( event.pos );
+    if ( treeItem ) {
+        if ( treeItem.item.children ) {
 
-            if ( item.selectable ) this.controller.selected=item;
+            if ( event.pos.x - treeItem.rect.x <  VG.UI.stylePool.current.skin.TreeWidget.ChildIndent || !treeItem.item.selectable ) {
+                treeItem.item.open=treeItem.item.open ? false : true;
+            }
+
+            if ( treeItem.item.selectable ) this.controller.selected=treeItem.item;
         } else
         {
-            this.controller.selected=item;
+            this.controller.selected=treeItem.item;
+            this.possibleDnDSource=treeItem;
         }
     }
-    this.verified=false;    
+    this.verified=false;
+    this.mouseIsDown=true;
 };
 
-VG.UI.TreeWidget.prototype.mouseDoubleClicked=function( event )
+VG.UI.TreeWidget.prototype.mouseUp=function( event )
 {
+    this.mouseIsDown=false;    
+};
+
+VG.UI.TreeWidget.prototype.mouseDoubleClick=function( event )
+{
+    if ( this.controller.selected ) {
+        var selected=this.controller.selected;
+        var itemUnderMouse=this.getItemAtPos( event.pos );
+        if ( itemUnderMouse ) itemUnderMouse=itemUnderMouse.item;
+
+        if ( selected === itemUnderMouse )
+            this.controller.selected.open=this.controller.selected.open ? false : true;        
+    }
+    this.verified=false; 
 };
 
 VG.UI.TreeWidget.prototype.vHandleMoved=function( offsetInScrollbarSpace )
@@ -169,7 +211,7 @@ VG.UI.TreeWidget.prototype.verifyScrollbar=function( text )
         this.needsVScrollbar=true;
 
     if ( this.needsVScrollbar && !this.vScrollbar ) {
-        this.vScrollbar=VG.UI.Scrollbar( "TreeWidget Scrollbar" );
+        this.vScrollbar=VG.UI.ScrollBar( "TreeWidget Scrollbar" );
         this.vScrollbar.callbackObject=this;
     }    
 
@@ -189,123 +231,18 @@ VG.UI.TreeWidget.prototype.selectionChanged=function()
 
 VG.UI.TreeWidget.prototype.paintWidget=function( canvas )
 {
+    this.spacing=VG.UI.stylePool.current.skin.TreeWidget.Spacing;
+
     if ( !this.rect.equals( this.previousRect ) ) this.verified=false;
-    VG.context.style.drawTreeWidgetBorder( canvas, this );
-    canvas.setClipRect( this.contentRect );
-
-    if ( !this.controller.length ) { canvas.setClipRect(); return; }
-
-    this.itemHeight=canvas.style.skin.TreeWidget.ItemFont.size + canvas.style.skin.TreeWidget.ItemHeightAdder;
-    this.contentRect=this.contentRect.shrink( VG.context.style.skin.TreeWidget.ContentBorderSize.width, VG.context.style.skin.TreeWidget.ContentBorderSize.height );
-
-    if ( !this.verified || canvas.hasBeenResized )
-        this.verifyScrollbar();
-
-    // ---
-
-    this.items=null;
-    this.items=[];
-    this._itemsCount=-1;
-    
-    var selBackgroundRect=VG.Core.Rect( this.contentRect );
-    if ( this.needsVScrollbar )
-        selBackgroundRect=selBackgroundRect.add( 0, 0, -VG.context.style.skin.Scrollbar.Size -3, 0 );
-
-    // ---
-
-    var paintRect=VG.Core.Rect( this.contentRect );
-    paintRect.height=this.itemHeight;
-
-    if ( this.needsVScrollbar )
-        paintRect.width-=VG.context.style.skin.Scrollbar.Size;
-
-    var oldWidth=paintRect.width;
-    paintRect.y=this.contentRect.y - this.offset;
-
-    // --- 
-
-    for ( var i=0; i < this.controller.length; ++i ) 
-    {
-        // --- Iterate and Draw the Top Level Items
-    
-        var item=this.controller.at( i ) ;
-        ++this._itemsCount;
-
-        if ( 1 )//paintRect.y + this.itemHeight <= this.contentRect.bottom() ) 
-        {
-            if ( 1 )//this._itemsCount >= this.offset )
-            {
-                this.items.push( VG.UI.TreeWidgetItem( item, paintRect ) );
-                VG.context.style.drawTreeWidgetItem( canvas, item, this.controller.isSelected( item ), paintRect, selBackgroundRect );
-
-                paintRect.y+=this.itemHeight + this.spacing;    
-            }
-
-            if ( item.children && item.open ) this.drawItemChildren( canvas, paintRect, item, selBackgroundRect );
-
-            paintRect.x=this.contentRect.x;
-            paintRect.width=oldWidth;
-        } else break;
-    }
-
-    if ( this.needsVScrollbar ) {
-        this.vScrollbar.rect=VG.Core.Rect( this.rect.right() - VG.context.style.skin.Scrollbar.Size - 3, this.contentRect.y, VG.context.style.skin.Scrollbar.Size, this.contentRect.height );
-
-        // this.totalItemHeight == Total height of all Items in the list widget including spacing
-        // visibleHeight == Total height of all currently visible items
-        // this.contentRect.height == Height of the available area for the list items
-
-        this.vScrollbar.setScrollbarContentSize( this.totalItemHeight, this.contentRect.height );
-        this.vScrollbar.paintWidget( canvas );
-    }    
-
+    VG.UI.stylePool.current.drawTreeWidget( this, canvas );
     this.previousRect.set( this.rect );
-    canvas.setClipRect( false );
-};
-
-VG.UI.TreeWidget.prototype.drawItemChildren=function( canvas, paintRect, item, selBackgroundRect )
-{
-    if ( item.children && item.open )
-    {
-        var oldXOffset=paintRect.x;
-        var oldWidth=paintRect.width;
-
-        paintRect.x+=VG.context.style.skin.TreeWidget.ItemHierarchyOffset
-        paintRect.width-=VG.context.style.skin.TreeWidget.ItemHierarchyOffset
-
-        // --- Draw all childs
-
-        for ( var i=0; i < item.children.length; ++i ) 
-        {
-            var child=item.children[i];
-
-            ++this._itemsCount;
-
-            if ( 1 )//paintRect.y + this.itemHeight < ( this.rect.y+this.rect.height-2 ) ) 
-            {                
-                if ( 1 )//this._itemsCount >= this.offset )
-                {                
-                    this.items.push( VG.UI.TreeWidgetItem( child, paintRect ) );
-                    VG.context.style.drawTreeWidgetItem( canvas, child, this.controller.isSelected( child ), paintRect, selBackgroundRect );  
-
-                    paintRect.y+=this.itemHeight + this.spacing;    
-                }
-
-                if ( child.children && child.open ) 
-                    this.drawItemChildren( canvas, paintRect, child, selBackgroundRect );
-            }
-        }
-
-        paintRect.x=oldXOffset;
-        paintRect.width=oldWidth;
-    }
 };
 
 VG.UI.TreeWidget.prototype.getItemAtPos=function( pos )
 {
     for ( var i=0; i < this.items.length; ++i ) {
         if ( this.items[i].rect.contains( pos ) )
-            return this.items[i].item;
+            return this.items[i];
     }
     return null;
 };

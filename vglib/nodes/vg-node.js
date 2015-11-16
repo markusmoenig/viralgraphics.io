@@ -208,6 +208,36 @@ VG.Nodes.Node.prototype.setParamNumber=function( name, value )
         this.container.setParamNumber( name, value );
 };
 
+VG.Nodes.Node.prototype.setParamSlider=function( name, value )
+{
+    /**Sets the value of a slider parameter, identified by its name.
+     * @param {string} name - The name of the parameter to set.
+     * @param {number} value - The value to set.
+     */
+     if ( this.container )
+        this.container.setParamSlider( name, value );
+};
+
+VG.Nodes.Node.prototype.setParamBoolean=function( name, value )
+{
+    /**Sets the value of a boolean parameter, identified by its name.
+     * @param {string} name - The name of the parameter to set.
+     * @param {number} value - The value to set.
+     */
+     if ( this.container )
+        this.container.setParamBoolean( name, value );
+};
+
+VG.Nodes.Node.prototype.setParamList=function( name, value )
+{
+    /**Sets the value of a list parameter, identified by its name.
+     * @param {string} name - The name of the parameter to set.
+     * @param {number} value - The value to set.
+     */
+     if ( this.container )
+        this.container.setParamList( name, value );
+};
+
 VG.Nodes.Node.prototype.setParamVector2=function( name, x, y )
 {
     /**Sets the value of a color parameter, identified by its name.

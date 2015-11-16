@@ -1,26 +1,38 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-VG.Data.UndoItem=function()
+VG.Data.UndoItem=function( undoObject )
 {    
-    if ( !(this instanceof VG.Data.UndoItem) ) return new VG.Data.UndoItem();
+    if ( !(this instanceof VG.Data.UndoItem) ) return new VG.Data.UndoItem( undoObject );
+
+    this.undoObject=undoObject;
+    this.subItems=[];
+};
+
+VG.Data.UndoItem.prototype.addSubItem=function( path, value )
+{
+    var subItem=this.undoObject.pathValueAboutToChange( this.collection, path, value, true );
+    this.subItems.push( subItem );
 };
 
 VG.Data.UndoItem.Type={ "ValueBased" : 0, "ControllerBased" : 1 };
@@ -55,11 +67,11 @@ VG.Data.Undo.prototype.clear=function( dontInvokeClearCallback )
         this.callbackForClear();
 };
 
-VG.Data.Undo.prototype.pathValueAboutToChange=function( collection, path, value )
+VG.Data.Undo.prototype.pathValueAboutToChange=function( collection, path, value, dontInstall )
 {
     //console.log( "pathValueAboutToChange", path, value );
 
-    var undo=VG.Data.UndoItem();
+    var undo=VG.Data.UndoItem( this );
 
     undo.type=VG.Data.UndoItem.Type.ValueBased;
 
@@ -67,22 +79,34 @@ VG.Data.Undo.prototype.pathValueAboutToChange=function( collection, path, value 
     undo.path=path;
     undo.oldValue=collection.dataForPath( path );
     undo.newValue=value;
-    undo.pathIndex=-1;
+    //undo.pathIndex=-1;
+    undo.pathIndex=[];
 
     if ( path.indexOf( '.') !== -1 ) {
         var parts=path.split( '.' );
-        //console.log( "part", parts );
-        var controller=collection.controllerForPath( parts[0] ).object;
+        var controllerPath="";
 
-        //console.log( "test", controller.indexOf( controller.selected ) );
-        undo.pathIndex=controller.indexOf( controller.selected );
+        for ( var i=0; i < parts.length-1; ++i ) {
+            if ( i > 0 ) controllerPath+='.';
+            controllerPath+=parts[i];
+
+            var controller=collection.controllerForPath( controllerPath ).object;
+            if ( controller )
+                undo.pathIndex.push( controller.indexOf( controller.selected ) );
+            else VG.log( "Controller for path ", controllerPath, " not found!")
+        }
     }
 
     // ---
-    this.steps=this.steps.slice( 0, this.stepIndex );
-    this.stepIndex++;
-    this.steps.push( undo );
-    this.updateUndoRedoWidgets();
+
+    if ( !dontInstall ) {
+        this.steps=this.steps.slice( 0, this.stepIndex );
+        this.stepIndex++;
+        this.steps.push( undo );
+        this.updateUndoRedoWidgets();
+    }
+
+    return undo;
 };
 
 VG.Data.Undo.prototype.controllerProcessedItem=function( controller, action, path, index, stringifiedItem )
@@ -115,13 +139,21 @@ VG.Data.Undo.prototype.undo=function( widget )
     {
         // --- Value Based
 
-        if ( undo.pathIndex !== -1 ) 
+        if ( undo.pathIndex.length ) 
             this.adjustPathIndex( undo );
 
         var valueBinding=undo.collection.valueBindingForPath( undo.path );
 
         valueBinding.object.valueFromModel( undo.oldValue );
         undo.collection.storeDataForPath( undo.path, undo.oldValue, true );
+
+        for ( var i=0; i < undo.subItems.length; ++i ) {
+            var subItem=undo.subItems[i];
+            var valueBinding=undo.collection.valueBindingForPath( subItem.path );
+
+            valueBinding.object.valueFromModel( subItem.oldValue );
+            undo.collection.storeDataForPath( subItem.path, subItem.oldValue, true );
+        }
     } else
     if ( undo.type === VG.Data.UndoItem.Type.ControllerBased )
     {
@@ -174,13 +206,21 @@ VG.Data.Undo.prototype.redo=function( widget )
 
     if ( undo.type === VG.Data.UndoItem.Type.ValueBased ) {
 
-        if ( undo.pathIndex !== -1 ) 
+        if ( undo.pathIndex.length ) 
             this.adjustPathIndex( undo );
 
         var valueBinding=undo.collection.valueBindingForPath( undo.path );
 
         valueBinding.object.valueFromModel( undo.newValue );
         undo.collection.storeDataForPath( undo.path, undo.newValue, true );
+
+        for ( var i=0; i < undo.subItems.length; ++i ) {
+            var subItem=undo.subItems[i];
+            var valueBinding=undo.collection.valueBindingForPath( subItem.path );
+
+            valueBinding.object.valueFromModel( subItem.newValue );
+            undo.collection.storeDataForPath( subItem.path, subItem.newValue, true );
+        }        
     } else
     if ( undo.type === VG.Data.UndoItem.Type.ControllerBased )
     {
@@ -232,15 +272,18 @@ VG.Data.Undo.prototype.adjustPathIndex=function( undo )
     var parts=undo.path.split( '.' );
     var controllerPath="";
 
-    for( var i=0; i < parts.length-1; ++i ) {
+    for( var i=0; i < parts.length-1; ++i ) 
+    {
         if ( i > 0 ) controllerPath+=".";
         controllerPath+=parts[i];
+
+        var controller=undo.collection.controllerForPath( controllerPath ).object;
+
+        if ( controller ) {
+            if ( controller.indexOf( controller.selected ) !== undo.pathIndex[i] )
+                controller.selected=controller.at( undo.pathIndex[i] );
+        }
     }
-
-    var controller=undo.collection.controllerForPath( controllerPath ).object;
-
-    if ( controller.indexOf( controller.selected ) !== undo.pathIndex )
-        controller.selected=controller.at( undo.pathIndex );
 };
 
 VG.Data.Undo.prototype.addUndoWidget=function( widget )

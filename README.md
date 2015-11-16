@@ -13,7 +13,7 @@ V-IDE is the Integrated Development Environment for Visual Graphics, allowing di
 
 At the core of  Visual Graphics is an OpenGL ES 2 abstraction layer. On the Web this layer is implemented in WebGL, on the Desktop and Mobile platform this layer is implemented in native C++ code.  Visual Graphics itself runs entirely in Javascript with various support functions, like native file requesters or camera access, provided by the host environment. This OpenGL abstraction layer is used to render the Widgets of the User Interface library of  Visual Graphics as well as to create realtime 2D and 3D graphics. 
 
-On Desktop and Mobile platforms Visual Graphics uses the SpiderMonkey Javascript Engine. 
+On Desktop and Mobile platforms Visual Graphics uses either Google V8 or the SpiderMonkey Javascript Engine. 
 
 ##The Vision
 
@@ -22,6 +22,6 @@ Support the App with Backend User Management, Database Access and Cloud Storage.
 
 ##Status
 
-The current version is v0.27 with new features being implemented daily.  Visual Graphics is already in a usable state, however APIs can change without notice and documentation is quite minimal at the moment. 
+The current version is v0.30 with new features being implemented daily.  Visual Graphics is already in a usable state, however APIs can change without notice and documentation is quite minimal at the moment. 
 
 For more information please visit the Visual Graphics Homepage at http://www.visualgraphics.tv.

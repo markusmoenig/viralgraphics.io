@@ -1,37 +1,33 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <iostream>
-
-
 #include "gl.hpp"
-
-#include <jsapi.h>
-using namespace JS;
-
-#include <jsfriendapi.h>
+#include "jswrapper.hpp"
 
 class Texture 
 {
 public:
-    Texture( JSContext *cx, JSObject *images, bool cube )// : images( cx, imgs ) //, heapImages( cx, imgs )
+    Texture( JSWrapperObject *imagesObj, bool cube ) : imagesObject( imagesObj )
     {
         /** 2d texture
          *  @constructor 
@@ -56,53 +52,50 @@ public:
          * @member {enum}*/
         filtering = 0;//VG.Texture.Filter.None;
 
-        RootedObject imagesObject( cx, images );
-
         unsigned int length;
-        JS_GetArrayLength( cx, HandleObject(imagesObject), &length );
+        imagesObject->getArrayLength( &length );
 
         if ( length > 0 )
         {
-            RootedValue image0(cx); JS_GetElement( cx, HandleObject(imagesObject), 0, MutableHandleValue(&image0) );
-            RootedObject image0Obj(cx, &image0.toObject() );
-            RootedValue imageRealWidth(cx); JS_GetProperty( cx, HandleObject( &image0Obj ), "realWidth", MutableHandleValue(&imageRealWidth) );
-            RootedValue imageRealHeight(cx); JS_GetProperty( cx, HandleObject( &image0Obj ), "realHeight", MutableHandleValue(&imageRealHeight) );
+            JSWrapperData image0Data;
+            imagesObject->getArrayElement( 0, &image0Data );
 
-            initW = imageRealWidth.toInt32();
-            initH = imageRealHeight.toInt32();
+            JSWrapperData data;
+            image0Data.object()->get( "realWidth", &data );
+            initialRealWidth = data.toNumber();
+            image0Data.object()->get( "realHeight", &data );
+            initialRealHeight = data.toNumber();
+            image0Data.object()->get( "width", &data );
+            initialWidth = data.toNumber();            
+            image0Data.object()->get( "height", &data );
+            initialHeight = data.toNumber();
         }
 
         target = cube ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
 
         //if (!images instanceof Array) throw "images is not an array";
 
-        this->cx=cx;
-        this->images=images;
-
-        heapImages=new Heap<JSObject*>( images );
-        AddNamedObjectRoot(cx, heapImages, "Images");
-
         id = 0;
     }
 
     void bind()
     {
-        RootedObject imagesObject( cx, images );
-
         unsigned int length;
-        JS_GetArrayLength( cx, HandleObject(imagesObject), &length );
+        imagesObject->getArrayLength( &length );
 
         if ( length > 0 )
         {
-            RootedValue image0(cx); JS_GetElement( cx, HandleObject(imagesObject), 0, MutableHandleValue(&image0) );
-            RootedObject image0Obj(cx, &image0.toObject() );
-            RootedValue needsUpdate(cx); JS_GetProperty( cx, HandleObject( &image0Obj ), "needsUpdate", MutableHandleValue(&needsUpdate) );
+            JSWrapperData image0Data;
+            imagesObject->getArrayElement( 0, &image0Data );
 
-            if ( target == GL_TEXTURE_2D && needsUpdate.toBoolean() )
-            {
-                needsUpdate.setBoolean( false );
-                JS_SetProperty( cx, HandleObject( &image0Obj ), "needsUpdate", MutableHandleValue(&needsUpdate) );
-                this->initW=0; this->initH=0;
+            JSWrapperData data;
+            image0Data.object()->get( "needsUpdate", &data );
+
+            if ( target == GL_TEXTURE_2D && data.toBoolean() )
+            {            
+                data.setBoolean( false );
+                image0Data.object()->set( "needsUpdate", data );
+                this->initialRealWidth=0; this->initialRealHeight=0;
 
                 update( 0, 0, -1, -1 );
             }
@@ -154,13 +147,20 @@ public:
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
         glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
 
-        RootedObject imagesObject( cx, images );
-        RootedValue image0(cx); JS_GetElement( cx, HandleObject(imagesObject), 0, MutableHandleValue(&image0) );
-        RootedObject image0Obj(cx, &image0.toObject() );
-        RootedValue imageRealWidth(cx); JS_GetProperty( cx, HandleObject( &image0Obj ), "realWidth", MutableHandleValue(&imageRealWidth) );
-        RootedValue imageRealHeight(cx); JS_GetProperty( cx, HandleObject( &image0Obj ), "realHeight", MutableHandleValue(&imageRealHeight) );
-        GLint w = imageRealWidth.toInt32();
-        GLint h = imageRealHeight.toInt32();
+        JSWrapperData image0Data;
+        imagesObject->getArrayElement( 0, &image0Data );
+
+        JSWrapperData data;
+        image0Data.object()->get( "realWidth", &data );
+        GLint w = data.toNumber();
+        initialRealWidth = data.toNumber();
+        image0Data.object()->get( "realHeight", &data );
+        GLint h = data.toNumber();
+        initialRealHeight = data.toNumber();
+        image0Data.object()->get( "width", &data );
+        initialWidth = data.toNumber();            
+        image0Data.object()->get( "height", &data );
+        initialHeight = data.toNumber();
 
         if ( target == GL_TEXTURE_CUBE_MAP )
         {
@@ -173,25 +173,31 @@ public:
                              GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
             };
 
-            //if (this.images.length != 6) throw "unexpected number of faces";
-
-            //for (var i = 0; i < this.images.length; i++)
+            unsigned int length; imagesObject->getArrayLength( &length );
+            for ( unsigned int i=0; i < length; ++i )
             {
-            //    gl.texImage2D(faceOrder[i], 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, this.images[i].data); 
+                JSWrapperData imageObjectData, imageData;
+                imagesObject->getArrayElement( i, &imageObjectData );
+
+                imageObjectData.object()->get( "data", &imageData );
+                if ( imageData.object()->isTypedArray() )
+                {
+                    unsigned int length; uint8_t *ptr;
+                    imageData.object()->getAsUint8Array( &ptr, &length );
+
+                    glTexImage2D( faceOrder[i], 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, ptr );
+                    GL_ASSERT();
+                }
             }
-
-        }
-        else
-        {
-            RootedValue data(cx); JS_GetProperty( cx, HandleObject( &image0Obj ), "data", MutableHandleValue(&data) );
-            bool ok=JS_IsTypedArrayObject( &data.toObject() );
-            if ( ok ) {
+        } else {
+            image0Data.object()->get( "data", &data );
+            if ( data.object()->isTypedArray() )
+            {
                 unsigned int length; uint8_t *ptr;
-                JS_GetObjectAsUint8Array( &data.toObject(), &length, &ptr );
+                data.object()->getAsUint8Array( &ptr, &length );
 
-                glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, ptr );
-
-				GL_ASSERT();
+                glTexImage2D( target, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, ptr );
+                GL_ASSERT();
             }
         }
 
@@ -210,16 +216,17 @@ public:
 
         if ( target == GL_TEXTURE_CUBE_MAP) return;
 
-        RootedObject imagesObject( cx, images );
-        RootedValue image0(cx); JS_GetElement( cx, HandleObject(imagesObject), 0, MutableHandleValue(&image0) );
-        RootedObject image0Obj(cx, &image0.toObject() );
-        RootedValue imageRealWidth(cx); JS_GetProperty( cx, HandleObject( &image0Obj ), "realWidth", MutableHandleValue(&imageRealWidth) );
-        RootedValue imageRealHeight(cx); JS_GetProperty( cx, HandleObject( &image0Obj ), "realHeight", MutableHandleValue(&imageRealHeight) );
-        GLint imW = imageRealWidth.toInt32();
-        GLint imH = imageRealHeight.toInt32();
+        JSWrapperData image0Data;
+        imagesObject->getArrayElement( 0, &image0Data );
+
+        JSWrapperData data;
+        image0Data.object()->get( "realWidth", &data );
+        GLint imW = data.toNumber();
+        image0Data.object()->get( "realHeight", &data );
+        GLint imH = data.toNumber();        
 
         //if the dimmension has changed, recreate the texture from scratch
-        if (imW != this->initW || imH != this->initH)
+        if (imW != initialRealWidth || imH != initialRealHeight)
         {
             destroy();
             create();
@@ -252,9 +259,7 @@ public:
     {
         /** Disposes the texture */
 
-        RemoveObjectRoot( cx, heapImages );
-        delete heapImages;
-
+        delete imagesObject;
         destroy();
     }
 
@@ -276,9 +281,8 @@ public:
     GLuint id;
     GLuint target;
 
-    GLint initW, initH;
+    GLint initialWidth, initialHeight;
+    GLint initialRealWidth, initialRealHeight;
 
-    JSContext *cx;
-    JSObject *images;
-    Heap<JSObject *> *heapImages;
+    JSWrapperObject *imagesObject;
 };

@@ -1,22 +1,54 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+ 
+ // ----------------------------------------------------------------- VG.UI.DecoratedToolSeparator
+
+VG.UI.DecoratedToolSeparator=function()
+{
+    if ( !(this instanceof VG.UI.DecoratedToolSeparator )) return new VG.UI.DecoratedToolSeparator();
+
+    VG.UI.Widget.call( this );
+    this.name="DecoratedToolSeparator";
+
+    this.horizontalExpanding=false;
+    this.verticalExpanding=false;
+};
+
+VG.UI.DecoratedToolSeparator.prototype=VG.UI.Widget();
+
+VG.UI.DecoratedToolSeparator.prototype.calcSize=function()
+{
+    this.preferredSize.set( VG.UI.stylePool.current.skin.DecoratedToolBar.Separator.Size );
+    return this.preferredSize;
+};
+
+VG.UI.DecoratedToolSeparator.prototype.paintWidget=function( canvas )
+{
+    var size=this.calcSize();
+    this.contentRect.set( this.rect );
+    
+    VG.UI.stylePool.current.drawDecoratedToolSeparator( this, canvas );
+};
 
 // ----------------------------------------------------------------- VG.UI.ToolSeparator
 
@@ -35,7 +67,7 @@ VG.UI.ToolSeparator.prototype=VG.UI.Widget();
 
 VG.UI.ToolSeparator.prototype.calcSize=function()
 {
-    var size=VG.Core.Size( 2, VG.context.style.skin.Toolbar.Separator.Size.height );
+    var size=VG.Core.Size( 2, VG.UI.stylePool.current.skin.ToolBar.Separator.Size.height );
     return size;
 };
 
@@ -44,7 +76,7 @@ VG.UI.ToolSeparator.prototype.paintWidget=function( canvas )
     var size=this.calcSize();
     this.contentRect.set( this.rect );
     
-    VG.context.style.drawToolSeparator( canvas, this );
+    VG.UI.stylePool.current.drawToolSeparator( this, canvas );
 };
 
 // ----------------------------------------------------------------- VG.UI.ToolButton
@@ -63,8 +95,12 @@ VG.UI.ToolButton=function( text, iconName )
     this.verticalExpanding=false;
     
     this.role=VG.UI.ActionItemRole.None;
-    this.minimumSize.width=VG.context.style.skin.ToolButton.MinimumWidth;
+    this.minimumSize.width=VG.UI.stylePool.current.skin.ToolButton.MinimumWidth;
     this._icon=0; 
+
+    this.checkable=false;
+    this.checked=false;
+    this.exclusions=[];
 };
 
 VG.UI.ToolButton.prototype=VG.UI.Widget();
@@ -78,57 +114,351 @@ Object.defineProperty( VG.UI.ToolButton.prototype, "icon", {
     }    
 });
 
-VG.UI.ToolButton.prototype.calcSize=function()
+VG.UI.ToolButton.prototype.bind=function( collection, path )
 {
-    var size=VG.Core.Size();
+    this.collection=collection;
+    this.path=path;
+    collection.addValueBindingForPath( this, path ); 
+};
+
+VG.UI.ToolButton.prototype.valueFromModel=function( value )
+{
+    //console.log( "TextEdit.valueFromModel: " + value );
+
+    if ( value === null ) this.checked=false;
+    else this.checked=value;  
+
+    if ( this.changed )
+        this.changed.call( VG.context, value, false, this );   
+
+    VG.update();    
+};
+
+VG.UI.ToolButton.prototype.addExclusions=function()
+{
+    this.checkable=true;
+
+    for ( var i=0; i < arguments.length; ++i ) {
+        if ( this.exclusions.indexOf( arguments[i] ) === -1 ) this.exclusions.push( arguments[i] );
+
+        if ( arguments[i].exclusions.indexOf( this ) === -1 )
+        {
+            arguments[i].exclusions.push( this );
+            arguments[i].checkable=true;
+
+            for ( var ai=0; ai < arguments.length; ++ai ) {
+                if ( i !== ai ) arguments[i].exclusions.push( arguments[ai] );
+            }
+        }
+    }
+};
+
+VG.UI.ToolButton.prototype.calcSize=function( canvas )
+{
+    var size=this.preferredSize;
     
-    this.minimumSize.width=VG.context.style.skin.ToolButton.MinimumWidth;
+    canvas.pushFont( canvas.style.skin.ToolButton.Font );
+    this.minimumSize.width=canvas.style.skin.ToolButton.MinimumWidth;
 
     if ( !this.icon ) {
-        VG.context.workspace.canvas.getTextSize( this.text, size );
-        size.width+=10;
-        if ( VG.context.style.skin.ToolButton.ScaleToParentHeight )
-            size.height=VG.context.style.skin.Toolbar.Height;
-        else size.height+=10;
-    } else {
-        if ( VG.context.style.skin.ToolButton.ScaleToParentHeight )
-            size.set( 22 + 10, VG.context.style.skin.Toolbar.Height );
-        else size.set( 22 + 10, 22 + 10 );
-    }
+        canvas.getTextSize( this.text, size );
+        size.width+=canvas.style.skin.ToolButton.TextMargin.width; size.height=canvas.getLineHeight() + canvas.style.skin.ToolButton.TextMargin.height;
 
-    if ( size.width < this.minimumSize.width )
-        size.width=this.minimumSize.width;
+        if ( size.width < this.minimumSize.width )
+            size.width=this.minimumSize.width;
+    } else size.set( 22 + 10, 22 + 10 );    
 
+    if ( this.svgName && this.parent && this.parent.decorated )
+        size.set( 33, 33 );
+
+    canvas.popFont();
     return size;
 };
 
 VG.UI.ToolButton.prototype.mouseDown=function( event )
 {
-    this.mouseIsDown=true;
+    if ( this.rect.contains( event.pos) )
+        this.mouseIsDown=true;
 };
 
 VG.UI.ToolButton.prototype.mouseUp=function( event )
 {
-    this.mouseIsDown=false;
+    if ( this.rect.contains( event.pos) )
+    {
+        if ( this.checkable && this.mouseIsDown )
+        {
+            if ( this.exclusions.length && this.checked === false ) 
+            {    
+                this.checked=true;
+                var undo=undefined;
+
+                if ( this.collection && this.path )
+                    undo=this.collection.storeDataForPath( this.path, this.checked, false, true );   
+
+                for ( var i=0; i < this.exclusions.length; ++i ) 
+                {
+                    var exclusion=this.exclusions[i];
+                    exclusion.checked=false;
+
+                    if ( this.collection && this.path && undo ) {
+                        undo.addSubItem( exclusion.path, exclusion.checked );   
+
+                        if ( exclusion.changed ) exclusion.changed( exclusion.checked, true, exclusion );
+                    }
+                } 
+
+                if ( this.changed ) this.changed( this.checked, true, this );
+            } else
+            if ( !this.exclusions.length )
+            {
+                this.checked=!this.checked;
+
+                if ( this.collection && this.path )
+                    this.collection.storeDataForPath( this.path, this.checked );   
+
+                if ( this.changed ) this.changed( this.checked, true, this );
+            }
+        }
+        this.mouseIsDown=false;
+    }
 };
 
 VG.UI.ToolButton.prototype.paintWidget=function( canvas )
 {
-    var size=this.calcSize();
-    this.contentRect.set( this.rect );
-    var size=size.add( -10, 0 );
-    
-    VG.context.style.drawToolButton( canvas, this );
+    VG.UI.stylePool.current.drawToolButton( this, canvas );
 };
 
-// ----------------------------------------------------------------- VG.UI.Toolbar
+// ----------------------------------------------------------------- VG.UI.DecoratedQuickMenu
 
-VG.UI.Toolbar=function()
+VG.UI.DecoratedQuickMenuItem=function( text, callback, iconName, svgName, svgGroupName )
 {
-    if ( !(this instanceof VG.UI.Toolbar) ) return VG.UI.Toolbar.creator( arguments );
+    if ( !(this instanceof VG.UI.DecoratedQuickMenuItem) ) return new VG.UI.DecoratedQuickMenuItem( text, callback, iconName, svgName, svgGroupName );
+
+    this.text=text;
+    this.callback=callback;
+
+    this.rect=VG.Core.Rect();
+
+    // --- Sub Menu
+
+    this.index=undefined;
+    this.items=[];
+    this.itemsRect=VG.Core.Rect();
+};
+
+VG.UI.DecoratedQuickMenuItem.prototype.addItem=function( text, callback, iconName, svgName, svgGroupName )
+{
+    var item=new VG.UI.DecoratedQuickMenuItem( text, callback, iconName, svgName, svgGroupName );
+
+    item.text=text;
+    item.callback=callback;
+
+    item.rect=VG.Core.Rect();
+
+    this.items.push( item );
+
+    return item;
+};
+
+// ----------------------------------------------------------------- VG.UI.DecoratedQuickMenu
+
+VG.UI.DecoratedQuickMenu=function()
+{
+    if ( !(this instanceof VG.UI.DecoratedQuickMenu) ) return new VG.UI.DecoratedQuickMenu();
     
     VG.UI.Widget.call( this );
-    this.name="Toolbar";
+    this.name="DecoratedQuickMenu";
+    
+    this.horizontalExpanding=false;
+    this.verticalExpanding=false;
+
+    this.minimumSize.set( VG.UI.stylePool.current.skin.DecoratedQuickMenu.Size.width, VG.UI.stylePool.current.skin.DecoratedQuickMenu.Size.height );
+    this.maximumSize.set( VG.UI.stylePool.current.skin.DecoratedQuickMenu.Size.width, VG.UI.stylePool.current.skin.DecoratedQuickMenu.Size.height );
+    
+    this.role=VG.UI.ActionItemRole.None;
+    this._icon=0; 
+
+    this.open=false;
+    this.popupRect=VG.Core.Rect();
+    this.closeButtonRect=VG.Core.Rect();
+    this.closeButtonHover=false;
+
+    this.items=[];
+};
+
+VG.UI.DecoratedQuickMenu.prototype=VG.UI.Widget();
+
+VG.UI.DecoratedQuickMenu.prototype.calcSize=function()
+{
+    return this.minimumSize;
+};
+
+VG.UI.DecoratedQuickMenu.prototype.addItem=function( text, callback )
+{
+    var item=VG.UI.DecoratedQuickMenuItem( text, callback );
+    this.items.push( item );
+
+    return item;
+};
+
+VG.UI.DecoratedQuickMenu.prototype.mouseDown=function( event )
+{
+    // --- Test for Main Menu Click
+    if ( this.popupRect.contains( event.pos ) )
+    {
+        if ( this.open && this.index !== undefined )
+        {
+            var selItem=this.items[this.index];
+            if ( selItem && !selItem.items.length && !selItem.disabled && selItem.callback ) selItem.callback();
+        } 
+    }
+
+    // --- Test for Sub Menu Click
+
+    if ( this.open && this.index !== undefined ) {
+        var selItem=this.items[this.index];
+        if ( selItem && selItem.items.length && selItem.index !== undefined ) {
+            selItem=selItem.items[selItem.index];
+            if ( selItem && !selItem.disabled && selItem.callback ) selItem.callback();
+        }
+    }
+
+    if ( !VG.UI.stylePool.current.skin.DecoratedQuickMenu.UsesCloseButton )
+    {
+        if ( this.rect.contains( event.pos) )
+        {
+            this.mouseIsDown=true;
+            this.open=!this.open;        
+        } else this.open=false;
+    } else
+    {
+        this.mouseIsDown=true;
+        if ( !this.open ) this.open=true;
+        else
+        {
+            if ( this.closeButtonRect.contains( event.pos ) || this.popupRect.contains( event.pos ) )
+                this.open=false;
+        }         
+    }
+
+    if ( this.open ) VG.context.workspace.mouseTrackerWidget=this;
+    else VG.context.workspace.mouseTrackerWidget=null;
+
+    VG.update();
+};
+
+VG.UI.DecoratedQuickMenu.prototype.mouseUp=function( event )
+{
+    if ( this.rect.contains( event.pos) )
+    {
+        this.mouseIsDown=false;
+    }
+};
+
+VG.UI.DecoratedQuickMenu.prototype.mouseMove=function( event )
+{
+    this.closeButtonHover=false;
+    if ( VG.UI.stylePool.current.skin.DecoratedQuickMenu.UsesCloseButton && this.open && this.closeButtonRect && this.closeButtonRect.contains( event.pos ) )
+    {
+        this.closeButtonHover=true;
+    }
+
+    if ( this.open && this.popupRect )
+    {
+        if ( this.popupRect.contains( event.pos ) )
+        {
+            var y=event.pos.y - this.popupRect.y;
+            var index=undefined;
+            for ( var i=0; i < this.items.length; ++i ) {
+                var item=this.items[i];
+
+                if ( item.rect.contains( event.pos ) && item.text && item.text.length )
+                    { index=i; break; }
+            }
+
+            if ( index !== undefined && index < this.items.length ) {
+                this.index=index;
+                VG.update();
+            }
+        }
+
+        if ( this.index !== undefined )
+        {
+            var item=this.items[this.index];
+            item.index=undefined;
+
+            if ( item.items.length && item.itemsRect.contains( event.pos ) )
+            {
+                for ( var i=0; i < item.items.length; ++i ) {
+                    var childItem=item.items[i];
+
+                    if ( childItem.rect.contains( event.pos ) && childItem.text && childItem.text.length )
+                        { item.index=i; VG.update(); break; }
+                }
+            }
+        } 
+    } 
+};
+
+VG.UI.DecoratedQuickMenu.prototype.paintWidget=function( canvas )
+{
+    this.contentRect.set( this.rect );
+
+    if ( this.open && canvas.delayedPaintWidgets.indexOf( this ) === -1 ) canvas.delayedPaintWidgets.push( this )
+    else VG.UI.stylePool.current.drawDecoratedQuickMenu( this, canvas );
+};
+
+// ----------------------------------------------------------------- VG.UI.DecoratedToolBar
+
+VG.UI.DecoratedToolBar=function()
+{
+    if ( !(this instanceof VG.UI.DecoratedToolBar) ) return VG.UI.DecoratedToolBar.creator( arguments );
+    
+    VG.UI.Widget.call( this );
+    this.name="DecoratedToolBar";
+
+    // ---
+    
+    this.layout=VG.UI.Layout();
+    this.layout.decorated=true;
+    this.layout.spacing=VG.UI.stylePool.current.skin.DecoratedToolBar.Spacing;
+    this.layout.margin.right=12;
+
+    for( var i=0; i < arguments.length; ++i )
+        this.addItem( arguments[i] );
+
+    this.maximumSize.height=VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
+};
+
+VG.UI.DecoratedToolBar.prototype=VG.UI.Widget();
+
+VG.UI.DecoratedToolBar.prototype.addItem=function( item )
+{
+    this.layout.addChild( item );
+}
+
+VG.UI.DecoratedToolBar.prototype.addItems=function()
+{
+    for( var i=0; i < arguments.length; ++i )
+        this.addItem( arguments[i] );    
+};
+
+VG.UI.DecoratedToolBar.prototype.paintWidget=function( canvas )
+{
+    VG.UI.stylePool.current.drawDecoratedToolBar( this, canvas );
+
+    this.layout.rect.set( this.contentRect );
+    this.layout.layout( canvas );    
+};
+
+// ----------------------------------------------------------------- VG.UI.ToolBar
+
+VG.UI.ToolBar=function()
+{
+    if ( !(this instanceof VG.UI.ToolBar) ) return VG.UI.ToolBar.creator( arguments );
+    
+    VG.UI.Widget.call( this );
+    this.name="ToolBar";
 
     // ---
     
@@ -137,27 +467,26 @@ VG.UI.Toolbar=function()
     for( var i=0; i < arguments.length; ++i )
         this.addItem( arguments[i] );
 
-    this.maximumSize.height=VG.context.style.skin.Toolbar.Height;
+    this.maximumSize.height=VG.UI.stylePool.current.skin.ToolBar.Height;
 };
 
-VG.UI.Toolbar.prototype=VG.UI.Widget();
+VG.UI.ToolBar.prototype=VG.UI.Widget();
 
-VG.UI.Toolbar.prototype.addItem=function( item )
+VG.UI.ToolBar.prototype.addItem=function( item )
 {
     this.layout.addChild( item );
 }
 
-VG.UI.Toolbar.prototype.addItems=function()
+VG.UI.ToolBar.prototype.addItems=function()
 {
     for( var i=0; i < arguments.length; ++i )
         this.addItem( arguments[i] );    
 };
 
-VG.UI.Toolbar.prototype.paintWidget=function( canvas )
+VG.UI.ToolBar.prototype.paintWidget=function( canvas )
 {
-    this.maximumSize.height=VG.context.style.skin.Toolbar.Height;    
-    VG.context.style.drawToolbar( canvas, this );
-        
-    this.layout.rect.set( this.rect );
+    VG.UI.stylePool.current.drawToolBar( this, canvas );
+
+    this.layout.rect.set( this.contentRect );
     this.layout.layout( canvas );
 };

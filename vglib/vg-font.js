@@ -1,25 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig, Luis Jimenez.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Contributors:
- *   - Font support in Visual Graphics is based on Typeface, 
- *     Copyright (c) 2008 - 2009, David Chester, http://typeface.neocracy.org
- *   - Luis Jimenez implementation of Font Triangulation
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 VG.Font = {};
@@ -58,8 +57,6 @@ VG.Font.Manager.prototype.addFonts=function()
                     fontFace=_typeface_js.faces[font].bold.italic;  
             }
 
-
-
             var triFont=VG.Font.Triangulator.createFont( fontFace, { curveDiv: 3 } );
             triFont.name=font;
 
@@ -80,21 +77,48 @@ VG.Font.Manager.prototype.getFont=function( name )
     return null;
 };
 
-VG.Font.Font=function( name, size)
+VG.Font.Font=function( name, size, curveDiv )
 {
-    if ( !(this instanceof VG.Font.Font) ) return new VG.Font.Font( name, size );
+    if ( !(this instanceof VG.Font.Font) ) return new VG.Font.Font( name, size, curveDiv );
 
-    this.name=name;
-    this.size=size;
-    this.triFont=VG.fontManager.getFont( name );
-    this.scale=this.size * this.triFont.pixelScale;
+    if ( size === undefined && name.triFont ) 
+    {
+        // --- Copy
 
-    //this.signature=size + "px " + name.toLowerCase(); 
+        this.name=name.name;
+        this.size=name.size;
+        this.triFont=name.triFont;
+        this.scale=name.scale;
+    } else 
+    if ( !curveDiv )
+    {
+        // --- Use existing font
+        this.name=name;
+        this.size=size;
+        this.triFont=VG.fontManager.getFont( name );
+        this.scale=this.size * this.triFont.pixelScale;
+    } else
+    {
+        // --- Create Font fresh with a custom curveDiv
+        this.name=name;
+        this.size=size;
+        this.triFont=VG.fontManager.getFont( name );
+        this.triFont=VG.Font.Triangulator.createFont( this.triFont.face, { curveDiv: curveDiv } );
+        this.scale=this.size * this.triFont.pixelScale;
+    }
 };
 
 VG.Font.Font.prototype.toString=function()
 {
-    return this.signature;
+    return this.name;
+};
+
+VG.Font.Font.prototype.setFont=function( name )
+{
+    if ( this.name !== name ) {
+        this.triFont=VG.fontManager.getFont( name );
+        this.name=name;
+    }
 };
 
 VG.Font.Font.prototype.setSize=function( size )
@@ -129,7 +153,7 @@ VG.Font.Triangulator.createFont=function(font, options)
     var v = out.tris;
 
     var text = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" + 
-               "~!@#$%^&*()_+{}:\"<>?|[];',./\\-=";
+               "~!@#$%^&*()_+{}:\"<>?|[];',./\\-=%";
 
     for (var i=0; i < text.length; ++i )
     {
@@ -641,7 +665,7 @@ VG.Font.Triangulator.generatePolygons=function(face, char, seg)
             {
                 var t = j / seg;
                 var tx = bezierCubic(t, px0, px1, px2, px);
-                var ty = bezierCubic(t, py0, py1, px2, py);
+                var ty = bezierCubic(t, py0, py1, py2, py);
 
                 vs.push(new VG.Math.Vector3(tx, ty, 0.0));
             }               

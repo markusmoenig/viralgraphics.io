@@ -36,6 +36,7 @@ namespace embree
       v0 = parms.getVector3f("v0");
       v1 = parms.getVector3f("v1");
       v2 = parms.getVector3f("v2");
+      Ng = normalize(cross(v2-v0,v1-v0));
     }
 
     /*! Triangle construction from its vertices. */
@@ -79,6 +80,20 @@ namespace embree
       dg.Ns = this->Ng;
       dg.st = Vec2f(ray.u,ray.v);
       dg.error = max(abs(ray.tfar),reduce_max(abs(dg.P)));
+    }
+    
+    virtual Vector3f getRandomSample() const
+    {
+        float s = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        float t = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        if (s + t > 1.0f)
+        {
+            s = 1.0f - t;
+            t = 1.0f - t;
+        }
+        float r = 1.0f - s - t;
+        
+        return v0 + s * (v1 - v0) + t * (v2 - v0);
     }
 
   public:

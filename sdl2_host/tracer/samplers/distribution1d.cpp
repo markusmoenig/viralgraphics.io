@@ -15,7 +15,6 @@
 // ======================================================================== //
 
 #include "distribution1d.h"
-#include <algorithm>
 
 namespace embree
 {

@@ -1,0 +1,9 @@
+
+name = MTL-Demo
+version = 0.01
+url = mtl-demo
+author = Markus Moenig
+
+images = images/cube_nx.png, images/cube_ny.png, images/cube_nz.png, images/cube_px.png, images/cube_py.png, images/cube_pz.png
+
+sources = mtl-demo.js

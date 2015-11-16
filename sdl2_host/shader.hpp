@@ -1,38 +1,37 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include <iostream>
+#include <algorithm>
 
 #include "gl.hpp"
 
-
-#include <jsapi.h>
-using namespace JS;
-
-
-#include <algorithm>
+#include "jswrapper.hpp"
 
 class Shader 
 {
 public:
-    Shader(  JSContext *cx, const char *vertSrc, const char *fragSrc ) 
+    Shader(  std::string vertSrc, std::string fragSrc ) 
     {
         /** Creates a new shader from a pair of vertex and fragment sources
          *  @constructor
@@ -57,18 +56,14 @@ public:
         culling = false;
 
         //keep a copy of the source
-        vsrc = (char *) malloc( strlen( vertSrc ) + 1 );
-        strcpy( vsrc, vertSrc );
-        fsrc = (char *) malloc( strlen( fragSrc ) + 1 );
-        strcpy( fsrc, fragSrc );
+        vsrc = vertSrc;
+        fsrc = fragSrc;
 
         vid = 0;
         fid = 0;
 
         //program id
         id = 0;
-
-        this->cx=cx;
     }
 
     void create()
@@ -82,7 +77,7 @@ public:
     
         if ( vid && fid )
         {
-            if ( compileShader( vid, vsrc ) && compileShader( fid, fsrc ) )
+            if ( compileShader( vid, vsrc.c_str() ) && compileShader( fid, fsrc.c_str() ) )
             {
                 id=glCreateProgram();
             
@@ -242,7 +237,12 @@ public:
         } 
     }
 
-    void setTexture( GLuint uid, JSObject *texture, GLint slot )
+    void setFloatArray( GLuint uid, int length, GLfloat *values )
+    {
+        glUniform1fv(uid, length, values);
+    }
+
+    void setTexture( GLuint uid, JSWrapperObject *object, GLint slot )
     {
         /** Sets a texture
          *  @param {number | string} uniform - Takes either a location/index or the name
@@ -250,17 +250,26 @@ public:
          *  */
 
         glActiveTexture( GL_TEXTURE0 + slot );
-    
-        /*
-        if (texture instanceof VG.RenderTarget)
+
+        // --- The isRenderTarget Check has to be improved (slow)
+
+        JSWrapperData renderTargetCheck;
+        object->get( "checkStatusComplete", &renderTargetCheck );
+
+        if ( !renderTargetCheck.isUndefined() )
         {
-            TODO
-            texture.bindAsTexture();
-        }
-        else*/
+            JSWrapperData data;
+            object->get( "bindAsTexture", &data );
+
+            data.object()->call( NULL, object );
+        } else
         {
-            RootedValue rc(cx); RootedObject textureObject(cx, texture);
-            Call( cx, HandleObject(textureObject), "bind", HandleValueArray::empty(), MutableHandleValue(&rc) );
+            //Call( cx, HandleObject(textureObject), "bind", HandleValueArray::empty(), MutableHandleValue(&rc) );
+
+            JSWrapperData data;
+            object->get( "bind", &data );
+
+            data.object()->call( NULL, object );
         }
     
         glUniform1i( uid, slot );
@@ -308,7 +317,12 @@ public:
                 glUniform4i( uid, values[0], values[1], values[2], values[3] );
             break;
         } 
-    }    
+    }
+    
+    void setBool(GLuint uid, bool b)
+    {
+        glUniform1i(uid, b);
+    }
 
     void setMatrix( GLuint uid, int length, GLfloat *values, bool transpose )
     {
@@ -373,13 +387,9 @@ public:
 
     ~Shader() 
     {
-        free( vsrc ); 
-        free( fsrc );
     }
 
     // ---
-
-    JSContext *cx;
 
     bool depthWrite;
     bool depthTest;
@@ -387,7 +397,7 @@ public:
 
     int blendType;
 
-    char *vsrc, *fsrc;
+    std::string vsrc, fsrc;
 
     GLuint vid, fid, id;
 };

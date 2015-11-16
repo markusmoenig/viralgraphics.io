@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include <iostream>
@@ -23,163 +26,150 @@
 #include "texture.hpp"
 #include "jshost.hpp"
 
-extern JSHost *g_host;
+extern JSWrapper *g_jsWrapper;
 
 // --------------------------------------------------------------- Member Functions
 
-bool Texture_create(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION( Texture_create )
 
-    Texture *texture=(Texture *) JS_GetPrivate( &value.toObject() );
+    Texture *texture=(Texture *) JSWRAPPER_FUNCTION_GETCLASS
     texture->create();
-    return true;
-}
 
-bool Texture_bind(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    Texture *texture=(Texture *) JS_GetPrivate( &value.toObject() );
+JSWRAPPER_FUNCTION( Texture_bind )
+
+    Texture *texture=(Texture *) JSWRAPPER_FUNCTION_GETCLASS
     texture->bind();
-    return true;
-}
 
-bool Texture_update(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
+
+JSWRAPPER_FUNCTION( Texture_update )
+
+    Texture *texture=(Texture *) JSWRAPPER_FUNCTION_GETCLASS
 
     GLint x=0, y=0, width=-1, height=-1;
 
-    if ( argc >= 1 ) x=args[0].toInt32();
-    if ( argc >= 2 ) y=args[1].toInt32();
-    if ( argc >= 3 ) width=args[2].toInt32();
-    if ( argc >= 4 ) height=args[3].toInt32();
+    if ( args.count() >= 1 ) x=args.at(0).toNumber();
+    if ( args.count() >= 2 ) y=args.at(1).toNumber();
+    if ( args.count() >= 3 ) width=args.at(2).toNumber();
+    if ( args.count() >= 4 ) height=args.at(3).toNumber();
 
-    Texture *texture=(Texture *) JS_GetPrivate( &value.toObject() );
     texture->update( x, y, width, height );
-    return true;
-}
 
-bool Texture_destroy(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION_END
 
-    Texture *texture=(Texture *) JS_GetPrivate( &value.toObject() );
+JSWRAPPER_FUNCTION( Texture_destroy )
+
+    Texture *texture=(Texture *) JSWRAPPER_FUNCTION_GETCLASS
     texture->destroy();
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
-bool Texture_dispose(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp ); Value value=args.computeThis( cx );
+JSWRAPPER_FUNCTION( Texture_dispose )
 
-    Texture *texture=(Texture *) JS_GetPrivate( &value.toObject() );
+    Texture *texture=(Texture *) JSWRAPPER_FUNCTION_GETCLASS
     texture->dispose();
 
     // --- VG.Renderer().removeResource(this);
 
-    RootedValue *renderer=g_host->executeScript( "VG.Renderer()" );
-    RootedObject rendererObject( cx, &renderer->toObject() );
+    JSWrapperData rendererObject;
+    g_jsWrapper->execute( "VG.Renderer()", &rendererObject );
 
-    RootedValue rc( cx );
-    RootedValue thisValue( cx, value );
+    JSWrapperArguments arguments;
+    arguments.append( thisObject );    
 
-    bool ok=Call( cx, HandleObject( rendererObject ), "removeResource", HandleValueArray( thisValue ), MutableHandleValue( &rc ) );
+    JSWrapperData addObject;
+    rendererObject.object()->get( "removeResource", &addObject );
+    addObject.object()->call( &arguments, rendererObject.object() );
 
-    return true;
-}
+JSWRAPPER_FUNCTION_END
 
-// --------------------------------------------------------------- Properties
+JSWRAPPER_FUNCTION( Texture_getRealWidth )
 
-bool GetTextureProperty( JSContext *cx, Handle<JSObject *> object, Handle<jsid> id, MutableHandle<Value> value )
-{
-    RootedValue val(cx); JS_IdToValue( cx, id, MutableHandleValue(&val) );
-    JSString *propertyString = val.toString(); const char *propertyName=JS_EncodeString(cx, propertyString);    
-    //printf("GetShaderProperty: %s\n", propertyName ); 
-    
-    Texture *texture=(Texture *) JS_GetPrivate( object );
+    Texture *texture=(Texture *) JSWRAPPER_FUNCTION_GETCLASS
 
-    return true;    
-}
+    JSWrapperData data; data.setNumber( texture->initialRealWidth );
+    JSWRAPPER_FUNCTION_SETRC( data )
 
-bool SetTextureProperty( JSContext *cx, Handle<JSObject *> object, Handle<jsid> id, bool, MutableHandle<Value> value)
-{
-    RootedValue val(cx); JS_IdToValue( cx, id, MutableHandleValue(&val) );
-    JSString *propertyString = val.toString(); const char *propertyName=JS_EncodeString(cx, propertyString);      
-    //printf("SetShaderProperty: %s\n", propertyName ); 
+JSWRAPPER_FUNCTION_END
 
-    Texture *texture=(Texture *) JS_GetPrivate( object );
-  
-    return true;
-}
+JSWRAPPER_FUNCTION( Texture_getRealHeight )
 
-static JSFunctionSpec texture_functions[] = {
-    JS_FS( "create", Texture_create, 0, 0 ),
-    JS_FS( "bind", Texture_bind, 0, 0 ),
-    JS_FS( "update", Texture_update, 0, 0 ),
-    JS_FS( "destroy", Texture_destroy, 0, 0 ),
-    JS_FS( "dispose", Texture_dispose, 0, 0 ),
+    Texture *texture=(Texture *) JSWRAPPER_FUNCTION_GETCLASS
 
-    JS_FS_END
-};
+    JSWrapperData data; data.setNumber( texture->initialRealHeight );
+    JSWRAPPER_FUNCTION_SETRC( data )
+
+JSWRAPPER_FUNCTION_END
+
+JSWRAPPER_FUNCTION( Texture_getWidth )
+
+    Texture *texture=(Texture *) JSWRAPPER_FUNCTION_GETCLASS
+
+    JSWrapperData data; data.setNumber( texture->initialWidth );
+    JSWRAPPER_FUNCTION_SETRC( data )
+
+JSWRAPPER_FUNCTION_END
+
+JSWRAPPER_FUNCTION( Texture_getHeight )
+
+    Texture *texture=(Texture *) JSWRAPPER_FUNCTION_GETCLASS
+
+    JSWrapperData data; data.setNumber( texture->initialHeight );
+    JSWRAPPER_FUNCTION_SETRC( data )
+
+JSWRAPPER_FUNCTION_END
+
+JSWRAPPER_FUNCTION( Texture_identifyTexture )
+JSWRAPPER_FUNCTION_END
   
 // --------------------------------------------------------------- 
 
-JSClass TextureClass = 
-{ 
-    "Texture", JSCLASS_HAS_PRIVATE, JS_PropertyStub, NULL,//JS_PropertyStub,
-    JS_PropertyStub, JS_StrictPropertyStub,
-    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, NULL//JSCustomer :: JSDestructor
-};
+JSWRAPPER_CONSTRUCTOR( TextureConstructor, "Texture" )
 
-bool TextureConstructor( JSContext *cx, unsigned argc, jsval *vp )
-{
-    //printf( "Texture Constructor!%d\n", argc );
-
-    JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
-
-    JSObject *object = JS_NewObjectForConstructor( cx, &TextureClass, args );
-    RootedObject obj(cx, object ); RootedValue v(cx, JS::UndefinedValue() );
-    JS_DefineFunctions( cx, HandleObject(obj), texture_functions );
-
-    if ( argc >= 1 ) {
-        JS::CallArgs args = JS::CallArgsFromVp( argc, vp );
-
-        JSObject *images = &args[0].toObject();
+    if ( args.count() >= 1 ) {
+        JSWrapperObject *imagesObject=args.at( 0 ).object()->copy();
         bool cube=false;
 
-        if ( argc >=2 ) cube=args[1].toBoolean();
+        if ( args.count() >=2 ) cube=args.at( 1 ).toBoolean();
 
-        Texture *texture=new Texture( cx, images, cube );// JS_EncodeString(cx, vs), JS_EncodeString(cx, fs) );
+        Texture *texture=new Texture( imagesObject, cube );
 
-        JS_SetPrivate( object, texture );
-        args.rval().set( OBJECT_TO_JSVAL( object ) );
+        JSWRAPPER_CONSTRUCTOR_SETCLASS( texture )
     }
 
     //VG.Renderer().addResource(this);
 
-    RootedValue rendererRC(cx); RootedObject global( cx,JS_GetGlobalForObject( cx, object ) );
-    bool ok = JS_EvaluateScript( cx, HandleObject( global ), "VG.Renderer()", strlen("VG.Renderer()"), "unknown", 1, MutableHandleValue(&rendererRC) );    
-    if ( ok )
-    {
-        RootedValue objectValue( cx, OBJECT_TO_JSVAL(object) );
-        RootedObject renderer(cx, &rendererRC.toObject() ); MutableHandleValue handleValue( &rendererRC );
-        ok=Call( cx, HandleObject(renderer), "addResource", HandleValueArray( objectValue ), handleValue );
-    }    
+    JSWrapperData rendererObject;
+    g_jsWrapper->execute( "VG.Renderer()", &rendererObject );
 
-    return true;
-}
+    JSWrapperArguments arguments;
+    arguments.append( thisObject );    
 
-JSObject *registerTexture( JSContext *cx, JSObject *object )
+    JSWrapperData addObject;
+    rendererObject.object()->get( "addResource", &addObject );
+    addObject.object()->call( &arguments, rendererObject.object() );    
+
+JSWRAPPER_CONSTRUCTOR_END
+
+JSWrapperClass *registerTexture( JSWrapper * jsWrapper )
 {
-    RootedObject obj(cx, object ); RootedObject parentobj(cx);
+    JSWrapperData data;
+    jsWrapper->globalObject()->get( "VG", &data );
 
-    JSObject * newObject=JS_InitClass( cx, HandleObject(obj), HandleObject(parentobj), &TextureClass,  
-        TextureConstructor, 0,
-        NULL, NULL,
-        NULL, NULL);
+    JSWrapperClass *textureClass=data.object()->createClass( "Texture", TextureConstructor );
+    textureClass->registerFunction( "create", Texture_create );
+    textureClass->registerFunction( "bind", Texture_bind );
+    textureClass->registerFunction( "update", Texture_update );
+    textureClass->registerFunction( "destroy", Texture_destroy );
+    textureClass->registerFunction( "dispose", Texture_dispose );
+    textureClass->registerFunction( "identifyTexture", Texture_identifyTexture );
+    textureClass->registerFunction( "getRealWidth", Texture_getRealWidth );
+    textureClass->registerFunction( "getRealHeight", Texture_getRealHeight );
+    textureClass->registerFunction( "getWidth", Texture_getWidth );
+    textureClass->registerFunction( "getHeight", Texture_getHeight );
+    textureClass->install();
 
-    return newObject;
+    return textureClass;
 }

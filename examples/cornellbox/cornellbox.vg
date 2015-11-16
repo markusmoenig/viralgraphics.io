@@ -1,0 +1,7 @@
+
+name = CornellBox
+version = 0.30
+url = cornellbox
+author = Markus Moenig
+
+sources = cornellbox.js

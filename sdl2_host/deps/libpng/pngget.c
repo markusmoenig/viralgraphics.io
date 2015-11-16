@@ -893,9 +893,9 @@ png_get_sCAL_fixed(png_const_structrp png_ptr, png_const_inforp info_ptr,
        * if neither floating point APIs nor internal floating point arithmetic
        * are enabled.
        */
-      *width = png_fixed(png_ptr, atof(info_ptr->scal_s_width), "sCAL width");
-      *height = png_fixed(png_ptr, atof(info_ptr->scal_s_height),
-         "sCAL height");
+      //*width = png_fixed(png_ptr, atof(info_ptr->scal_s_width), "sCAL width");
+      //*height = png_fixed(png_ptr, atof(info_ptr->scal_s_height),
+      //   "sCAL height");
       return (PNG_INFO_sCAL);
    }
 
@@ -912,8 +912,8 @@ png_get_sCAL(png_const_structrp png_ptr, png_const_inforp info_ptr,
        (info_ptr->valid & PNG_INFO_sCAL) != 0)
    {
       *unit = info_ptr->scal_unit;
-      *width = atof(info_ptr->scal_s_width);
-      *height = atof(info_ptr->scal_s_height);
+      //*width = atof(info_ptr->scal_s_width);
+      //*height = atof(info_ptr->scal_s_height);
       return (PNG_INFO_sCAL);
    }
 

@@ -51,6 +51,10 @@ namespace embree
       if (!isMediaInterface) return current;
       return current == mediumInside ? mediumOutside : mediumInside;
     }
+    
+    virtual Color getIntensity() const { return Color(1, 1, 1); }
+    
+    virtual bool isEmissive() const { return false; }
 
   public:
     Medium mediumOutside;   //!< Outside medium.

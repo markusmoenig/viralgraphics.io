@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include <AppKit/AppKit.h>
@@ -23,8 +26,9 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 
+#include <iostream>
+
 extern SDL_SysWMinfo g_wmInfo;
-extern const char *g_appNameChars, *g_appVersionChars;
 
 extern void sendBackendRequest_finished( const char *result, void *heap );
 
@@ -144,6 +148,9 @@ void setMouseCursor_cocoa( const char *_name )
     else
     if ( [name isEqualToString: @"row-resize"] )
         [[NSCursor resizeUpDownCursor] set];
+    else
+    if ( [name isEqualToString: @"pointer"] )
+        [[NSCursor pointingHandCursor] set];    
     else        
     if ( [name isEqualToString: @"default"] )
         [[NSCursor arrowCursor] set];
@@ -156,17 +163,23 @@ void setProjectChangedState_cocoa( bool value )
 
 // --- setWindowTitle_cocoa, sets the title of the OpenGL window.
 
-void setWindowTitle_cocoa( const char *_title, const char *_filePath )
+void setWindowTitle_cocoa( const char *_title, const char *_filePath, const char *appName, const char *appVersion )
 {
-    char formattedTitle[200];
+    char formattedTitle[400];
 
     if ( strlen(_title) == 0 ) 
     {
-        sprintf( formattedTitle, "%s v%s", g_appNameChars, g_appVersionChars );
+        sprintf( formattedTitle, "%s v%s", appName, appVersion );
     } else
     {
-        sprintf( formattedTitle, "%s v%s - %s", g_appNameChars, g_appVersionChars, _title );
+        sprintf( formattedTitle, "%s v%s - %s", appName, appVersion, _title );
     }
+
+    //JSWrapperData data;
+    //g_jsWrapper->execute( "VG.Utils.decompressFromBase64( VG.App.name );", &data );
+    //std::appName=data.toString();
+
+    //printf("%s\n", appName.c_str() );
 
     NSString *title=[NSString stringWithFormat:@"%s", formattedTitle];
     NSString *filePath=[NSString stringWithFormat:@"%s", _filePath];
@@ -177,7 +190,7 @@ void setWindowTitle_cocoa( const char *_title, const char *_filePath )
 
 // --- sendBackendRequest_cocoa, sends a JSON data package to the given url, calls the callback with the returned JSON.
 
-const char *sendBackendRequest_cocoa( const char *url, const char *_parameters, const char *type, void *heap )
+const char *sendBackendRequest_cocoa( const char *url, const char *_parameters, const char *type, void *callbackValuePtr )
 {/*
     NSMenu *mainMenu = [[NSApplication sharedApplication] mainMenu];
     NSMenu *appMenu = [[mainMenu itemAtIndex:0] submenu];
@@ -215,7 +228,7 @@ const char *sendBackendRequest_cocoa( const char *url, const char *_parameters, 
         {
             //NSArray *array=[[NSArray alloc] initWithObjects:(id)string,nil];
             //[func callWithArguments:array];
-            sendBackendRequest_finished( [string UTF8String], heap );
+            sendBackendRequest_finished( [string UTF8String], callbackValuePtr );
         }
     }];
     return 0;
@@ -343,4 +356,29 @@ void setNativeMenuItemState_cocoa( int menuItemId, bool disabled, bool checked )
             }
         }
     }
+}
+
+// --- Goto URL
+
+void gotoUrl_cocoa( const char *_url )
+{
+    NSString *url=[NSString stringWithFormat:@"%s", _url];
+    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:url]];    
+}
+
+// --- Getting / Setting Focus to cober SDL2 Bug
+
+NSWindow *_keyWindow;
+NSOpenGLContext *_openGLContext;
+
+void getKeyWindow( void )
+{
+    _keyWindow = [[NSApplication sharedApplication] keyWindow];
+    _openGLContext = [NSOpenGLContext currentContext];
+}
+
+void setKeyWindow( void )
+{
+    [_keyWindow makeKeyAndOrderFront:nil];
+    [_openGLContext makeCurrentContext];    
 }

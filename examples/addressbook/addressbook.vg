@@ -1,0 +1,7 @@
+
+name = AddressBook
+version = 1.0
+url = addressbook
+author = Markus Moenig
+
+sources = addressbook.js

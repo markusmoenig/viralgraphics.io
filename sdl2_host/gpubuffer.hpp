@@ -1,34 +1,31 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include <iostream>
-
-#include "gl.hpp"
-
-#include <jsapi.h>
-using namespace JS;
-
-
 #include <vector>
 
-
+#include "gl.hpp"
+#include "jswrapper.hpp"
 
 class GPUBuffer 
 {
@@ -61,7 +58,6 @@ public:
          * char* pData = new char[stride * size);
          * */
 
-        data=0;
         stride=0;
         this->size=size;
         this->type=type;
@@ -87,8 +83,10 @@ public:
             break;
         }
 
-        data=(char *) malloc( size * stride );
+        //data=0;//(char *) malloc( size * stride );
     }
+
+    char *getDataFromDataBuffer( JSWrapperObject *object );
 
     GLuint getSize( void ) 
     {
@@ -104,105 +102,71 @@ public:
     {
     }
 
-    void setBuffer( GLuint index, float value )
+    bool isVertexBuffer() const
     {
-        /** Sets the buffer data by index
-         *  @param {number} index - The index in the buffer, must be < size
-         *  @param {*} */
-
-        switch ( type )
-        {
-            case 0://VG.Type.Float:
-            {
-                GLfloat *buf=(GLfloat*) data;
-                buf[index]=value;
-                break;
-            }
-            case 1://VG.Type.Uint8:
-                data[index]=(GLint) value;
-            break;
-            case 2://VG.Type.Uint16:
-            {
-                GLushort *buf=(GLushort*)data;
-                buf[index]=(GLint) value;
-                break;
-            }
-        }
+        return (target == GL_ARRAY_BUFFER);
     }
 
     void bind()
     {
         /** Binds the buffer */
+        if (isVertexBuffer()) {
 #ifdef __VG_OPENGL3__
-        glBindVertexArray( vaid );
+#ifndef WIN32 
+			glBindVertexArray( vaid );
 #endif
+#endif
+        }
         glBindBuffer( target, id );
 		GL_ASSERT();
     }
 
-    void update( GLuint offset, GLuint count, bool nobind )
+    void update( GLuint offset, GLuint count, bool nobind, char *data )
     {
         /** Updates the buffer from ram to vram
          *  @param {number} [0] offset - The buffer offset
          *  @param {number} [size] count - The count or size to update from the offset
          *  @param {bool} [false] nobind - If true then the buffer wont be binded.
          *  */
-
-        if ( id == 0 ) create();
-
-        //if (!offset)
-        //{
-        //    offset = 0;
-        //}
-
+        if ( id == 0 )
+            create(0);
         if (!nobind)
-        {
             bind();
-        }
-
         if (!count)
-        {
             count = size;
-        }
-
         //On native code, check for offset + cout overflow, or it will crash
-    
         //this does not allocate a new buffer, just a hack for webgl (subarray returns a view)
         //for native opengl would be  glBufferSubData(target, offset, count, dataPtr); in BYTES!
-    
         if ( count >= size )
-        {
             glBufferData( target, count * stride, data, usage );
-        }
         else
-        {
             glBufferSubData( target, offset * stride, count * stride, data );
-        }
 		GL_ASSERT();
     }
 
-    void create()
+    void create( char *data )
     {
         /** Restores or creates the buffer in the gpu */
-
         if ( id != 0)
         {
             //throw "Unexpected buffer creation (buffer already create)";
             return;
         }
-
+        
+        if (isVertexBuffer()) {
 #ifdef __VG_OPENGL3__
-        glGenVertexArrays( 1, &vaid );
-        glBindVertexArray( vaid );
+#ifndef WIN32 
+            glGenVertexArrays( 1, &vaid );
+            glBindVertexArray( vaid );
 #endif
-
+#endif
+        }
         glGenBuffers( 1, &id );
-
         bind();
         glBufferData( target, size * stride, data, usage );
         GL_ASSERT();
-    }    
-
+    }
+    
     void destroy()
     {
         /** Releases the buffer from GPU, it can be send again with buffer.create */
@@ -215,7 +179,6 @@ public:
     void dispose()
     {
         /** Disposes this object and becomes invalid for further use */
-
         destroy();
     }    
 
@@ -237,69 +200,7 @@ public:
         GL_ASSERT();
     } 
 
-    void draw( GLint primType, GLuint offset, GLuint count, bool nobind )
-    {
-        /** Draws primitives
-         *  @param {enum} primType - Primitive type VG.Primitive.Triangles, VG.Primitive.Lines VG.Primitive.TriangleStip VG.Primitive.LineStrip 
-         *  @param {number} offset - The offset or start index 
-         *  @param {number} count - The count from the offset on 
-         *  @param {bool} nobind - If true the buffer wont be binded
-         *  */
-
-        if (!nobind)
-        {
-            bind();
-        }
-
-        GLenum mode = GL_TRIANGLES;
-
-        switch (primType)
-        {
-            case 1: mode = GL_LINES; break;
-            case 3: mode = GL_LINE_STRIP; break;
-            case 2: mode = GL_TRIANGLE_STRIP; break;
-        }
-
-        glDrawArrays(mode, offset, count);
-
-        GL_ASSERT();
-        purgeAttribs(); 
-    }
-
-    void drawIndexed( GLint primType, GLuint offset, GLuint count, GPUBuffer *indexBuffer, bool nobind )
-    {
-        /** Draws indexed primitives
-         *  @param {enum} primType - Primitive type VG.Primitive.Triangles, VG.Primitive.Lines VG.Primitive.TriangleStip VG.Primitive.LineStrip 
-         *  @param {number} offset - The index offset or start index 
-         *  @param {number} count - The index count from the offset on
-         *  @param {enum} indexType - The index type: VG.Type.Uint8 or VG.Type.Uint16 
-         *  @param {VG.GPUBuffer} indexBuffer - The index buffer
-         *  @param {bool} nobind - If true no buffer will be binded including the index buffer
-         *  */
-
-        int mode = GL_TRIANGLES;
-
-        if (!nobind)
-        {
-            bind();
-            indexBuffer->bind();
-        }
-
-        switch (primType)
-        {
-            case 1: mode = GL_LINES; break;
-            case 3: mode = GL_LINE_STRIP; break;
-            case 2: mode = GL_TRIANGLE_STRIP; break;
-        }
-    
-        size_t ptrOffset=offset;
-        glDrawElements( mode, count, indexBuffer->elemType, (const void*)ptrOffset );
-        GL_ASSERT();
-        purgeAttribs(); 
-    }
-
     // ---
-
     GLuint id;
     GLuint vaid;
     GLuint usage;
@@ -308,6 +209,4 @@ public:
     GLuint elemType;
     GLuint stride;
     GLuint type;
-
-    char *data;
 };

@@ -52,7 +52,25 @@ namespace embree
     size_t numVertices () const;
     int extract(RTCScene scene, size_t id) const;
     void postIntersect(const Ray& ray, DifferentialGeometry& dg) const;
-
+    
+    virtual Vector3f getRandomSample() const
+    {
+        unsigned int i = rand() % triangles.size();
+        
+        float s = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        float t = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        if (s + t > 1.0f)
+        {
+            s = 1.0f - t;
+            t = 1.0f - t;
+        }
+        float r = 1.0f - s - t;
+        
+        return position[triangles[i].v0] + 
+            s * (position[triangles[i].v1] - position[triangles[i].v0]) + 
+            t * (position[triangles[i].v2] - position[triangles[i].v0]);
+    }
+    
   public:
     vector_t<Vec3fa> position;      //!< Position array.
     vector_t<Vec3fa> motion;        //!< Motion array.

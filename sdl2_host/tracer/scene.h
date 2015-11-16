@@ -1,121 +1,63 @@
 /*
-* (C) Copyright 2014, 2015 Markus Moenig Luis Jimenez <kuko@kvbits.com>.
-*
-* This file is part of Visual Graphics.
-*
-* Visual Graphics is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Lesser General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* Visual Graphics is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU Lesser General Public License for more details.
-*
-* You should have received a copy of the GNU Lesser General Public License
-* along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
-*
-*/
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>, Luis Jimenez <kuko@kvbits.com>.
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 
 #ifndef __VG_TRACER_SCENE_INCLUDED
 #define __VG_TRACER_SCENE_INCLUDED
 
-
-
-
-#include <jsapi.h>
 #include <inttypes.h>
-#include <unordered_map>
 #include "api/scene_flat.h"
 
-
-class GPUBuffer;
-
-namespace embree
-{
-    class Material;
-    class Shape;
-    typedef std::vector<Ref<BackendSceneFlat::Primitive>> PrimitiveList;
-}
+#include "jswrapper.hpp"
 
 class Tracer;
 class TracerTriangleMesh;
-
+class GPUBuffer;
 
 class Scene
 {
-protected:
-
-
-    enum VertexAttrType
-    {
-        V_INVALID,
-        V_POSITION,
-        V_NORMAL,
-        V_UV
-    };
-
-    struct VertexAttr
-    {
-        VertexAttrType type;
-        int stride;
-        int offset;
-    };
-
-    typedef std::vector<VertexAttr> VertexAttrArray;
-
-    struct VBuffer
-    {
-        VertexAttrArray layout;
-        int stride;
-        GPUBuffer* pBuffer;
-    };
-
-    struct StaticLayoutAttr
-    {
-        int bufferIndex;
-        int index;
-    };
-
-    typedef std::vector<StaticLayoutAttr> StaticLayout;
-
-    typedef std::vector<VBuffer> VBuffers;
-
-    static VertexAttrType getAttrTypeFromName(const char* name);
-
-    static void readVBuffers(JSContext* cx, JS::RootedObject& jsMeshNode, VBuffers& vbuffers);
-
-    /** Reads and creates a embree shape from a js mesh */
-    static embree::Shape* createShapeFromJSMesh(JSContext* cx, JS::RootedObject& jsMeshNode, const embree::AffineSpace3f* pWorldTransform);
-
-
-    embree::BackendSceneFlat* m_pInternal;
-
-    void syncChildren(JSContext* cx, JS::RootedObject& jsNode, embree::PrimitiveList& prims);
-
     friend class Tracer;
-    friend class TracerTriangleMesh;
-public:
 
+    typedef std::vector<embree::Ref<embree::BackendSceneFlat::Primitive>> PrimitiveList;
+
+// members
+protected:
+    embree::BackendSceneFlat* m_pInternal;
+    
+// methods
+protected:
+    // material
+    void createMaterial(embree::Material*& defaultMaterial, std::vector<embree::Material*>& subMaterials, JSWrapperObject * );
+    // light
+    static void createLight( JSWrapperObject *, std::vector<embree::Light*>& lights );
+    // scene traverse
+    void syncChildren( JSWrapperObject *, PrimitiveList& prims);
+public:
     Scene();
     ~Scene();
-
     /** Syncronizes the js scene to this */
-    void sync(JSContext* cx, JS::RootedObject& jsScene);
-
+    void sync( JSWrapperObject *, JSWrapperObject * );
     /** Cleans any internal structures, sync has to be called again to re-validate this scene */
     void clean();
-
-    embree::Material* createDefaultMaterial() const;
-
-    //public members
-    int32_t m_id;
 };
-
-
-
-
-
 
 #endif

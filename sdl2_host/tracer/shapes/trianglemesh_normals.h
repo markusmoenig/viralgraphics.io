@@ -57,6 +57,24 @@ namespace embree
     size_t numVertices () const;
     int extract(RTCScene scene, size_t id) const;
     void postIntersect(const Ray& ray, DifferentialGeometry& dg) const;
+    
+    virtual Vector3f getRandomSample() const
+    {
+        unsigned int i = rand() % triangles.size();
+        
+        float s = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        float t = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        if (s + t > 1.0f)
+        {
+            s = 1.0f - t;
+            t = 1.0f - t;
+        }
+        float r = 1.0f - s - t;
+        
+        return vertices[triangles[i].v0].p + 
+            s * (vertices[triangles[i].v1].p - vertices[triangles[i].v0].p) + 
+            t * (vertices[triangles[i].v2].p - vertices[triangles[i].v0].p);
+    }
 
   public:
     vector_t<Vertex> vertices;     //!< Vertex array (positions and normals).

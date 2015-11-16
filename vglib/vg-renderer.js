@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Luis Jimenez <kuko@kvbits.com>.
+ * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 /* Type enum */
@@ -73,18 +76,20 @@ VG.Renderer = function()
     this.shaderTex2d.blendType = VG.Shader.Blend.Alpha;
     this.shaderTex2d.create();
 
-
     //Generic quad buffer with uv
     this.texQuadBuffer = new VG.GPUBuffer(VG.Type.Float, 4 * 4, true);
     this.texQuadBuffer.create();
-
-
-
 
     //the main render target (it's actually null), dont need to call create.
     this.mainRT = new VG.RenderTarget(0, 0, true);
     this.mainRT.clear();
 
+	// the render targets(fbo) for continued effect-chain process, while ping pong (switching).
+	this.rtPing = new VG.RenderTarget();
+	this.rtPong = new VG.RenderTarget();
+    
+	this.framePingPong = new VG.GPUBuffer(VG.Type.Float, 4 * 4, true);
+	this.framePingPong.create();
 }
 
 VG.Renderer.prototype.addResource = function(resource)
@@ -94,8 +99,51 @@ VG.Renderer.prototype.addResource = function(resource)
 
 VG.Renderer.prototype.removeResource = function(resource)
 {
-    this.resource.delete(resource);
+    this.resources.delete(resource);
 }
+
+// ping pong RT mechanism - begin
+VG.Renderer.prototype.startPingPong = function(width, height, imageWidth, imageHeight )
+{
+	this.rtPing.resetSize(width, height);
+	this.rtPong.resetSize(width, height);
+
+    this.rtPing.imageWidth=imageWidth; this.rtPing.imageHeight=imageHeight;
+    this.rtPong.imageWidth=imageWidth; this.rtPong.imageHeight=imageHeight;
+
+	this.mainRT.setViewportEx(0, 0, width, height);
+	this.prepareFrameQuad(0, 0, 2, 2, VG.Core.Size(2, 2), this.framePingPong);
+}
+
+VG.Renderer.prototype.whilePingPong = function(texture)
+{
+	var rtActive;
+
+	if (texture===this.rtPing)
+		rtActive = this.rtPong;
+	else
+		rtActive = this.rtPing;
+	
+	rtActive.bind();
+
+	return rtActive;
+}
+
+VG.Renderer.prototype.drawPingPong = function(aPos, aTex)
+{
+    /** Draws a frame-quad.
+	 *  @param {number} aPos - The vertex coordinate attribute location of shader.
+	 *  @param {number} aTex - The Texture coordinate attribute location of shader.
+     *  */
+    this.drawFrameQuad(aPos, aTex, true, this.framePingPong);
+}
+
+VG.Renderer.prototype.endPingPong = function(texture)
+{
+	if (texture.bindAsTexture) // instanceof VG.RenderTarget
+		texture.unbind();
+}
+// ping pong RT mechanism - end
 
 VG.Renderer.prototype.getTexture = function(source)
 {
@@ -103,15 +151,21 @@ VG.Renderer.prototype.getTexture = function(source)
      *  @param {string | VG.Core.Image} source - The image source, either a path or an image object 
      *  @returns {VG.Texture} 
      *  */
-
-
     var tex = null;
 
     if (this.textures.has(source))
     {
         tex = this.textures.get(source);
     }
-    else
+    else if (source.bindAsTexture) // instanceof VG.RenderTarget
+    {
+		tex = source;
+    }
+    else if (source.identifyTexture) // instanceof VG.Texture
+    {
+		tex = source;
+    }
+	else
     {
         tex = new VG.Texture([source]);
         tex.create();
@@ -129,7 +183,7 @@ VG.Renderer.prototype.onResize = function(w, h)
 
     this.resources.forEach(function(r) {
         
-        if (r.bindAsTexture)// instanceof VG.RenderTarget)
+        if (r.bindAsTexture) // instanceof VG.RenderTarget
         {
             if (r.autoResize)
             {
@@ -187,6 +241,31 @@ VG.Renderer.prototype.drawQuad = function(texture, w, h, x, y, alpha, viewportSi
      *  @param {VG.Core.Size} [null] viewportSize - The viewport size
      *  */
 
+	// texture
+    this.shaderTex2d.bind();
+    this.shaderTex2d.setTexture("tex", texture, 0);
+	
+	// alpha
+	if (alpha === undefined)
+		alpha = 1.0;
+    this.shaderTex2d.setFloat("alpha", alpha);
+	
+	// quad
+	this.prepareFrameQuad(x, y, w, h, viewportSize);
+	this.drawFrameQuad(this.shaderTex2d.getAttrib("vPos"), this.shaderTex2d.getAttrib("vTexCoord"), true);
+}
+
+VG.Renderer.prototype.prepareFrameQuad = function(x, y, w, h, viewportSize, quad)
+{
+    /** Prepares a frame-quad to draw, if rect is null then it render a full screen quad
+     *  unless w or h are defined 
+     *  @param {number} x - X offset
+     *  @param {number} y - Y offset
+     *  @param {number} w - Width in pixels 
+     *  @param {number} h - Height in pixels 
+     *  @param {VG.Core.Size} [null] viewportSize - The viewport size
+	 *  @param {VG.GPUBuffer} quad - primitive to set
+     *  */
     var vw = viewportSize ? viewportSize.width : this.w;
     var vh = viewportSize ? viewportSize.height : this.h;
 
@@ -194,34 +273,44 @@ VG.Renderer.prototype.drawQuad = function(texture, w, h, x, y, alpha, viewportSi
     if (!h) h = vh;
     if (!x) x = 0;
     if (!y) y = 0;
-    if (alpha === undefined) alpha = 1.0;
 
-    this.shaderTex2d.bind();
-    this.shaderTex2d.setTexture("tex", texture, 0);
-    this.shaderTex2d.setFloat("alpha", alpha);
-
-    var b = this.texQuadBuffer;
-
-
-    var x1 = (x - vw / 2) / (vw / 2);
+    var b = quad ? quad : this.texQuadBuffer;
+    
+	var x1 = (x - vw / 2) / (vw / 2);
     var y1 = (vh / 2 - y) / (vh / 2);
     var x2 = ((x + w) - vw / 2) / (vw / 2);
     var y2 = (vh / 2 - (y + h)) / (vh / 2);
 
     var i = 0;
+    var db=b.getDataBuffer();
 
-    b.setBuffer(i++, x1); b.setBuffer(i++, y1); b.setBuffer(i++, 0.0); b.setBuffer(i++, 1.0);
-    b.setBuffer(i++, x1); b.setBuffer(i++, y2); b.setBuffer(i++, 0.0); b.setBuffer(i++, 0.0);
-    b.setBuffer(i++, x2); b.setBuffer(i++, y1); b.setBuffer(i++, 1.0); b.setBuffer(i++, 1.0);
-    b.setBuffer(i++, x2); b.setBuffer(i++, y2); b.setBuffer(i++, 1.0); b.setBuffer(i++, 0.0); 
-
+    db.set(i++, x1); db.set(i++, y1); db.set(i++, 0.0); db.set(i++, 1.0);
+    db.set(i++, x1); db.set(i++, y2); db.set(i++, 0.0); db.set(i++, 0.0);
+    db.set(i++, x2); db.set(i++, y1); db.set(i++, 1.0); db.set(i++, 1.0);
+    db.set(i++, x2); db.set(i++, y2); db.set(i++, 1.0); db.set(i++, 0.0);
 
     b.update();
 
-    b.vertexAttrib(this.shaderTex2d.getAttrib("vPos"), 2, false, 16, 0);
-    b.vertexAttrib(this.shaderTex2d.getAttrib("vTexCoord"), 2, true, 16, 4 * 2);
-    
-    b.draw(VG.Renderer.Primitive.TriangleStrip, 0, 4, true); 
+	return b;
+}
+
+VG.Renderer.prototype.drawFrameQuad = function(aPos, aTex, nobind, quad)
+{
+    /** Draws a frame-quad.
+	 *  @param {number} aPos - The vertex coordinate attribute location of shader.
+	 *  @param {number} aTex - The Texture coordinate attribute location of shader.
+	 *  @param {bool} nobind - If true the buffer wont be binded.
+	 *  @param {VG.GPUBuffer} quad - primitive to draw
+     *  */
+	var b = quad ? quad : this.texQuadBuffer;
+	if (!nobind)
+		b.bind();
+    b.vertexAttrib(aPos, 2, false, 16, 0);
+    b.vertexAttrib(aTex, 2, false, 16, 4 * 2);
+
+	b.drawBuffer(VG.Renderer.Primitive.TriangleStrip, 0, 4);
+
+	b.purgeAttribs();
 }
 
 VG.Renderer.prototype.drawMesh = function(mesh, element, shader)
@@ -233,14 +322,14 @@ VG.Renderer.prototype.drawMesh = function(mesh, element, shader)
 
     if (mesh.isValid() == false) return;
 
+	var vb;
     for (var i = 0; i < mesh.vBuffers.length; i++)
     {
-        var vb = mesh.vBuffers[i].vb;
+        vb = mesh.vBuffers[i].vb;
         var layout = mesh.vBuffers[i].layout;
 
         //byte stride
         var tStride = vb.getStride();
-
         var vStride = tStride * mesh.vBuffers[i].stride;
 
         vb.bind();
@@ -248,9 +337,7 @@ VG.Renderer.prototype.drawMesh = function(mesh, element, shader)
         for (var j = 0; j < layout.length; j++)
         {
             var vL = layout[j];
-
             var index = shader.getAttrib(vL.name);
-
             if (index < 0) continue;
 
             vb.vertexAttrib(index, vL.stride, false, vStride, tStride * vL.offset);
@@ -263,7 +350,7 @@ VG.Renderer.prototype.drawMesh = function(mesh, element, shader)
     if (element == -1 || mesh.elements[element] === undefined)
     {
         eOffset = 0;
-        eSize = mesh.isIndexed() ? mesh.indexCount : mesh.vertexCount;
+        eSize = mesh.isIndexed() ? mesh.getIndexCount() : mesh.vertexCount;
     }
     else
     {
@@ -271,19 +358,21 @@ VG.Renderer.prototype.drawMesh = function(mesh, element, shader)
         eSize = mesh.elements[element].size;
     }
 
-    //TODO add draw/drawIndexed to the renderer insted
     if (mesh.isIndexed())
     {
         mesh.iBuffer.bind();
-        vb.drawIndexed(VG.Renderer.Primitive.Triangles, eOffset, eSize, mesh.iBuffer.type, mesh.iBuffer, true);
+		vb.drawBuffer(VG.Renderer.Primitive.Triangles, eOffset, eSize, true, mesh.iBuffer.elemType);
     }
     else
     {
-        vb.draw(VG.Renderer.Primitive.Triangles, eOffset, eSize, true);
+		vb.drawBuffer(VG.Renderer.Primitive.Triangles, eOffset, eSize);
     }
+
+	vb.purgeAttribs();
 }
 
-VG.Renderer.Primitive = { Triangles: 0, Lines: 1, TriangleStrip: 2, LineStrip: 3 };
+
+VG.Renderer.Primitive = { Triangles: 0, Lines: 1, TriangleStrip: 2, LineStrip: 3, Points: 4 };
 
 
 // The render namespace
@@ -328,12 +417,23 @@ VG.Render.TraceContext = function()
 
     /** Render scale ratio, use low values for faster iteration
      *  @member {Number} */
-    this.scaleRatio = 0.25;
+    this.scaleRatio = 0.5;
+
+    /** Flag to notify scene changed
+     *  @member {bool} */
+    this.sceneChanged = true;
 
     this.texture.create();
 }
 
 VG.Render.networkTrace = function()
 {
-    //TODO
+    return false; // not implemented, as for nows
 }
+
+VG.Render.TraceSettings = function()
+{
+    /** Ray tracing settings, used with VG.Render.trace function.
+     *
+     *  @constructor */ 
+};
