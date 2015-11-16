@@ -2312,9 +2312,12 @@ VG.UI.AppWidget.prototype.setAppSource=function( type, content )
         VG.DB.getAppSource( content, function( object ) {
 
             VG.context=appContext;
+            var oldStyle=this.switchStyle( VG.UI.stylePool.styles[0] );
 
             VG.App=object.source;
             this.processVIDE( null, true );
+            
+            this.switchStyle( oldStyle );
             VG.context=mainContext;
 
             this.loading=false;
