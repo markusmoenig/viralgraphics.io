@@ -634,7 +634,7 @@ VG.Core.SVGPool.prototype.getSVGByName=function( name )
             return this.svgs[i];
     }
 
-    name=VG.context.style.iconPrefix + name;
+    name=VG.UI.stylePool.current.skin.prefix + name;
 
     for( var i=0; i < this.svgs.length; ++i ) {
         if ( this.svgs[i].name == name )
