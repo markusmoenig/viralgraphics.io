@@ -509,6 +509,53 @@ VG.UI.VisualGraphicsGraySkin=function()
         HeaderBackGradColor1 : VG.Core.Color( 219, 219, 219 ),
         HeaderBackGradColor2 : VG.Core.Color( 198, 198, 198 ),
     };
+
+    // --- TEMPORARY, TABLEWIDGET HAS TO BE REMOVED
+
+    this.TableWidget = {
+                Font : VG.Font.Font( "Roboto Regular", 14 ),
+                TextColor : VG.Core.Color( 244, 244, 244 ),            
+                DisabledSeparatorColor : VG.Core.Color( 48, 48, 48 ),  
+                SelectionColor : VG.Core.Color(  44, 55, 71 ),            
+                SeparatorWidth : 1,
+                ContentMargin : VG.Core.Margin( 0, 0, 0, 6 ),
+                RowHeight : 28,
+
+                Header : {
+                    Font : VG.Font.Font( "Roboto Regular", 13 ),
+                    SeparatorHeight : 3,
+                    SeparatorColor : VG.Core.Color( 117, 117, 117 ),    
+                    Height : 23,
+                    BorderColor : VG.Core.Color( 117, 117, 117 ),
+                    GradientColor1 : VG.Core.Color( 169, 169, 169 ),
+                    GradientColor2 : VG.Core.Color( 148, 148, 148 ),
+                    TextXOffset : 10,                    
+                },
+                Footer : {
+                    SeparatorHeight : 16,
+                    Margin : VG.Core.Margin( 10, 0, 0, 0 ),
+                    Height : 24,                    
+                },
+
+                Item : {
+                    
+                    BorderColor : VG.Core.Color( 216, 216, 216 ),  
+                    SelectedBorderColor : VG.Core.Color( 186, 223, 248 ),
+
+                    GradientColor1 : VG.Core.Color( 183, 183, 183 ),
+                    GradientColor2 : VG.Core.Color( 186, 186, 186 ), 
+                    BottomColor : VG.Core.Color( 186, 186, 186 ),
+
+                    SelectedGradientColor1 : VG.Core.Color( 128, 196, 242 ),
+                    SelectedGradientColor2 : VG.Core.Color( 132, 198, 241 ), 
+                    SelectedBottomColor : VG.Core.Color( 132, 198, 241 ),
+
+                    XMargin : 2,
+                    Spacing : 2,
+                },                
+            };
+
+    // ---
 };
 
 VG.UI.VisualGraphicsGraySkin.prototype.activate=function()

@@ -38,7 +38,7 @@ VG.UI.TableWidgetSeparator.prototype=VG.UI.Widget();
 
 VG.UI.TableWidgetSeparator.prototype.calcSize=function()
 {
-    var size=VG.Core.Size( VG.context.style.skin.TableWidget.SeparatorWidth, 20 );//VG.context.style.skin.ToolPanelHeight );
+    var size=VG.Core.Size( VG.UI.stylePool.current.skin.TableWidget.SeparatorWidth, 20 );
     return size;
 };
 
@@ -47,7 +47,7 @@ VG.UI.TableWidgetSeparator.prototype.paintWidget=function( canvas )
     var size=this.calcSize( canvas );
     this.contentRect.set( this.rect );
     
-    VG.context.style.drawTableWidgetSeparator( canvas, this );
+    VG.UI.stylePool.current.drawTableWidgetSeparator( canvas, this );
 };
 
 VG.UI.TableWidgetColumn=function( binding, type )
@@ -89,15 +89,15 @@ VG.UI.TableWidgetHeaderItem.prototype.calcSize=function( canvas )
 
 VG.UI.TableWidgetHeaderItem.prototype.paintWidget=function( canvas )
 {
-    this.font=VG.context.style.skin.DefaultFont;
+    this.font=canvas.style.skin.TableWidget.Font;
     canvas.pushFont(this.font);
 
     var textColor;
 
     if ( !this.disabled ) {
         if ( this.customColor ) textColor=this.customColor;
-        else textColor=VG.context.style.skin.Widget.TextColor;
-    } else textColor=VG.context.style.skin.Widget.DisabledTextColor;
+        else textColor=canvas.style.skin.Widget.TextColor;
+    } else textColor=canvas.style.skin.Widget.DisabledTextColor;
 
     if ( this.embedded && this.embeddedSelection ) textColor=canvas.style.skin.Widget.EmbeddedTextColor;
 
@@ -483,7 +483,7 @@ VG.UI.TableWidget.prototype.verifyScrollbar=function( text )
         this.needsVScrollbar=true;
 
     if ( this.needsVScrollbar && !this.vScrollbar ) {
-        this.vScrollbar=VG.UI.Scrollbar( "TableWidget Scrollbar" );
+        this.vScrollbar=VG.UI.ScrollBar( "TableWidget Scrollbar" );
         this.vScrollbar.callbackObject=this;
         //this.layout.addChild( this.vScrollbar );
         this.childWidgets.push( this.vScrollbar )
@@ -507,8 +507,8 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
         }
     }
 
-    //VG.UI.Frame.prototype.paintWidget.call( this, canvas );
-    VG.context.style.drawGeneralBorder( canvas, this );
+    VG.UI.Frame.prototype.paintWidget.call( this, canvas );
+    //canvas.style.drawGeneralBorder( canvas, this );
     this.visualState=oldState;
 
     this.childWidgets=[];
@@ -534,10 +534,10 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
     this.headerLayout.rect.height=canvas.style.skin.TableWidget.Header.Height;
     this.headerLayout.rect.round();
 
-    VG.context.style.drawTableWidgetHeaderBackground( canvas, this.headerLayout.rect );
+    canvas.style.drawTableWidgetHeaderBackground( canvas, this.headerLayout.rect );
     this.headerLayout.layout( canvas );
 
-    VG.context.style.drawTableWidgetHeaderSeparator( canvas, this );
+    canvas.style.drawTableWidgetHeaderSeparator( canvas, this );
 
     canvas.popFont();
 
@@ -560,7 +560,7 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
         this.footerLayout.margin.set( canvas.style.skin.TableWidget.Footer.Margin );
         this.footerLayout.layout( canvas );    
 
-        VG.context.style.drawTableWidgetFooterSeparator( canvas, this );
+        canvas.style.drawTableWidgetFooterSeparator( canvas, this );
 
         this.contentRect.height-=this.footerLayout.rect.height + canvas.style.skin.TableWidget.Footer.SeparatorHeight;
     }
@@ -577,7 +577,7 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
     canvas.pushFont( canvas.style.skin.TableWidget.Font );
 
     var paintRect=VG.Core.Rect( this.contentRect );
-    paintRect.height=VG.context.style.skin.TableWidget.RowHeight;
+    paintRect.height=canvas.style.skin.TableWidget.RowHeight;
 
     var textLineEditCounter=this.offset * this.textLineEditModulo, popupButtonCounter=this.offset * this.popupButtonModulo, labelCounter=this.offset * this.labelModulo;
     this.visibleHeight=0;
@@ -589,9 +589,9 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
         var rect=VG.Core.Rect( paintRect );
         rect.x=this.rect.x+1; rect.width=this.rect.width-2;
 
-        if ( this.needsVScrollbar ) rect.width-=canvas.style.skin.Scrollbar.Size + 8 + canvas.style.skin.TableWidget.ContentMargin.right;
+        if ( this.needsVScrollbar ) rect.width-=canvas.style.skin.ScrollBar.Size + 8 + canvas.style.skin.TableWidget.ContentMargin.right;
 
-        VG.context.style.drawTableWidgetRowBackground( canvas, this, rect, this.headerLayout, item === this.controller.selected );
+        canvas.style.drawTableWidgetRowBackground( canvas, this, rect, this.headerLayout, item === this.controller.selected );
 
         for ( var i=0; i < this.columns.length; ++i )
         {
@@ -629,7 +629,7 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
                 widget.rect.width-=2*canvas.style.skin.TableWidget.Item.XMargin;
 
                 if ( this.needsVScrollbar )
-                    widget.rect.width-=canvas.style.skin.Scrollbar.Size + 2;                
+                    widget.rect.width-=canvas.style.skin.ScrollBar.Size + 2;                
             }
 
             widget.rect.round();
@@ -651,13 +651,13 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
     canvas.popFont();        
 
     if ( this.needsVScrollbar ) {
-        this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() - VG.context.style.skin.Scrollbar.Size - 2, this.contentRect.y, VG.context.style.skin.Scrollbar.Size, this.contentRect.height );
+        this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() - canvas.style.skin.ScrollBar.Size - 2, this.contentRect.y, canvas.style.skin.ScrollBar.Size, this.contentRect.height );
 
         // this.totalItemHeight == Total height of all Items in the list widget including spacing
         // visibleHeight == Total height of all currently visible items
         // this.contentRect.height == Height of the available area for the list items
 
-        this.vScrollbar.setScrollbarContentSize( this.totalItemHeight, this.visibleHeight );
+        this.vScrollbar.setScrollBarContentSize( this.totalItemHeight, this.visibleHeight );
         this.vScrollbar.paintWidget( canvas );
     }    
 };

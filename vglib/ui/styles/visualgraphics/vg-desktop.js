@@ -1893,4 +1893,72 @@ VG.UI.VisualGraphicsStyle.prototype.drawWindow=function( widget, canvas )
     widget.contentRect.set( widget.rect.x+2, widget.rect.y + this.skin.Window.HeaderHeight + 2, widget.rect.width-2, widget.rect.height - this.skin.Window.HeaderHeight );
 };
 
+// ----------------------------- TEMPORARY, HAS TO BE REMOVED
+
+VG.UI.VisualGraphicsStyle.prototype.drawTableWidgetRowBackground=function( canvas, tableWidget, rowRect, layout, selected )
+{
+    this.rect1.copy( rowRect );
+    this.rect1.x+=this.skin.TableWidget.Item.XMargin;
+    this.rect1.width-=2*this.skin.TableWidget.Item.XMargin;
+
+    if ( selected ) canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, this.rect1, this.skin.TableWidget.Item.SelectedBorderColor );
+    else canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangleOutline1px, this.rect1, this.skin.TableWidget.Item.BorderColor );
+
+    this.rect1.x+=1; this.rect1.y+=1;
+    this.rect1.width-=2; this.rect1.height-=4;
+
+    if ( selected ) canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect1, this.skin.TableWidget.Item.SelectedGradientColor1, this.skin.TableWidget.Item.SelectedGradientColor2 );
+    else canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect1, this.skin.TableWidget.Item.GradientColor1, this.skin.TableWidget.Item.GradientColor2 );
+
+    this.rect1.y+=this.rect1.height; this.rect1.height=2;
+
+    if ( selected ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TableWidget.Item.SelectedBottomColor );
+    else canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TableWidget.Item.BottomColor );
+
+    // --- Draw Separators
+
+    for ( var i=0; i < layout.children.length; ++i )
+    {
+        var item=layout.children[i];
+
+        if ( item.rect.width === 1 )
+        {
+            this.rect1.copy( rowRect );
+            this.rect1.x=item.rect.x;
+            this.rect1.width=item.rect.width;
+
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TableWidget.Header.BorderColor );
+        }
+    }
+};
+
+VG.UI.VisualGraphicsStyle.prototype.drawTableWidgetHeaderBackground=function( canvas, rect )
+{
+    canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, rect, this.skin.TableWidget.Header.BorderColor );
+
+    this.rect1.copy( rect );
+    this.rect1.x+=1; this.rect1.y+=1;
+    this.rect1.width-=2; this.rect1.height-=2;
+
+    canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect1, this.skin.TableWidget.Header.GradientColor1, this.skin.TableWidget.Header.GradientColor2 );    
+};
+
+VG.UI.VisualGraphicsStyle.prototype.drawTableWidgetSeparator=function( canvas, separator )
+{
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( separator.contentRect.x, separator.contentRect.y, 1, separator.contentRect.height ), 
+        this.skin.TableWidget.Header.SeparatorColor );    
+};
+
+VG.UI.VisualGraphicsStyle.prototype.drawTableWidgetHeaderSeparator=function( canvas, widget )
+{    
+};
+
+VG.UI.VisualGraphicsStyle.prototype.drawTableWidgetFooterSeparator=function( canvas, widget )
+{
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( widget.footerLayout.rect.x, widget.footerLayout.rect.y - this.skin.TableWidget.Footer.SeparatorHeight/2, 
+        widget.footerLayout.rect.width, 1 ), this.skin.TableWidget.Header.SeparatorColor );
+};
+
+// -----------------------------
+
 VG.UI.stylePool.addStyle( new VG.UI.VisualGraphicsStyle() );
