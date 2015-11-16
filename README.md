@@ -1,13 +1,13 @@
 Visual Graphics
 ===============
  
-Visual Graphics is an Open Source, Cross-Platform Application and Game Framework written completely in Javascript and WebGL / OpenGL to achieve complete platform independence and maximum graphics performance. 
+Visual Graphics is an Open Source, Cross-Platform Application and Game Framework written completely in Javascript and WebGL / OpenGL to achieve complete platform independence and maximum graphics performance. It is released under the MIT License.
 
 It is aimed at both application as well as game developers.
 
 Developers can choose from a wide collection of various Layouts and Widgets to create professional applications for every platform including the Web, all based on one source code. As Visual Graphics is drawing all Widgets itself using Styles and Skins, it can completely control it's own look and feel for every platform it is running on. For example the Visual Graphics Website is actually not a Website, but an Visual Graphics application utilizing WebGL. 
 
-V-IDE is the Integrated Development Environment for Visual Graphics, allowing direct deployment of apps to the Web and into the up-coming Visual Graphics App Store (and every other platform specific App Store). Native Desktop and Mobile versions for each Visual Graphics application will be automatically created on Deployment and made available for Download. 
+VGMAKE is the make utility and VIDE is the Integrated Development Environment for Visual Graphics, both allow direct deployment of apps to the Web and into the up-coming Visual Graphics App Store (and every other platform specific App Store). Native Desktop and Mobile versions for each Visual Graphics application can be can be automatically on Deployment and made available for Download. 
 
 ##How it Works
 
