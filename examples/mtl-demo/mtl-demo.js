@@ -3,12 +3,6 @@
  */
 
 /*
- So timeline would be
- A) Finish All Material Stuff
-    mostly done
- B) Move tracer2 and view3d to new Material System
-    todo
- C) Write Samples for Materials for me
     Run this app to view effects of illum 0 to illum 7 on sphere
         0. neon, require Kd, optional map_Kd
         1. diffuse, require Kd, Ka, optional map_Kd, map_Ka
@@ -32,8 +26,6 @@
             determined by image
         4. How the cube should look like without filter.
             and with constant specular reflection.
- D) Do Simple Visual Hockey Game Demo using canon.js for Physics
- E) Start with Half Edge Format and also Scale / Rotate / Move Tools etc
  */
 
 

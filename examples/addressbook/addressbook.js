@@ -51,8 +51,10 @@ function vgMain( workspace )
 
     this.addContactQMI=this.workspace.addQuickMenuItem( "ADD CONTACT", function() { this.addButton.clicked(); }.bind( this ) );
     this.removeContactQMI=this.workspace.addQuickMenuItem( "REMOVE CONTACT", function() { this.removeButton.clicked(); }.bind( this ) );
+    this.removeContactQMI.disabled=true;
     this.workspace.addQuickMenuItem( "" );
     this.selectImageQMI=this.workspace.addQuickMenuItem( "SELECT IMAGE", function() { this.imageButton.clicked(); }.bind( this ) );
+    this.selectImageQMI.disabled=true;
 
     // --- StatusBar
     workspace.statusBar=VG.UI.StatusBar();

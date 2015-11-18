@@ -34,7 +34,13 @@ CornellBoxWidget=function( setupDefaultScene )
         mouseDown = true;
 
         var hit=this.pipeline.hitTestMeshes( this.context, this.objects, event.pos.x - this.rect.x, event.pos.y - this.rect.y );
-        if ( this.hitCallback ) this.hitCallback( hit, this.objects.indexOf( hit ) );
+        if ( this.hitCallback ) this.hitCallback( hit, this.objects.indexOf( hit ), true );
+    }
+
+    this.mouseMove = function( event ) 
+    { 
+        var hit=this.pipeline.hitTestMeshes( this.context, this.objects, event.pos.x - this.rect.x, event.pos.y - this.rect.y );
+        if ( this.hitCallback ) this.hitCallback( hit, this.objects.indexOf( hit ), false );
     }
 
     this.mouseUp = function(e) { mouseDown = false; }
@@ -236,8 +242,6 @@ function vgMain( workspace, args, argc )
     var cornellBoxWidget = new CornellBoxWidget(); 
     cornellBoxWidget.minimumSize.width=100;
 
-    var statusMessage="Cornell Box Demo Application - www.visualgraphics.tv/apps/cornellbox. Download Desktop Version for Raytracing.";
-
     // --- Toolbar
 
     var renderButton=VG.UI.ToolButton( "Render" );
@@ -248,7 +252,7 @@ function vgMain( workspace, args, argc )
         if ( !cornellBoxWidget.context.trace ) renderButton.text="Stop";
         else {
             renderButton.text="Render";
-            workspace.statusBar.message( statusMessage );            
+            workspace.statusBar.message( "" );            
         }
         cornellBoxWidget.context.trace = !cornellBoxWidget.context.trace;
     }.bind( this );
@@ -307,11 +311,16 @@ function vgMain( workspace, args, argc )
 
     // --- Hit test callback
 
-    cornellBoxWidget.hitCallback=function( mesh, index ) {
+    cornellBoxWidget.hitCallback=function( mesh, index, clicked  ) {
         if ( index >= 0 && index <= 8) {
-            popupButton.index=index;
-            this.nodeController.selected=this.materials[index].node.data;
+            if ( clicked ) {
+                popupButton.index=index;
+                this.nodeController.selected=this.materials[index].node.data;
+            }
+            workspace.statusBar.message( popupButton.items[index] );            
         }
+        if ( index === -1 ) workspace.statusBar.message( "" );
+        VG.update();
     }.bind( this );
 
     // --- Render Progress Callback
@@ -392,7 +401,6 @@ function vgMain( workspace, args, argc )
     renderQuickItem.disabled=renderButton.disabled;
 
     workspace.statusBar=VG.UI.StatusBar();
-    workspace.statusBar.message( statusMessage );
 };
 
 // --- Creates a node based material and applies it
