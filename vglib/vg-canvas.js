@@ -1043,19 +1043,27 @@ VG.Canvas.prototype.drawSVG=function( svg, svgGroup, rect, col, angle, crX, crY)
     var posX=rect.x, posY=rect.y;
     var scale=1;
 
-    if ( rect.width && rect.height )
+    if ( rect.width && rect.height && ( rect.width < group.width || rect.height < group.height ) )
     {
-        var aspectRatio=group.height / group.width;
         var scaleX=rect.width / group.width;
         var scaleY=rect.height / group.height;
 
         scale=Math.min( scaleX, scaleY );
+
+        // --- temp solution for icon alignment
+        if ( group.name === "SaveAs" ) {
+            posY-=4; scale=0.93;
+        }
 
         var newWidth=group.width * scale;//aspectRatio;
         var newHeight=group.height * scale;//aspectRatio;
 
         posX+=(group.width*scaleX - newWidth)/2 - group.bbox.minX * scale;
         posY+=(group.height*scaleY - newHeight)/2 - group.bbox.minY * scale;
+    } else 
+    if ( rect.width && rect.height ) {
+        posX+=(rect.width - group.width)/2 - group.bbox.minX;
+        posY+=(rect.height - group.height)/2 - group.bbox.minY;
     }
 
     posX=Math.round( posX ); posY=Math.round( posY );

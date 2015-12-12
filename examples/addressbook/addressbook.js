@@ -38,16 +38,10 @@ function vgMain( workspace )
     // --- Register Undo / Redo Callback, called to indicate an Undo/Redo action was performed, we just use it to update the StatusBar Message.
     this.workspace.registerCallback( VG.UI.CallbackType.UndoRedo, setToolbarMessage.bind( this ) );
 
-    // --- Setup the Menus
-    var menubar=VG.UI.MenuBar();
-    workspace.addMenuBar( menubar );
-    
-    VG.Utils.addDefaultFileMenu( menubar );
-    VG.Utils.addDefaultEditMenu( menubar );
-    VG.Utils.addDefaultViewMenu( menubar );
-
     // --- Setup the Decorated Toolbar
     this.workspace.createDecoratedToolBar();
+    //VG.Utils.addDefaultQuickViewMenu();
+    //this.workspace.addQuickMenuItem();
 
     this.addContactQMI=this.workspace.addQuickMenuItem( "ADD CONTACT", function() { this.addButton.clicked(); }.bind( this ) );
     this.removeContactQMI=this.workspace.addQuickMenuItem( "REMOVE CONTACT", function() { this.removeButton.clicked(); }.bind( this ) );

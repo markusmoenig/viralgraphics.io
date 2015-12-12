@@ -21,6 +21,50 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+// ----------------------------------------------------------------------------------- Contact Us
+
+VG.UI.Workspace.prototype.showContactUsDialog=function( subjects )
+{
+    var dialog=VG.UI.Dialog( "CONTACT US");
+
+    var nameEdit=VG.UI.TextLineEdit();
+    var emailEdit=VG.UI.TextLineEdit();
+    var subjectMenu=VG.UI.DropDownMenu();
+    var messageEdit=VG.UI.TextEdit( "" );
+    messageEdit.minimumSize.set( 500, 300 );
+
+    if ( this.userId ) {
+        nameEdit.text=this.userName;
+        nameEdit.disabled=true;
+        emailEdit.setFocus();
+    }
+
+    for ( var i=0; i < subjects.length; ++i )
+        subjectMenu.addItem( subjects[i] );
+
+    dialog.layout=VG.UI.LabelLayout( "NAME", nameEdit, "EMAIL", emailEdit, "SUBJECT", subjectMenu, "MESSAGE", messageEdit );
+    dialog.layout.labelSpacing=20;
+    dialog.layout.allowScrollbars=false;
+    dialog.layout.labelAlignment=VG.UI.HAlignment.Left;
+    dialog.layout.margin.set( 30, 20, 30, 10 );
+
+    dialog.addButton( "CLOSE", function() { dialog.close( dialog ); }.bind( this ) );
+    dialog.addButton( "SEND", function() { 
+
+        if ( nameEdit.text.length && emailEdit.text && messageEdit.text ) {
+            VG.DB.sendEMailToAppAdmins( this.appId, nameEdit.text, emailEdit.text, subjectMenu.text(), messageEdit.text, function( success ) {
+
+                if ( success ) dialog.close( dialog );
+                else dialog.label.text="Login failed";
+
+            }.bind( this ) );
+        } else dialog.label="Missing Information";
+
+    }.bind( this ) );
+
+    this.showWindow( dialog );            
+};
+
 // ----------------------------------------------------------------------------------- Login Dialog
 
 VG.UI.Workspace.prototype.showLoginDialog=function()
@@ -30,6 +74,7 @@ VG.UI.Workspace.prototype.showLoginDialog=function()
         this.loginDialog=VG.UI.Dialog( "LOGIN DIALOG");
 
         var layout=VG.UI.LabelLayout();
+        layout.margin.set( 30, 20, 30, 10 );
         layout.labelSpacing=40;
         layout.labelAlignment=VG.UI.HAlignment.Left;
 
@@ -41,6 +86,7 @@ VG.UI.Workspace.prototype.showLoginDialog=function()
         layout.addChild( "PASSWORD", this.login_passwordEdit );
 
         this.loginDialog.layout=layout;
+
         this.loginDialog.addButton( "CLOSE", function() { this.close( this ); }.bind( this.loginDialog ) );
         this.loginDialog.addButton( "LOGIN", function() { 
 
@@ -115,9 +161,11 @@ VG.UI.Workspace.prototype.showSignupDialog=function()
         };
 
         var vlayout=VG.UI.Layout( widget, layout );
-    
+        vlayout.margin.set( 30, 20, 30, 10 );
+        vlayout.spacing+=3;
+
         vlayout.calcSize=function() {
-            var size=VG.Core.Size( 550, 240 );
+            var size=VG.Core.Size( 550, 250 );
             return size;
         }.bind( this );
         vlayout.vertical=true;        
@@ -164,7 +212,7 @@ VG.UI.Workspace.prototype.showUserSettingsDialog=function()
 {
     if ( !this.userSettingsDialog ) {
 
-        this.userSettingsDialog=VG.UI.Dialog( "Change Password");
+        this.userSettingsDialog=VG.UI.Dialog( "CHANGE PASSWORD");
 
         var layout=VG.UI.LabelLayout();
         layout.labelSpacing=40;
@@ -175,8 +223,8 @@ VG.UI.Workspace.prototype.showUserSettingsDialog=function()
         this.userSettings_passwordEdit1.password=true;
         this.userSettings_passwordEdit2.password=true;
 
-        layout.addChild( "New Password", this.userSettings_passwordEdit1 );
-        layout.addChild( "Repeat", this.userSettings_passwordEdit2 );
+        layout.addChild( "NEW PASSWORD", this.userSettings_passwordEdit1 );
+        layout.addChild( "REPEAT", this.userSettings_passwordEdit2 );
 
         this.userSettingsDialog.layout=layout;
         this.userSettingsDialog.addButton( "Close", function() { this.close( this ); }.bind( this.userSettingsDialog ) );

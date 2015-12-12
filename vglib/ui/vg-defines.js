@@ -32,7 +32,7 @@ VG.UI.CallbackType={ "New" : 0, "UndoRedo" : 1, "Open" : 2, "Save" : 3, "LoggedS
 VG.UI.DockWidgetLocation={ "Left" : 0, "Right" : 1, "Floating" : 2, "Docs.Enum" : -1 };
 
 VG.UI.ActionItemRole={ "None" : 0, "New" : 1, "Open" : 2, "Save" : 3, "SaveAs" : 4, "Undo" : 5, "Redo" : 6, "Open_Local" : 7, "Cut" : 8, "Copy" : 9, "Paste" : 10, "Delete" : 11, "SelectAll" : 12, 
-	"Login" : 13, "Signup" : 14, "UserTool" : 15, "QuickMenu" : 16, "Docs.Enum" : -1 };
+	"Login" : 13, "Signup" : 14, "UserTool" : 15, "QuickMenu" : 16, "SkinCycyle" : 17, "Docs.Enum" : -1 };
 
 VG.UI.MaxLayoutSize=32768;
 

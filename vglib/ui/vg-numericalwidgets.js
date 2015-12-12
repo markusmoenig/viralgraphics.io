@@ -211,25 +211,25 @@ VG.UI.Vector3Edit=function( x, y, z, min, max, fixedPrecision )
     this.value1Edit=VG.UI.NumberEdit( x, min, max, fixedPrecision );
     this.value1Edit.changed=function( value, cont, obj ) {
         this.value.x=value;
-        if ( this.changed ) this.changed( this.value, cont, this );
         if ( this.collection && this.path )
             this.collection.storeDataForPath( this.path, [this.value.x, this.value.y, this.value.z] );
+        if ( this.changed ) this.changed( this.value, cont, this );
     }.bind( this );
 
     this.value2Edit=VG.UI.NumberEdit( y, min, max, fixedPrecision );
     this.value2Edit.changed=function( value, cont, obj ) {
         this.value.y=value;
-        if ( this.changed ) this.changed( this.value, cont, this );
         if ( this.collection && this.path )
             this.collection.storeDataForPath( this.path, [this.value.x, this.value.y, this.value.z] );        
+        if ( this.changed ) this.changed( this.value, cont, this );
     }.bind( this );
 
     this.value3Edit=VG.UI.NumberEdit( z, min, max, fixedPrecision );
     this.value3Edit.changed=function( value, cont, obj ) {
         this.value.z=value;
-        if ( this.changed ) this.changed( this.value, cont, this );
         if ( this.collection && this.path )
             this.collection.storeDataForPath( this.path, [this.value.x, this.value.y, this.value.z] );        
+        if ( this.changed ) this.changed( this.value, cont, this );
     }.bind( this );
 
     this.value=new VG.Math.Vector3( x, y, z );

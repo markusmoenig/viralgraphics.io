@@ -1278,6 +1278,7 @@ VG.UI.LabelLayout=function()
         this.addChild( arguments[i], arguments[i+1] );
 
     this.hOffset=0; this.vOffset=0;
+    this.allowScrollbars=true;
 };
 
 VG.UI.LabelLayout.prototype=VG.UI.Layout();
@@ -1414,7 +1415,7 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
     }
 
     // --- Check for H Scrollbar
-    if ( Math.floor( this.rect.width ) < Math.floor( this.size.width ) ) { 
+    if ( this.allowScrollbars && Math.floor( this.rect.width ) < Math.floor( this.size.width ) ) { 
         this.needsHScrollbar=true;
         //VG.log( "VG.UI.LabelLayout needs HScrollbar", this.rect.width, this.size.width );
         this.contentRect.height-=/*this.rect.height -*/ VG.UI.stylePool.current.skin.ScrollBar.Size;
@@ -1427,7 +1428,7 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
     } else this.needsHScrollbar=false;
 
     // --- Check for V Scrollbar
-    if ( Math.floor( this.rect.height ) < Math.floor( this.size.height ) ) { 
+    if ( this.allowScrollbars && Math.floor( this.rect.height ) < Math.floor( this.size.height ) ) { 
         this.needsVScrollbar=true;
         //VG.log( "VG.UI.LabelLayout needs VScrollbar", this.rect.height, this.size.height );
         this.contentRect.width-=/*this.rect.width -*/ VG.UI.stylePool.current.skin.ScrollBar.Size;

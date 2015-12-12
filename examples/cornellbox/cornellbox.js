@@ -396,6 +396,7 @@ function vgMain( workspace, args, argc )
 
     workspace.createDecoratedToolBar();
     VG.Utils.addDefaultQuickDownloadMenu();
+    VG.Utils.addDefaultQuickViewMenu();
     workspace.addQuickMenuItem( "" );
     var renderQuickItem=workspace.addQuickMenuItem( "RENDER", function() { renderButton.clicked(); renderQuickItem.text=renderButton.text; }.bind( this ) );
     renderQuickItem.disabled=renderButton.disabled;

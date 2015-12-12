@@ -21,15 +21,15 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-VG.UI.VisualGraphicsGraySkin=function()
+VG.UI.VisualGraphicsDarkGraySkin=function()
 {
-    this.name="Gray";
-    this.path="desktop_gray";
+    this.name="Dark Gray";
+    this.path="desktop_darkgray";
 
     this.Widget={
         Font : VG.Font.Font( "Open Sans Semibold", 13 ),
 
-    	BackgroundColor : VG.Core.Color( 139, 139, 139 ),
+    	BackgroundColor : VG.Core.Color( 93, 93, 93 ),
         TextColor : VG.Core.Color( 244, 244, 244 ),
         DisabledTextColor : VG.Core.Color( 122, 122, 122 ),  
         FocusColor : VG.Core.Color( 129, 197, 242 ),
@@ -43,16 +43,16 @@ VG.UI.VisualGraphicsGraySkin=function()
         SmallFont : VG.Font.Font( "Open Sans Semibold", 12 ),
         TextColor : VG.Core.Color( 255, 255, 255 ),
 
-        FocusBorderColor1 : VG.Core.Color( 126, 197, 243 ),
-        FocusBorderColor2 : VG.Core.Color( 128, 128, 128 ),
+        FocusBorderColor1 : VG.Core.Color( 253, 252, 207 ),
+        FocusBorderColor2 : VG.Core.Color( 132, 132, 132 ),
         FocusBorderCheckedColor2 : VG.Core.Color( 165, 165, 165 ),
 
-        BorderColor : VG.Core.Color( 158, 158, 158 ),
-        BackGradColor1 : VG.Core.Color( 185, 185, 185 ),
-        BackGradColor2 : VG.Core.Color( 171, 171, 171 ),
+        BorderColor : VG.Core.Color( 126, 126, 126 ),
+        BackGradColor1 : VG.Core.Color( 148, 148, 148 ),
+        BackGradColor2 : VG.Core.Color( 138, 138, 138 ),
 
-        HoverBackGradColor1 : VG.Core.Color( 150, 150, 150 ),
-        HoverBackGradColor2 : VG.Core.Color( 140, 140, 140 ),   
+        HoverBackGradColor1 : VG.Core.Color( 120, 120, 120 ),
+        HoverBackGradColor2 : VG.Core.Color( 112, 112, 112 ),   
 
         CheckedBackGradColor1 : VG.Core.Color( 180, 180, 180 ),
         CheckedBackGradColor2 : VG.Core.Color( 194, 194, 194 ),  
@@ -69,17 +69,32 @@ VG.UI.VisualGraphicsGraySkin=function()
         TextColor : VG.Core.Color( 240, 240, 240 ),
     };
 
+    this.Menu={
+        Font : VG.Font.Font( "Open Sans Semibold", 13 ),
+        ShortcutFont : VG.Font.Font( "Open Sans Semibold", 13 ),
+        BorderColor : VG.Core.Color( 130, 130, 130 ),
+        SeparatorColor : VG.Core.Color( 102, 102, 102 ),
+        BackColor : VG.Core.Color( 149, 149, 149 ),
+        DisabledTextColor : VG.Core.Color( 128, 128, 128 ),
+        HighlightedTextColor : VG.Core.Color( 85, 85, 85 ),
+        HighlightedBackColor : VG.Core.Color( 249, 247, 108 ),
+        HighlightedBorderColor : VG.Core.Color( 249, 247, 108 ),
+        TextColor : VG.Core.Color( 255, 255, 255 ),
+    };
+
+
     this.ContextMenu={
         Font : VG.Font.Font( "Roboto Regular", 13 ),
 
-        TextColor : VG.Core.Color(),
-        HighlightedTextColor : VG.Core.Color(),
+        TextColor : VG.Core.Color( 255, 255, 255 ),
         DisabledTextColor : VG.Core.Color( 128, 128, 128 ),
 
-        BorderColor : VG.Core.Color( 204, 204, 204 ),
-        BackColor : VG.Core.Color( 232, 232, 232 ),
-        HighlightedBackColor : VG.Core.Color( 168, 211, 245 ),
-        SeparatorColor : VG.Core.Color( 160, 160, 160 ),
+        BorderColor : VG.Core.Color( 130, 130, 130 ),
+        BackColor : VG.Core.Color( 149, 149, 149 ),
+        SeparatorColor : VG.Core.Color( 102, 102, 102 ),
+
+        HighlightedBackColor : VG.Core.Color( 249, 247, 108 ),
+        HighlightedTextColor : VG.Core.Color( 85, 85, 85 ),
     };
 
     this.DecoratedToolBar={
@@ -88,13 +103,13 @@ VG.UI.VisualGraphicsGraySkin=function()
 
         LogoColor : VG.Core.Color( 255, 255, 255 ),
 
-        TopBorderColor : VG.Core.Color( 220, 220, 220 ),
+        TopBorderColor : VG.Core.Color( 142, 142, 142 ),
         //TopBorderColor1 : VG.Core.Color( 171, 171, 171 ),
         //TopBorderColor2 : VG.Core.Color( 214, 214, 214 ),
-        BottomBorderColor : VG.Core.Color( 114, 114, 114 ),
+        BottomBorderColor : VG.Core.Color( 81, 81, 81 ),
 
-        BackGradColor1 : VG.Core.Color( 197, 197, 197 ),
-        BackGradColor2 : VG.Core.Color( 167, 167, 167 ),    
+        BackGradColor1 : VG.Core.Color( 129, 129, 129 ),
+        BackGradColor2 : VG.Core.Color( 105, 105, 105 ),    
 
         Separator : {
             Color1 : VG.Core.Color( 136, 136, 136 ),
@@ -106,7 +121,7 @@ VG.UI.VisualGraphicsGraySkin=function()
     this.DecoratedQuickMenu={
 
         HoverColor : VG.Core.Color( 255, 255, 255 ),
-        Color : VG.Core.Color( 126, 126, 124 ),         
+        Color : VG.Core.Color( 180, 180, 180 ),         
         BorderColor : VG.Core.Color( 255, 255, 255 ),
         SubMenuBorderColor : VG.Core.Color( 182, 182, 182 ),
         BackgroundColor : VG.Core.Color( 88, 88, 88 ),
@@ -130,14 +145,14 @@ VG.UI.VisualGraphicsGraySkin=function()
 
     this.DockWidget={
 
-        BackColor : VG.Core.Color( 147, 147, 147 ),
+        BackColor : VG.Core.Color( 99, 99, 99 ),
         FloatingBorderColor : VG.Core.Color( 126, 197, 243 ),
 
         HeaderHeight : 21,
         HeaderFont : VG.Font.Font( "Open Sans Bold", 12 ),
-        HeaderBorderColor : VG.Core.Color( 102, 102, 102 ),
-        HeaderBackGradColor1 : VG.Core.Color( 125, 125, 125 ),
-        HeaderBackGradColor2 : VG.Core.Color( 114, 114, 114 ),
+        HeaderBorderColor : VG.Core.Color( 86, 86, 86 ),
+        HeaderBackGradColor1 : VG.Core.Color( 105, 105, 105 ),
+        HeaderBackGradColor2 : VG.Core.Color( 96, 96, 96 ),
 
         HeaderTextColor : VG.Core.Color( 255, 255, 255 ),
     };
@@ -148,22 +163,22 @@ VG.UI.VisualGraphicsGraySkin=function()
 
         TextColor : VG.Core.Color( 255, 255, 255 ),
 
-        FocusBorderColor : VG.Core.Color( 126, 197, 243 ),
-        BorderColor : VG.Core.Color( 213, 213, 213 ),
-        HoverBorderColor : VG.Core.Color( 220, 220, 220 ),
+        FocusBorderColor : VG.Core.Color( 253, 252, 207 ),
+        BorderColor : VG.Core.Color( 107, 107, 107 ),
+        HoverBorderColor : VG.Core.Color( 122, 122, 122 ),
 
-        BackGradColor1 : VG.Core.Color( 193, 193, 193 ),
-        BackGradColor2 : VG.Core.Color( 171, 171, 171 ),
+        BackGradColor1 : VG.Core.Color( 98, 98, 98 ),
+        BackGradColor2 : VG.Core.Color( 89, 89, 89 ),
 
-        HoverBackGradColor1 : VG.Core.Color( 202, 202, 202 ),
-        HoverBackGradColor2 : VG.Core.Color( 186, 186, 186 ),
+        HoverBackGradColor1 : VG.Core.Color( 113, 113, 113 ),
+        HoverBackGradColor2 : VG.Core.Color( 105, 105, 105 ),
 
-        SepColor1 : VG.Core.Color( 213, 213, 213 ),
-        SepColor2 : VG.Core.Color( 164, 164, 164 ),
+        SepColor1 : VG.Core.Color( 122, 122, 122 ),
+        SepColor2 : VG.Core.Color( 103, 103, 103 ),
 
-        ItemBorderColor : VG.Core.Color( 239, 239, 239 ),
-        ItemBackColor : VG.Core.Color( 194, 194, 194 ),
-        ItemSelectedBackColor : VG.Core.Color( 168, 211, 245 ),
+        ItemBorderColor : VG.Core.Color( 153, 153, 153 ),
+        ItemBackColor : VG.Core.Color( 124, 124, 124 ),
+        ItemSelectedBackColor : VG.Core.Color( 249, 247, 108 ),
         ItemTextColor : VG.Core.Color( 255, 255, 255 ),
         ItemSelectedTextColor : VG.Core.Color( 85, 85, 85 ),
     };
@@ -180,48 +195,49 @@ VG.UI.VisualGraphicsGraySkin=function()
 
         TextColor : VG.Core.Color( 85, 81, 85 ),
 
-        FocusBorderColor : VG.Core.Color( 126, 197, 243 ),
-        BorderColor : VG.Core.Color( 213, 213, 213 ),
-        HoverBorderColor : VG.Core.Color( 220, 220, 220 ),
+        FocusBorderColor : VG.Core.Color( 253, 252, 207 ),
+        BorderColor : VG.Core.Color( 107, 107, 107 ),
+        HoverBorderColor : VG.Core.Color( 122, 122, 122 ),
 
-        BackColor : VG.Core.Color( 120, 120, 120 ),
+        BackColor : VG.Core.Color( 82, 82, 82 ),
 
         Spacing : 2,
         Margin : VG.Core.Margin( 2, 2, 2, 2 ),
 
-        ItemBackColor : VG.Core.Color( 192, 192, 192 ),
-        ItemSelectedBorderColor : VG.Core.Color( 126, 197, 243 ),
-        ItemSelectedBackColor : VG.Core.Color( 168, 211, 245 ),
+        ItemBackColor : VG.Core.Color( 177, 177, 177 ),
+        ItemSelectedBorderColor : VG.Core.Color( 253, 252, 207 ),
+        ItemSelectedBackColor : VG.Core.Color( 249, 247, 108 ),
 
         ToolLayoutHeight : 28,
-        ToolTopBorderColor : VG.Core.Color( 194, 194, 194 ),
-        ToolBottomBorderColor : VG.Core.Color( 111, 111, 111 ),
-        ToolBackGradColor1 : VG.Core.Color( 174, 174, 174 ),
-        ToolBackGradColor2 : VG.Core.Color( 131, 131, 131 ),  
+
+        ToolTopBorderColor : VG.Core.Color( 155, 155, 155 ),
+        ToolBottomBorderColor : VG.Core.Color( 89, 89, 89 ),
+        ToolBackGradColor1 : VG.Core.Color( 139, 139, 139 ),
+        ToolBackGradColor2 : VG.Core.Color( 105, 105, 105 ),        
     };
 
     this.Menu={
         Font : VG.Font.Font( "Open Sans Semibold", 13 ),
         ShortcutFont : VG.Font.Font( "Open Sans Semibold", 13 ),
-        BorderColor : VG.Core.Color( 239, 239, 239 ),
-        SeparatorColor : VG.Core.Color( 224, 224, 224 ),
-        BackColor : VG.Core.Color( 194, 194, 194 ),
+        BorderColor : VG.Core.Color( 130, 130, 130 ),
+        SeparatorColor : VG.Core.Color( 102, 102, 102 ),
+        BackColor : VG.Core.Color( 149, 149, 149 ),
         DisabledTextColor : VG.Core.Color( 128, 128, 128 ),
         HighlightedTextColor : VG.Core.Color( 85, 85, 85 ),
-        HighlightedBackColor : VG.Core.Color( 168, 211, 245 ),
-        HighlightedBorderColor : VG.Core.Color( 126, 197, 243 ),
+        HighlightedBackColor : VG.Core.Color( 249, 247, 108 ),
+        HighlightedBorderColor : VG.Core.Color( 249, 247, 108 ),
         TextColor : VG.Core.Color( 255, 255, 255 ),
     };
 
     this.MenuBar={
         Font : VG.Font.Font( "Open Sans Semibold", 13 ),
         Height : 21,
-        BorderSize : 0,
+        BorderSize : 1,
 
-        TopBorderColor : VG.Core.Color( 172, 172, 172 ),
-        BottomBorderColor : VG.Core.Color( 172, 172, 172 ),
+        TopBorderColor : VG.Core.Color( 180, 180, 180 ),
+        BottomBorderColor : VG.Core.Color( 91, 91, 91 ),
 
-        BackColor : VG.Core.Color( 172, 172, 172 ),
+        BackColor : VG.Core.Color( 137, 137, 137 ),
         SelectedBackColor : VG.Core.Color( 61, 61, 61 ),
         TextColor : VG.Core.Color( 255, 255, 255 ),
         SelectedTextColor : VG.Core.Color( 255, 255, 255 ),
@@ -235,22 +251,21 @@ VG.UI.VisualGraphicsGraySkin=function()
 
     this.SectionBar={
 
-        BorderColor : VG.Core.Color( 132, 132, 132 ),
-        BackColor : VG.Core.Color( 163, 163, 163 ),
-        BorderColor : VG.Core.Color( 133, 133, 133 ),
+        BorderColor : VG.Core.Color( 75, 75, 75 ),
+        BackColor : VG.Core.Color( 130, 130, 130 ),
 
         HeaderHeight : 21,
         HeaderFont : VG.Font.Font( "Open Sans Bold", 12 ),
-        HeaderBorderColor : VG.Core.Color( 102, 102, 102 ),
-        HeaderBackGradColor1 : VG.Core.Color( 125, 125, 125 ),
-        HeaderBackGradColor2 : VG.Core.Color( 114, 114, 114 ),
+        HeaderBorderColor : VG.Core.Color( 82, 82, 82 ),
+        HeaderBackGradColor1 : VG.Core.Color( 100, 100, 100 ),
+        HeaderBackGradColor2 : VG.Core.Color( 91, 91, 91 ),
 
         HeaderTextColor : VG.Core.Color( 255, 255, 255 ),
 
         Separator : {
             Height : 2,
-            Color1 : VG.Core.Color( 136, 136, 136 ),
-            Color2 : VG.Core.Color( 197, 197, 197 ),
+            Color1 : VG.Core.Color( 109, 109, 109 ),
+            Color2 : VG.Core.Color( 158, 158, 158 ),
         }
     };    
 
@@ -260,7 +275,7 @@ VG.UI.VisualGraphicsGraySkin=function()
 
         Size : VG.Core.Size( 81, 47 ),
 
-        BorderColor : VG.Core.Color( 94, 94, 94 ),
+        BorderColor : VG.Core.Color( 80, 80, 80 ),
         BackGradColor1 : VG.Core.Color( 80, 80, 80 ),
         BackGradColor2 : VG.Core.Color( 72, 72, 72 ),
 
@@ -268,7 +283,7 @@ VG.UI.VisualGraphicsGraySkin=function()
         HoverBackGradColor1 : VG.Core.Color( 94, 94, 94 ),
         HoverBackGradColor2 : VG.Core.Color( 86, 86, 86 ),
 
-        SelectedBorderColor : VG.Core.Color( 242, 242, 242 ),
+        SelectedBorderColor : VG.Core.Color( 245, 245, 245 ),
         SelectedBackGradColor1 : VG.Core.Color( 242, 242, 242 ),
         SelectedBackGradColor2 : VG.Core.Color( 242, 242, 242 ),
         SelectedTextColor : VG.Core.Color( 96, 96, 96 ),        
@@ -303,20 +318,20 @@ VG.UI.VisualGraphicsGraySkin=function()
 
         Height : 22,
 
-        TopBorderColor : VG.Core.Color( 194, 194, 194 ),
-        BottomBorderColor : VG.Core.Color( 111, 111, 111 ),
-        BackGradColor1 : VG.Core.Color( 174, 174, 174 ),
-        BackGradColor2 : VG.Core.Color( 132, 132, 132 ),
+        TopBorderColor : VG.Core.Color( 155, 155, 155 ),
+        BottomBorderColor : VG.Core.Color( 89, 89, 89 ),
+        BackGradColor1 : VG.Core.Color( 139, 139, 139 ),
+        BackGradColor2 : VG.Core.Color( 106, 106, 106 ),
 
-        HoverTopBorderColor : VG.Core.Color( 202, 202, 202 ),
-        HoverBottomBorderColor : VG.Core.Color( 130, 130, 130 ),
-        HoverBackGradColor1 : VG.Core.Color( 184, 184, 184 ),
-        HoverBackGradColor2 : VG.Core.Color( 148, 148, 148 ),
+        HoverTopBorderColor : VG.Core.Color( 162, 162, 162 ),
+        HoverBottomBorderColor : VG.Core.Color( 104, 104, 104 ),
+        HoverBackGradColor1 : VG.Core.Color( 147, 147, 147 ),
+        HoverBackGradColor2 : VG.Core.Color( 118, 118, 118 ),
 
-        SelectedTopBorderColor : VG.Core.Color( 169, 169, 169 ),
-        SelectedBottomBorderColor : VG.Core.Color( 97, 97, 97 ),
-        SelectedBackGradColor1 : VG.Core.Color( 151, 151, 151 ),
-        SelectedBackGradColor2 : VG.Core.Color( 116, 116, 116 ),    
+        SelectedTopBorderColor : VG.Core.Color( 135, 135, 135 ),
+        SelectedBottomBorderColor : VG.Core.Color( 78, 78, 78 ),
+        SelectedBackGradColor1 : VG.Core.Color( 121, 121, 121 ),
+        SelectedBackGradColor2 : VG.Core.Color( 93, 93, 93 ),    
     };
 
     this.SplitLayout={
@@ -329,14 +344,14 @@ VG.UI.VisualGraphicsGraySkin=function()
         DragBackColor : VG.Core.Color( 132, 132, 132 ),
         DragBorderColor : VG.Core.Color( 239, 239, 239 ),     
 
-        HoverBackColor : VG.Core.Color( 185, 185, 185 ),
-        HoverBorderColor : VG.Core.Color( 239, 239, 239 ),  
+        HoverBackColor : VG.Core.Color( 148, 148, 148 ),
+        HoverBorderColor : VG.Core.Color( 191, 191, 191 ),  
     };    
 
     this.StatusBar={
 
-        BorderColor : VG.Core.Color( 132, 132, 132 ),
-        BackColor : VG.Core.Color( 147, 147, 147 ),
+        BorderColor : VG.Core.Color( 76, 76, 76 ),
+        BackColor : VG.Core.Color( 120, 120, 120 ),
         Height : 20,
     };
 
@@ -346,24 +361,24 @@ VG.UI.VisualGraphicsGraySkin=function()
         TextColor : VG.Core.Color( 244, 244, 244 ),
         Height : 32,
 
-        SelectedEdgeBorderColor : VG.Core.Color( 171, 171, 171 ),
-        SelectedTopBorderColor : VG.Core.Color( 184, 184, 184 ),
-        SelectedSideBorderColor1 : VG.Core.Color( 179, 179, 179 ),
-        SelectedSideBorderColor2 : VG.Core.Color( 165, 161, 161 ),
+        SelectedEdgeBorderColor : VG.Core.Color( 110, 110, 110 ),
+        SelectedTopBorderColor : VG.Core.Color( 118, 118, 118 ),
+        SelectedSideBorderColor1 : VG.Core.Color( 114, 114, 114 ),
+        SelectedSideBorderColor2 : VG.Core.Color( 103, 103, 103 ),
 
-        SelectedBackGradientColor1 : VG.Core.Color( 186, 186, 186 ),
-        SelectedBackGradientColor2 : VG.Core.Color( 178, 178, 178 ),
+        SelectedBackGradientColor1 : VG.Core.Color( 119, 119, 119 ),
+        SelectedBackGradientColor2 : VG.Core.Color( 114, 114, 114 ),
 
-        HoverBackGradientColor1 : VG.Core.Color( 156, 156, 156 ),
-        HoverBackGradientColor2 : VG.Core.Color( 139, 139, 139 ),
+        HoverBackGradientColor1 : VG.Core.Color( 100, 100, 100 ),
+        HoverBackGradientColor2 : VG.Core.Color( 89, 89, 89 ),
 
-        BackGradientColor1 : VG.Core.Color( 165, 165, 165 ),
-        BackGradientColor2 : VG.Core.Color( 149, 149, 149 ),
+        BackGradientColor1 : VG.Core.Color( 106, 106, 106 ),
+        BackGradientColor2 : VG.Core.Color( 95, 95, 95 ),
 
-        LeftBorderColor : VG.Core.Color( 183, 183, 183 ),
-        TabBorderColor : VG.Core.Color( 214, 214, 214 ),
-        BottomBorderColor1 : VG.Core.Color( 153, 153, 153 ),
-        BottomBorderColor2 : VG.Core.Color( 178, 178, 178 ),
+        LeftBorderColor : VG.Core.Color( 117, 117, 117 ),
+        TabBorderColor : VG.Core.Color( 137, 137, 137 ),
+        BottomBorderColor1 : VG.Core.Color( 98, 98, 98 ),
+        BottomBorderColor2 : VG.Core.Color( 114, 114, 114 ),
     };
 
     this.TextEdit={
@@ -373,12 +388,12 @@ VG.UI.VisualGraphicsGraySkin=function()
         TextColor : VG.Core.Color( 242, 242, 242 ),
         DefaultTextColor : VG.Core.Color( 71, 71, 71 ),
 
-        FocusBorderColor1 : VG.Core.Color( 168, 211, 245 ),
-        FocusBorderColor2 : VG.Core.Color( 126, 197, 243 ),
+        FocusBorderColor1 : VG.Core.Color( 253, 252, 207 ),
+        FocusBorderColor2 : VG.Core.Color( 249, 247, 108 ),
         FocusBorderColor3 : VG.Core.Color( 119, 119, 119 ),
-        FocusBackgroundColor : VG.Core.Color( 139, 139, 139 ),
+        FocusBackgroundColor : VG.Core.Color( 148, 148, 148 ),
 
-        BackgroundColor : VG.Core.Color( 164, 164, 164 ),
+        BackgroundColor : VG.Core.Color( 148, 148, 148 ),
         BorderColor1 : VG.Core.Color( 209, 209, 209 ),          
         BorderColor2 : VG.Core.Color( 149, 149, 149 ),   
     };    
@@ -390,14 +405,14 @@ VG.UI.VisualGraphicsGraySkin=function()
     	TextColor : VG.Core.Color( 242, 242, 242 ),
         DefaultTextColor : VG.Core.Color( 71, 71, 71 ),
 
-    	FocusBorderColor1 : VG.Core.Color( 168, 211, 245 ),
-    	FocusBorderColor2 : VG.Core.Color( 126, 197, 243 ),
-    	FocusBorderColor3 : VG.Core.Color( 147, 147, 147 ),
-    	FocusBackgroundColor : VG.Core.Color( 139, 139, 139 ),
+    	FocusBorderColor1 : VG.Core.Color( 253, 252, 207 ),
+    	FocusBorderColor2 : VG.Core.Color( 249, 247, 108 ),
+    	FocusBorderColor3 : VG.Core.Color( 148, 148, 148 ),
+    	FocusBackgroundColor : VG.Core.Color( 148, 148, 148 ),
 
-    	BackgroundColor : VG.Core.Color( 164, 164, 164 ),
+    	BackgroundColor : VG.Core.Color( 148, 148, 148 ),
     	BorderColor1 : VG.Core.Color( 209, 209, 209 ),    	 	
-    	BorderColor2 : VG.Core.Color( 149, 149, 149 ),   
+    	BorderColor2 : VG.Core.Color( 148, 148, 148 ),   
     };
 
     this.TitleBar={
@@ -413,13 +428,6 @@ VG.UI.VisualGraphicsGraySkin=function()
     };
 
     this.ToolBar={
-        //Height : 42,
-
-        //TopBorderColor : VG.Core.Color( 220, 220, 220 ),
-        //BottomBorderColor : VG.Core.Color( 89, 89, 89 ),
-
-        //BackGradColor1 : VG.Core.Color( 196, 196, 196 ),
-        //BackGradColor2 : VG.Core.Color( 155, 155, 155 ),
 
         Height : 26,
 
@@ -429,8 +437,8 @@ VG.UI.VisualGraphicsGraySkin=function()
         BackGradColor : VG.Core.Color( 120, 120, 120 ),
 
         Separator : {
-            Color1 : VG.Core.Color( 102, 102, 102 ),
-            Color2 : VG.Core.Color( 148, 148, 148 ),
+            Color1 : VG.Core.Color( 82, 82, 82 ),
+            Color2 : VG.Core.Color( 126, 126, 126 ),
             Size : VG.Core.Size( 2, 22 ),
         },        
     };
@@ -440,14 +448,14 @@ VG.UI.VisualGraphicsGraySkin=function()
         Font : VG.Font.Font( "Roboto Regular", 14 ),
         TextColor : VG.Core.Color( 255, 255, 255 ),
 
-        BorderColor : VG.Core.Color( 158, 158, 158 ),
-        BackColor : VG.Core.Color( 163, 163, 163 ),
+        BorderColor : VG.Core.Color( 108, 108, 108 ),
+        BackColor : VG.Core.Color( 130, 130, 130 ),
 
-        HoverBorderColor : VG.Core.Color( 224, 224, 224 ),
-        HoverBackColor : VG.Core.Color( 163, 163, 163 ),
+        HoverBorderColor : VG.Core.Color( 179, 179, 179 ),
+        HoverBackColor : VG.Core.Color( 157, 157, 157 ),
 
-        ClickedBorderColor : VG.Core.Color( 255, 255, 255 ),
-        ClickedBackColor : VG.Core.Color( 186, 186, 186 ),
+        ClickedBorderColor : VG.Core.Color( 204, 204, 204 ),
+        ClickedBackColor : VG.Core.Color( 149, 149, 149 ),
 
         TextMargin : VG.Core.Size( 10, 0 ),
 
@@ -472,25 +480,25 @@ VG.UI.VisualGraphicsGraySkin=function()
 
         TextColor : VG.Core.Color( 85, 81, 85 ),
 
-        FocusBorderColor : VG.Core.Color( 126, 197, 243 ),
-        BorderColor : VG.Core.Color( 213, 213, 213 ),
-        HoverBorderColor : VG.Core.Color( 220, 220, 220 ),
+        FocusBorderColor : VG.Core.Color( 253, 252, 207 ),
+        BorderColor : VG.Core.Color( 107, 107, 107 ),
+        HoverBorderColor : VG.Core.Color( 122, 122, 122 ),
 
-        BackColor : VG.Core.Color( 120, 120, 120 ),
+        BackColor : VG.Core.Color( 82, 82, 82 ),
 
         Spacing : 3,
         Margin : VG.Core.Margin( 2, 2, 2, 2 ),
 
-        ItemBackColor : VG.Core.Color( 192, 192, 192 ),
-        ItemSelectedBorderColor : VG.Core.Color( 126, 197, 243 ),
-        ItemSelectedBackColor : VG.Core.Color( 168, 211, 245 ),
+        ItemBackColor : VG.Core.Color( 177, 177, 177 ),
+        ItemSelectedBorderColor : VG.Core.Color( 253, 252, 207 ),
+        ItemSelectedBackColor : VG.Core.Color( 249, 247, 108 ),
 
-        ToolLayoutHeight : 32,
+        ToolLayoutHeight : 28,
 
-        ToolTopBorderColor : VG.Core.Color( 191, 191, 191 ),
-        ToolBottomBorderColor : VG.Core.Color( 111, 111, 111 ),
-        ToolBackGradColor1 : VG.Core.Color( 148, 148, 148 ),
-        ToolBackGradColor2 : VG.Core.Color( 142, 142, 142 ),
+        ToolTopBorderColor : VG.Core.Color( 155, 155, 155 ),
+        ToolBottomBorderColor : VG.Core.Color( 89, 89, 89 ),
+        ToolBackGradColor1 : VG.Core.Color( 139, 139, 139 ),
+        ToolBackGradColor2 : VG.Core.Color( 105, 105, 105 ),    
 
         ChildIndent : 20,
         ChildControlColor : VG.Core.Color( 227, 227, 227 ),
@@ -502,13 +510,13 @@ VG.UI.VisualGraphicsGraySkin=function()
         HeaderFont : VG.Font.Font( "Open Sans Semibold", 14 ),
         HeaderTextColor : VG.Core.Color( 255, 255, 255 ),
 
-        BackColor : VG.Core.Color( 120, 120, 120 ),
+        BackColor : VG.Core.Color( 82, 82, 82 ),
 
-        BorderColor1 : VG.Core.Color( 179, 179, 179 ),
-        BorderColor2 : VG.Core.Color( 239, 239, 239 ),
+        BorderColor1 : VG.Core.Color( 147, 147, 147 ),
+        BorderColor2 : VG.Core.Color( 197, 197, 197 ),
 
-        HeaderBackGradColor1 : VG.Core.Color( 219, 219, 219 ),
-        HeaderBackGradColor2 : VG.Core.Color( 198, 198, 198 ),
+        HeaderBackGradColor1 : VG.Core.Color( 156, 156, 156 ),
+        HeaderBackGradColor2 : VG.Core.Color( 143, 143, 143 ),
     };
 
     // --- TEMPORARY, TABLEWIDGET HAS TO BE REMOVED
@@ -559,10 +567,16 @@ VG.UI.VisualGraphicsGraySkin=function()
     // ---
 };
 
-VG.UI.VisualGraphicsGraySkin.prototype.activate=function()
+VG.UI.VisualGraphicsDarkGraySkin.prototype.activate=function()
 {
-	this.prefix=this.style.prefix + "gray_";
+    this.prefix=this.style.prefix + "darkgray_";
+    this.fallbackPrefix=this.style.prefix + "gray_";
 
+    var path=this.style.path + "/" + this.path;
+
+    VG.loadStyleImage( path, this.prefix + "checkbox_focus.png" );
+    VG.loadStyleImage( path, this.prefix + "checkbox_focus_checked.png" );
+/*
 	var path=this.style.path + "/" + this.path;
 
     // --- ScrollBar
@@ -635,6 +649,7 @@ VG.UI.VisualGraphicsGraySkin.prototype.activate=function()
     VG.loadStyleImage( path, this.prefix + "status_question.png" );
     VG.loadStyleImage( path, this.prefix + "status_success.png" );
     VG.loadStyleImage( path, this.prefix + "status_warning.png" );
+    */
 };
 
-VG.UI.stylePool.getStyleByName( "Visual Graphics" ).addSkin( new VG.UI.VisualGraphicsGraySkin );
+VG.UI.stylePool.getStyleByName( "Visual Graphics" ).addSkin( new VG.UI.VisualGraphicsDarkGraySkin );

@@ -51,14 +51,22 @@ VG.Utils.numberWithCommas = function(x) {
 VG.Utils.getImageByName=function( name )
 {
     for( var i=0; i < VG.context.imagePool.images.length; ++i ) {
-        if ( VG.context.imagePool.images[i].name == name )
+        if ( VG.context.imagePool.images[i].name === name )
             return VG.context.imagePool.images[i];
     }
 
-    name=VG.UI.stylePool.current.skin.prefix + name;
+    var prefixName=VG.UI.stylePool.current.skin.prefix + name;
     for( var i=0; i < VG.context.imagePool.images.length; ++i ) {
-        if ( VG.context.imagePool.images[i].name == name )
+        if ( VG.context.imagePool.images[i].name === prefixName )
             return VG.context.imagePool.images[i];
+    }
+
+    if ( VG.UI.stylePool.current.skin.fallbackPrefix ) {
+        prefixName=VG.UI.stylePool.current.skin.fallbackPrefix + name;
+        for( var i=0; i < VG.context.imagePool.images.length; ++i ) {
+            if ( VG.context.imagePool.images[i].name == prefixName )
+                return VG.context.imagePool.images[i];
+        }
     }
 
     return null;
@@ -69,14 +77,22 @@ VG.Utils.getSVGByName=function( name )
     if ( !VG.Core.SVG ) return null;
 
     for( var i=0; i < VG.context.svgPool.svgs.length; ++i ) {
-        if ( VG.context.svgPool.svgs[i].name == name )
+        if ( VG.context.svgPool.svgs[i].name === name )
             return VG.context.svgPool.svgs[i];
     }
 
-    name=VG.UI.stylePool.current.skin.prefix + name;
+    var prefixName=VG.UI.stylePool.current.skin.prefix + name;
     for( var i=0; i < VG.context.svgPool.svgs.length; ++i ) {
-        if ( VG.context.svgPool.svgs[i].name == name )
+        if ( VG.context.svgPool.svgs[i].name === prefixName )
             return VG.context.svgPool.svgs[i];
+    }
+
+    if ( VG.UI.stylePool.current.skin.fallbackPrefix ) {
+        prefixName=VG.UI.stylePool.current.skin.fallbackPrefix + name;
+        for( var i=0; i < VG.context.svgPool.svgs.length; ++i ) {
+            if ( VG.context.svgPool.svgs[i].name == prefixName )
+                return VG.context.svgPool.svgs[i];
+        }
     }
 
     return null;
@@ -161,19 +177,19 @@ VG.Utils.addDefaultQuickDownloadMenu=function()
 {
     var downloadItem=VG.context.workspace.addQuickMenuItem( "DOWNLOADS" );
 
-    var macItem=downloadItem.addItem( "Mac OS X Desktop Version", function() {
+    var macItem=downloadItem.addItem( "MAC OS X DESKTOP VERSION", function() {
         VG.log( "https://visualgraphics.tv/app/download/" + VG.context.workspace.appId + "/mac" );
         VG.gotoUrl( "https://visualgraphics.tv/app/download/" + VG.context.workspace.appId + "/mac" );
     }.bind( this ) );
     macItem.statusTip="Download the native Mac OS X Version of this Application.";
 
-    var win64Item=downloadItem.addItem( "Windows Desktop Version", function() {
+    var win64Item=downloadItem.addItem( "WINDOWS DESKTOP VERSION", function() {
         VG.log( "https://visualgraphics.tv/app/download/" + VG.context.workspace.appId + "/win64" );
         VG.gotoUrl( "https://visualgraphics.tv/app/download/" + VG.context.workspace.appId + "/win64" );
     }.bind( this ) );
     win64Item.statusTip="Download the native Windows 64-Bit Desktop Version of this Application.";
 
-    var linuxItem=downloadItem.addItem( "Linux Version Coming Soon", function() {
+    var linuxItem=downloadItem.addItem( "LINUX VERSION COMING SOON", function() {
         VG.log( "https://visualgraphics.tv/app/download/" + VG.context.workspace.appId + "/unix" );
         VG.gotoUrl( "https://visualgraphics.tv/app/download/" + VG.context.workspace.appId + "/unix" );
     }.bind( this ) );
@@ -213,6 +229,32 @@ VG.Utils.addDefaultViewMenu=function( menubar )
     }
 
     return viewMenu;
+};
+
+VG.Utils.addDefaultQuickViewMenu=function()
+{
+    var viewItem=VG.context.workspace.addQuickMenuItem( "SKINS" );    
+
+    var style=VG.UI.stylePool.current;
+
+    for( var s=0; s < style.skins.length; ++s ) 
+    {
+        var skin=style.skins[s];
+
+        var skinItem=viewItem.addItem( skin.name.toUpperCase(), function() {
+            VG.context.workspace.switchToStyle( this.style, this.skin );
+            VG.log( "switched to", this.style.name );
+        } );
+
+        if ( style === VG.UI.stylePool.current && skin === VG.UI.stylePool.current.skin )
+            skinItem.checked=skinItem.checkable=true;
+
+        skinItem.style=style;
+        skinItem.skin=skin;
+        skinItem.statusTip="Activates this User Interface Style / Skin.";
+    }
+
+    return viewItem;
 };
 
 VG.Utils.dumpObject=function( object )

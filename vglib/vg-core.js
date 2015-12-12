@@ -1133,16 +1133,25 @@ VG.Core.ImagePool.prototype.getImageByName=function( name )
      */
 
     for( var i=0; i < this.images.length; ++i ) {
-        if ( this.images[i].name == name )
+        if ( this.images[i].name === name )
             return this.images[i];
     }
 
-    name=VG.UI.stylePool.current.skin.prefix + name;
+    var prefixName=VG.UI.stylePool.current.skin.prefix + name;
 
     for( var i=0; i < this.images.length; ++i ) {
-        if ( this.images[i].name == name )
+        if ( this.images[i].name === prefixName )
             return this.images[i];
     }
+
+    if ( VG.UI.stylePool.current.skin.fallbackPrefix ) {
+        prefixName=VG.UI.stylePool.current.skin.fallbackPrefix + name;
+        for( var i=0; i < this.images.length; ++i ) {
+            if ( this.images[i].name === prefixName )
+                return this.images[i];
+        }
+    }
+
     return null;
 };
 

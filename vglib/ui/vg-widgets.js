@@ -889,6 +889,13 @@ VG.UI.DropDownMenu.prototype.clear=function( text )
     this.index=-1;
 };
 
+VG.UI.DropDownMenu.prototype.text=function( text )
+{
+    var text="";
+    if ( this.index !== -1 ) text=this.items[this.index];
+    return text;
+};
+
 VG.UI.DropDownMenu.prototype.addItem=function( text )
 {
     this.items.push( text );
@@ -915,7 +922,7 @@ VG.UI.DropDownMenu.prototype.calcSize=function( canvas )
 
     size.set( minWidth, VG.context.workspace.canvas.getLineHeight() );
 
-    size.add( 40, 2, size );
+    size.add( 40, 3, size );
     //size.height=VG.UI.stylePool.current.skin.DropDownMenu.Height;
     this.minimumSize.set( size );
 
@@ -2286,6 +2293,7 @@ VG.UI.AppWidget.prototype.setAppSource=function( type, content )
     appContext.imagePool=mainContext.imagePool;
     appContext.svgPool=mainContext.svgPool;
     appContext.workspace.mainRect=VG.Core.Rect( mainContext.workspace.rect );
+    appContext.style=VG.UI.stylePool.current;
 
     VG.context=appContext;
 
@@ -2317,8 +2325,8 @@ VG.UI.AppWidget.prototype.setAppSource=function( type, content )
             VG.App=object.source;
             this.processVIDE( null, true );
             
-            this.switchStyle( oldStyle );
             VG.context=mainContext;
+            this.switchStyle( oldStyle );
 
             this.loading=false;
         }.bind( this ) );
@@ -2382,9 +2390,7 @@ VG.UI.AppWidget.prototype.paintWidget=function( canvas )
 {
     if ( !this.appContext ) return;
 
-    var mainContext=VG.context;
     this.switchFromMain();
-    var oldStyle=this.switchStyle( VG.UI.stylePool.styles[0] );
 
     if ( this.loading )
     {
@@ -2400,7 +2406,7 @@ VG.UI.AppWidget.prototype.paintWidget=function( canvas )
 
         VG.context.workspace.paintWidget();
     }
-    this.switchStyle( oldStyle );
+
     this.switchToMain();    
 };
 
@@ -2436,6 +2442,15 @@ VG.UI.AppWidget.prototype.mouseUp=function( event )
     if ( this.appContext && this.appContext.workspace.rect.contains( event.pos ) ) {
         this.switchFromMain();
         this.appContext.workspace.mouseUp( event.button );
+        this.switchToMain();
+    }
+};
+
+VG.UI.AppWidget.prototype.mouseDoubleClick=function( event )
+{
+    if ( this.appContext && this.appContext.workspace.rect.contains( event.pos ) ) {
+        this.switchFromMain();
+        this.appContext.workspace.mouseDoubleClick( event );
         this.switchToMain();
     }
 };
@@ -2482,12 +2497,16 @@ VG.UI.AppWidget.prototype.switchFromMain=function()
 
     this.mainContext=VG.context;
     VG.context=this.appContext;
+
+    this.switchStyle( VG.UI.stylePool.styles[0] );
 };
 
 VG.UI.AppWidget.prototype.switchToMain=function()
 {
     VG.context.workspace.canvas.flush();    
     VG.context=this.mainContext;
+
+    this.switchStyle( this.appContext.style );    
 };
 
 VG.UI.AppWidget.prototype.switchStyle=function( style )

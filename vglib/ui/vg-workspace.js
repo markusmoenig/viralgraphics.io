@@ -118,7 +118,12 @@ VG.UI.Workspace=function()
             if ( this.callbackForLoggedStateChanged )
                 this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName, this.userId );        
             VG.update();           
-        }    
+        } else {
+            // --- Not logged in, try to get the appId of the current application
+            VG.DB.getAppId( function( appId ) { 
+                this.appId=appId;
+            }.bind( this ) );            
+        }
     }.bind(this), "GET" );
 
     // --- Default Events
@@ -314,15 +319,16 @@ VG.UI.Workspace.prototype.createDecoratedToolBar=function()
     this.decoratedToolBar.addItem( spacer30px );
     this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
     //this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
-    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.New );
+    //this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );    
+    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Undo );
+    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Redo );    
     this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
+    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.New );
     this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Open );
     this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Save );
     this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.SaveAs );
-    this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );    
-    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Undo );
-    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Redo );
     this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
+    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.SkinCycle );
     this.decoratedToolBar.addItem( VG.UI.LayoutHSpacer() );
     this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
     this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Login );
@@ -861,6 +867,12 @@ VG.UI.Workspace.prototype.mouseWheel=function( step )
 
 VG.UI.Workspace.prototype.showContextMenu=function()
 {
+    if ( this.keysDown.length ) {
+        // --- When a key is pressed send mouseDown Event
+        this.mouseDown( VG.Events.MouseButton.Right );
+        return;
+    }
+
     this.mouseDownWidget=this.widgetUnderMouse;
 
     var event=VG.Events.MouseDownEvent( this );
@@ -1874,6 +1886,26 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
             object.svgGroupName="quickmenu";
             this.quickMenu=object;        
         break;
+
+        case VG.UI.ActionItemRole.SkinCycle: 
+            object.text="Skin Cycle";
+            object.svgName="glyphs.svg";
+            object.svgGroupName="SkinCycle";
+            object.clicked=function() {
+                var style=VG.UI.stylePool.current;
+                var skin=style.skin;
+                var skinIndex=style.skins.indexOf( skin );
+
+                if ( skinIndex < style.skins.length - 1 ) skinIndex++;
+                else skinIndex=0;
+
+                object.toolTip="Cycles through the available Skins of the Application Style."
+
+                style.skin=style.skins[skinIndex];
+
+                VG.update();
+            };
+        break;        
 
         default: 
             object.text="Unknown Role"; 

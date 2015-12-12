@@ -1265,7 +1265,7 @@ VG.UI.TextLineEdit=function( text )
     VG.UI.BaseText.call( this );
     this.name="TextLineEdit";
     
-    this.font=VG.Font.Font( VG.UI.stylePool.current.skin.TextEdit.Font );
+    this.font=VG.Font.Font( VG.UI.stylePool.current.skin.TextLineEdit.Font );
 
     this.supportsFocus=true;
     this.minimumSize.width=40;
@@ -1330,7 +1330,7 @@ VG.UI.TextLineEdit.prototype.calcSize=function( canvas )
 {
     var size=VG.Core.Size();
 
-    this.font.setFont( VG.UI.stylePool.current.skin.TextEdit.Font );
+    this.font.setFont( VG.UI.stylePool.current.skin.TextLineEdit.Font );
     canvas.pushFont(this.font);
 
     VG.context.workspace.canvas.getTextSize( this.text, size );

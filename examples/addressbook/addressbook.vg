@@ -1,7 +1,9 @@
 
 name = AddressBook
-version = 1.0
+version = 0.30
 url = addressbook
 author = Markus Moenig
+
+defaultSkin = Dark Gray
 
 sources = addressbook.js
