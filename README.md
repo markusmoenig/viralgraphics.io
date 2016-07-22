@@ -11,6 +11,8 @@ Applications written for Visual Graphics can be easily deployed and distributed 
 
 Several example applications based on Visual Graphics are supplied with their sources in the examples folder. Just click on their .html files to start them.
 
+An example of an Visual Graphics application (work in progress) can be seen here: https://www.paintsupreme.com.
+
 ##Developing for Visual Graphics
 
 Makefiles of Visual Graphics applications (they end with .vg) can be compiled into project files (.vide) using a node.js based program called vgmake. vgmake also allows the creation and publishing of applications on the Web.
@@ -25,9 +27,9 @@ We initially envisioned Visual Graphics to be a cross platform toolkit. Meaning 
 
 ##Status
 
-The current version is v0.33 with new features being implemented daily.  Visual Graphics is already in a usable state, however APIs can change without notice and documentation is quite minimal at the moment. 
+The current version is v0.33 with new features being implemented daily. Visual Graphics is already in a usable state, however APIs can change without notice and documentation is quite minimal at the moment. 
 
-For more information please visit the Visual Graphics Homepage at http://www.visualgraphics.tv.
+For more information please visit the Visual Graphics Homepage at http://www.visualgraphics.tv or contact me at markusm@visualgraphics.tv.
 
 #Developing for Visual Graphics
 
