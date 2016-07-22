@@ -71,7 +71,8 @@ vgbuild.js uses the Google Closure Compiler to compress the Visual Graphics sour
 
 ###An example .vg makefile:
 
-```name = Website
+```
+name = Website
 version = 0.31
 url = website
 author = Markus Moenig
