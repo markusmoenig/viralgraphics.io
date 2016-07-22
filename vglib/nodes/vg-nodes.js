@@ -358,10 +358,6 @@ VG.Nodes.NodeColor=function()
 
     // --- Terminals
 
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Sample2D, "Sample2D", function() {
-        return this.container.getParamValue( "color" );
-    }.bind( this ) ) );
-
     this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector4, "Vector4", function() {
         var color=this.container.getParamValue( "color" );
         this.vector4.set( color.r, color.g, color.b, color.a );
@@ -390,21 +386,26 @@ VG.Nodes.NodeCheckerGen=function()
 
     VG.Nodes.Node.call( this );
     this.size=new VG.Math.Vector2();
+    var outVector=new VG.Math.Vector4();
 
     // --- Terminals
 
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Sample2D, "out", function( vector ) {
+    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Sample, "sample", function( vector ) {
+
+        var colorName="color1";
 
         if ( !( Math.floor( vector.x / this.container.getParamValue( "width" ) ) % 2 ) ) 
         {
-            if ( !( Math.floor( vector.y / this.container.getParamValue( "height" ) ) % 2 ) ) return this.container.getParamValue( "color1" );
-                else return this.container.getParamValue( "color2" );
+            if ( ( Math.floor( vector.y / this.container.getParamValue( "height" ) ) % 2 ) ) colorName="color2";
         } else
         {
-            if ( !( Math.floor( vector.y / this.container.getParamValue( "height" ) ) % 2 ) ) return this.container.getParamValue( "color2" );
-                else return this.container.getParamValue( "color1" );
+            if ( !( Math.floor( vector.y / this.container.getParamValue( "height" ) ) % 2 ) ) colorName="color2";
         }
 
+        var value=this.container.getParamValue( colorName );
+
+        outVector.set( value.r, value.g, value.b, value.a );
+        return outVector;
     }.bind( this ) ) );
 
     this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector2, "size", function( vector ) {
@@ -420,8 +421,8 @@ VG.Nodes.NodeCheckerGen.prototype.createProperties=function( data )
     this.container=VG.Nodes.ParamContainer( this );
     var group=this.container.addGroupByName( "settings", "Settings" );
 
-    group.addParam( VG.Nodes.ParamNumber( data, "width", "Tile Width", 20, 1, 100 ) );
-    group.addParam( VG.Nodes.ParamNumber( data, "height", "Tile Height", 20, 1, 100 ) );
+    group.addParam( VG.Nodes.ParamNumber( data, "width", "Tile Width", 0.5, 0.0001, 1, 3 ) );
+    group.addParam( VG.Nodes.ParamNumber( data, "height", "Tile Height", 0.5, 0.0001, 1, 3 ) );
     group.addParam( VG.Nodes.ParamColor( data, "color1", "Color 1", VG.Core.Color( "#ffffff" ) ) );
     group.addParam( VG.Nodes.ParamColor( data, "color2", "Color 2", VG.Core.Color( "#000000" ) ) );    
 };
@@ -442,7 +443,7 @@ VG.Nodes.NodeImage=function()
 
     // --- Terminals
 
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Sample2D, "sample", function( vector ) {
+    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Sample, "sample", function( vector ) {
         
 		var image=this.container.getParam( "image" ).value;
         

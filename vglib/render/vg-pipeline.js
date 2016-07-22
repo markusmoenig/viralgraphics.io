@@ -293,6 +293,20 @@ VG.Render.Pipeline.prototype.drawScene = function(context, scene, delta)
 
 	if (context.trace)
     {
+        var traceCtx=context.traceContext;
+        context.traceSegment();
+
+        if ( traceCtx.passes > 0 ) traced=true;
+
+        // VG.context.workspace.canvas.drawImage( traceCtx.widget.rect, traceCtx.image );
+
+        // console.log( traceCtx.widget.rect, traceCtx.image.width,traceCtx.image.height );
+
+        //traced=true;
+
+        // VG.Renderer().drawQuad( VG.Renderer().getTexture( traceCtx.image ), traceCtx.image.width, traceCtx.image.height, 0, 0, 1, context.size2D); // alpha
+
+        /*
         if (!context.traceContext)
             context.traceContext = new VG.Render.TraceContext();
         var traceCtx = context.traceContext;
@@ -332,15 +346,17 @@ VG.Render.Pipeline.prototype.drawScene = function(context, scene, delta)
 		{
 			var alpha = VG.Math.clamp(traceCtx.iterations / (traceCtx.maxIterations / 10.0), 0.0, 1.0);
 			// render the texture bound to output the trace gets updated.
-			VG.Renderer().drawQuad(traceCtx.texture, w, h, 0, 0, /*alpha*/1, context.size2D);
+			VG.Renderer().drawQuad(traceCtx.texture, w, h, 0, 0, 1, context.size2D); // alpha
 		}
+        */
     }
-	if (!traced)
-	{
+
+    if (!traced)
+    {
         var renderables = scene.findAllVisible(context, true);
         for (var i = 0; i < renderables.length; i++)
             renderables[i].onDraw(this, context, delta);
-    }
+    }    
 }
 
 VG.Render.Context = function()
@@ -355,7 +371,8 @@ VG.Render.Context = function()
 	/** lights
 	* @member {Array[VG.Render.Light]} lights
 	*/
-	this.lights = [];
+	// this.lights = [];
+    // this.emissiveObjects = [];
 
     /** Determines if tracing should be used 
      *  @member {Bool}[false] trace */
@@ -376,6 +393,161 @@ VG.Render.Context = function()
 
     this.traceSettings=new VG.Render.TraceSettings();
 }
+
+VG.Render.Context.prototype.createTracer = function( width, height )
+{
+    this.traceContext=[];
+    var traceCtx=this.traceContext;
+
+    traceCtx.passes=0;
+    traceCtx.divPasses=1;
+    traceCtx.tracer=new Module.VGTracer();
+
+    traceCtx.transform=new VG.Math.Matrix4( this.camera.getTransform() );
+    traceCtx.transform.elements[12]=0;
+    traceCtx.transform.elements[13]=0;
+    traceCtx.transform.elements[14]=0;
+    traceCtx.transform.elements[15]=1;
+
+    traceCtx.width=width;//this.view.rect.width;//VG.context.dc.width;
+    traceCtx.height=height;//this.view.rect.height;//VG.context.dc.height;
+
+    traceCtx.image=VG.Core.Image( width, height );
+    // traceCtx.image.clear();
+    this.size2D.set( width, height );
+
+    if ( this.camera.eye ) traceCtx.origin=this.camera.eye;
+    else traceCtx.origin=this.camera.position;
+
+    VG.context.traceContext=traceCtx;
+
+    return traceCtx;    
+};
+
+VG.Render.Context.prototype.tracerReadScene = function( scene )
+{
+    var traceCtx=this.traceContext;
+
+    for (  var mi=0; mi < scene.children.length; mi++) 
+    {
+        var m = scene.children[mi];
+
+        var vb = m.vBuffers[0].vb;
+        var layout = m.vBuffers[0].layout;
+
+        var stride = 0;
+        var offset = 0;
+
+        for ( var i = 0; i < layout.length; i++) 
+        {
+            var elem = layout[i];
+            stride += elem.stride;
+            if (elem.name === 'position')
+                offset = elem.offset;
+        }
+
+        var data = vb.getDataBuffer();
+        var matrix=new VG.Math.Matrix4()        
+
+        var tracerObject, sphere;
+
+        if ( !(m instanceof VG.Render.SphereMesh) )
+        {
+            var points=[];
+
+            matrix.setIdentity();
+            matrix.setQuatRotation(m._rotation);
+            matrix.scale(m._scale.x, m._scale.y, m._scale.z);     
+            matrix.translate(m._position.x, m._position.y, m._position.z);
+
+            for ( var i = 0; i < m.vertexCount; i++) 
+            {
+                var point = new VG.Math.Vector3(data.get(stride * i + offset), data.get(stride * i + offset + 1), data.get(stride * i + offset + 2));
+                var tpoint=matrix.multiplyVector3( point );
+                points.push( tpoint.x, tpoint.y, tpoint.z );
+            }
+
+            var rc=VG.Utils.typedArrayToEMS( new Float64Array( points ) );
+            tracerObject=new Module.VGTracerMeshObject( rc.offset, rc.length );
+            traceCtx.tracer.addMeshObject( tracerObject );
+        } else
+        {
+            var origin=new Module.VGVector3( m._position.x, m._position.y, m._position.z );
+            tracerObject=new Module.VGTracerSphereObject( origin, m.radius );
+            traceCtx.tracer.addSphereObject( tracerObject );
+            sphere=true;
+        }
+
+        var tracerMaterial=new Module.VGTracerMaterial();
+
+        if ( m.tracerMatTerminal ) m.tracerMatTerminal.onCall( tracerMaterial );
+        else tracerMaterial.setEmissiveColor( 1, 1, 1 );
+
+        if ( tracerMaterial.isLight() )
+            traceCtx.tracer.addLightObject( tracerObject );
+
+        if ( m.material.opt.image )
+        {
+            // --- Image as Texture
+
+            var image=m.material.opt.image;
+
+            var emsImageData=VG.Utils.typedArrayToEMS( image.data );
+
+            var tracerImage=new Module.VGTracerImage( image.width, image.height, image.modulo, emsImageData.offset );
+            tracerMaterial.setTexture( tracerImage );
+        }
+
+        tracerObject.setMaterial( tracerMaterial );
+    };
+
+    traceCtx.imageDataOffset=traceCtx.tracer.init( [traceCtx.width, traceCtx.height, traceCtx.image.realWidth, traceCtx.image.realHeight, 5, this.camera.fov, 
+        traceCtx.origin.x, traceCtx.origin.y, traceCtx.origin.z,
+        traceCtx.transform.elements[0], traceCtx.transform.elements[1], traceCtx.transform.elements[2], traceCtx.transform.elements[3],  
+        traceCtx.transform.elements[4], traceCtx.transform.elements[5], traceCtx.transform.elements[6], traceCtx.transform.elements[7],  
+        traceCtx.transform.elements[8], traceCtx.transform.elements[9], traceCtx.transform.elements[10], traceCtx.transform.elements[11]
+        ] );
+
+    traceCtx.image.data = Module.HEAPU8.subarray(traceCtx.imageDataOffset, traceCtx.imageDataOffset + traceCtx.image.modulo * traceCtx.image.realHeight );
+    traceCtx.y=0;
+
+    traceCtx.cores=traceCtx.tracer.numberOfCores();    
+};
+
+VG.Render.Context.prototype.traceSegment=function()
+{
+    var traceCtx=this.traceContext;
+
+    traceCtx.passes=traceCtx.tracer.trace();
+    traceCtx.image.needsUpdate=true;
+
+    if ( traceCtx.callback )
+        traceCtx.callback( traceCtx );
+
+    //VG.log( "Passes: " + traceCtx.passes );//, "Total Time: ", this.endTime, "Last Pass: ", Date.now() - this.passStartTime );  
+};
+
+VG.Render.Context.prototype.tracerStart=function()
+{
+    var traceCtx=this.traceContext;
+    this.trace=true;    
+
+    traceCtx.tracer.start();
+    traceCtx.startTime=Date.now();    
+};
+
+VG.Render.Context.prototype.tracerStop=function()
+{
+    var traceCtx=this.traceContext;    
+    this.trace=false;
+
+    traceCtx.tracer.stop();
+    traceCtx.tracer.delete();
+
+    delete traceCtx.tracer;
+
+    this.traceContext=undefined;
+};
 
 VG.Render.Context.prototype.setSceneChanged = function(changed)
 {

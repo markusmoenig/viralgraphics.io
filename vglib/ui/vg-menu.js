@@ -75,6 +75,9 @@ VG.UI.MenuItem.prototype.addExclusions=function()
             arguments[i].exclusions.push( this );
             arguments[i].checkable=true;
         }
+
+        for ( var k=0; k < arguments.length; ++k )
+            if ( arguments[i] !== arguments[k] && arguments[i].exclusions.indexOf( arguments[k] ) === -1 ) arguments[i].exclusions.push( arguments[k] );
     }
 };
 
@@ -458,6 +461,14 @@ VG.UI.ContextMenu.prototype.addItem=function( text, icon, callback, shortcut )
     return item;
 };
 
+VG.UI.ContextMenu.prototype.insertItem=function( index, text, icon, callback, shortcut )
+{
+    var item=VG.UI.MenuItem( text, icon, callback, shortcut );
+    this.items.splice( index, 0, item );
+
+    return item;
+};
+
 VG.UI.ContextMenu.prototype.addSeparator=function()
 {
     var item=VG.UI.MenuItem();
@@ -554,18 +565,18 @@ VG.UI.ContextMenu.prototype.mouseUp=function( event )
         // --- Dismiss context menu
 
         this.visible=false;
-        VG.context.workspace.contextMenu=null;
-        VG.context.workspace.mouseTrackerWidget=null;
+        VG.context.workspace.contextMenu=undefined;
+        VG.context.workspace.mouseTrackerWidget=undefined;
     }
 };
 
 VG.UI.ContextMenu.prototype.activate=function( pos )
 {
-    this.rect.setPos( pos );
-    this.rect.setSize( this.calcSize( VG.context.workspace.canvas ) );
-
     if ( this.aboutToShow )
         this.aboutToShow();
+
+    this.rect.setPos( pos );
+    this.rect.setSize( this.calcSize( VG.context.workspace.canvas ) );
 
     this.visible=true;
     VG.context.workspace.contextMenu=this;

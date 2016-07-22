@@ -149,7 +149,7 @@ VG.Canvas=function()
 
 VG.Canvas.Shape2D={ "Rectangle" : 0, "VerticalGradient" : 1, "HorizontalGradient" : 2, "RectangleOutline" : 3,  "RectangleOutlineMin1px" : 4,  "RectangleOutlineMin2px" : 5,  
                     "RoundedRectangleOutline1px" : 6, "RoundedRectangle2px" : 7, "RectangleCorners" : 8, 
-                    "FlippedTriangle" : 9, "ArrowLeft" : 10, "ArrowRight" : 11, "Circle": 12, "ArrowRightGradient": 13, "DropShadow_NoTop7px" : 14, "Docs.Enum" : 9000 };
+                    "FlippedTriangle" : 9, "ArrowLeft" : 10, "ArrowRight" : 11, "Circle": 12, "CircleOutline": 13, "ArrowRightGradient": 14, "DropShadow_NoTop7px" : 15, "Docs.Enum" : 9000 };
 
 VG.Canvas.prototype.pushFont=function( font )
 {
@@ -211,13 +211,6 @@ VG.Canvas.prototype.pushClipRect=function( rect )
             this.rt.setScissor( rect );
         }
     }
-
-/*
-    VG.log( "--", this.clipRects.length );
-    for ( var i=0; i < this.clipRects.length; ++i )
-    {
-        VG.log( i, this.clipRects[i].toString() );
-    }*/
 };
 
 VG.Canvas.prototype.popClipRect=function()
@@ -420,36 +413,36 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
             var pixelColor=VG.Core.Color( col1 );
 
             // --- Top Left
-            pixelColor.a=0.1;
+            pixelColor.a=0.1 * col1.a;
             this.addSolidRectangle2D( rect.x, rect.y, rect.x+1, rect.y+1, pixelColor );
-            pixelColor.a=0.75;
+            pixelColor.a=0.75 * col1.a;
             this.addSolidRectangle2D( rect.x+1, rect.y, rect.x+2, rect.y+1, pixelColor );
             this.addSolidRectangle2D( rect.x, rect.y+1, rect.x+1, rect.y+2, pixelColor );
-            pixelColor.a=1.0;
+            pixelColor.a=1.0 * col1.a;
             this.addSolidRectangle2D( rect.x+1, rect.y+1, rect.x+2, rect.y+2, pixelColor );
             // --- Top Right
-            pixelColor.a=0.1;
+            pixelColor.a=0.1 * col1.a;
             this.addSolidRectangle2D( rect.right()-1, rect.y, rect.right(), rect.y+1, pixelColor );
-            pixelColor.a=0.75;
+            pixelColor.a=0.75 * col1.a;
             this.addSolidRectangle2D( rect.right()-2, rect.y, rect.right()-1, rect.y+1, pixelColor );
             this.addSolidRectangle2D( rect.right()-1, rect.y+1, rect.right(), rect.y+2, pixelColor );
-            pixelColor.a=1.0;
+            pixelColor.a=1.0 * col1.a;
             this.addSolidRectangle2D( rect.right()-2, rect.y+1, rect.right()-1, rect.y+2, pixelColor );
             // --- Bottom Left
-            pixelColor.a=0.1;
+            pixelColor.a=0.1 * col1.a;
             this.addSolidRectangle2D( rect.x, rect.bottom()-1, rect.x+1, rect.bottom(), pixelColor );
-            pixelColor.a=0.75;
+            pixelColor.a=0.75 * col1.a;
             this.addSolidRectangle2D( rect.x+1, rect.bottom()-1, rect.x+2, rect.bottom(), pixelColor );
             this.addSolidRectangle2D( rect.x, rect.bottom()-2, rect.x+1, rect.bottom()-1, pixelColor );
-            pixelColor.a=1.0;
+            pixelColor.a=1.0 * col1.a;
             this.addSolidRectangle2D( rect.x+1, rect.bottom()-2, rect.x+2, rect.bottom()-1, pixelColor );            
             // --- Bottom Right
-            pixelColor.a=0.1;
+            pixelColor.a=0.1 * col1.a;
             this.addSolidRectangle2D( rect.right()-1, rect.bottom()-1, rect.right(), rect.bottom(), pixelColor );
-            pixelColor.a=0.75;
+            pixelColor.a=0.75 * col1.a;
             this.addSolidRectangle2D( rect.right()-2, rect.bottom()-1, rect.right()-1, rect.bottom(), pixelColor );
             this.addSolidRectangle2D( rect.right()-1, rect.bottom()-2, rect.right(), rect.bottom()-1, pixelColor );
-            pixelColor.a=1.0;
+            pixelColor.a=1.0 * col1.a;
             this.addSolidRectangle2D( rect.right()-2, rect.bottom()-2, rect.right()-1, rect.bottom()-1, pixelColor );    
         break;  
 
@@ -505,7 +498,7 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
                 x2 = pX + rW * Math.cos(inc * i);
                 y2 = pY - rH * Math.sin(inc * i);
 
-                if (shape == VG.Canvas.Shape2D.CircleHue)
+                if (shape === VG.Canvas.Shape2D.CircleHue)
                 {
                     col1 = this.cacheC1;
                     col1.setHSL(VG.Math.deg(inc * (i - 1)) - 90, 1.0, 0.5);
@@ -513,10 +506,40 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
                     col2 = this.cacheC2;
                     col2.setHSL(VG.Math.deg(inc * i) - 90, 1.0, 0.5);
 
-                    col3 = VG.Core.Color(255, 255, 255);
+                    col3 = VG.Core.Color.White;
                 }
 
                 this.addTriangle2D(x1, y1, x2, y2, pX, pY, col1, col2, col3);
+            }
+
+            return;
+        break; 
+
+        case VG.Canvas.Shape2D.CircleOutline:
+            var rW = rect.width / 2;
+            var rH =  rect.height / 2;
+
+            var step = Math.floor(VG.Math.clamp(rW * rH, 8, 64));
+            
+            var theta = 0.0;
+            var pX = rect.x + rect.width / 2;
+            var pY = rect.y + rect.height / 2;
+            var inc = (Math.PI * 2.0) / step;
+
+            if (!col3) col3 = col1;
+            if (!col2) col2 = col1;
+ 
+            var x1, y1, x2, y2;
+
+            for (var i = 1; i <= step; i++)
+            {
+                x1 = pX + rW * Math.cos(inc * (i - 1));
+                y1 = pY - rH * Math.sin(inc * (i - 1));    
+
+                x2 = pX + rW * Math.cos(inc * i);
+                y2 = pY - rH * Math.sin(inc * i);
+
+                this.drawLine(x1, y1, x2, y2, 1, col1 );
             }
 
             return;
@@ -597,7 +620,7 @@ VG.Canvas.prototype.drawLine=function(x1, y1, x2, y2, t, color)
                        p0.x + pD.x * -hT, p0.y + pD.y * -hT, color, color, color);
 }
 
-VG.Canvas.prototype.drawCurve=function(x1, y1, x2, y2, x3, y3, x4, y4, t, seg, color)
+VG.Canvas.prototype.drawCurve=function(x1, y1, x2, y2, x3, y3, x4, y4, thick, seg, color)
 {
     /** Draws a cubic bezier line 
      *  @param {Number} x1 - The p1 x coordinate
@@ -612,22 +635,17 @@ VG.Canvas.prototype.drawCurve=function(x1, y1, x2, y2, x3, y3, x4, y4, t, seg, c
      *  @param {Number} seg - Segment count the higher the better quality
      *  @param {Number} color - The line color */
 
-
-    for (var i = 1; i < seg; i++)
+    var oldX=x1, oldY=y1;
+    for (var j = 1, seg = seg; j <= seg; j++)
     {
-        var t1 = (i - 1) / seg;
-        var tx1 = VG.Math.bezierCubic(t1, x1, x2, x3, x4);
-        var ty1 = VG.Math.bezierCubic(t1, y1, y2, y3, y4);
+        var t = j / seg;
+        var tx = VG.Math.bezierCubic(t, x1, x2, x3, x4);
+        var ty = VG.Math.bezierCubic(t, y1, y2, y3, y4);
 
-        var t2 = i / seg;
-        var tx2 = VG.Math.bezierCubic(t2, x1, x2, x3, x4);
-        var ty2 = VG.Math.bezierCubic(t2, y1, y2, y3, y4);
-
-        this.drawLine(tx1, ty1, tx2, ty2, t, color); 
+        this.drawLine( oldX, oldY, tx, ty, thick, color);
+        oldX=tx; oldY=ty;     
     }
 }
-
-var rot=0;
 
 // --------------------------------------------- VG.Canvas.prototype.drawImage
 
@@ -756,7 +774,7 @@ VG.Canvas.prototype.wordWrap=function( text, start, width, textLines, dontAppend
     var oneWordFit=false;
     var newLine=false;
 
-    if( text === "" || text===undefined ) {
+    if( text === "" || text===undefined || width < 0 ) {
 
         textLines.push("");
         return { nextStart: start };
@@ -769,6 +787,7 @@ VG.Canvas.prototype.wordWrap=function( text, start, width, textLines, dontAppend
     {
         var g = VG.Font.Triangulator.getGlyph( font.triFont, text[i] );
         lineWidth+=g.width * font.scale;
+
         if(lineWidth >= width)
         {
             // Not even the 1st letter fits.
@@ -1043,7 +1062,7 @@ VG.Canvas.prototype.drawSVG=function( svg, svgGroup, rect, col, angle, crX, crY)
     var posX=rect.x, posY=rect.y;
     var scale=1;
 
-    if ( rect.width && rect.height && ( rect.width < group.width || rect.height < group.height ) )
+    if ( rect.width && rect.height )//&& ( rect.width < group.width || rect.height < group.height ) )
     {
         var scaleX=rect.width / group.width;
         var scaleY=rect.height / group.height;

@@ -289,7 +289,7 @@ Object.defineProperty( VG.Nodes.Param.prototype, "disabled",
 
 // ----------------------------------------------------------------- VG.Nodes.ParamNumber
 
-VG.Nodes.ParamNumber=function( data, name, text, value, min, max )
+VG.Nodes.ParamNumber=function( data, name, text, value, min, max, precision )
 {
     /**
      * Creates a Number Parameter.<br>
@@ -300,16 +300,18 @@ VG.Nodes.ParamNumber=function( data, name, text, value, min, max )
      * @param {number} value - The initial value of this parameter.
      * @param {number} min - Optional, the minimum number allowed.
      * @param {number} max - Optional, the maximum number allowed.
+     * @param {number} precision - Optional, the numerical precision.
      * @constructor
     */    
 
-    if ( !(this instanceof VG.Nodes.ParamNumber ) ) return new VG.Nodes.ParamNumber( data, name, text, value, min, max );
+    if ( !(this instanceof VG.Nodes.ParamNumber ) ) return new VG.Nodes.ParamNumber( data, name, text, value, min, max, precision );
 
     this.name=name ? name : "value";
     this.text=text ? text : "Value";
 
     this.min=min;
     this.max=max;
+    this.precision=precision;
 
     this.data=data;
     if ( !data[name] ) data[name]=value;
@@ -319,7 +321,7 @@ VG.Nodes.ParamNumber.prototype=VG.Nodes.Param();
 
 // ----------------------------------------------------------------- VG.Nodes.ParamNumber
 
-VG.Nodes.ParamSlider=function( data, name, text, value, min, max, step )
+VG.Nodes.ParamSlider=function( data, name, text, value, min, max, step, precision )
 {
     /**
      * Creates a Slider Parameter.<br>
@@ -331,12 +333,13 @@ VG.Nodes.ParamSlider=function( data, name, text, value, min, max, step )
      * @param {number} min - Optional, the minimum number allowed.
      * @param {number} max - Optional, the maximum number allowed.
      * @param {number} step - Optional, the step distance between possible values.
+     * @param {number} precision - Optiona, the fixed precision for the edit widget.
      * @constructor
     */    
 
     //VG.Nodes.Param.call( this );
 
-    if ( !(this instanceof VG.Nodes.ParamSlider ) ) return new VG.Nodes.ParamSlider( data, name, text, value, min, max, step );
+    if ( !(this instanceof VG.Nodes.ParamSlider ) ) return new VG.Nodes.ParamSlider( data, name, text, value, min, max, step, precision );
 
     this.name=name ? name : "value";
     this.text=text ? text : "Value";
@@ -344,6 +347,7 @@ VG.Nodes.ParamSlider=function( data, name, text, value, min, max, step )
     this.min=min;
     this.max=max;
     this.step=step;    
+    this.precision=precision;
 
     this.data=data;
     if ( !data[name] ) data[name]=value;

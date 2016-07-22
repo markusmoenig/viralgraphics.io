@@ -65,12 +65,15 @@ VG.Renderer = function()
         "uniform sampler2D tex;\n\n" +
 
         "uniform float alpha;\n\n" +
+        "uniform bool premAlpha;\n\n" +
 
         "varying vec2 texCoord;\n\n" +
 
         "void main() {\n" +
         "   vec4 color = texture2D(tex, texCoord);\n" +
-        "   gl_FragColor = vec4(color.rgb, color.a * alpha);\n" +
+        //"   if ( premAlpha ) gl_FragColor = vec4( color.r * alpha, color.g * alpha, color.b * alpha, color.a * alpha ); else gl_FragColor = vec4(color.rgb, color.a * alpha);\n" +
+        "   if ( premAlpha ) gl_FragColor = vec4( clamp( color.r * alpha, 0.0, 1.0), clamp( color.g * alpha, 0.0, 1.0), clamp( color.b * alpha, 0.0, 1.0), clamp( color.a * alpha, 0.0, 1.0) ); else gl_FragColor = vec4(color.rgb, clamp( color.a * alpha, 0.0, 1.0) );\n" +
+
         "}\n");
 
     this.shaderTex2d.blendType = VG.Shader.Blend.Alpha;
@@ -111,8 +114,8 @@ VG.Renderer.prototype.startPingPong = function(width, height, imageWidth, imageH
     this.rtPing.imageWidth=imageWidth; this.rtPing.imageHeight=imageHeight;
     this.rtPong.imageWidth=imageWidth; this.rtPong.imageHeight=imageHeight;
 
-	this.mainRT.setViewportEx(0, 0, width, height);
-	this.prepareFrameQuad(0, 0, 2, 2, VG.Core.Size(2, 2), this.framePingPong);
+	this.mainRT.setViewportEx(0, VG.context.workspace.rect.height-height, width, height );
+	this.prepareFrameQuad(0, 0, width, height, VG.Core.Size(width, height), this.framePingPong);
 }
 
 VG.Renderer.prototype.whilePingPong = function(texture)

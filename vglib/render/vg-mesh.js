@@ -608,7 +608,7 @@ VG.Render.Mesh.prototype.onDraw = function(pipeline, context, delta)
         }
     }
 
-	material.applyLights(context.lights, viewM);
+	material.applyLights( context.lights, viewM, context.emissiveObjects );
 
 	if (this.isIndexed())
 	{
@@ -630,7 +630,8 @@ VG.Render.Mesh.prototype.onDraw = function(pipeline, context, delta)
 	}
 	else
 	{
-		material.applySubMaterial(-1); // applies default material
+		//material.applySubMaterial(-1); // applies default material
+        if ( material.applyData ) material.applyData();
 		vb.drawBuffer(VG.Renderer.Primitive.Triangles, 0, this.vertexCount);
 	}
 
@@ -648,6 +649,62 @@ VG.Render.Mesh.makeBox = function(width, height, depth)
     
     var mesh = new VG.Render.BoxMesh();
 	mesh.setGeometry(width, height, depth);
+    mesh.update();
+
+    return mesh;
+}
+VG.Render.Mesh.makeBoxIndexed = function(width, height, depth)
+{
+    /** Makes a primitive box
+     *  @param {Number} width - The width
+     *  @param {Number} height - The height
+     *  @param {Number} depth - The depth
+     *  @returns {VG.Render.Mesh} */
+
+    var mesh = new VG.Render.Mesh();
+    mesh.vertexCount = 8;
+    mesh.addVertexBuffer(VG.Type.Float,
+        [
+            { name: "position", offset: 0, stride: 4 }
+        ]
+    );
+    mesh.layout = mesh.generateStaticLayout();
+    mesh.setTriangleArray({
+        position:[
+            -1, -1, -1, 1,
+            1, -1, -1, 1,
+            1, 1, -1, 1,
+            -1, 1, -1, 1,
+            -1, -1, 1, 1,
+            1, -1, 1, 1,
+            1, 1, 1, 1,
+            -1, 1, 1, 1,
+        ]
+    });
+    mesh.iBuffer = new VG.GPUBuffer(VG.Type.Uint16, 3*6*2, false, true);
+    mesh.iBuffer.create();
+    var db = mesh.iBuffer.getDataBuffer();
+    var ixs =
+        [
+            0, 2, 1,
+            0, 3, 2,
+            4, 5, 6,
+            4, 6, 7,
+            0, 1, 5,
+            0, 5, 4,
+            1, 2, 6,
+            1, 6, 5,
+            2, 3, 7,
+            2, 7, 6,
+            3, 0, 4,
+            3, 4, 7
+        ];
+    for(var i in ixs) {
+        db.set(i, ixs[i]);
+    }
+    var t = new VG.Math.Matrix4();
+    t.setScale(width / 2, height / 2, depth / 2);
+    mesh.applyTransform(t);
     mesh.update();
 
     return mesh;
@@ -749,8 +806,9 @@ VG.Render.SphereMesh.prototype.setRadius = function(radius)
     var t = new VG.Math.Matrix4();
     t.setScale(radius, radius, radius);
     this.applyTransform(t);
-}
 
+    this.radius=radius;
+}
 
 // Box Mesh
 VG.Render.BoxMesh = function(parent)

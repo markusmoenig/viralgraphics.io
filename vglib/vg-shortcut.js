@@ -44,18 +44,22 @@ VG.Shortcut.Item.prototype.createText=function()
     if ( !this.key ) return;
 
     if ( this.modifierOptional === VG.Events.KeyCodes.Shift )
-        this.text+="SHIFT+";
+        this.text+="Shift+";
 
     if ( this.modifier === VG.Events.KeyCodes.AppleLeft )
-        this.text+="CMD";
+        this.text+="Cmd";
     else
     if ( this.modifier === VG.Events.KeyCodes.Ctrl )
-        this.text+="CTRL";    
+        this.text+="Ctrl";    
     else
     if ( this.modifier === VG.Events.KeyCodes.Alt )
-        this.text+="ALT";     
+        this.text+="Alt";     
+    else
+    if ( this.modifier === VG.Events.KeyCodes.Shift )
+        this.text+="Shift";     
 
-    this.text+="+" + this.key;
+    if ( this.text.length ) this.text+="+";
+    this.text+=this.key;
 };
 
 VG.Shortcut.Manager=function()
@@ -224,12 +228,14 @@ VG.Shortcut.Manager.prototype.verifyMenu=function( text, keysDown, menu )
 
 VG.Shortcut.Manager.prototype.verifyShortcut=function( text, keysDown, shortcut )
 {
+    if ( text.toUpperCase() === shortcut.key && !shortcut.modifier ) return true;
+
     if ( text.toUpperCase() === shortcut.key && keysDown.indexOf( shortcut.modifier ) !== -1 ) 
     {
         if ( !shortcut.modifierOptional || ( shortcut.modifierOptional && keysDown.indexOf( shortcut.modifierOptional ) !== -1 ) )
         {
             // --- If Shift is pressed and no optional modifier selected ignore this event
-            if ( !shortcut.modifierOptional && keysDown.indexOf( VG.Events.KeyCodes.Shift ) !== -1 ) return false;
+            //if ( !shortcut.modifierOptional && keysDown.indexOf( VG.Events.KeyCodes.Shift ) !== -1 ) return false;
 
             return true;
         }

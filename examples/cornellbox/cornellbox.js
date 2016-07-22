@@ -1,7 +1,7 @@
 CornellBoxWidget=function( setupDefaultScene )
 {
     VG.UI.RenderWidget.call(this);
-    VG.context.workspace.autoRedrawInterval=500;
+    VG.context.workspace.autoRedrawInterval=30;
 
     this.objects=[];
 
@@ -14,20 +14,6 @@ CornellBoxWidget=function( setupDefaultScene )
     var y = 0;
 
     var storedDelta = 0.001;
-
-    this.keyDown = function(e)
-    {
-        var scaleRatio = this.context.traceContext.scaleRatio;
-
-        if (e == VG.Events.KeyCodes.One) context.traceContext.scaleRatio = 0.25;
-        if (e == VG.Events.KeyCodes.Two) context.traceContext.scaleRatio = 0.50;
-        if (e == VG.Events.KeyCodes.Three) context.traceContext.scaleRatio = 1.0;
-
-        if (context.traceContext.scaleRatio != scaleRatio)
-        {
-            context.traceContext.resetAccumulation = true;
-        }
-    }
 
     this.mouseDown = function( event ) 
     { 
@@ -49,8 +35,8 @@ CornellBoxWidget=function( setupDefaultScene )
     {
         storedDelta = delta;
         //TODO update aspect ratio on a resize callback not here / everyframe
-        this.camera.aspect = this.rect.width / this.rect.height;
-        this.camera.updateProjection();
+        this.context.camera.aspect = this.rect.width / this.rect.height;
+        this.context.camera.updateProjection();
 
         this.context.size2D.set(this.rect.width, this.rect.height);
         
@@ -63,26 +49,26 @@ CornellBoxWidget.prototype = Object.create(VG.UI.RenderWidget.prototype);
 
 CornellBoxWidget.prototype.init = function()
 {
-    var context = new VG.Render.Context();
-    // camera
-    this.camera = context.camera;
-    this.camera.setProjection(60, this.rect.width / this.rect.height);
-    this.camera.setRotation(0, 0, 0);
-    this.camera.position.z = 14.0;
-    this.camera.position.y = 5.0;
+    this.context = new VG.Render.Context();
+    
+    this.context.camera.setProjection(60, this.rect.width / this.rect.height);
+    this.context.camera.setRotation(0, 0, 0);
+    this.context.camera.position.z = 14.0;
+    this.context.camera.position.y = 5.0;
 
-    //enable tracing
-    context.trace = false;
-    this.context=context;
+    // this.context.camera.setLookAt(new VG.Math.Vector3(0, 5, 0), new VG.Math.Vector3(0, 1, 0), undefined, true);
 
     this.pipeline = new VG.Render.Pipeline();
     this.scene = new VG.Render.SceneManager();
 };
 
-CornellBoxWidget.prototype.applyMaterialAtIndex = function( index, matTerminal )
+CornellBoxWidget.prototype.applyMaterialAtIndex = function( index, matTerminal, tracerMatTerminal )
 {
     var mesh=this.objects[index];
     mesh.material.opt=matTerminal.onCall();
+
+    if ( tracerMatTerminal )
+        mesh.tracerMatTerminal=tracerMatTerminal;
 
     mesh.material.needsUpdate=true;
     if ( this.context.traceContext ) this.context.traceContext.sceneChanged=true;
@@ -92,7 +78,7 @@ CornellBoxWidget.prototype.setup = function( context, scene, objects )
 {
     this.clearColor = new VG.Core.Color();
 
-	// wall thickness
+    // wall thickness
     var wt = 0.1;
 
     var lights = [
@@ -119,13 +105,13 @@ CornellBoxWidget.prototype.setup = function( context, scene, objects )
     ];
     context.lights = lights;
 
-	/// materials
-    var neon = new VG.Render.MtlMaterial( {Kd : [ 3, 3, 3 ], name : "neon white", illum : 0 } );
+    /// materials
+    var neon = new VG.Render.MtlMaterial( {Kd : [ 1, 1, 1 ], name : "neon white", illum : 0 } );
 
-	// --- Back Wall
+    // --- Back Wall
     var backWall = new VG.Render.BoxMesh(scene);
-	backWall.setGeometry(10, 10, wt);
-	backWall.update();
+    backWall.setGeometry(10, 10, wt);
+    backWall.update();
     
     backWall.position.z = -5 + wt/2;
     backWall.position.y = 5;
@@ -133,10 +119,10 @@ CornellBoxWidget.prototype.setup = function( context, scene, objects )
     backWall.material=new VG.Render.MtlMaterial();
     this.objects.push( backWall );
 
-	// left wall
+    // left wall
     var leftWall = new VG.Render.BoxMesh(scene);
-	leftWall.setGeometry(wt, 10, 10);
-	leftWall.update();
+    leftWall.setGeometry(wt, 10, 10);
+    leftWall.update();
 
     leftWall.position.x -= 5 - wt / 2;
     leftWall.position.y = 5;
@@ -144,60 +130,60 @@ CornellBoxWidget.prototype.setup = function( context, scene, objects )
     leftWall.material=new VG.Render.MtlMaterial();
     this.objects.push( leftWall );
 
-	// right wall
+    // right wall
     var rightWall = new VG.Render.BoxMesh(scene);
     rightWall.name="Right Wall";    
-	rightWall.setGeometry(wt, 10, 10);
-	rightWall.update();
+    rightWall.setGeometry(wt, 10, 10);
+    rightWall.update();
     rightWall.position.x += 5 - wt / 2;
     rightWall.position.y = 5;
 
     rightWall.material=new VG.Render.MtlMaterial();
     this.objects.push( rightWall );
 
-	// floor wall
+    // floor wall
     var floor = new VG.Render.BoxMesh(scene);
-	floor.setGeometry(10, wt, 10);
-	floor.update();
+    floor.setGeometry(10, wt, 10);
+    floor.update();
     floor.position.y -= wt / 2;
 
     floor.material=new VG.Render.MtlMaterial();
     this.objects.push( floor );
 
-	// ceiling wall
+    // ceiling wall
     var ceiling = new VG.Render.BoxMesh(scene);
-	ceiling.setGeometry(10, wt, 10);
-	ceiling.update();
+    ceiling.setGeometry(10, wt, 10);
+    ceiling.update();
     ceiling.position.y += 10 + wt / 2;
 
-	ceiling.material = new VG.Render.MtlMaterial();
+    ceiling.material = new VG.Render.MtlMaterial();
     this.objects.push( ceiling );
 
-	// lamp geometry (pseudo)
-	var lamp = new VG.Render.BoxMesh(scene);
-	lamp.setGeometry(3, 0.1, 3);
-	lamp.update();
-	lamp.position.y += 10;
+    // lamp geometry
+    var lamp = new VG.Render.BoxMesh(scene);
+    lamp.setGeometry(3, 0.1, 3);
+    lamp.update();
+    lamp.position.y += 10;
 
     lamp.material = neon;
 
     // props
 
     var box1 = new VG.Render.BoxMesh(scene);
-	box1.setGeometry(3, 7, 3);
-	box1.update();
+    box1.setGeometry(3, 7, 3);
+    box1.update();
     box1.position.y += 3.5;
     box1.position.z += 0.5;
     box1.position.x += 3;
     box1.setRotation(45, 0, 0);
 
-	box1.material = new VG.Render.MtlMaterial();
+    box1.material = new VG.Render.MtlMaterial();
     this.objects.push( box1 );
 
-	//
+    //
     var box2 = new VG.Render.BoxMesh(scene);
-	box2.setGeometry(3, 3, 3);
-	box2.update();
+    box2.setGeometry(3, 3, 3);
+    box2.update();
 
     box2.position.y += 1.5-wt;
     box2.position.z -= 2;
@@ -208,7 +194,7 @@ CornellBoxWidget.prototype.setup = function( context, scene, objects )
     this.objects.push( box2 );
 
     //
-    var sphere = new VG.Render.SphereMesh( scene, 140 );
+    var sphere = new VG.Render.SphereMesh( scene, 40 );
     sphere.setRadius(1.5);
     sphere.update();
 
@@ -220,7 +206,7 @@ CornellBoxWidget.prototype.setup = function( context, scene, objects )
     this.objects.push( sphere );
 
     //
-    var sphere2 = new VG.Render.SphereMesh( scene, 140 );
+    var sphere2 = new VG.Render.SphereMesh( scene, 40 );
     sphere2.setRadius(0.75);
     sphere2.update();
 
@@ -237,44 +223,65 @@ CornellBoxWidget.prototype.setup = function( context, scene, objects )
 function vgMain( workspace, args, argc )
 {
     this.dc=VG.Data.Collection( "MainData" );
-    this.dc.nodes=[];
+    this.dc.nodes={ nodes : [] };
 
-    var cornellBoxWidget = new CornellBoxWidget(); 
-    cornellBoxWidget.minimumSize.width=100;
+    var view3D = new CornellBoxWidget(); 
+    view3D.clearBackground=true;
+    view3D.minimumSize.width=100;
 
     // --- Toolbar
 
     var renderButton=VG.UI.ToolButton( "Render" );
-    var renderQuality=VG.UI.DropDownMenu( "Low", "Medium", "High" );
-    var renderQualityLabel=VG.UI.Label("  Quality");
+    var renderCoresLabel=VG.UI.Label( "Cores: " );
+    var renderCoresLabel1=VG.UI.Label( "-" );
+    var renderPassesLabel=VG.UI.Label( "Passes: " );
+    var renderPassesLabel1=VG.UI.Label( "-" );
+    var renderTimeLabel=VG.UI.Label( "Time: " );
+    var renderTimeLabel1=VG.UI.Label( "-" );    
 
     renderButton.clicked=function() {
-        if ( !cornellBoxWidget.context.trace ) renderButton.text="Stop";
+        if ( !view3D.context.trace ) 
+        {
+            if ( !view3D.traceContext ) 
+            {
+                view3D.context.createTracer( view3D.rect.width, view3D.rect.height );
+                view3D.context.tracerReadScene( view3D.scene );
+                renderCoresLabel1.text=String( view3D.context.traceContext.cores );
+
+                view3D.context.traceContext.callback=function( ctx ) {
+                    renderPassesLabel1.text=String( ctx.passes );
+
+                    function msToTime(duration) {
+                        var milliseconds = parseInt((duration%1000)/100), seconds = parseInt((duration/1000)%60), minutes = parseInt((duration/(1000*60))%60), hours = parseInt((duration/(1000*60*60))%24);
+
+                        hours = (hours < 10) ? "0" + hours : hours;
+                        minutes = (minutes < 10) ? "0" + minutes : minutes;
+                        seconds = (seconds < 10) ? "0" + seconds : seconds;
+
+                        return hours + ":" + minutes + ":" + seconds + "." + milliseconds;
+                    }
+
+                    var elTime=Date.now() - ctx.startTime;
+                    renderTimeLabel1.text=msToTime( elTime );
+                };
+            }
+            renderButton.text="Stop";
+            view3D.context.tracerStart();
+        }
         else {
             renderButton.text="Render";
-            workspace.statusBar.message( "" );            
+            view3D.context.tracerStop();
+            renderCoresLabel1.text=String( "-" );
+            renderPassesLabel1.text=String( "-" );
+            renderTimeLabel1.text=String( "-" );
         }
-        cornellBoxWidget.context.trace = !cornellBoxWidget.context.trace;
     }.bind( this );
 
-    renderQuality.changed=function( index ) {
-        switch( index ) {
-            case 0 : cornellBoxWidget.context.traceContext.scaleRatio=0.25; break;
-            case 1 : cornellBoxWidget.context.traceContext.scaleRatio=0.5; break;
-            case 2 : cornellBoxWidget.context.traceContext.scaleRatio=1; break;
-        }
-        cornellBoxWidget.context.traceContext.resetAccumulation=true;
-    }.bind( this );
-    renderQuality.index=1;
+    var toolbar=VG.UI.ToolBar( renderButton,  
+        VG.UI.ToolSeparator(), renderCoresLabel, renderCoresLabel1,
+        VG.UI.ToolSeparator(), renderPassesLabel, renderPassesLabel1,
+        VG.UI.ToolSeparator(), renderTimeLabel, renderTimeLabel1 );
 
-    if ( VG.getHostProperty( VG.HostProperty.Platform ) !== VG.HostProperty.PlatformDesktop ) {
-        // --- On Platforms other than Desktop disable Render Button as no Network Rendering yet
-        renderButton.disabled=true;
-        renderQuality.disabled=true;
-        renderQualityLabel.disabled=true;
-    }
-
-    var toolbar=VG.UI.ToolBar( renderButton, renderQualityLabel, renderQuality );//, VG.UI.ToolSeparator() );
     workspace.addToolBar( toolbar );
 
     // --- Layouts
@@ -307,11 +314,11 @@ function vgMain( workspace, args, argc )
 
     // ---
 
-    workspace.content = cornellBoxWidget;
+    workspace.content = view3D;
 
     // --- Hit test callback
 
-    cornellBoxWidget.hitCallback=function( mesh, index, clicked  ) {
+    view3D.hitCallback=function( mesh, index, clicked  ) {
         if ( index >= 0 && index <= 8) {
             if ( clicked ) {
                 popupButton.index=index;
@@ -323,49 +330,27 @@ function vgMain( workspace, args, argc )
         VG.update();
     }.bind( this );
 
-    // --- Render Progress Callback
-
-    cornellBoxWidget.context.traceSettings.progressCallback=function( iter, maxIter ) {
-        workspace.statusBar.message( "Iterations: " + iter + "/" + maxIter, 2000 );
-    }.bind( this );
-
     // --- Create and apply Materials
 
     this.defaultMaterialSettings=[
-        { Ka : [ 1, 1, 1 ], Kd : [ 1, 1, 0 ], Ks : [ 0.4, 0.4, 0.4 ], Ns: 100, illum : 1 },
-        { Ka : [ 0.7, 0.1, 0.1 ], Kd : [ 0.749, 0, 0 ], Ks : [ 0.4, 0.4, 0.4 ], Ns: 100, illum : 2 },
-        { Ka : [ 0.1, 0.2, 0.4 ], Kd : [ 44/255, 156/255, 180/255 ], Ks : [ 0.4, 0.4, 0.4 ], Ns: 10, illum : 2 },
-        { Ka : [ 1, 1, 1 ], Kd : [ 1, 1, 1 ], Ks : [ 0.4, 0.4, 0.4 ], Ns: 100, illum : 1 },
-        { Ka : [ 1, 1, 1 ], Kd : [ 1, 1, 1 ], Ks : [ 0.4, 0.4, 0.4 ], Ns: 100, illum : 1 },
-        { Ka : [ 0.2, 0.2, 0.3 ], Kd : [ 0.5, 0.5, 0.9 ], Ks : [ 1, 1, 1 ], Ns: 200, illum : 2 },
-        { Ka : [ 0.1, 0.5, 0.1 ], Kd : [ 0, 0.749, 0 ], Ks : [ 1, 1, 1 ], Ns: 200, illum : 2 },
-        { Ka : [ 0, 0, 0 ], Kd : [ 0, 0, 0 ], Ks : [ 1, 1, 1 ], Ns: 10, illum : 7, d: 0.4, Ni: 2 },
-        { Ka : [ 0, 0, 0 ], Kd : [ 0, 0, 0 ], Ks : [ 1, 1, 1 ], Ns: 20, illum : 3 }
+        { name : "Back Wall", type : 0, Ka : [ 1, 1, 1 ], Kd : [ 1, 1, 0 ], Ks : [ 0.4, 0.4, 0.4 ], Ns: 100, illum : 1 },
+        { name : "Left Wall", type : 0, Ka : [ 0.7, 0.1, 0.1 ], Kd : [ 0.749, 0, 0 ], Ks : [ 0.4, 0.4, 0.4 ], Ns: 100, illum : 2 },
+        { name : "Right Wall", type : 0, Ka : [ 0.1, 0.2, 0.4 ], Kd : [ 44/255, 156/255, 180/255 ], Ks : [ 0.4, 0.4, 0.4 ], Ns: 10, illum : 2 },
+        { name : "Floor", type : 0, Ka : [ 1, 1, 1 ], Kd : [ 1, 1, 1 ], Ks : [ 0.4, 0.4, 0.4 ], Ns: 100, illum : 1 },
+        { name : "Ceiling", type : 0, Ka : [ 1, 1, 1 ], Kd : [ 1, 1, 1 ], Ks : [ 0.4, 0.4, 0.4 ], Ns: 100, illum : 1 },
+        { name : "Big Cube", type : 1, Ka : [ 0.2, 0.2, 0.3 ], Kd : [ 0.5, 0.5, 0.9 ], Ks : [ 1, 1, 1 ], Ns: 200, illum : 2 },
+        { name : "Small Cube", type : 0, Ka : [ 0.1, 0.5, 0.1 ], Kd : [ 0, 0.749, 0 ], Ks : [ 1, 1, 1 ], Ns: 200, illum : 2 },
+        { name : "Big Sphere", type : 2, Ka : [ 0, 0, 0 ], Kd : [ 0, 0, 0 ], Ks : [ 1, 1, 1 ], Ns: 10, illum : 7, d: 0.4, Ni: 2 },
+        { name : "Small Sphere", type : 1, Ka : [ 0, 0, 0 ], Kd : [ 0, 0, 0 ], Ks : [ 1, 1, 1 ], Ns: 20, illum : 3 }
     ];
 
-    this.materials=[];
+    this.materials=[], this.tracerMaterials=[];
 
-    // --- Back Wall
-    createMtlMaterial( cornellBoxWidget, 0 );
-    // --- Left Wall
-    createMtlMaterial( cornellBoxWidget, 1 );
-    // --- Right Wall
-    createMtlMaterial( cornellBoxWidget, 2 );
-    // --- Floor
-    createMtlMaterial( cornellBoxWidget, 3 );
-    // --- Ceiling
-    createMtlMaterial( cornellBoxWidget, 4 );
-    // --- Big Box
-    createMtlMaterial( cornellBoxWidget, 5 );   
-    // --- Small Box
-    createMtlMaterial( cornellBoxWidget, 6 );   
-    // --- Big Sphere -  Inital Glass
-    createMtlMaterial( cornellBoxWidget, 7 );   
-    // --- Small Sphere - Initial Mirror
-    createMtlMaterial( cornellBoxWidget, 8 );   
+    for ( var i=0; i < this.defaultMaterialSettings.length; ++i )
+        createMaterial( view3D, i );
     
     // --- Update Reflections
-    cornellBoxWidget.pipeline.updateEnvMapping( cornellBoxWidget.context, cornellBoxWidget.scene);
+    view3D.pipeline.updateEnvMapping( view3D.context, view3D.scene);
 
     // --- Show UI of Back Wall
     this.nodeController.selected=this.materials[0].node.data;
@@ -375,8 +360,8 @@ function vgMain( workspace, args, argc )
 
     // --- Update Callback
     this.graph.graph.updateCallback=function() {
-        cornellBoxWidget.applyMaterialAtIndex( popupButton.index, this.materials[popupButton.index] );
-        cornellBoxWidget.pipeline.updateEnvMapping( cornellBoxWidget.context, cornellBoxWidget.scene);        
+        view3D.applyMaterialAtIndex( popupButton.index, this.materials[popupButton.index] );
+        view3D.pipeline.updateEnvMapping( view3D.context, view3D.scene);        
     }.bind( this );    
 
     // --- New Callback --- Set all material settings back to their default values
@@ -386,9 +371,9 @@ function vgMain( workspace, args, argc )
             applyDefaultMaterialSettings( node, i );
 
             var matTerminal=node.getTerminal( "out" );            
-            cornellBoxWidget.applyMaterialAtIndex( i, matTerminal );
+            view3D.applyMaterialAtIndex( i, matTerminal );
         }
-        cornellBoxWidget.pipeline.updateEnvMapping( cornellBoxWidget.context, cornellBoxWidget.scene);        
+        view3D.pipeline.updateEnvMapping( view3D.context, view3D.scene);        
         this.nodeController.selected=this.materials[popupButton.index].node.data;
     }.bind( this ) );
 
@@ -406,32 +391,43 @@ function vgMain( workspace, args, argc )
 
 // --- Creates a node based material and applies it
 
-function createMtlMaterial( cornellBoxWidget, index )
+function createMaterial( view3D, index )
 {
     // --- Create MaterialNode
 
-    var materialNode=new VG.Nodes["NodeMtlMaterial"];
+    var materialNode=new VG.Nodes["NodeMaterial"];
+
+    var data=VG.context.defaultMaterialSettings[index];
+    materialNode.name=data.name;
+
     VG.context.graph.addNode( materialNode, true );
-    var matTerminal=materialNode.getTerminal( "out" );
+    var matTerminal=materialNode.getTerminal( "mtl" );
+    var tracerTerminal=materialNode.getTerminal( "out" );
 
     // ---
 
     var node=matTerminal.node;
 
     VG.context.materials.push( matTerminal );
-    applyDefaultMaterialSettings( node, index )
-    cornellBoxWidget.applyMaterialAtIndex( index, matTerminal );
+    VG.context.tracerMaterials.push( tracerTerminal );
+
+    applyDefaultMaterialSettings( materialNode, index )
+    view3D.applyMaterialAtIndex( index, matTerminal, tracerTerminal );
 };
 
 function applyDefaultMaterialSettings( node, index )
 {
-    var mtl=VG.context.defaultMaterialSettings[index];
+    var data=VG.context.defaultMaterialSettings[index];
 
+    node.setParamNumber( "type", data.type );
+    node.setParamColor( "color", data.Kd[0], data.Kd[1], data.Kd[2] );
+
+/*
     node.setParamColor( "ambientColor", mtl.Ka[0], mtl.Ka[1], mtl.Ka[2] );
     node.setParamColor( "diffuseColor", mtl.Kd[0], mtl.Kd[1], mtl.Kd[2] );
     node.setParamColor( "specularColor", mtl.Ks[0], mtl.Ks[1], mtl.Ks[2] );
     node.setParamNumber( "illum", mtl.illum );
     node.setParamNumber( "specular", mtl.Ns );
     if ( mtl.d ) node.setParamNumber( "dissolve", mtl.d );
-    if ( mtl.Ni ) node.setParamNumber( "density", mtl.Ni );
+    if ( mtl.Ni ) node.setParamNumber( "density", mtl.Ni );*/
 };

@@ -59,6 +59,7 @@ VG.Nodes.Graph.prototype.addNode=function( node, customSetup )
         node.data.id=this.idCounter++;
         node.data.className=node.className;
         node.data.node=node;
+        node.data.name=node.name;        
 
         if ( node.createProperties ) 
             node.createProperties( node.data );
@@ -87,6 +88,7 @@ VG.Nodes.Graph.prototype.createNode=function( className)
         node.data.id=this.idCounter++;
         node.data.className=node.className;
         node.data.node=node;
+        node.data.name=node.name;
 
         if ( node.createProperties ) 
             node.createProperties( node.data );
@@ -111,12 +113,23 @@ VG.Nodes.Graph.prototype.getNodeFromId=function( id )
     else return this.nodes.get( id );
 };
 
+VG.Nodes.Graph.prototype.findNode=function( name )
+{
+    for (var node of this.nodes.values() )    
+    {
+        if ( node.data.name === name )
+            return node;
+    }
+};
+
 VG.Nodes.Graph.prototype.load=function( data, displaceImage )
 {
     /**Loads the nodes of a compressed graph and returns the output terminal, i.e. the terminal which was connected to the preview node.
      * @param {string} data - The compressed data to load. 
      */
 
+    if ( this.previewNode )
+        this.previewNode.disconnectAll();
     var string=VG.Utils.decompressFromBase64( data );
 
     var obj=JSON.parse( string );
@@ -204,8 +217,10 @@ VG.Nodes.Graph.prototype.clear=function( id )
 {
     /**Clears the graph.
      */
-    this.nodes.clear();
 
+    if ( this.previewNode )
+        this.previewNode.disconnectAll();
+    this.nodes.clear();
     this.idCounter=0;
     this.runCounter=-1;    
 };
@@ -238,7 +253,7 @@ VG.Nodes.Graph.prototype.run=function( terminal, image, sizeVector )
     {
         rc=terminal.onCall();
     } else        
-    if ( terminal.type === VG.Nodes.Terminal.Type.Sample2D ) 
+    if ( terminal.type === VG.Nodes.Terminal.Type.Sample ) 
     {
         var vector=new VG.Math.Vector2();
 		var callbreak = false;
@@ -277,7 +292,7 @@ VG.Nodes.Graph.prototype.run=function( terminal, image, sizeVector )
 						callbreak = true;
 						break;
 					}
-                    image.setPixel( w + wOffset, h + hOffset, rc.r, rc.g, rc.b, rc.a );                    
+                    image.setPixel( w + wOffset, h + hOffset, rc.x, rc.y, rc.z, rc.w );                    
                 }
 				if (callbreak)
 					break;
@@ -289,14 +304,15 @@ VG.Nodes.Graph.prototype.run=function( terminal, image, sizeVector )
             {
                 for( var w=0; w < image.width; ++w )
                 {
-                    vector.set( w, h );
+                    vector.set( w/image.width, h/image.height );
                     rc=terminal.onCall( vector );
 					if (!rc)
 					{
 						callbreak = true;
 						break;
 					}
-                    image.setPixel( w, h, rc.r, rc.g, rc.b, rc.a );
+
+                    image.setPixel( w, h, rc.x, rc.y, rc.z, rc.w );
                 }
 				if (callbreak)
 					break;

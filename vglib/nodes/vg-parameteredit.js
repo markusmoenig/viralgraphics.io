@@ -47,7 +47,7 @@ VG.Nodes.ParamContainerEdit=function( container )
 
             if ( param instanceof VG.Nodes.ParamNumber )
             {
-                param.widget=VG.UI.NumberEdit( param.data[param.name], param.min, param.max );
+                param.widget=VG.UI.NumberEdit( param.data[param.name], param.min, param.max, param.precision );
                 param.widget.name=param.name;
 
                 param.widget.changed=function( value, contineous, object ) {
@@ -70,8 +70,9 @@ VG.Nodes.ParamContainerEdit=function( container )
             } else
             if ( param instanceof VG.Nodes.ParamSlider )
             {
-                param.widget=VG.UI.Slider( param.min, param.max, param.step );
-                param.widget.value=param.data[param.name],
+                param.widget=VG.UI.Slider( param.min, param.max, param.step, true, param.precision );
+                param.widget.edit.minimumSize.width=55;
+                param.widget.value=param.data[param.name];
                 param.widget.name=param.name;
 
                 param.widget.changed=function( value, continuous, object ) {
@@ -96,7 +97,7 @@ VG.Nodes.ParamContainerEdit=function( container )
             } else            
             if ( param instanceof VG.Nodes.ParamBoolean )
             {
-                param.widget=VG.UI.Checkbox( param.data[param.name] );
+                param.widget=VG.UI.CheckBox( param.data[param.name] );
                 param.widget.name=param.name;
 
                 param.widget.changed=function( value, object ) {
@@ -179,6 +180,9 @@ VG.Nodes.ParamContainerEdit=function( container )
             {
                 param.widget=VG.UI.Vector3Edit( param.data[param.name].x, param.data[param.name].y, param.data[param.name].z, param.min, param.max );
                 param.widget.name=param.name;
+                param.widget.fixedPrecision=3;
+                param.widget.enableXYZMode();
+                param.widget.minimumSize.height=30;
 
                 param.widget.changed=function( value, contineous, object ) {
                     var param=this.container.getParam( object.name );
@@ -328,9 +332,9 @@ VG.UI.ImageSelector=function( name )
     //this.button.big=false;
 
     this.button.clicked=function() {
-        var fileDialog=VG.OpenFileDialog( VG.UI.FileDialog.Image, function( image ) {
+        var fileDialog=VG.OpenFileDialog( VG.UI.FileDialog.Image, function( name, image ) {
 
-            this.label.text=VG.Utils.fileNameFromPath( image.name );
+            this.label.text=VG.Utils.fileNameFromPath( name );
             if ( this.changed ) this.changed( image, this.label.text, this );
 
         }.bind( this ) );

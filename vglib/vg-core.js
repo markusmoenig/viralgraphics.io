@@ -168,6 +168,16 @@ VG.Core.Size.prototype.set=function( width, height )
     }
 };
 
+VG.Core.Size.prototype.copy=function()
+{
+    /** Copies the values from an VG.Core.Size object.
+     *
+     *  @param {Number | VG.Core.Point} size - A VG.Core.Size class
+     */
+
+    this.width=arguments[0].width; this.height=arguments[0].height;
+};
+
 VG.Core.Size.prototype.equals=function( arg )
 {
     /** Returns true if the given VG.Core.Size is equal.
@@ -451,6 +461,10 @@ VG.Core.Rect.prototype.contains=function( arg )
     if ( arg instanceof VG.Core.Rect ) {
         if ( (this.x <= arg.x) && (this.y <= arg.y) && (this.right() >= arg.right() ) && (this.bottom() >= arg.bottom()) )
             return true; else return false;
+    } else if ( arguments.length === 2 )
+    {
+        if ( (this.x <= arguments[0] ) && (this.y <= arguments[1] ) && (this.x + this.width >= arguments[0] ) && (this.y + this.height >= arguments[1] ) )
+            return true; else return false;        
     }
 
     return false;
@@ -480,7 +494,34 @@ VG.Core.Rect.prototype.intersect=function( rect )
 
         return null;
     }
-}
+};
+
+VG.Core.Rect.prototype.union=function( rect, resultRect )
+{
+    /** Returns the resultant rectangle of the union of this and rect. Applies to and returns resultRect if defined.
+     *
+     *  @param {VG.Core.Rect} rect - A VG.Core.Rect class
+     *  @returns {VG.Core.Rect}
+     */
+
+    if( rect instanceof VG.Core.Rect ) {
+
+        var left = Math.min( this.x, rect.x );
+        var top = Math.min( this.y, rect.y );
+
+        var right = Math.max( this.x+this.width, rect.x+rect.width );
+        var bottom = Math.max( this.y+this.height, rect.y+rect.height );
+
+        var width = right - left;
+        var height= bottom - top;
+
+        if ( resultRect ) { 
+            resultRect.set( left, top, width, height ); 
+            return resultRect;
+        }
+        else return VG.Core.Rect(left, top, width, height)
+    }
+};
 
 VG.Core.Rect.prototype.toString=function()
 {
@@ -488,6 +529,16 @@ VG.Core.Rect.prototype.toString=function()
      *  @returns {String}
      */    
     return "VG.Core.Rect( " + this.x + ", " + this.y + ", " + this.width + ", " + this.height + " );";
+};
+
+VG.Core.Rect.prototype.isValid=function()
+{
+    /** Returns true if the rectangle is valid, i.e. both width and height are bigger than 0, otherwise returns false.
+     *  @returns {String}
+     */    
+    
+    if ( this.width > 0 && this.height > 0 ) return true;
+    else return false;
 };
 
 // --------------------------------------------- VG.Core.Margin
@@ -655,15 +706,15 @@ VG.Core.Color.prototype.copy=function(color)
     this.a = color.a;
 }
 
-VG.Core.Color.prototype.set=function(color)
+VG.Core.Color.prototype.set=function( r, g, b, a )
 {
     /** Sets the color values to the values of the given color.
      *  @param {VG.Core.Color} color - The color class to copy the values from.
      */
-    this.r = color.r;
-    this.g = color.g;
-    this.b = color.b;
-    this.a = color.a;
+    this.r = r;
+    this.g = g;
+    this.b = b;
+    if ( a !== undefined ) this.a = a;
 }
 
 VG.Core.Color.prototype.mul=function(d)
@@ -685,7 +736,8 @@ VG.Core.Color.prototype.setRGBA=function( r, g, b, a )
      *  @param {number} b - The blue color value between 0.255
      *  @param {number} a - The alpha value between 0.255
      */    
-    this.r=r/255.0; this.g=g/255.0; this.b=b/255.0; this.a=a/255.0;
+    this.r=r/255.0; this.g=g/255.0; this.b=b/255.0; 
+    if ( a !== undefined ) this.a=a/255.0;
 };
 
 VG.Core.Color.prototype.setValue=function( r, g, b, a )
@@ -698,7 +750,7 @@ VG.Core.Color.prototype.setValue=function( r, g, b, a )
      */    
     this.r=r; this.g=g; this.b=b; this.a=a;
 };
-/*
+
 VG.Core.Color.prototype.setValueArray=function(value)
 {
 	if (0 < value.length)
@@ -710,7 +762,7 @@ VG.Core.Color.prototype.setValueArray=function(value)
 	if (3 < value.length)
 		this.a = value[3];
 }
-*/
+
 VG.Core.Color.prototype.toHSL=function()
 {
     /** Returns an object containing the converted HSL values for this color.
@@ -817,7 +869,7 @@ VG.Core.Color.prototype.toHex=function()
         return hex.length == 1 ? "0" + hex : hex;
     }
 
-    return "#" + componentToHex( this.r * 255.0 ) + componentToHex( this.g * 255.0 ) + componentToHex( this.b * 255.0 );
+    return "#" + componentToHex( Math.round( this.r * 255.0 ) ) + componentToHex( Math.round( this.g * 255.0 ) ) + componentToHex( Math.round( this.b * 255.0 ) );
 }
 
 VG.Core.Color.prototype.setHex=function( hex )
@@ -860,6 +912,9 @@ VG.Core.Timer.prototype.getDelta = function()
 
     return diff;
 }
+
+VG.Core.Color.Black=VG.Core.Color();
+VG.Core.Color.White=VG.Core.Color( 255, 255, 255 );
 
 // --------------------------------------------- VG.Core.Image
 
@@ -1006,6 +1061,32 @@ VG.Core.Image.prototype.powerOfTwo=function (value, pow) {
     return pow;
 };
 
+VG.Core.Image.prototype.resize=function( width, height )
+{
+    /** Copies the values of the given image using a new data array.
+     * @param {VG.Core.Image} image - The image to copy  
+     */
+
+    if ( !this.isValid() || this.width !== width || this.height !== height ) {
+        this.width=width; this.height=height;
+        this.alloc();
+    }
+    this.needsUpdate=true;
+};
+
+VG.Core.Image.prototype.clear=function()
+{
+    /** Clears the image data with 0 values.
+     */
+
+    if ( this.data.fill ) this.data.fill( 0 );
+    else
+    {
+        for ( var i=0; i < this.data.length; ++i )
+            this.data[i]=0;
+    }
+};
+
 VG.Core.Image.prototype.set=function( image )
 {
     /** Copies the values of the given image using a new data array.
@@ -1055,13 +1136,13 @@ VG.Core.Image.prototype.isValid=function()
      * Returns {bool}
      */
 
-    if ( this.width && this.height && this.data ) return true;
+    if ( this.width && this.height && this.data && !this.locked ) return true;
     else return false;
 };
 
-VG.Core.Image.prototype.clear=function()
+VG.Core.Image.prototype.invalidate=function()
 {
-    /** Clears the image by setting the data and dimensions of the image to 0.
+    /** Invalidates the image by setting the data and dimensions of the image to 0.
      */    
     this.data=null;
     this.width=0; this.height=0;

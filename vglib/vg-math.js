@@ -1775,7 +1775,18 @@ VG.Math.Aabb.prototype.transform=function(m)
     return this;
 }
 
+VG.Math.Aabb.prototype.sample=function( svec )
+{
+    var svec=new VG.Math.Vector3();
 
+    svec.x=this.min.x + (this.max.x - this.min.x) * Math.random();
+    svec.y=this.min.y + (this.max.y - this.min.y) * Math.random();
+    svec.z=this.min.z + (this.max.z - this.min.z) * Math.random();
+
+    //VG.log( this.min.x, this.min.y, this.min.z, this.max.x, this.max.y, this.max.z );
+
+    return svec;
+};
 
 VG.Math.Quat=function()
 {

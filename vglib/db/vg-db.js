@@ -136,6 +136,32 @@ VG.DB.userIsAppAdmin=function( appId, userId, callback )
     }, "GET" );	
 };
 
+VG.DB.sendEMailToAppAdmins=function( appId, name, email, subject, message, callback )
+{
+    /**Sends an eMail to the admins of the application with the given appId.
+     * @param {string} appId - The application id of the app. The eMail will be send to the admins of that app.
+     * @param {string} name - The name of the sender of the eMail.
+     * @param {string} email - The email of the sender of the eMail.
+     * @param {string} subject - The subject of the message.
+     * @param {string} message - The message to send.
+     * @param {function} callback - The callback to be called , either a true or false value is passed to the
+     * function as its first argument depending on the success of the eMail sending.
+     */
+
+    var parameters={subject : subject, message : message, email : email, name : name };
+
+    VG.sendBackendRequest( "/app/email/" + appId, JSON.stringify( parameters ), function( responseText ) {
+        var response=JSON.parse( responseText );
+
+        if ( callback ) {
+            if ( response.status === "ok" ) callback( true );
+            else callback( false );
+        }
+    
+    }, "POST" );
+};
+
+
 VG.DB.getAppChatMessages=function( appId, callback, since )
 {
     /**Retrieves all chat messages for the given Application, optionally since a given timestamp.

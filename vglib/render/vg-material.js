@@ -669,3 +669,445 @@ VG.Render.MtlMaterial.prototype.bind = function(context){
 };
 
 
+
+
+
+
+// Normal Material for Phong Shading Model
+VG.Render.NormalMaterial = function( data )
+{
+	/** Normal Material for Phong Shading Model
+	* @constructor
+	* @param {VG.Render.NormalMaterial.MaterialInfo} defMat - default material
+	* @param {Array[VG.Render.NormalMaterial.MaterialInfo]} subMats - sub materials
+	*/
+	VG.Render.Material.call(this);
+	// initialize
+	this.onCreate();
+	
+	this.data=data;
+}
+
+VG.Render.NormalMaterial.prototype = Object.create(VG.Render.Material.prototype);
+
+VG.Render.NormalMaterial.prototype.onCreate = function()
+{
+    /** Identifies normal material in native layer.
+     * @member {bool}
+     */
+    this.identifyNormalMaterial = true;
+
+	/** default material to apply when any facet's sub-material is not set.
+	* @member {VG.Render.NormalMaterial.MaterialInfo} defaultMaterial
+	*/
+	this.defaultMaterial = null;
+
+	/** sub materials to apply for every facet.
+	* @member {Array[VG.Render.NormalMaterial.MaterialInfo]}
+	*/
+	this.subMaterials = [];
+
+	/** Maximum light count : constant
+	* @member {int} MaxLightN - constant
+	*/
+	this.MaxLightN = 32;
+
+	// Shader
+    var vSrc = [
+        '#version 100',
+
+		// vertex attributes
+        'attribute vec4 position;',
+        'attribute vec3 normal;',
+
+		// transform
+        'uniform mat4 mvM;',
+        'uniform mat4 projM;',
+		
+		// to fragment
+        'varying vec3 vP;',
+        'varying vec3 vN;',
+		
+		// function
+        'void main() {',
+        '	vN = (mvM * vec4(normal, 0.0)).xyz;',
+        '	vec4 pos = mvM * position;',
+        '	vP = pos.xyz;',
+		'	gl_Position = projM * pos;',
+        '}',
+    ].join("\n");
+
+    var fSrc = [
+        '#version 100',
+        'precision highp float;',
+
+		// material
+		'struct Material {',
+		'	vec4 color;',
+
+		'	bool emissive;',
+		'	vec4 emissiveColor;',
+
+		'	float glossy;',		
+
+		'	vec4 ambientColor;',
+		'	vec4 diffuseColor;',
+		'	vec4 specularColor;',
+		'	float specularShininess;',
+		'};',
+		'uniform Material material;',
+
+		// lights
+		'#define NLIGHT ' + this.MaxLightN,
+
+		'struct Light {',
+		'	vec4 position;', // in ecs : (position of, or direction to) light
+		'	vec4 emissiveColor;',
+
+		'	vec4 ambientColor;',
+		'	vec4 diffuseColor;',
+		'	vec4 specularColor;',
+
+		'	vec3 spotDirection;', // in ecs		
+		'	float spotExponent;',
+		'	float spotCutOff;', // cos(cutOff)
+		'	float attenuation0;',
+		'	float attenuation1;',
+		'	float attenuation2;',
+		'};',
+		'uniform Light light[NLIGHT];', // multiple lights
+		'uniform int nLight;', // current light count (<= NLIGHT)
+		'uniform bool localViewer;', // view direction GL_LIGHT_MODEL_LOCAL_VIEWER, i.e, (0, 0, 1)
+		'uniform float globalAmbient;', // global ambient light
+
+		// from vertex shader
+        'varying vec3 vP;',
+        'varying vec3 vN;',
+
+		// function
+        'void main() {',
+
+        '   if ( material.emissive ) {',
+        '      gl_FragColor = vec4( material.emissiveColor.rgb, 1);',
+        '      return;',
+        '   }',
+
+		// accumulated color of all contributions.
+        '   vec4 sigma = material.color;', // start with the material emission.
+
+		// global ambient
+        //'   sigma += globalAmbient * material.ambientColor;',
+        '   sigma *= globalAmbient;',
+		// contributions from light sources
+        '   for (int i = 0; i < NLIGHT; i++) {',
+        '		if (nLight <= i)',
+        '			break;',
+
+        '		Light iLight = light[i];',
+
+		'		float atten = 1.0;', // attenuation factor
+        '		float spot = 1.0;', // spotlight effect
+
+		'		if (iLight.position.w != 0.0) {', // only when point-light
+        //'			if (iLight.attenuation1 != 0.0 || iLight.attenuation2 != 0.0) {',
+						// attenuation factor
+        //'				float d = distance(iLight.position.xyz, vP);',
+        //'				float _atten = iLight.attenuation0 + iLight.attenuation1 * d + iLight.attenuation2 * d * d;',
+        //'				if (_atten > 0.0)',
+        //'					atten = 1.0 / _atten;',
+        //'			}',
+        
+		'			if (iLight.spotCutOff > 0.0) {',
+						// spotlight effect
+        '				vec3 v = normalize(vP - iLight.position.xyz);',
+        '				vec3 d = normalize(iLight.spotDirection);',
+        '				float _spot = max(0.0, dot(v, d));',
+        '				if (_spot < iLight.spotCutOff)',
+							// outside of spot-cone.
+        '					spot = 0.0;',
+							// inside of spot-cone
+        '				else if (iLight.spotExponent != 0.0)',
+        '					spot = pow(_spot, iLight.spotExponent);',
+        '				else',
+        '					spot = _spot;',
+        '			}',
+        '		}',
+				// ads = ambient + diffuse + specular
+        '		vec4 ads = sigma;',//iLight.ambientColor * material.ambientColor;',
+        '		vec3 nL = normalize(iLight.position.w==0.0 ? iLight.position.xyz : (iLight.position.xyz - vP));',
+        '		vec3 nN = normalize(vN);',
+        '		float fln = dot(nL, nN);',
+        '		if (0.0 < fln) {',
+					// diffuse
+//        '			ads += (fln * iLight.diffuseColor * material.diffuseColor);',
+        '			sigma += sigma * fln * 5.0;',//(fln * iLight.diffuseColor * material.diffuseColor);',
+					// specular
+        '			vec3 nR = 2.0*fln*nN - nL;', // reflection of incident light
+        '			vec3 nV = localViewer ? vec3(0.0, 0.0, 1.0) : normalize(-vP);', // view direction
+        '			float spec = dot(nR, nV);',
+		'			if (0.0 < spec) {',
+        '				if (material.specularShininess != 0.0)',
+        '					spec = pow(spec, material.specularShininess);',
+        '				sigma += sigma * (spec * 0.6);',//(spec * iLight.specularColor * material.specularColor);',
+		'			}',
+		'		}',
+				// all contribution
+//		'		sigma += atten * spot * ads;',
+		'   }',
+        '   gl_FragColor = vec4(sigma.rgb, material.ambientColor.a);',
+        '}'
+    ].join("\n");
+
+    this.shader = new VG.Shader(vSrc, fSrc);
+    this.shader.depthTest = true;
+    this.shader.depthWrite = true;
+
+    this.shader.create();
+}
+
+VG.Render.NormalMaterial.prototype.applyData = function()
+{
+    /** Applies sub material.
+     *  @param {int} subIndex - The sub material(index) for facet, if subIndex < 0, then defaultMaterial.
+     *  */
+
+    var data=this.data;
+    var shader=this.shader;
+
+	shader.setColor("material.color", data.color );
+	shader.setBool("material.emissive", data.emissive );
+
+	if ( data.emissive )
+		shader.setColor("material.emissiveColor", data.emissiveColor );
+
+	shader.setFloat("material.glossy", data.glossy );
+	shader.setFloat("material.specularShininess", data.shininess );
+
+	/*
+	shader.setColor("material.emissionColor", data.emissionColor);
+	shader.setColor("material.ambientColor", data.ambientColor);
+	shader.setColor("material.diffuseColor", data.diffuseColor);
+	shader.setColor("material.specularColor", data.specularColor);
+	shader.setFloat("material.specularShininess", data.specularShininess);*/
+}
+
+VG.Render.NormalMaterial.prototype.applyLights = function( lights, viewM, emissiveObjects )
+{
+    /** Applies global lights.
+     *  @param {Array[VG.Render.Light]} lights
+	 *  @param {VG.Math.Matrix4} viewM - view matrix
+     *  */
+	var shader = this.shader;
+	var applyN = 0;
+
+
+	var ambient=0.18;// / Math.PI;
+	shader.setFloat('globalAmbient', ambient );
+
+	if (lights.length < 1) {
+		shader.setInt('nLight', applyN);
+		return;
+	}
+
+	var mvM = new VG.Math.Matrix4();
+	var lightPosition = [0, 0, 0, 0];
+	var spotDirection = [0, 0, 0];
+
+	for (var i = 0; i < emissiveObjects.length; i++)
+	{
+		var object = emissiveObjects[i];
+
+		var iLight = 'light' + '[' + applyN + '].';
+
+		lightPosition[0]=object.position.x;
+		lightPosition[1]=object.position.y;
+		lightPosition[2]=object.position.z;
+		lightPosition[3]=1;
+
+		lightPosition[1]=9;
+
+		mvM.set(viewM);
+		mvM.multiply(object.getTransform());
+
+		//lightPosition[1]-=8;
+		//lightPosition[2]-=4;
+		//lightPosition[2]=object.position.z;
+
+		mvM.transformVectorArray(lightPosition);
+
+		shader.setFloat(iLight + 'position', lightPosition);
+
+		shader.setColor(iLight + 'emissiveColor', object.material.data.emissiveColor);
+
+/*
+			shader.setColor(iLight + 'ambientColor', light.ambientColor);
+			shader.setColor(iLight + 'diffuseColor', light.diffuseColor);
+			shader.setColor(iLight + 'specularColor', light.specularColor);
+
+			mvM.set(viewM);
+			mvM.multiply(light.getTransform());
+
+			light.lightPosition.getArray(lightPosition);
+			mvM.transformVectorArray(lightPosition);
+			shader.setFloat(iLight + 'position', lightPosition);
+
+			light.spotDirection.getArray(spotDirection);
+			mvM.transformVectorArray(spotDirection, true);
+			shader.setFloat(iLight + 'spotDirection', spotDirection);
+
+			shader.setFloat(iLight + 'spotExponent', light.spotExponent);
+			shader.setFloat(iLight + 'spotCutOff', light.spotCutOff);
+			shader.setFloat(iLight + 'attenuation0', light.attenuation0);
+			shader.setFloat(iLight + 'attenuation1', light.attenuation1);
+			shader.setFloat(iLight + 'attenuation2', light.attenuation2);
+*/
+		applyN++;
+	}
+/*
+	for (var i = 0; i < lights.length; i++)
+	{
+		var light = lights[i];
+		if (1)//light.identifyAmbientLight)
+		{
+			shader.setColor('globalAmbient', VG.Core.NormalizedColor( 0.18, 0.18, 0.18) );//light.color);
+		}
+		else if (light.identifyNormalLight && applyN < this.MaxLightN)
+		{
+			var iLight = 'light' + '[' + applyN + '].';
+
+			shader.setColor(iLight + 'ambientColor', light.ambientColor);
+			shader.setColor(iLight + 'diffuseColor', light.diffuseColor);
+			shader.setColor(iLight + 'specularColor', light.specularColor);
+
+			mvM.set(viewM);
+			mvM.multiply(light.getTransform());
+
+			light.lightPosition.getArray(lightPosition);
+			mvM.transformVectorArray(lightPosition);
+			shader.setFloat(iLight + 'position', lightPosition);
+
+			light.spotDirection.getArray(spotDirection);
+			mvM.transformVectorArray(spotDirection, true);
+			shader.setFloat(iLight + 'spotDirection', spotDirection);
+
+			shader.setFloat(iLight + 'spotExponent', light.spotExponent);
+			shader.setFloat(iLight + 'spotCutOff', light.spotCutOff);
+			shader.setFloat(iLight + 'attenuation0', light.attenuation0);
+			shader.setFloat(iLight + 'attenuation1', light.attenuation1);
+			shader.setFloat(iLight + 'attenuation2', light.attenuation2);
+
+			applyN++;
+		}
+	}
+*/
+
+	shader.setInt('nLight', applyN);
+}
+
+VG.Render.NormalMaterial.prototype.makeLampMaterial = function(lampColor)
+{
+    /** make the material as lamp.
+     *  @param {VG.Core.Color} lampColor - The lamp color
+     *  */
+	var material = this.defaultMaterial;
+
+	material.emissionColor.set(lampColor);
+	material.ambientColor.set(lampColor);
+	material.diffuseColor.setValue(0, 0, 0, 1);
+	material.specularColor.setValue(0, 0, 0, 1);
+	material.specularShininess = 0;
+
+	this.subMaterials = [];
+}
+
+VG.Render.NormalMaterial.MaterialInfo = function(parm)
+{
+	/** Material Parameters for Normal Material
+	* @constructor
+	* param {Object} parm : {default:[r,g,b,a], diffuse:[r,g,b,a], specular:[r,g,b,a], factor:shininess, ambient:[r,g,b,a], emission:[r,g,b,a]} <br />
+	* default is ambient and specular.
+	* color-array is size-dynamic.
+	*/
+	this.onCreate();
+
+	if (!parm)
+		return;
+/*
+	if (parm.default)
+	{
+		this.diffuseColor.setValueArray(parm.default);
+		this.specularColor.setValueArray(parm.default);
+	}
+
+	if (parm.factor !== undefined)
+		this.specularShininess = parm.factor;
+
+	if (parm.diffuse)
+		this.diffuseColor.setValueArray(parm.diffuse);
+	if (parm.specular)
+		this.specularColor.setValueArray(parm.specular);
+	if (parm.ambient)
+		this.ambientColor.setValueArray(parm.ambient);
+	if (parm.emission)
+		this.emissionColor.setValueArray(parm.emission);*/
+};
+
+VG.Render.NormalMaterial.MaterialInfo.prototype.onCreate = function()
+{
+	/** Emission Color
+	* @member {VG.Core.Color}
+	*/
+	this.emissionColor = VG.Core.NormalizedColor(0.0, 0.0, 0.0);
+
+	/** Ambient Color
+	* @member {VG.Core.Color}
+	*/
+	this.ambientColor = VG.Core.NormalizedColor(0.2, 0.2, 0.2);
+
+	/** Diffuse Color
+	* @member {VG.Core.Color}
+	*/
+	this.diffuseColor = VG.Core.NormalizedColor(0.8, 0.8, 0.8);
+
+	/** Specular Color
+	* @member {VG.Core.Color}
+	*/
+	this.specularColor = VG.Core.NormalizedColor(0.0, 0.0, 0.0);
+
+	/** Specular Shininess
+	* @member {Number}
+	*/
+	this.specularShininess = 0.0;
+}
+
+VG.Render.MaterialData=function()
+{
+	this.color=VG.Core.Color();
+	this.emissiveColor=VG.Core.Color( 255, 255, 255 );
+
+	this.emissive=false;
+	this.glossy=0;
+};
+
+VG.Render.MaterialData.prototype.toTracerMaterial=function()
+{
+	var tracerM={};
+
+	tracerM.color=new VG.Math.Vector4( this.color.r,  this.color.g,  this.color.b,  this.color.a );
+	tracerM.emissive=this.emissive;
+
+	if ( this.emissive ) {
+		tracerM.emissiveColor=new VG.Math.Vector3( this.emissiveColor.r,  this.emissiveColor.g,  this.emissiveColor.b );
+	} else tracerM.emissiveColor=new VG.Math.Vector3( 0, 0, 0, 0 );
+
+	tracerM.shininess=this.shininess;
+	tracerM.glossy=this.glossy;
+	tracerM.mirror=this.mirror;
+
+	if ( tracerM.glossy ) {
+		tracerM.specularColor=new VG.Math.Vector3( 0.99-tracerM.color.x,  0.99-tracerM.color.y,  0.99-tracerM.color.z );
+		//tracerM.specularColor=new VG.Math.Vector3( 0, 0, 0 );
+	}
+
+	return tracerM;
+};

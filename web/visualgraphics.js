@@ -64,32 +64,63 @@ function main()
     // ---- Plug into browser cut / copy paste
 
     window.addEventListener('cut', function ( event ) {
-        VG.context.workspace.modelCutCallback.call( VG.context.workspace );
-        if ( event.clipboardData )
+        VG.context.workspace.modelCutCallback.call( VG.context.workspace, true );
+        if ( event.clipboardData ) 
             event.clipboardData.setData('text/plain',  VG.context.workspace.textClipboard );            
         event.preventDefault();
     });
 
     window.addEventListener('copy', function ( event ) {
-        VG.context.workspace.modelCopyCallback.call( VG.context.workspace );
+        VG.context.workspace.modelCopyCallback.call( VG.context.workspace, true );
         if ( event.clipboardData )
-            event.clipboardData.setData('text/plain',  VG.context.workspace.textClipboard );        
+            event.clipboardData.setData('text/plain',  VG.context.workspace.textClipboard );
         event.preventDefault();
     });
 
     window.addEventListener('paste', function ( event ) {
 
+        var pasteData;
         if ( event.clipboardData ) {
-            //console.log('paste event', event.clipboardData.getData( 'text/plain' ) );
+
             var pasteData=event.clipboardData.getData( 'text/plain' );
             if ( pasteData ) {
                 VG.copyToClipboard( "Text", pasteData );
             }
         }
 
-        VG.context.workspace.modelPasteCallback.call( VG.context.workspace );
+        if ( !pasteData )
+        {
+            var items = (event.clipboardData  || event.originalEvent.clipboardData).items;
+            
+            // find pasted image among pasted items            
+            var blob = null;
+            for (var i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf("image") === 0) {
+                    blob = items[i].getAsFile();
+                }
+            }
+
+            // load image if there is a pasted image
+            if (blob !== null) {
+                var reader = new FileReader();
+                reader.onload = function(event) {
+                    pasteData=event.target.result;
+                    VG.decompressImageData( pasteData, VG.Core.Image(), function( image ) {
+                        VG.copyToClipboard( "Image", image );
+                        VG.context.workspace.modelPasteCallback.call( VG.context.workspace, true );
+                    } );
+                };
+                reader.readAsDataURL(blob);
+            }
+        }
+
+        VG.context.workspace.modelPasteCallback.call( VG.context.workspace, true );
         event.preventDefault();
     });  
+
+    window.addEventListener('focus', function ( event ) {
+        VG.context.workspace.appReceivedFocus();
+    });
 
     // --- Touch Events
 
@@ -131,9 +162,6 @@ function main()
 
     // ---
 
-    VG.context.workspace=VG.UI.Workspace();
-    VG.resizeCanvas();
-
     canvas.onmousedown = mouseDownRelay;
     document.onmouseup = mouseUpRelay;
     document.onmousemove = mouseMoveRelay;  
@@ -146,6 +174,94 @@ function main()
 
     document.onwheel = wheelRelay;
 
+    // --- Add the images of the project to the image pool
+    for (var imageName in VG.App.images )  {
+        var image=new VG.Core.Image();
+        image.name=imageName;
+
+        VG.decompressImageData( VG.App.images[imageName], image );
+        VG.context.imagePool.addImage( image );
+    }    
+
+    // --- Eval the sources of the App stored in the VG.App Namespace
+    for (var sourceName in VG.App.sources )  {
+
+        var decodedSource=VG.Utils.decompressFromBase64( VG.App.sources[sourceName] );
+
+        try {
+            eval( decodedSource );
+        } catch ( e ) {
+            success=false;
+            console.log( e.message );
+        }        
+    }
+
+    // --- Add the SVGs of the project to the pool
+    for (var svgName in VG.App.svg )  {
+        var decodedSVG=VG.Utils.decompressFromBase64( VG.App.svg[svgName] );
+
+        var svg=VG.Core.SVG( svgName, decodedSVG );
+    }  
+
+    // --- Load the Fonts of the project
+    for (var fontName in VG.App.fonts )  
+    {
+        var decodedFont=VG.Utils.decompressFromBase64( VG.App.fonts[fontName] );
+
+        try {
+            eval( decodedFont );
+        } catch ( e ) {
+            success=false;
+            console.log( e.message );
+        }        
+    }   
+
+    VG.fontManager.addFonts();  
+    
+    // --- Activate the right Skin
+
+    if ( VG.App.defaultSkin ) {
+        var defaultSkin=VG.Utils.decompressFromBase64( VG.App.defaultSkin );
+        if ( defaultSkin && defaultSkin.length ) {
+            for ( var i=0; i < VG.UI.stylePool.current.skins.length; ++i ) {
+                var skin=VG.UI.stylePool.current.skins[i];
+                if ( skin.name === defaultSkin ) {
+                    VG.UI.stylePool.current.skin=skin;
+                    break;
+                }
+            }
+        }
+    }
+
+    // --- Splash Screen 
+
+    if ( VG.App.splashScreen && VG.App.showSplashScreen )
+    {
+        var splashScreen=VG.Utils.decompressFromBase64( VG.App.splashScreen );
+        eval( splashScreen );
+
+        if ( VG.drawSplashScreen ) 
+        {
+            VG.context.workspace.canvas.setAlpha( 0 );
+            VG.splashStartTime=new Date().getTime();
+        }
+    } else
+    {
+        VG.splashScreenFunc=null; 
+        //VG.splashScreenFuncFadeIn=null;
+
+        VG.resizeCanvas( true );      
+
+        var rt=VG.Renderer().mainRT;
+        rt.setViewport( VG.context.workspace.rect );  
+
+        VG.context.workspace.canvas.setAlpha( 1 );
+        VG.context.workspace.canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.context.workspace.rect, VG.Core.Color( 255, 255, 255 ) );
+        VG.context.workspace.canvas.setAlpha( 0 );
+    }
+
+    VG.resizeCanvas();    
+
     // ---
 
     var arg=[];
@@ -157,7 +273,7 @@ function main()
 
     tick();
 
-    VG.context.workspace.needsRedraw=true;    
+    VG.context.workspace.needsRedraw=true;
 }
 
 window.addEventListener( 'resize', VG.resizeCanvas );
@@ -198,11 +314,11 @@ function mouseDoubleClickRelay() {
 }
 
 function contextMenuRelay( event ) {
-    VG.context.workspace.showContextMenu();    
+    VG.context.workspace.showContextMenu();
     event.preventDefault();
 }
 
-function wheelRelay( event ) {
+function wheelRelay( e ) {
 
     var e = window.event || e;
     var step = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
@@ -249,4 +365,121 @@ function isRightMouseButton( event )
         isRightMB=event.button==2; 
 
     return isRightMB;
+}
+
+// ----------------------------------------------------------------- Splash Screen Handler
+
+VG.splashScreenFunc=function() 
+{
+    var rt=VG.Renderer().mainRT;
+    rt.clear( true, true );
+    rt.setViewport( VG.context.workspace.rect );
+
+    var ready=true;
+    var currentTime = new Date().getTime();
+
+    // --- Check if all images are loaded
+    for ( var i=0; i < VG.context.imagePool.images.length; ++i )
+    {
+        if ( VG.context.imagePool.images[i].locked === true )
+        { ready=false; break; }
+    }
+
+    var splashFinished=false;
+
+    // --- White Background
+
+    var alpha=VG.context.workspace.canvas.alpha;
+
+    VG.context.workspace.canvas.setAlpha( 1.0 );            
+    VG.context.workspace.canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.context.workspace.rect, VG.Core.Color( 255, 255, 255 ) );
+    VG.context.workspace.canvas.setAlpha( alpha );
+
+    // --- Draw SplashScreen Code
+
+    VG.context.workspace.canvas.setAlpha( 1.0 - alpha );
+
+    if ( VG.drawSplashScreen )
+        splashFinished=VG.drawSplashScreen( VG.context.workspace.rect, VG.context.workspace.canvas, currentTime - VG.splashStartTime );
+
+    VG.context.workspace.canvas.setAlpha( alpha );
+
+    // --- When Finished Fade to White and than pass over to 
+
+    if ( splashFinished && ready )
+    {
+        if ( VG.context.workspace.canvas.alpha < 1.0 ) 
+        {
+            VG.context.workspace.canvas.setAlpha( VG.context.workspace.canvas.alpha + 0.05 );
+        } else
+        {
+            if ( !VG.App.webMaximize && VG.getHostProperty( VG.HostProperty.Platform ) === VG.HostProperty.PlatformWeb )
+            {
+                var canvas=document.getElementById( 'webgl' );
+                var body=document.body;
+
+                var w=VG.Utils.decompressFromBase64( VG.App.webCustomWidth );
+                var h=VG.Utils.decompressFromBase64( VG.App.webCustomHeight );
+
+                if ( w > 0 ) {
+                    var width=w + "px";
+                    canvas.style.width=width;
+                }
+
+                if ( h > 0 ) {
+                    var height=h + "px";
+                    body.style.height=height;
+                    canvas.style.height=height;                
+                }            
+
+                var borderColor=VG.Utils.decompressFromBase64( VG.App.webBorderColor );
+
+                body.style["background-color"]=borderColor;
+                canvas.style.margin="0 auto";
+                canvas.style.display="block";    
+
+                VG.resizeCanvas( true );      
+
+                var rt=VG.Renderer().mainRT;
+                rt.setViewport( VG.context.workspace.rect );                          
+            }
+            
+            VG.context.workspace.canvas.setAlpha( 1 );
+            VG.context.workspace.canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.context.workspace.rect, VG.Core.Color( 255, 255, 255 ) );
+            VG.context.workspace.canvas.setAlpha( 0 );
+
+            VG.splashScreenFunc=null;
+        }
+    }
+    VG.context.workspace.canvas.flush();        
+}
+
+VG.splashScreenFuncFadeIn=function() 
+{
+    var alpha=0;
+
+    if ( VG.splashScreenFuncFadeInCounter === undefined ) VG.splashScreenFuncFadeInCounter=Date.now();
+    else alpha=( Date.now() - VG.splashScreenFuncFadeInCounter ) / 1000;
+
+    if ( alpha < 1.0 ) 
+    {
+        VG.context.workspace.canvas.setAlpha( alpha );
+        VG.context.workspace.paintWidget();
+
+        VG.context.workspace.canvas.setAlpha( 1.0 - alpha );
+        VG.context.workspace.canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.context.workspace.rect, VG.Core.Color( 255, 255, 255 ) );
+    } else
+    {
+        VG.context.workspace.canvas.setAlpha( 1.0 );
+        VG.context.workspace.paintWidget();
+        VG.splashScreenFuncFadeIn=null;
+
+        // --- Border Color
+
+        if ( VG.App.webBorderColor ) {
+            var borderColor=VG.Utils.decompressFromBase64( VG.App.webBorderColor );
+            document.body.style.backgroundColor=borderColor;
+        }
+    }
+    VG.context.workspace.canvas.flush();        
 }

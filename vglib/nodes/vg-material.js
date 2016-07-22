@@ -20,6 +20,169 @@
 
 // --- This is the internal data structore of the Mtl Material Node
 
+VG.Nodes.NodeMaterialData=function()
+{
+    // --- This is the internal structure used by the Node for its UI operations (Parameters, including Undo / Redo, Load / Save. Etc.)
+
+    this.type=0;
+    this.kD=VG.Core.Color( 128, 128, 128, 255 );
+    this.kS=VG.Core.Color( 255, 255, 255, 255 );
+    this.kE=VG.Core.Color( 255, 255, 255, 255 );
+
+    this.specular=10;
+    this.refractionIndex=1.75;
+
+/*
+    this.ambientColor=VG.Core.Color( 128, 128, 128, 255 );
+    this.diffuseColor=VG.Core.Color( 128, 128, 128, 255 );
+    this.specularColor=VG.Core.Color( 255, 255, 255, 255 );
+    this.illum=1;
+    this.specular=100;
+    this.dissolve=1;
+    this.density=1;*/
+};
+
+// ----------------------------------------------------------------- VG.Nodes.NodeMaterial --- Material
+
+VG.Nodes.NodeMaterial=function()
+{   
+    if ( !(this instanceof VG.Nodes.NodeMaterial ) ) return new VG.Nodes.NodeMaterial();
+
+    VG.Nodes.Node.call( this );
+
+    this.name="Mtl Material";
+    this.className="NodeMaterial";
+
+    // --- Our internal structure holding the
+    this.material=new VG.Nodes.NodeMaterialData();
+    this.mtlMaterial={ name : this.name };
+
+    // --- Output Terminal
+
+    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Material, "out", function( tracerMaterial ) {
+
+        var type=this.container.getParamValue( "type" ) 
+        tracerMaterial.setType( type );
+
+        var kD=this.container.getParamValue( "color" );
+        var kS=this.container.getParamValue( "specularColor" );
+        var kE=this.container.getParamValue( "emissiveColor" );
+
+        tracerMaterial.setColor( kD.r, kD.g, kD.b );
+
+        tracerMaterial.setSpecularExp( this.container.getParamValue( "specular" ) );
+        tracerMaterial.setSpecularColor( kS.r, kS.g, kS.b );
+
+        tracerMaterial.setIOR( this.container.getParamValue( "refractionIndex" ) );
+
+        if ( type === 4 )
+            tracerMaterial.setEmissiveSColor( kE.r, kE.g, kE.b );
+
+        // ---
+
+        return this.tracerMaterial;
+
+    }.bind( this ) ) );
+
+    // --- MTL Output Terminal
+
+    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Material, "mtl", function( vector ) {
+
+        var type=this.container.getParamValue( "type" );
+
+        switch ( type )
+        {
+            case 0: // DIFF
+                this.mtlMaterial.illum=1; 
+
+                this.colorToArray( this.mtlMaterial, "Ka", this.container.getParamValue( "color" ) );
+            break;
+
+            case 1: // GLOSSY
+                this.mtlMaterial.illum=2; 
+                this.colorToArray( this.mtlMaterial, "Ks", this.container.getParamValue( "specularColor" ) );
+                this.colorToArray( this.mtlMaterial, "Ka", this.container.getParamValue( "color" ) );
+                this.mtlMaterial.Ns=this.container.getParamValue( "specular" ); 
+            break;
+
+            case 2: // MIRROR
+                this.mtlMaterial.illum=3; 
+                this.colorToArray( this.mtlMaterial, "Ka", { r : 0, g : 0, b : 0 } );                
+                this.colorToArray( this.mtlMaterial, "Ks", { r : 1, g : 1, b : 1 } );
+            break;
+
+            case 3: // DIELECTRIC
+                this.mtlMaterial.illum=7; 
+                this.colorToArray( this.mtlMaterial, "Ka", { r : 0, g : 0, b : 0 } );                 
+                this.colorToArray( this.mtlMaterial, "Ks", { r : 1, g : 1, b : 1 } );
+                this.mtlMaterial.Ni=this.container.getParamValue( "refractionIndex" );
+            break;
+
+            case 4: // LIGHT
+                this.mtlMaterial.illum=0;
+                this.colorToArray( this.mtlMaterial, "Ks", this.container.getParamValue( "color" ) );
+                this.colorToArray( this.mtlMaterial, "Ka", this.container.getParamValue( "color" ) );
+            break;
+        }
+
+
+        this.colorToArray( this.mtlMaterial, "Kd", this.container.getParamValue( "color" ) );
+
+        return this.mtlMaterial;
+
+    }.bind( this ) ) );
+};
+
+VG.Nodes.NodeMaterial.prototype=VG.Nodes.Node();
+
+VG.Nodes.NodeMaterial.prototype.createProperties=function( data )
+{
+    this.container=VG.Nodes.ParamContainer( this );
+    var group=this.container.addGroupByName( "basics", "Basics" );
+
+    //group.addParam( VG.Nodes.ParamNumber( data, "illum", "Illum", this.material.illum, 0, 10 ) );
+    group.addParam( VG.Nodes.ParamList( data, "type", "Type", this.material.type, ["Diffuse", "Glossy", "Mirror", "Dielectric / Glass", "Emissive" ],
+    function( value ) {
+
+        //var type=this.container.getParamValue( "type" );
+        //var spec=this.container.getParam( "specularColor" );
+        //spec.disabled=type !== 1;
+
+        /*
+        var spec=this.container.getParam( "specular" );
+        var diss=this.container.getParam( "dissolve" );
+        var dens=this.container.getParam( "density" );
+        if ( spec ) spec.disabled=value < 2 ? true : false;
+        if ( diss ) diss.disabled=value === 4 || value === 6 || value === 7 ? false : true;
+        if ( dens ) dens.disabled=value < 6 ? true : false;*/
+    }.bind( this ) ) );
+
+    group.addParam( VG.Nodes.ParamColor( data, "color", "Color", this.material.kD ) );
+
+    group=this.container.addGroupByName( "specularSettings", "Specular Highlight", true );
+    group.addParam( VG.Nodes.ParamSlider( data, "specular", "Size Exp", this.material.specular, 0, 100, 1 ) );//.disabled=true;
+    spec=group.addParam( VG.Nodes.ParamColor( data, "specularColor", "Color", this.material.kS ) );//.disabled=true;
+
+    group=this.container.addGroupByName( "dielectricSettings", "Dielectric / Glass", true );
+    group.addParam( VG.Nodes.ParamSlider( data, "refractionIndex", "RefractionIndex", this.material.refractionIndex, 0, 10, .1 ) );//.disabled=true;
+
+    group=this.container.addGroupByName( "emissiveSettings", "Emissive", true );
+    group.addParam( VG.Nodes.ParamColor( data, "emissiveColor", "Emissive", this.material.kE ) );//.disabled=true;
+};
+
+VG.Nodes.NodeMaterial.prototype.colorToArray=function( data, arrayName, color )
+{
+    if ( data[arrayName] ) delete data[arrayName];
+
+    data[arrayName]=[ color.r, color.g, color.b ];
+};
+
+// ---
+
+VG.Nodes.availableNodes.set( "Materials.Tracer", "NodeMaterial" );
+
+// --- This is the internal data structore of the Mtl Material Node
+
 VG.Nodes.NodeMtlMaterialData=function()
 {
     // --- This is the internal structure used by the Node for its UI operations (Parameters, including Undo / Redo, Load / Save. Etc.)
@@ -49,7 +212,7 @@ VG.Nodes.NodeMtlMaterial=function()
     this.mtlMaterial={ name : this.name };
 
     // --- Input Terminal: Ambient Color
-    this.ambientColorTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Sample2D, "ambientColor", null, function() {
+    this.ambientColorTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Sample, "ambientColor", null, function() {
         // --- onConnect
         this.container.getParam( "ambientColor" ).disabled=true;
     }.bind( this ), function() {
@@ -59,7 +222,7 @@ VG.Nodes.NodeMtlMaterial=function()
     this.addInput( this.ambientColorTerminal );
 
     // --- Input Terminal: Diffuse Color
-    this.diffuseColorTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Sample2D, "diffuseColor", null, function() {
+    this.diffuseColorTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Sample, "diffuseColor", null, function() {
         // --- onConnect
         this.container.getParam( "diffuseColor" ).disabled=true;
     }.bind( this ), function() {
@@ -69,7 +232,7 @@ VG.Nodes.NodeMtlMaterial=function()
     this.addInput( this.diffuseColorTerminal );
 
     // --- Input Terminal: Specular Color
-    this.specularColorTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Sample2D, "specularColor", null, function() {
+    this.specularColorTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Sample, "specularColor", null, function() {
         // --- onConnect
         this.container.getParam( "specularColor" ).disabled=true;
     }.bind( this ), function() {

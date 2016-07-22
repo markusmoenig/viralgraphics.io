@@ -1328,6 +1328,11 @@ VG.UI.HtmlView.prototype.mouseWheel=function( step )
     return true;
 };
 
+VG.UI.HtmlView.prototype.mouseLeave=function( step )
+{
+    VG.setMouseCursor("default");
+};
+
 VG.UI.HtmlView.prototype.setVScrollbarDimensions=function( canvas )
 {
     this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() + 2, this.contentRect.y, VG.UI.stylePool.current.skin.ScrollBar.Size, this.contentRect.height );

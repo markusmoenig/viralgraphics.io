@@ -39,6 +39,7 @@ VG.UI.TreeWidget=function()
     this.name="TreeWidget";
 
     this.offset=0;
+    this._itemHeight=-1;
 
     this.toolLayout=VG.UI.Layout();
     this.layout=this.toolLayout;
@@ -69,6 +70,23 @@ VG.UI.TreeWidget.prototype.bind=function( collection, path )
 
     return this.controller;
 };
+
+Object.defineProperty( VG.UI.TreeWidget.prototype, "itemHeight", 
+{
+    get: function() {
+        if ( this._itemHeight === -1 ) {
+            return VG.UI.stylePool.current.skin.TreeWidget.Font.size + 8;
+
+            //VG.context.workspace.canvas.pushFont( VG.UI.stylePool.current.skin.TreeWidget.Font );
+            //var fontHeight=VG.context.workspace.canvas.getLineHeight();
+            //VG.context.workspace.canvas.popFont();
+            //return fontHeight + 4;
+        } else return this._itemHeight;
+    },
+    set: function( itemHeight ) {
+        this._itemHeight=itemHeight;
+    }    
+});
 
 VG.UI.TreeWidget.prototype.addToolWidget=function( widget )
 {
@@ -162,8 +180,8 @@ VG.UI.TreeWidget.prototype.mouseDown=function( event )
         } else
         {
             this.controller.selected=treeItem.item;
-            this.possibleDnDSource=treeItem;
         }
+        this.possibleDnDSource=treeItem;        
     }
     this.verified=false;
     this.mouseIsDown=true;
@@ -200,8 +218,6 @@ VG.UI.TreeWidget.prototype.verifyScrollbar=function( text )
 
     this.totalVisibleItemCount=this.countVisibleControllerItems();
 
-    //console.log( this.totalVisibleItemCount );
-
     this.totalItemHeight=this.totalVisibleItemCount * this.itemHeight + (this.totalVisibleItemCount-1) * this.spacing;
     this.heightPerItem=this.totalItemHeight / this.controller.length;
     this.visibleItems=this.contentRect.height / this.heightPerItem;
@@ -209,6 +225,7 @@ VG.UI.TreeWidget.prototype.verifyScrollbar=function( text )
 
     if ( this.totalItemHeight > this.contentRect.height )
         this.needsVScrollbar=true;
+    else this.offset=0;
 
     if ( this.needsVScrollbar && !this.vScrollbar ) {
         this.vScrollbar=VG.UI.ScrollBar( "TreeWidget Scrollbar" );

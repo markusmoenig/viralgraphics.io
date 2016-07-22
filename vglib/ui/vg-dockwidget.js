@@ -78,7 +78,7 @@ VG.UI.DockWidget.prototype.mouseMove=function( event )
 
 VG.UI.DockWidget.prototype.mouseDown=function( event )
 {
-    if ( event.pos.y >= this.rect.y && event.pos.y <= ( this.rect.y + VG.context.style.skin.DockWidget.Header.Height ) ) 
+    if ( event.pos.y >= this.rect.y && event.pos.y <= ( this.rect.y + VG.UI.stylePool.current.skin.DockWidget.HeaderHeight ) ) 
     {
         this.dragOp=true;
         this.dragOpMoved=false;
@@ -173,13 +173,13 @@ VG.UI.SectionBar=function( text )
 
     this.text=text ? text : "";
 
-    this.layout.margin.set( 9, 7, 9, 0 );
+    this.layout.margin.set( 9, 7, 9, 9 );
     this.layout.spacing=6;
 
     this.horizontalExpanding=false;
     this.verticalExpanding=true;
 
-    this.selectedButton=null;
+    this.activeButton=null;
 };
 
 VG.UI.SectionBar.prototype=VG.UI.DockWidget();
@@ -214,7 +214,7 @@ VG.UI.SectionBar.prototype.addItem=function( item )
     if ( item instanceof VG.UI.SectionBarButton ) {
         item.stripCallback=this.stripButtonSelectionCallback.bind( this );
         item.stripWidget=this;
-        if ( !this.selectedButton ) this.selectedButton=item;
+        if ( !this.activeButton ) this.activeButton=item;
     }
 };
 
@@ -227,6 +227,28 @@ VG.UI.SectionBar.prototype.addButton=function( text )
     var button=VG.UI.SectionBarButton( text );
     this.addItem( button );
     return button;
+};
+
+VG.UI.SectionBar.prototype.addSwitch=function( text1, text2 )
+{
+    /**Adds a Button to the SectionBar.
+     * @param {string} text - The text of the button to add.
+     */       
+
+    var switchButton=VG.UI.SectionBarSwitch( text1, text2 );
+    this.addItem( switchButton );
+    return switchButton;
+};
+
+VG.UI.SectionBar.prototype.addSeparator=function( text )
+{
+    /**Adds a Button to the SectionBar.
+     * @param {string} text - The text of the button to add.
+     */       
+
+    var sep=VG.UI.SectionBarSeparator();
+    this.addItem( sep );
+    return sep;
 };
 
 VG.UI.SectionBar.prototype.addItems=function( item )
@@ -263,7 +285,7 @@ VG.UI.SectionBar.prototype.paintWidget=function( canvas )
     this.layout.layout( canvas );  
 };
 
-// ----------------------------------------------------------------- VG.UI.DockStripButton
+// ----------------------------------------------------------------- VG.UI.SectionBarButton
 
 VG.UI.SectionBarButton=function( text )
 {
@@ -275,7 +297,12 @@ VG.UI.SectionBarButton=function( text )
 
     if ( !(this instanceof VG.UI.SectionBarButton) ) return new VG.UI.SectionBarButton( text );
     this.text=arguments[0];
-    
+
+    if ( text.indexOf( "\n" ) !== -1 )
+    {
+        this.textArray=text.split( "\n" );
+    }
+
     VG.UI.Widget.call( this );
     this.name="SectionBarButton";
     
@@ -306,7 +333,7 @@ VG.UI.SectionBarButton.prototype.mouseDown=function( event )
 
     if ( this.stripCallback ) this.stripCallback( this );
     if ( this.clicked ) this.clicked( this );
-    this.stripWidget.selectedButton=this;
+    this.stripWidget.activeButton=this;
 };
 
 VG.UI.SectionBarButton.prototype.mouseUp=function( event )
@@ -317,6 +344,70 @@ VG.UI.SectionBarButton.prototype.mouseUp=function( event )
 VG.UI.SectionBarButton.prototype.paintWidget=function( canvas )
 {
     VG.UI.stylePool.current.drawSectionBarButton( this, canvas );
+};
+
+// ----------------------------------------------------------------- VG.UI.SectionBarSwitch
+
+VG.UI.SectionBarSwitch=function( text1, text2 )
+{
+    if ( !(this instanceof VG.UI.SectionBarSwitch) ) return new VG.UI.SectionBarSwitch( text1, text2 );
+    this.text=arguments[0];
+    
+    VG.UI.Widget.call( this );
+    this.name="SectionBarSwitch";
+    
+    this.text1=text1;
+    this.text2=text2;
+
+    this.horizontalExpanding=false;
+    this.verticalExpanding=false;
+    this.left=true;
+
+    this.customClick=true;
+    this.leftRect=VG.Core.Rect();
+    this.rightRect=VG.Core.Rect();
+
+    this.minimumSize.width=VG.UI.stylePool.current.skin.SectionBarSwitch.Size.Width;
+};
+
+VG.UI.SectionBarSwitch.prototype=VG.UI.Widget();
+
+VG.UI.SectionBarSwitch.prototype.calcSize=function( canvas )
+{
+    var size=this.preferredSize;
+    
+    size.width=VG.UI.stylePool.current.skin.SectionBarSwitch.Size.width;
+    size.height=VG.UI.stylePool.current.skin.SectionBarSwitch.Size.height;
+
+    this.minimumSize.width=size.width;
+    this.minimumSize.height=size.height;
+
+    return size;
+};
+
+VG.UI.SectionBarSwitch.prototype.mouseDown=function( event )
+{
+    this.mouseIsDown=true;
+
+    if ( this.leftRect.contains( event.pos ) )
+        this.left=true;
+    else
+    if ( this.rightRect.contains( event.pos ) )
+        this.left=false;
+    else return;
+
+    if ( this.clicked ) this.clicked( this.left );
+    VG.update();
+};
+
+VG.UI.SectionBarSwitch.prototype.mouseUp=function( event )
+{
+    this.mouseIsDown=false;
+};
+
+VG.UI.SectionBarSwitch.prototype.paintWidget=function( canvas )
+{
+    VG.UI.stylePool.current.drawSectionBarSwitch( this, canvas );
 };
 
 // ----------------------------------------------------------------- VG.UI.SectionBarSeparator
@@ -356,4 +447,170 @@ VG.UI.SectionBarSeparator.prototype.paintWidget=function( canvas )
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y, this.rect.width, 1 ), VG.UI.stylePool.current.skin.SectionBar.Separator.Color1 );
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y+1, this.rect.width, 1 ), VG.UI.stylePool.current.skin.SectionBar.Separator.Color2 );
     }
+};
+
+// ----------------------------------------------------------------- VG.UI.SectionToolBar
+
+VG.UI.SectionToolBar=function( text )
+{
+    /**Creates a VG.UI.SectionToolBar.<br>
+     * SectionToolBars can be added to the left or right side of an VG.UI.Workspace and can contain a list of vertically stacked VG.UI.SectionBarButtons. SectionBars cannot be resized. Use
+     * addItem() and addItems() to add items to the SectionBar.
+     * @constructor
+     */
+
+    if ( !(this instanceof VG.UI.SectionToolBar) ) return new VG.UI.SectionToolBar( text );
+
+    VG.UI.DockWidget.call( this );
+    this.name="SectionToolBar";
+
+    this.text=text ? text : "";
+
+    this.layout.margin.set( 9, 7, 9, 0 );
+    this.layout.spacing=6;
+
+    this.horizontalExpanding=false;
+    this.verticalExpanding=true;
+
+    this.activeButton=null;
+    this.childWidgets=[];
+};
+
+VG.UI.SectionToolBar.prototype=VG.UI.DockWidget();
+
+VG.UI.SectionToolBar.prototype.calcSize=function( canvas )
+{
+    var size=this.preferredSize;
+
+    size.width=54;
+    size.height=VG.UI.MaxLayoutSize;
+
+    this.minimumSize.width=size.width;
+    this.maximumSize.width=size.width;
+    return size;
+};
+
+VG.UI.SectionToolBar.prototype.mouseMove=function( event )
+{
+};
+
+VG.UI.SectionToolBar.prototype.mouseDown=function( event )
+{
+};
+
+VG.UI.SectionToolBar.prototype.mouseUp=function( event )
+{
+};
+
+VG.UI.SectionToolBar.prototype.addSection=function( text )
+{
+    /**Adds an VG.UI.SectionBarButton to the SectionBar.
+     * @param {VG.UI.SectionBarButton} button - Button to add to the SectionBar
+     */
+
+    var layout=VG.UI.Layout();
+    layout.vertical=true;
+    layout.margin.clear();
+    layout.spacing=1;
+    layout.text=text;
+
+    this.layout.addChild( layout );
+    return layout;
+};
+
+VG.UI.SectionToolBar.prototype.addButton=function( section, iconName )
+{
+    var button=VG.UI.SectionToolBarButton( iconName );
+    section.addChild( button );
+
+    if ( button instanceof VG.UI.SectionToolBarButton ) {
+        button.sectionBarCallback=this.buttonSelectionCallback.bind( this );
+        button.sectionBarWidget=this;
+        if ( !this.activeButton ) this.activeButton=button;
+    }
+
+    this.childWidgets.push( button );
+
+    return button;
+};
+
+VG.UI.SectionToolBar.prototype.buttonSelectionCallback=function( button )
+{
+    for( var i=0; i < this.layout.children.length; ++i )
+    {
+        var widget=this.layout.children[i];
+
+        if ( widget instanceof VG.UI.SectionToolBarButton )
+        {
+            if ( widget === button ) widget.selected=true;
+            else widget.selected=false;
+        }
+    }
+
+    if ( this.selectionChanged ) this.selectionChanged( button );
+};
+
+VG.UI.SectionToolBar.prototype.paintWidget=function( canvas )
+{
+    VG.UI.stylePool.current.drawSectionToolBar( this, canvas );
+
+    //this.layout.rect.set( this.contentRect );
+    //this.layout.layout( canvas );  
+};
+
+// ----------------------------------------------------------------- VG.UI.SectionToolBarButton
+
+VG.UI.SectionToolBarButton=function( iconName )
+{
+    /**Creates an VG.UI.SectionToolBarButton.<br>
+     * DockStripButtons can be added to VG.UI.SectionBars. They contain either text or images.
+     * @param {string} text - The text of the button.
+     * @constructor
+     */
+
+    if ( !(this instanceof VG.UI.SectionToolBarButton) ) return new VG.UI.SectionToolBarButton( iconName );
+    
+    VG.UI.Widget.call( this );
+    this.name="SectionToolBarButton";
+    
+    this.horizontalExpanding=false;
+    this.verticalExpanding=false;
+
+    this.iconName=iconName;
+    
+    this.minimumSize.width=VG.UI.stylePool.current.skin.SectionToolBarButton.Size.width;
+};
+
+VG.UI.SectionToolBarButton.prototype=VG.UI.Widget();
+
+VG.UI.SectionToolBarButton.prototype.calcSize=function( canvas )
+{
+    var size=this.preferredSize;
+    
+    size.width=VG.UI.stylePool.current.skin.SectionToolBarButton.Size.width;
+    size.height=VG.UI.stylePool.current.skin.SectionToolBarButton.Size.height;
+
+    this.minimumSize.width=size.width;
+    this.minimumSize.height=size.height;
+
+    return size;
+};
+
+VG.UI.SectionToolBarButton.prototype.mouseDown=function( event )
+{
+    this.mouseIsDown=true;
+
+    if ( this.sectionBarCallback ) this.sectionBarCallback( this );
+    if ( this.clicked ) this.clicked( this );
+    this.sectionBarWidget.activeButton=this;
+};
+
+VG.UI.SectionToolBarButton.prototype.mouseUp=function( event )
+{
+    this.mouseIsDown=false;
+};
+
+VG.UI.SectionToolBarButton.prototype.paintWidget=function( canvas )
+{
+    VG.UI.stylePool.current.drawSectionToolBarButton( this, canvas );
 };

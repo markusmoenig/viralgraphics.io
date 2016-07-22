@@ -21,284 +21,38 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+
 // ----------------------------------------------------------------- VG.UI.NewsScrollerItem
 
-VG.UI.NewsScrollerItem=function( header, body, image, date, link )
+VG.UI.ScrollerImageItem=function( image )
 {    
-    if ( !(this instanceof VG.UI.NewsScrollerItem) ) return new VG.UI.NewsScrollerItem( header, body, image, link );
+    if ( !(this instanceof VG.UI.ScrollerImageItem) ) return new VG.UI.ScrollerImageItem( image );
 
-    this.header=header;
-    this.body=body;
-    this.image=image;
-    this.date=date;
-    this.link=link;
-    this.visible=false;
-
-    this.rect=VG.Core.Rect();
-};
-
-// ----------------------------------------------------------------- VG.UI.NewsScroller
-
-VG.UI.NewsScroller=function()
-{
-    if ( !(this instanceof VG.UI.NewsScroller) ) return new VG.UI.NewsScroller();
-    
     VG.UI.Widget.call( this );
-    this.name="NewsScroller";
 
-    this.minimumSize.set( 100, 100 );
-    this.supportsFocus=true;
-    this.supportsAutoFocus=true;
-
-    this.items=[];
-    this.currentIndex=0;
-
-    this.nextAnimationEventAt=0;
-
-    this.leftImage=VG.UI.Image();
-    this.leftImage.clicked=function() {
-        //if ( !this.animActive )
-        //    this.nextAnimationEventAt=new Date().getTime();
-        if ( this.currentPage > 0 ) this.currentPage-=1;
-        else this.currentPage=this.totalPages-1;
-    }.bind( this );
-
-    this.rightImage=VG.UI.Image();
-    this.rightImage.clicked=function() {
-        //if ( !this.animActive ) {
-        //    this.nextAnimationEventAt=new Date().getTime();
-        //    this.animDirectionLeft=false;
-        //}
-        if ( this.currentPage < ( this.totalPages -1 ) ) this.currentPage+=1;
-        else this.currentPage=0;
-    }.bind( this );    
-
-    this.animStartTime=-1;
-    this.animDuration=600;
-    this.animDirectionLeft=true;
-    this.animPeriod=8000;
-
-    this.childWidgets=[];
-    this.childWidgets.push( this.leftImage );    
-    this.childWidgets.push( this.rightImage );   
-
-    this.linkedItem=false;
-    this.visibleItems=3;
-    this.currentPage=0;
-    this.totalPages=1;
+    this.image=image;
 };
 
-VG.UI.NewsScroller.prototype=VG.UI.Widget();
+VG.UI.ScrollerImageItem.prototype=VG.UI.Widget();
 
-VG.UI.NewsScroller.prototype.addItem=function( header, body, image, date, link )
+VG.UI.ScrollerImageItem.prototype.paintWidget=function( canvas )
 {
-    var item=new VG.UI.NewsScrollerItem( header, body, image, date, link );
-    this.items.push( item );
+    if ( this.image.isValid() ) {
 
-    this.totalPages=Math.floor(this.items.length / this.visibleItems) + 1;
+        var rect1=this.contentRect;
+        rect1.copy( this.rect );
+
+        if ( this.image.width < this.rect.width )
+            rect1.x=this.rect.x + (this.rect.width - this.image.width)/2;
+
+        if ( this.image.height < this.rect.height )
+            rect1.y=this.rect.y + (this.rect.height - this.image.height)/2;
+
+        canvas.drawImage( rect1, this.image );
+    }
 };
 
-VG.UI.NewsScroller.prototype.calcSize=function()
-{
-    return VG.Core.Size( 100, 100 );
-};
-
-VG.UI.NewsScroller.prototype.mouseDown=function( event )
-{
-    if ( this.linkedItem ) VG.gotoWebLink( this.linkedItem.link );
-};
-
-VG.UI.NewsScroller.prototype.mouseMove=function( event )
-{
-    this.linkedItem=null;
-    for ( var i=0; i < this.items.length; ++i )
-    {
-        var item=this.items[i];
-
-        if ( item.link && item.visible && item.rect.contains( event.pos ) ) {
-            this.linkedItem=item;
-            VG.setMouseCursor("pointer");
-            break;
-        }
-    }
-    VG.update();
-};
-
-VG.UI.NewsScroller.prototype.paintWidget=function( canvas )
-{
-    // --- Draw Background (Custom Image Background and Background Color)
-
-    if ( this.backgroundImageName ) {
-        var image=VG.context.imagePool.getImageByName( this.backgroundImageName );
-        if ( image ) {
-            canvas.drawImage( VG.Core.Point( this.rect.x + ( this.rect.width - image.width) / 2, this.rect.y + ( this.rect.height - image.height ) / 2 ), image );
-        }
-    }
-
-    if ( !this.backgroundColor ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, canvas.style.skin.NewsScroller.BackgroundColor );
-    else canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, this.backgroundColor );
-
-    // --- Draw the Header
-
-    canvas.pushFont( canvas.style.skin.NewsScroller.Header.Font );
-
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y + canvas.style.skin.NewsScroller.Header.Height, 
-        this.rect.width, 1 ), canvas.style.skin.NewsScroller.Header.SeparatorColor );
-
-    canvas.drawTextRect( "News", VG.Core.Rect( this.rect.x + canvas.style.skin.NewsScroller.Margin.left, this.rect.y, 
-        this.rect.width, canvas.style.skin.NewsScroller.Header.Height ), canvas.style.skin.NewsScroller.Header.TextColor, 0, 1 );
-
-    canvas.popFont();
-
-    var imageDim=28;
-
-    if ( !this.leftImage.isValid() ) {
-        var image=VG.context.imagePool.getImageByName( "scroller_left.png" );
-        if ( image ) { 
-            this.leftImage.image.set( image ); this.leftImage.image.mul( VG.Core.Color( "#cbcfe0" ) ); 
-            this.leftImage.clickedImage=VG.Core.Image(); this.leftImage.clickedImage.set( image ); this.leftImage.clickedImage.mul( VG.Core.Color( "#8b8def" ) );             
-            this.leftImage.hoverImage=VG.Core.Image(); this.leftImage.hoverImage.set( image ); this.leftImage.hoverImage.mul( VG.Core.Color( "#7a7aa9" ) );             
-        }
-    }    
-
-    if ( !this.rightImage.isValid() ) {
-        var image=VG.context.imagePool.getImageByName( "scroller_right.png" );
-        if ( image ) { 
-            this.rightImage.image.set( image ); this.rightImage.image.mul( VG.Core.Color( "#cbcfe0" ) );
-            this.rightImage.clickedImage=VG.Core.Image(); this.rightImage.clickedImage.set( image ); this.rightImage.clickedImage.mul( VG.Core.Color( "#8b8def" ) );             
-            this.rightImage.hoverImage=VG.Core.Image(); this.rightImage.hoverImage.set( image ); this.rightImage.hoverImage.mul( VG.Core.Color( "#7a7aa9" ) );
-        }
-    }
-
-    if ( this.leftImage.isValid() ) {
-        this.leftImage.rect.set( this.rect.x + canvas.style.skin.NewsScroller.Margin.left + 105, this.rect.y + 26, this.leftImage.image.width, this.leftImage.image.height );
-        this.leftImage.paintWidget( canvas );
-    }    
-
-    if ( this.rightImage.isValid() ) {
-        this.rightImage.rect.set( this.rect.x + canvas.style.skin.NewsScroller.Margin.left + 140, this.rect.y + 26, this.rightImage.image.width, this.rightImage.image.height );
-        this.rightImage.paintWidget( canvas );
-    } 
-
-    // ---
-
-    var imageRect=VG.Core.Rect();
-    var textRect=VG.Core.Rect();
-
-    var offset=0; this.spacing=20;
-    var x=this.rect.x + canvas.style.skin.NewsScroller.Margin.left;
-    var y=this.rect.y + canvas.style.skin.NewsScroller.Header.Height + canvas.style.skin.NewsScroller.Body.Margin.top;
-    var maxTextWidth=this.rect.width - (canvas.style.skin.NewsScroller.Margin.left + canvas.style.skin.NewsScroller.Body.Item.ImageSize.width 
-        + this.spacing - canvas.style.skin.NewsScroller.Margin.right);
-
-    for ( var i=0; i < this.items.length; ++i ) this.items[i].visible=false;
-
-    var itemCounter=0;
-    for ( var i=this.currentPage * this.visibleItems; i < this.items.length; ++i )
-    {
-        itemCounter++;
-        if ( itemCounter === this.visibleItems + 1 ) break;
-
-        var item=this.items[i];
-        item.visible=true;
-
-        // --- Item Image
-        imageRect.set( x, y, canvas.style.skin.NewsScroller.Body.Item.ImageSize.width, canvas.style.skin.NewsScroller.Body.Item.ImageSize.height );
-        item.rect.set( imageRect ); 
-        var largestTextWidth=0;
-
-        if ( !item.image ) {
-            canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, imageRect, VG.Core.Color( "#5c6a97") );//, VG.Core.Color("#7182bc") );//VG.Core.Color( "#40465b")  
-            canvas.pushFont( VG.Font.Font( "Visual Graphics", 64 ) );
-            canvas.drawTextRect( "a", imageRect, VG.Core.Color( 248, 248, 248 ), 1, 1 );
-            canvas.popFont();
-        } else
-        {
-            canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, imageRect, VG.Core.Color( "#5c6a97") );//, VG.Core.Color("#7182bc") );//VG.Core.Color( "#40465b")  
-
-            var image=VG.Utils.getImageByName( item.image );
-            if ( image )
-                canvas.drawImage( VG.Core.Point( imageRect.x + (imageRect.width - image.width)/2, imageRect.y + (imageRect.height - image.height)/2 ), image );
-        }
-
-        // --- Item Header
-        canvas.pushFont( canvas.style.skin.NewsScroller.Body.Item.Header.Font );
-
-        textRect.set( x + canvas.style.skin.NewsScroller.Body.Item.ImageSize.width + 20, y, maxTextWidth, canvas.style.skin.NewsScroller.Body.Item.ImageSize.height );
-        var textWidth=canvas.drawTextRect( item.header, textRect, canvas.style.skin.NewsScroller.Body.Item.Header.TextColor, 0, 3 );
-        if ( textWidth > largestTextWidth ) largestTextWidth=textWidth;
-
-        // --- This item has hover, underline the header
-        if ( item === this.linkedItem ) {
-            textRect.set( imageRect.right() + 20, textRect.y + 17, textWidth, 2 );
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, textRect, canvas.style.skin.NewsScroller.Body.Item.Header.TextColor );
-        }
-
-        canvas.popFont();
-
-        // --- Item Body
-        canvas.pushFont( canvas.style.skin.NewsScroller.Body.Item.Body.Font );
-
-        var textY=y + 32;
-        var textArray=item.body.split(/\r\n|\r|\n/);
-        textRect.set( x + canvas.style.skin.NewsScroller.Body.Item.ImageSize.width + 20, textY, maxTextWidth, canvas.style.skin.NewsScroller.Body.Item.ImageSize.height-35 );
-
-        for ( var l=0; l < textArray.length; ++l )
-        {
-            textWidth=canvas.drawTextRect( textArray[l], textRect, canvas.style.skin.NewsScroller.Body.Item.Body.TextColor, 0, 3 );
-            if ( textWidth > largestTextWidth ) largestTextWidth=textWidth;
-
-            textRect.y+=canvas.getLineHeight();
-            textRect.height-=canvas.getLineHeight();
-        }
-
-        canvas.popFont();        
-
-        // --- Item Date
-        if ( item.date && item.date.length )
-        {
-            canvas.pushFont( canvas.style.skin.NewsScroller.Body.Item.Date.Font );
-
-            textRect.set( x + canvas.style.skin.NewsScroller.Body.Item.ImageSize.width + 20, y+3, 625, canvas.style.skin.NewsScroller.Body.Item.ImageSize.height );
-            canvas.drawTextRect( item.date, textRect, canvas.style.skin.NewsScroller.Body.Item.Date.TextColor, 0, 2 );
-
-            canvas.popFont();            
-        }
-
-        item.rect.width=canvas.style.skin.NewsScroller.Body.Item.ImageSize.width + 20 + largestTextWidth;
-
-        y+=canvas.style.skin.NewsScroller.Body.Item.ImageSize.height + canvas.style.skin.NewsScroller.Body.Spacing;
-    }
-
-    // --- Footer
-    canvas.pushFont( canvas.style.skin.NewsScroller.Body.Item.Date.Font );
-
-    y=this.rect.y + canvas.style.skin.NewsScroller.Header.Height + canvas.style.skin.NewsScroller.Body.Margin.top + 
-        this.visibleItems * canvas.style.skin.NewsScroller.Body.Item.ImageSize.height +
-        (this.visibleItems-1) * + canvas.style.skin.NewsScroller.Body.Spacing + 30;
-
-    textRect.set( x, y, 615, canvas.style.skin.NewsScroller.Body.Item.ImageSize.height );
-    for ( var i=0; i < this.totalPages; i++ )
-    {
-        if ( i === this.currentPage )
-            canvas.drawTextRect( String(i+1), textRect, canvas.style.skin.NewsScroller.Body.Item.Footer.ActiveTextColor, 0, 3 );
-        else
-            canvas.drawTextRect( String(i+1), textRect, canvas.style.skin.NewsScroller.Body.Item.Footer.TextColor, 0, 3 );
-
-        textRect.x+=12;        
-    }
-    canvas.popFont();
-}
-
-// ----------------------------------------------------------------- VG.UI.TreeWidget
-
-VG.UI.ScrollerItem=function( header, content )
-{    
-    if ( !(this instanceof VG.UI.ScrollerItem) ) return new VG.UI.ScrollerItem( header, content );
-
-    this.header=header;
-    this.content=content;
-};
+// ----------------------------------------------------------------- VG.UI.Scroller
 
 VG.UI.Scroller=function()
 {
@@ -307,106 +61,42 @@ VG.UI.Scroller=function()
     VG.UI.Widget.call( this );
     this.name="Scroller";
 
-    this.minimumSize.set( 100, 100 );
     this.supportsFocus=true;
+    this.supportsAutoFocus=true;
 
     this.items=[];
+    this.current=null;
     this.currentIndex=0;
 
-    this.nextAnimationEventAt=0;
-
-    this.leftImage=VG.UI.Image();
-    this.leftImage.clicked=function() {
-        if ( !this.animActive )
-            this.nextAnimationEventAt=new Date().getTime();
-    }.bind( this );
-
-    this.rightImage=VG.UI.Image();
-    this.rightImage.clicked=function() {
-        if ( !this.animActive ) {
-            this.nextAnimationEventAt=new Date().getTime();
-            this.animDirectionLeft=false;
-        }
-    }.bind( this );    
+    this.nextAnimationEventAt=0; 
 
     this.animStartTime=-1;
     this.animDuration=600;
     this.animDirectionLeft=true;
     this.animPeriod=8000;
 
-    this.childWidgets=[];
-    this.childWidgets.push( this.leftImage );    
-    this.childWidgets.push( this.rightImage );    
-};
+    this.circleColor=VG.Core.Color( 255, 255, 255 );
+    this.titleColor=VG.Core.Color( 255, 255, 255 );
+    this.titleFont=VG.Font.Font( "Open Sans Bold", 20 );
+    this.blurbBackColor=VG.Core.Color();
+    this.blurbBackColor.a=0.6;
+    this.htmlFont=VG.Font.Font( "Open Sans Semibold", 8 );
+
+    this.blurbAlpha=0;
+}
 
 VG.UI.Scroller.prototype=VG.UI.Widget();
 
-VG.UI.Scroller.prototype.calcSize=function()
+VG.UI.Scroller.prototype.addItem=function( item )
 {
-    return VG.Core.Size( 100, 100 );
-};
-
-VG.UI.Scroller.prototype.addItem=function( header, content )
-{
-    var item=new VG.UI.ScrollerItem( header, content );
     this.items.push( item );
+    item._circleRect=VG.Core.Rect();
+    if ( !this.current ) this.current=item;
 };
 
 VG.UI.Scroller.prototype.paintWidget=function( canvas )
 {
-    var setClippedRect=false;
-
-    // --- Draw Background (Custom Image Background and Background Color)
-
-    if ( this.backgroundImageName ) {
-        var image=VG.context.imagePool.getImageByName( this.backgroundImageName );
-        if ( image ) {
-            canvas.drawImage( VG.Core.Point( this.rect.x + ( this.rect.width - image.width) / 2, this.rect.y + ( this.rect.height - image.height ) / 2 ), image );
-        }
-    }
-
-    if ( !this.backgroundColor ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, canvas.style.skin.Scroller.BackgroundColor );
-    else canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, this.backgroundColor );
-
-    // ---
-
-    var headerTextColor;
-    if ( !this.headerTextColor ) headerTextColor=canvas.style.skin.Scroller.HeaderTextColor;
-    else headerTextColor=this.headerTextColor;
-
-    var imageDim=28;
-
-    // --- Left / Right Images
-
-    if ( !this.leftImage.isValid() ) {
-        var image=VG.context.imagePool.getImageByName( "scroller_left.png" );
-        if ( image ) {
-            this.leftImage.image.set( image ); this.leftImage.image.mul( VG.Core.Color( "#cecece" ) ); 
-            this.leftImage.clickedImage=VG.Core.Image(); this.leftImage.clickedImage.set( image ); this.leftImage.clickedImage.mul( VG.Core.Color( "#8b8def" ) );             
-            this.leftImage.hoverImage=VG.Core.Image(); this.leftImage.hoverImage.set( image ); this.leftImage.hoverImage.mul( VG.Core.Color( "#7a7aa9" ) );                  
-        }
-    }
-
-    if ( !this.rightImage.isValid() ) {
-        var image=VG.context.imagePool.getImageByName( "scroller_right.png" );
-        if ( image ) {
-            this.rightImage.image.set( image ); this.rightImage.image.mul( VG.Core.Color( "#cecece" ) ); 
-            this.rightImage.clickedImage=VG.Core.Image(); this.rightImage.clickedImage.set( image ); this.rightImage.clickedImage.mul( VG.Core.Color( "#8b8def" ) );             
-            this.rightImage.hoverImage=VG.Core.Image(); this.rightImage.hoverImage.set( image ); this.rightImage.hoverImage.mul( VG.Core.Color( "#7a7aa9" ) );  
-        }
-    } 
-
-    if ( this.leftImage.isValid() ) {
-        this.leftImage.rect.set( this.rect.x + 44, this.rect.y + 34, imageDim, imageDim );
-        this.leftImage.paintWidget( canvas );
-    }    
-
-    if ( this.rightImage.isValid() ) {
-        this.rightImage.rect.set( this.rect.right() - 44 - imageDim, this.rect.y + 34, imageDim, imageDim );
-        this.rightImage.paintWidget( canvas );
-    } 
-
-    if ( !this.items.length ) return;
+    if ( !this.current ) return;
 
     // --- Period Handling
 
@@ -451,89 +141,112 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
 
     // --- Draw the item (normal + animated)
 
-    var item=this.items[this.currentIndex];
+    this.current=this.items[this.currentIndex];
 
-    if ( typeof(item.content) === 'string' )
+    var rect=this.contentRect;
+    rect.copy( this.rect );
+
+    if ( this.animActive )
     {
-        var font=VG.context.style.skin.Scroller.TextItemHeaderFont;
-        canvas.pushFont( font ); 
+        this.animPixelOffset=this.animOffset * this.contentRect.width / this.animDuration;
 
-        this.contentRect.set( this.rect.x + 44 + imageDim + 50, this.rect.y + 34 + imageDim - canvas.getLineHeight() - font.triFont.descender * font.scale, 0, this.rect.height );
-        this.contentRect.width=this.rect.width - this.contentRect.x - 44 - imageDim - 10;
+        rect.x-=this.animPixelOffset;
 
-        var nextItem, buffer;
+        this.current.rect.copy( rect );        
+        this.current.paintWidget( canvas );
 
-        if ( this.animActive )
+        var nextIndex=this.currentIndex + 1;
+        if ( nextIndex >= this.items.length ) nextIndex=0;
+        var nextItem=this.items[nextIndex];
+
+        rect.copy( this.rect );
+        rect.x=this.rect.right() - this.animPixelOffset;
+
+        nextItem.rect.copy( rect );        
+        nextItem.paintWidget( canvas );
+
+          this.blurbAlpha=0;
+    } else
+    {
+        this.current.rect.copy( rect );        
+        this.current.paintWidget( canvas );        
+
+        // --- Draw the Circles
+
+        var xOff=this.rect.right() - 13 - this.items.length * 10 - (this.items.length-1) * 6;
+        for ( var i=0; i < this.items.length; ++i )
         {
-            canvas.pushClipRect( this.contentRect.add( -40, 0, 40, 0 ) );
-            setClippedRect=true;
+            rect.copy( this.rect );
+            rect.x=xOff; rect.y=rect.bottom() - 28;
+            rect.width=10; rect.height=10;
 
-            this.animPixelOffset=this.animOffset * this.contentRect.width / this.animDuration;
+            if ( this.currentIndex === i )
+                this.circleColor.a=1.0;
+            else this.circleColor.a=0.5;
+                
+            canvas.draw2DShape( VG.Canvas.Shape2D.Circle, rect, this.circleColor );
+            this.items[i]._circleRect.copy( rect );
 
-            if ( this.animDirectionLeft ) this.contentRect.x-=this.animPixelOffset;
-            else this.contentRect.x+=this.animPixelOffset;
-
-            var nextIndex=this.currentIndex + 1;
-            if ( nextIndex >= this.items.length ) nextIndex=0;
-            nextItem=this.items[nextIndex];
-        } 
-
-        this.contentRect.height=canvas.getLineHeight();
-
-        canvas.drawTextRect( item.header, this.contentRect, headerTextColor, 0, 0 );
-        if ( this.animActive ) {
-            buffer=this.contentRect.x; 
-            if ( this.animDirectionLeft ) this.contentRect.x+=this.contentRect.width;
-            else this.contentRect.x=buffer - this.contentRect.width;
-            canvas.drawTextRect( nextItem.header, this.contentRect, headerTextColor, 0, 0 );
-            this.contentRect.x=buffer;
+            xOff+=10 + 6;
         }
 
-        canvas.popFont();
+        // --- Draw the blurb
 
-        canvas.pushFont( VG.context.style.skin.Scroller.TextItemContentFont );
-
-        this.contentRect.y+=this.contentRect.height + 10;
-        this.contentRect.height=this.rect.height - (this.rect.y - this.contentRect.y);
-
-        var textArray=item.content.split(/\r\n|\r|\n/);
-        var nextTextArray;
-
-        if ( this.animActive ) nextTextArray=nextItem.content.split(/\r\n|\r|\n/);
-
-        for( var i=0; i < textArray.length; ++i )
+        if ( this.current.title )
         {
-            canvas.drawTextRect( textArray[i], this.contentRect, headerTextColor, 0, 0 );
-            if ( this.animActive ) {
-                buffer=this.contentRect.x;
-                if ( this.animDirectionLeft ) this.contentRect.x+=this.contentRect.width;
-                else this.contentRect.x=buffer - this.contentRect.width;               
-                canvas.drawTextRect( nextTextArray[i], this.contentRect, headerTextColor, 0, 0 );
-                this.contentRect.x=buffer;
+            canvas.setAlpha( this.blurbAlpha );
+
+            rect.copy( this.rect );
+
+            if ( !this.current.bottomBlurb ) {
+                rect.y+=35;
+                rect.height=120;
+            } else {
+                rect.y+=639 - 120 - 20;
+                rect.height=120;                
             }
 
-            this.contentRect.y+=canvas.getLineHeight();
+            if ( !this.current.rightBlurb ) {
+                rect.x+=20;
+                rect.width=385;
+            } else {
+                rect.x+=rect.width - 385 - 20;
+                rect.width=385;
+            }
+
+            canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, rect, this.blurbBackColor );
+
+            rect.x+=16; rect.y+=10;
+            rect.width-=16; rect.height-10;
+
+            canvas.pushFont( this.titleFont );
+            canvas.drawTextRect( this.current.title, rect, this.titleColor, 0, 0 );
+            canvas.popFont();
+
+            if ( !this.current.htmlView )
+            {
+                this.htmlView=new VG.UI.HtmlView();
+                this.htmlView.html=this.current.html;
+
+                this.htmlView.elements.body.margin.left=0;
+                this.htmlView.elements.body.margin.top=0;
+                this.htmlView.elements.body.margin.bottom=0;
+                this.htmlView.elements.body.spacing=5;
+
+                this.htmlView.elements.body.font.setSize( 14 );
+                //this.htmlView.elements.p.font.setSize( 11 );
+            }
+
+            rect.y+=34; rect.height-=34;
+
+            this.htmlView.rect.copy( rect );
+            this.htmlView.paintWidget( canvas );
+
+            if ( this.blurbAlpha < 1.0 ) {
+                this.blurbAlpha+=0.05;
+                VG.context.workspace.redrawList.push( Date.now() );
+            }
+            canvas.setAlpha( 1.0 );            
         }
-
-        canvas.popFont();
-    } else
-    if ( item.content instanceof VG.Core.Image )
-    {
-        var font=VG.context.style.skin.Scroller.ImageItemHeaderFont;
-        canvas.pushFont( font ); 
-
-        this.contentRect.set( this.rect.x + 44 + imageDim, this.rect.y + 34 + imageDim - canvas.getLineHeight() - font.triFont.descender * font.scale, 0, 0 );
-        this.contentRect.width=this.rect.width - this.contentRect.x - 44 - imageDim;
-        this.contentRect.height=canvas.getLineHeight();
-
-        canvas.drawTextRect( item.header, this.contentRect, headerTextColor, 1, 0 );
-
-        this.contentRect.y+=this.contentRect.height + 50;
-        this.contentRect.height=this.rect.height - (this.rect.y - this.contentRect.y);
-        canvas.popFont();
-
-        canvas.drawImage( this.contentRect.pos(), item.content );
     }
-
-    if ( setClippedRect ) canvas.popClipRect();    
 };

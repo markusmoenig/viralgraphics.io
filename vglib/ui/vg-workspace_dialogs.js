@@ -108,7 +108,8 @@ VG.UI.Workspace.prototype.showLoginDialog=function()
         }.bind( this ) );
     }
 
-    this.showWindow( this.loginDialog );            
+    this.showWindow( this.loginDialog );
+    this.login_userNameEdit.setFocus();    
 };
 
 // ----------------------------------------------------------------------------------- Signup Dialog
@@ -176,8 +177,8 @@ VG.UI.Workspace.prototype.showSignupDialog=function()
 
     }
 
-    this.signup_userNameEdit.setFocus();
     this.showWindow( this.signupDialog );            
+    this.signup_userNameEdit.setFocus();
 };
 
 VG.UI.Workspace.prototype.showSignupDialog_signUp=function()
@@ -245,94 +246,443 @@ VG.UI.Workspace.prototype.showUserSettingsDialog=function()
     this.showWindow( this.userSettingsDialog );            
 };
 
-// ----------------------------------------------------------------------------------- Open / Save Web Dialogs
+// ----------------------------------------------------------------------------------- VG.RemoteOpenProject
 
-VG.RemoteFileDialogItem=function()
+VG.RemoteProjectItem=function()
 {
     this.name="";
     this.size=0;
     this.type="";
 };
 
-VG.RemoteFileDialog=function( fileType, callback, title, buttonText, allowDownload, defaultName )
+VG.RemoteOpenProject=function( workspace, dataReadCallback )
 {
-    if ( !(this instanceof VG.RemoteFileDialog) ) return new VG.RemoteFileDialog( fileType, callback, title, buttonText, allowDownload, defaultName );
+    if ( !(this instanceof VG.RemoteOpenProject) ) return new VG.RemoteOpenProject( workspace, dataReadCallback );
 
-    // --- Request list of files
+    VG.UI.Dialog.call( this, "Open Project" );
 
-    var parameters={};
-    var url="/upload/" + VG.context.workspace.appId;
+    // --- Local Layout
 
-    VG.sendBackendRequest( url, JSON.stringify( parameters ), function( responseText ) {
-        var response=JSON.parse( responseText );
-        for ( var i =0; i < response.files.length; ++i )
-        {
-            var item=response.files[i];
-            
-            var fileItem=new VG.RemoteFileDialogItem();
-            fileItem.fileName=item.name;
-            fileItem.size=VG.Utils.bytesToSize(item.size);
-            this.fileListController.add( fileItem );
-        }
-        this.label.text="";
-    }.bind( this ), "GET" );   
+    var dropArea=VG.UI.DropArea( "Project", function( canvas ) {
+        // --- Paint Callback
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, dropArea.rect, VG.UI.stylePool.current.skin.ListWidget.ItemCustomContentBorderColor );
+        canvas.drawTextRect( "Drop Project File Here", dropArea.rect, VG.UI.stylePool.current.skin.Widget.TextColor, 1, 1 );
+    }.bind( this ), function( name, data ) {
+        // --- Drop Callback
+
+        dataReadCallback( name, data );
+        workspace.lastSaveType=2;
+
+        // --- Close
+
+        if ( VG.context.workspace.platform === VG.HostProperty.PlatformWeb )
+            VG.dropZone.style.display="none"; 
+
+        this.close( this );         
+    }.bind( this ) );
+
+    var localLayout=VG.UI.Layout( dropArea );
+
+    // --- Login first Layout
+
+    var loginLabel=VG.UI.Label();
+    loginLabel.text="You have to Login first to be able to use Cloud Storage.";
+
+    var loginLayout=VG.UI.LabelLayout( "", loginLabel );
+
+    loginLayout.margin.left=0;
+    loginLayout.vertical=true;
+
+    // --- Visual Graphics Cloud
+
+    var dc=VG.Data.Collection( "File List" );
+    dc.fileList=[];
+
+    var listWidget=new VG.UI.ListWidget();
+    listWidget.itemHeight=68;
+
+    var openButton=VG.UI.Button( "Open" );
+    openButton.toolTip="Opens the Project from the Visual Graphics Cloud.";
+    openButton.clicked=function() {
+
+        VG.remoteOpenFile( controller.selected.name, function ( responseText ) {
+            var data=JSON.parse( responseText );
+            dataReadCallback( controller.selected.name, data.file );
+
+            workspace.lastSaveType=1;
+
+            // --- Close
+
+            if ( VG.context.workspace.platform === VG.HostProperty.PlatformWeb )
+                VG.dropZone.style.display="none"; 
+
+            this.close( this );
+        }.bind( this ) );
+
+        this.label.text="Opening...";
+    }.bind( this );
+    listWidget.addToolWidget( openButton );
+
+    var deleteButton=VG.UI.Button( "Delete" );
+    deleteButton.toolTip="Deletes the selected Project from the Visual Graphics Cloud.";    
+    deleteButton.disabled=true;
+    deleteButton.clicked=function() {
+
+        // --- Request list of files
+
+        if ( !controller.selected ) return;
+
+        var parameters={};
+        var url="/upload/" + workspace.appId + "/id/" + controller.selected.serverId;
+
+        VG.sendBackendRequest( url, JSON.stringify( parameters ), function( data ) {
+            var obj=JSON.parse( data );
+
+            if ( obj.status === 'ok' )
+                this.label.text="File deleted successfully.";
+            else this.label.text="Error during deletion!";
+
+            getFileList();
+        }.bind( this ), "DELETE" );   
+
+        this.label.text="Deleting...";
+
+    }.bind( this );
+    listWidget.addToolWidget( deleteButton );    
 
     // ---
 
-    VG.UI.Dialog.call( this, title );
+    var itemRect=VG.Core.Rect(), itemRect1=VG.Core.Rect();
+    listWidget.paintItemCallback=function( canvas, item, paintRect, selected ) {
 
-    this.fileType=fileType;
-    this.callback=callback;
+        // --- Preview
 
-    this.dc=VG.Data.Collection( "File List" ); 
-    this.dc.fileList=[];
+        // 61, 61
 
-    this.fileListWidget=new VG.UI.TableWidget();
+        itemRect.copy( paintRect );
+        itemRect.x=paintRect.x + 20;
+        itemRect.y=paintRect.y + 4;
+        itemRect.width=61;
+        itemRect.height=61;
 
-    this.fileListController=this.fileListWidget.bind( this.dc, "fileList" );
-    this.fileListController.addObserver( "selectionChanged", function() {
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, itemRect, VG.UI.stylePool.current.skin.ListWidget.ItemCustomContentBorderColor );
+        itemRect.shrink( 1, 1, itemRect );    
+        
+        canvas.pushClipRect( itemRect );
 
-        if ( this.fileListController.selected ) this.fileNameEdit.text=this.fileListController.selected.fileName;
-        else this.fileNameEdit.text=defaultName;
+        if ( workspace.projectIcon )
+            canvas.drawImage( itemRect, workspace.projectIcon );
+        canvas.popClipRect();
 
+        itemRect.x+=itemRect.width + 20;
+        itemRect.width=paintRect.width - 61 - 20 - 20 - 20;
+        canvas.drawTextRect( item.text + ", " + item.size, itemRect, VG.UI.stylePool.current.skin.ListWidget.TextColor, 0, 1 );
+    }.bind( this );
+
+    var controller=listWidget.bind( dc, "fileList" );
+
+    controller.addObserver( "changed", function() {
+        deleteButton.disabled=controller.length > 0 ? false : true;
     }.bind( this ) );
 
-    this.fileListWidget.addColumn( "fileName", "Name", VG.UI.TableWidgetItemType.Label, true, 200 );
-    this.fileListWidget.addColumn( "size", "Size", VG.UI.TableWidgetItemType.Label, false, 100 );
+    controller.addObserver( "selectionChanged", function() {
+        deleteButton.disabled=!controller.selected;
+    }.bind( this ) );    
 
-    this.fileListWidget.minimumSize.set( 600, 300 );
-    this.fileListWidget.horizontalExpanding=true;
-    this.fileListWidget.verticalExpanding=true;
+    function getFileList() {
+        if ( workspace.userName )    
+        {
+            dc.fileList=[];
 
-    this.fileNameEdit=new VG.UI.TextLineEdit( defaultName );
-    this.fileNameEdit.defaultText="Filename";
-    this.fileNameEdit.horizontalExpanding=true;
-    //this.fileNameEdit.bind( this.dc, "fileList.fileName" );
+            // --- Request list of files
 
-    this.layout=VG.UI.LabelLayout( "", this.fileListWidget, "", this.fileNameEdit );
-    this.layout.labelSpacing=0;
+            var parameters={};
+            var url="/upload/" + workspace.appId;
 
-    if ( allowDownload ) {
-        this.addButton( "Download", function() { 
-            if ( this.fileNameEdit.text.length > 0 ) {
-                this.callback( { "filePath" : this.fileNameEdit.text, "download" : true } ); 
-                this.close( this );        
-            } 
-        }.bind( this ) );
-        this.addButtonSpacer( 10 );
+            VG.sendBackendRequest( url, JSON.stringify( parameters ), function( responseText ) {
+                var response=JSON.parse( responseText );
+                for ( var i =0; i < response.files.length; ++i )
+                {
+                    var item=response.files[i];
+            
+                    var fileItem=new VG.RemoteProjectItem();
+                    fileItem.text=VG.Utils.fileNameFromPath( item.name, true );
+                    fileItem.size=VG.Utils.bytesToSize(item.size);
+                    fileItem.name=item.name;
+                    fileItem.serverId=item._id;
+                    controller.add( fileItem );
+                }
+
+                if ( controller.length ) controller.selected=controller.at( 0 );
+                //this.label.text="";
+            }.bind( this ), "GET" );   
+        }
     }
 
-    this.addButton( "Close", function() { this.close( this ); }.bind( this ) );
+    getFileList();
 
-    this.addButton( buttonText, function() { 
-        if ( this.fileNameEdit.text.length > 0 ) {
-                this.callback( { "filePath" : this.fileNameEdit.text } ); 
-            this.close( this );        
-        } 
+    // --- Top Layout
+
+    var labelLayout=VG.UI.LabelLayout();
+
+    var openFromMenu=VG.UI.DropDownMenu( "Computer", "Visual Graphics Cloud" );
+    openFromMenu.changed=function( index ) {
+        if ( index === 0 ) {
+            stackedLayout.current=localLayout;
+            dropArea.makeVisible=true;
+        } else
+        if  ( index === 1 ) {
+
+            if ( VG.context.workspace.platform === VG.HostProperty.PlatformWeb )
+                VG.dropZone.style.display="none"; 
+
+            if ( !workspace.userName )
+                stackedLayout.current=loginLayout;
+            else stackedLayout.current=listWidget;
+        }
+    }.bind( this );
+
+    labelLayout.addChild( "Open From", openFromMenu );
+
+    // ---
+
+    var stackedLayout=VG.UI.StackedLayout();
+    stackedLayout.current=localLayout;
+
+    this.layout=VG.UI.Layout( labelLayout, stackedLayout );
+    this.layout.vertical=true;
+    this.layout.calcSize=function( canvas ) {
+        return VG.Core.Size( 800, 480 );
+    }.bind( this.layout );
+
+    openFromMenu.setFocus();
+
+    // ---
+
+    this.addButton( "Close", function() { 
+
+        if ( VG.context.workspace.platform === VG.HostProperty.PlatformWeb )
+            VG.dropZone.style.display="none"; 
+
+        this.close( this ); 
+    }.bind( this ) );  
+};
+  
+VG.RemoteOpenProject.prototype=VG.UI.Dialog();
+
+// ----------------------------------------------------------------------------------- VG.RemoteSaveProject
+
+VG.RemoteSaveProject=function( workspace, dataWriteCallback )
+{
+    if ( !(this instanceof VG.RemoteSaveProject) ) return new VG.RemoteSaveProject( workspace, dataWriteCallback );
+
+    VG.UI.Dialog.call( this, "Save Project" );
+
+    //this.layout=VG.UI.LabelLayout();
+
+    // --- Download Layout
+
+    var downloadLabel=VG.UI.Label();
+    downloadLabel.text="The Projectfile will be downloaded to the \"Downloads\" folder of your Computer.";
+
+    var downloadButton=VG.UI.Button( "Download" );
+    downloadButton.clicked=function() {
+
+        var fileName = nameEdit.text;
+        if ( workspace.projectExtension )fileName+=workspace.projectExtension;
+        
+        dataWriteCallback( { "filePath" : fileName, "download" : true } );
+
+        this.label.text="\"" + fileName + "\" download request send successfully.";
+    }.bind( this );
+
+    var downloadLayout=VG.UI.LabelLayout( "", downloadLabel, "", downloadButton );
+    downloadLayout.margin.left=0;
+    downloadLayout.vertical=true;
+
+    // --- Login first Layout
+
+    var loginLabel=VG.UI.Label();
+    loginLabel.text="You have to Login first to be able to use Cloud Storage.";
+
+    var loginLayout=VG.UI.LabelLayout( "", loginLabel );
+
+    loginLayout.margin.left=0;
+    loginLayout.vertical=true;
+
+    // --- Visual Graphics Cloud
+
+    var dc=VG.Data.Collection( "File List" );
+    dc.fileList=[];
+
+    var listWidget=new VG.UI.ListWidget();
+    listWidget.itemHeight=68;
+
+    var saveButton=VG.UI.Button( "Save" );
+    saveButton.toolTip="Saves the Project to the Visual Graphics Cloud.";
+    saveButton.clicked=function() {
+
+        var fileName = nameEdit.text;
+        if ( workspace.projectExtension ) fileName+=workspace.projectExtension;
+
+        dataWriteCallback( { "filePath" : fileName }, function( data ) {
+            var obj=JSON.parse( data );
+
+            if ( obj.status === 'ok' )
+                this.label.text="File saved successfully.";
+            else this.label.text="Error during saving!";
+
+            getFileList();
+        }.bind( this ) ); 
+
+        this.label.text="Saving...";
+
+    }.bind( this );
+    listWidget.addToolWidget( saveButton );
+
+    var deleteButton=VG.UI.Button( "Delete" );
+    deleteButton.toolTip="Deletes the selected Project from the Visual Graphics Cloud.";    
+    deleteButton.disabled=true;
+    deleteButton.clicked=function() {
+
+        // --- Request list of files
+
+        if ( !controller.selected ) return;
+
+        var parameters={};
+        var url="/upload/" + workspace.appId + "/id/" + controller.selected.serverId;
+
+        VG.sendBackendRequest( url, JSON.stringify( parameters ), function( data ) {
+            var obj=JSON.parse( data );
+
+            if ( obj.status === 'ok' )
+                this.label.text="File deleted successfully.";
+            else this.label.text="Error during deletion!";
+
+            getFileList();
+        }.bind( this ), "DELETE" );   
+
+        this.label.text="Deleting...";
+
+    }.bind( this );
+    listWidget.addToolWidget( deleteButton );    
+
+    // ---
+
+    var itemRect=VG.Core.Rect(), itemRect1=VG.Core.Rect();
+    listWidget.paintItemCallback=function( canvas, item, paintRect, selected ) {
+
+        // --- Preview
+
+        // 61, 61
+
+        itemRect.copy( paintRect );
+        itemRect.x=paintRect.x + 20;
+        itemRect.y=paintRect.y + 4;
+        itemRect.width=61;
+        itemRect.height=61;
+
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, itemRect, VG.UI.stylePool.current.skin.ListWidget.ItemCustomContentBorderColor );
+        itemRect.shrink( 1, 1, itemRect );    
+        
+        canvas.pushClipRect( itemRect );
+
+        if ( workspace.projectIcon )
+            canvas.drawImage( itemRect, workspace.projectIcon );
+        canvas.popClipRect();
+
+        itemRect.x+=itemRect.width + 20;
+        itemRect.width=paintRect.width - 61 - 20 - 20 - 20;
+        canvas.drawTextRect( item.text + ", " + item.size, itemRect, VG.UI.stylePool.current.skin.ListWidget.TextColor, 0, 1 );
+    }.bind( this );
+
+    var controller=listWidget.bind( dc, "fileList" );
+
+    controller.addObserver( "changed", function() {
+        deleteButton.disabled=controller.length > 0 ? false : true;
     }.bind( this ) );
 
-    this.label.text="Receiving File List ...";    
+    controller.addObserver( "selectionChanged", function() {
+        deleteButton.disabled=!controller.selected;
+    }.bind( this ) );    
+
+    function getFileList() {
+        if ( workspace.userName )    
+        {
+            dc.fileList=[];
+
+            // --- Request list of files
+
+            var parameters={};
+            var url="/upload/" + workspace.appId;
+
+            VG.sendBackendRequest( url, JSON.stringify( parameters ), function( responseText ) {
+                var response=JSON.parse( responseText );
+                for ( var i =0; i < response.files.length; ++i )
+                {
+                    var item=response.files[i];
+            
+                    var fileItem=new VG.RemoteProjectItem();
+                    fileItem.text=VG.Utils.fileNameFromPath( item.name, true );
+                    fileItem.size=VG.Utils.bytesToSize(item.size);
+                    fileItem.serverId=item._id;
+                    controller.add( fileItem );
+                }
+
+                if ( controller.length ) controller.selected=controller.at( 0 );
+                //this.label.text="";
+            }.bind( this ), "GET" );   
+        }
+    }
+
+    getFileList();
+
+    // --- Top Layout
+
+    var nameEdit=VG.UI.TextLineEdit();
+    nameEdit.text=workspace.projectName;
+
+    var extensionLabel=VG.UI.Label();
+    extensionLabel.text="An extension of \'" + workspace.projectExtension + "\' will be automatically added."
+
+    var labelLayout=VG.UI.LabelLayout( "Project Name", nameEdit );
+    if ( workspace.projectExtension ) labelLayout.addChild( "", extensionLabel );
+
+    var saveToMenu=VG.UI.DropDownMenu( "Download", "Visual Graphics Cloud" );
+    saveToMenu.changed=function( index ) {
+        if ( index === 0 ) stackedLayout.current=downloadLayout;
+        else
+        if  ( index === 1 ) {
+            if ( !workspace.userName )
+                stackedLayout.current=loginLayout;
+            else stackedLayout.current=listWidget;
+        }
+    }.bind( this );
+
+    labelLayout.addChild( "Save To", saveToMenu );
+
+    // ---
+
+    var stackedLayout=VG.UI.StackedLayout();
+    stackedLayout.current=downloadLayout;
+
+    //labelLayout.addChild( "", stackedLayout );
+
+    this.layout=VG.UI.Layout( labelLayout, VG.UI.LayoutVSeparator(), stackedLayout );
+    this.layout.vertical=true;
+    //this.layout.margin.top=20;
+    this.layout.calcSize=function( canvas ) {
+        //this.preferredSize.width=400;
+        //this.preferredSize.height=420;
+        return VG.Core.Size( 800, 480 );
+    }.bind( this.layout );
+
+    nameEdit.setFocus();
+
+
+    // ---
+
+    this.addButton( "Close", function() { this.close( this ); }.bind( this ) );  
 };
-
-VG.RemoteFileDialog.prototype=VG.UI.Dialog();
-
+  
+VG.RemoteSaveProject.prototype=VG.UI.Dialog();

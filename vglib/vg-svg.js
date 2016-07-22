@@ -20,17 +20,29 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-VG.Core.SVG=function( name, data, curveDiv )
+
+VG.Core.SVG=function( name, data, options, dontAddToPool )
 {
-    if ( !(this instanceof VG.Core.SVG) ) return new VG.Core.SVG( name, data, curveDiv );
+    if ( !(this instanceof VG.Core.SVG) ) return new VG.Core.SVG( name, data, options );
 
     var strict = true;
     parser = VG.sax.parser( strict );
 
     this.name=name;
+    this.data=data;
+
     groups=[];
 
     var currentGroup=null, groupDepth=0;
+
+    function createGroup( node )
+    {
+        var group={ name : 'Unnamed', pathNodes : [], polygonNodes : [], rectNodes : [], ellipseNodes : [] };
+        if ( node.attributes.id )
+            group.name=node.attributes.id;
+        currentGroup=group;
+        groups.push( group );
+    };
 
     parser.onopentag = function (node) {
         //console.log( 'onopentag', node, groupDepth );
@@ -39,28 +51,41 @@ VG.Core.SVG=function( name, data, curveDiv )
         {
             if ( groupDepth === 0 )
             {
-                var group={ name : 'No Name', pathNodes : [], polygonNodes : [], rectNodes : [] };
-                if ( node.attributes.id )
-                    group.name=node.attributes.id;
-                currentGroup=group;
-                groups.push( group );
+                createGroup( node );
             }
             ++groupDepth;
         } else
         if ( node.name === "path" )
         {
+            if ( !currentGroup ) createGroup( node );
+
             currentGroup.pathNodes.push( node );
             currentGroup.hasContent=true;
         } else
         if ( node.name === "polygon" )
         {
+            if ( !currentGroup ) createGroup( node );
+
             currentGroup.polygonNodes.push( node );
             currentGroup.hasContent=true;            
-        } else   
+        } else
         if ( node.name === "rect" && currentGroup && currentGroup.hasContent )
         {
+            if ( !currentGroup ) createGroup( node );            
             currentGroup.rectNodes.push( node );
-        }  
+        }  else
+        if ( node.name === "rect" )
+        {
+            if ( !currentGroup ) createGroup( node );
+
+            currentGroup.rectNodes.push( node );
+        } else    
+        if ( node.name === "ellipse" )
+        {
+            if ( !currentGroup ) createGroup( node );
+            
+            currentGroup.ellipseNodes.push( node );
+        }         
     };
 
     parser.onclosetag = function (name) {
@@ -71,17 +96,24 @@ VG.Core.SVG=function( name, data, curveDiv )
 
     parser.write( data ).close();
 
-    this.curveDiv=curveDiv ? curveDiv : 20;
+    this.curveDiv=options && options.curveDiv ? options.curveDiv : 20;
+    var createPolygons=true;
+    if ( options && options.noPolygons ) 
+        createPolygons=false;
 
     if ( groups.length )
         this.groups=groups;
 
     this.tris=[];
 
-    for ( var i=0; i < this.groups.length; ++i )
-        this.createPolygonsForGroup( this.groups[i] );
+    if ( createPolygons ) 
+    {
+        for ( var i=0; i < this.groups.length; ++i ) 
+            this.createPolygonsForGroup( this.groups[i] );
 
-    VG.context.svgPool.addSVG( this );
+        if ( !dontAddToPool )
+            VG.context.svgPool.addSVG( this );        
+    }
 };
 
 VG.Core.SVG.prototype.getGroupByName=function( name )
@@ -148,6 +180,18 @@ VG.Core.SVG.prototype.createPolygonsForGroup=function( group )
         for ( var k=0; k < polys.length; ++k) group.polygons.push( polys[k] );            
     }    
 
+    for ( var i=0; i < group.ellipseNodes.length; ++i )
+    {
+        var rect=group.ellipseNodes[i];
+        var polys=[];
+
+        this.createPolygonsForEllipse( Number(rect.attributes.cx), Number(rect.attributes.cy), Number(rect.attributes.rx), 
+            Number(rect.attributes.ry), polys );
+
+        this.triangulatePolygons( group, polys );        
+        for ( var k=0; k < polys.length; ++k) group.polygons.push( polys[k] );            
+    }    
+
     this.createBoundingBoxForGroup( group );
     //this.normalizeGroupPolygons( group );
 
@@ -157,11 +201,17 @@ VG.Core.SVG.prototype.createPolygonsForGroup=function( group )
 VG.Core.SVG.prototype.triangulatePolygons=function( group, polygons )
 {
     var i=0;
+
+    var contourOrientation=false;
+
+    if ( polygons.length )
+        contourOrientation=this.clockwise( polygons[0] )
+
     while ( i < polygons.length )
     {
         var polygon=polygons[i];
 
-        if ( polygon.length && !this.clockwise( polygon ) )
+        if ( polygon.length && this.clockwise( polygon ) === contourOrientation )
         {
             var holes=[];
             var contour=[];
@@ -175,24 +225,19 @@ VG.Core.SVG.prototype.triangulatePolygons=function( group, polygons )
 
             for ( var j=i+1; j < polygons.length; ++j )
             {
-                if ( polygons[j].length && this.clockwise( polygons[j] ) )
+                if ( polygons[j].length && this.clockwise( polygons[j] ) === !contourOrientation )
                 {
                     holes.push( contour.length / 2 );
 
-                    //for ( var o=polygons[j].length-1; o >= 0; --o )
                     for ( var o=0; o < polygons[j].length; ++o )
                     {
                         var hpoly=polygons[j];
                         contour.push( hpoly[o].x, hpoly[o].y );
                     }
-                }
-                ++i;
+                } else break;
             }
 
             var indices=VG.Utils.earcut( contour, holes );
-
-            //VG.log( "contour length", contour.length, "holes length", holes.length );
-            //VG.log( indices.length );
 
             for ( var t=0; t < indices.length; ++t )
             {
@@ -258,6 +303,22 @@ VG.Core.SVG.prototype.createPolygonsForRect=function( x, y, width, height, polyg
     poly.push( { x : x + width, y : y+height } );
     poly.push( { x : x + width, y : y } );
     poly.push( { x : x, y : y } );
+
+    polygons.push( poly );
+};
+
+VG.Core.SVG.prototype.createPolygonsForEllipse=function( cx, cy, rx, ry, polygons )
+{
+    var poly=[];
+
+    var step=2 * Math.PI / 60; // 60 Segments
+    for ( var theta=0; theta <= 2 * Math.PI; theta+=step )
+    {
+        var x=cx + Math.cos( theta ) * rx;
+        var y=cy + Math.sin( theta ) * ry;
+
+        poly.push( { x : x, y : y } );
+    }
 
     polygons.push( poly );
 };
@@ -423,8 +484,8 @@ VG.Core.SVG.prototype.createPolygonsForPath=function( path, polygons )
 
             case 'S' :
             {
-                var cx1=lCubicControlPoint.x;
-                var cy1=lCubicControlPoint.y;
+                var cx1=2 * p.x - lCubicControlPoint.x;
+                var cy1=2 * p.y - lCubicControlPoint.y;
                 var cx2=cmd[1];
                 var cy2=cmd[2];
                 var dx=cmd[3];
@@ -447,8 +508,8 @@ VG.Core.SVG.prototype.createPolygonsForPath=function( path, polygons )
 
             case 's' :
             {  
-                var cx1=lCubicControlPoint.x;
-                var cy1=lCubicControlPoint.y;
+                var cx1=2 * p.x - lCubicControlPoint.x;
+                var cy1=2 * p.y - lCubicControlPoint.y;
                 var cx2=cmd[1] + p.x;
                 var cy2=cmd[2] + p.y;
                 var dx=cmd[3] + p.x;

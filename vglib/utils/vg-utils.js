@@ -21,6 +21,33 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+VG.Utils.typedArrayToEMS=function( jsArray ) 
+{
+    var numBytes= jsArray.length * jsArray.BYTES_PER_ELEMENT;
+        
+    // malloc enough space for the data
+    var ptr= Module._malloc(numBytes);
+
+    // get a bytes-wise view on the newly allocated buffer
+    var heapBytes= new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
+        
+    // copy data into heapBytes
+    heapBytes.set(new Uint8Array(jsArray.buffer));
+        
+    return { offset : heapBytes.byteOffset, length : jsArray.length };
+    // call the c function which should modify the vals
+    // my_emscripten_func(heapBytes.byteOffset, jsArray.length);
+        
+    // print out the results of the c function
+    // var heapFloats= new Float32Array(heapBytes.buffer, heapBytes.byteOffset, floatData.length);
+    // for (i= 0; i < heapFloats.length; i++) {
+        // console.log(i + ": " + heapFloats[i]);
+    // }
+        
+    // free the heap buffer
+    // Module._free(heapBytes.byteOffset);    
+}
+
 VG.Utils.loadAppImage=function( imageName ) 
 {
     VG.sendBackendRequest( "/images/" + VG.AppSettings.name + "/" + imageName, {}, function( response ) {
@@ -329,21 +356,24 @@ VG.Utils.addSingleShotCallback=function( func )
     VG.context.workspace.singleShotCallbacks.push( func );
 };
 
-VG.Utils.renderTargetToImage=function( renderTarget, image )
+VG.Utils.renderTargetToImage=function( renderTarget, image, wait )
 {
-    var buf = new Uint8Array( 4 * renderTarget.getWidth() * renderTarget.getHeight() );
-    renderTarget.fillPixelBuffer( undefined, buf );
+    var width = renderTarget.getWidth();
+    var height = renderTarget.getHeight();
 
-    if ( !image ) image = new VG.Core.Image( renderTarget.getWidth(), renderTarget.getHeight() );
-    var index = 0;
-    for(var j = 0; j < renderTarget.getWidth(); j++){
-        for(var i = 0; i< renderTarget.getHeight(); i++){
-            image.setPixelRGBA(i, j, buf[index], buf[index+1], buf[index+2], buf[index+3]);
-            index += 4;
-        }
-    }
+    var frameW = renderTarget.getRealWidth();
+    var frameH = renderTarget.getRealHeight();
 
-    delete buf;
+    if ( !image ) 
+        image = new VG.Core.Image( width, height );
+
+    renderTarget.bind();
+    renderTarget.fillPixelBuffer( { x : 0, y : 0, width : frameW, height : frameH }, image.data );
+    renderTarget.unbind();
+
+    if ( wait )
+        renderTarget.checkStatusComplete();
+
     return image;
 }
 
@@ -365,8 +395,10 @@ VG.Utils.textureToImage=function( texture, image )
     renderTarget.imageWidth=texture.getWidth();
     renderTarget.imageHeight=texture.getHeight();
 
+    VG.context.workspace.canvas.flush();
+
     renderTarget.bind();
-    renderTarget.clear();
+    renderTarget.clear( true );
     
     VG.Renderer().drawQuad(texture, frameW, frameH, 0, 0, 1.0, VG.Core.Size(frameW, frameH));
 
@@ -378,15 +410,18 @@ VG.Utils.textureToImage=function( texture, image )
     var data=new Uint8Array( dataSize );
     renderTarget.fillPixelBuffer( undefined, data );
 
-	if (!image)
-		image = VG.Core.Image(width, height);
+    if (!image)
+        image = VG.Core.Image(width, height);
 
-	var ip = 0;
-	for (var y = height-1; y >= 0; y--)
-	{
-        for (var x = 0; x < width; x++)
-		{
-            image.setPixelRGBA(x, y, data[ip++], data[ip++], data[ip++], data[ip++] );
+    if ( renderTarget.checkStatusComplete() ) {
+
+	   var ip = 0;
+	   for (var y = height-1; y >= 0; y--)
+	   {
+            for (var x = 0; x < width; x++)
+            {
+                image.setPixelRGBA(x, y, data[ip++], data[ip++], data[ip++], data[ip++] );
+            }
 		}
 	}
 

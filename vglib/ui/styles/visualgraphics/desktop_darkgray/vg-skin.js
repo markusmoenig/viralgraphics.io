@@ -58,6 +58,21 @@ VG.UI.VisualGraphicsDarkGraySkin=function()
         CheckedBackGradColor2 : VG.Core.Color( 194, 194, 194 ),  
     };
 
+    this.ButtonGroup={
+
+        Font : VG.Font.Font( "Open Sans Semibold", 13 ),
+        TextColor : VG.Core.Color( 244, 244, 244 ),
+
+        NormalBorderColor : VG.Core.Color( 108, 108, 108 ),
+        NormalBackColor : VG.Core.Color( 123, 123, 123 ),
+
+        HoverBorderColor : VG.Core.Color( 179, 179, 179 ),
+        HoverBackColor : VG.Core.Color( 157, 157, 157 ),
+        
+        PressedBorderColor : VG.Core.Color( 204, 204, 204 ),
+        PressedBackColor : VG.Core.Color( 149, 149, 149 ),        
+    }; 
+
     this.CodeEdit={
         Font : VG.Font.Font( "Open Sans Semibold", 13 ),
         TopBorderColor : VG.Core.Color( 63, 75, 78 ),
@@ -208,8 +223,9 @@ VG.UI.VisualGraphicsDarkGraySkin=function()
         ItemSelectedBorderColor : VG.Core.Color( 253, 252, 207 ),
         ItemSelectedBackColor : VG.Core.Color( 249, 247, 108 ),
 
-        ToolLayoutHeight : 28,
+        ItemCustomContentBorderColor : VG.Core.Color( 139, 139, 139 ),
 
+        ToolLayoutHeight : 28,
         ToolTopBorderColor : VG.Core.Color( 155, 155, 155 ),
         ToolBottomBorderColor : VG.Core.Color( 89, 89, 89 ),
         ToolBackGradColor1 : VG.Core.Color( 139, 139, 139 ),
@@ -289,6 +305,49 @@ VG.UI.VisualGraphicsDarkGraySkin=function()
         SelectedTextColor : VG.Core.Color( 96, 96, 96 ),        
 
         TextColor : VG.Core.Color( 255, 255, 255 ),        
+    };
+
+    this.SectionBarSwitch={
+
+        Font : VG.Font.Font( "Open Sans Bold", 12 ),
+
+        Size : VG.Core.Size( 81, 32 ),    
+
+        TextColor : VG.Core.Color( 255, 255, 255 ),        
+    }; 
+    
+    this.SectionToolBar={
+
+        BackColor : VG.Core.Color( 130, 130, 130 ),
+        BorderColor1 : VG.Core.Color( 82, 82, 82 ),
+        BorderColor2 : VG.Core.Color( 130, 130, 130 ),
+
+        HeaderTopBorderColor : VG.Core.Color( 155, 155, 155 ),
+        HeaderGradColor1 : VG.Core.Color( 139, 139, 139 ),
+        HeaderGradColor2 : VG.Core.Color( 110, 110, 110 ),
+        HeaderBottomBorderColor1 : VG.Core.Color( 105, 105, 105 ),
+        HeaderBottomBorderColor2 : VG.Core.Color( 89, 89, 89 ),
+
+        HeaderFont : VG.Font.Font( "Open Sans Bold", 12 ),
+        HeaderTextColor : VG.Core.Color( 255, 255, 255 ),
+
+        Separator : {
+            Height : 2,
+            Color1 : VG.Core.Color( 136, 136, 136 ),
+            Color2 : VG.Core.Color( 197, 197, 197 ),
+        }
+    };
+
+    this.SectionToolBarButton={
+
+        Size : VG.Core.Size( 46, 43 ),
+
+        BorderColor : VG.Core.Color( 108, 108, 108 ),
+        BorderHoverColor : VG.Core.Color( 179, 179, 179 ),
+        BorderSelectedColor : VG.Core.Color( 204, 204, 204 ),
+
+        BackHoverColor : VG.Core.Color( 157, 157, 157 ),
+        BackSelectedColor : VG.Core.Color( 149, 149, 149 ),        
     };
 
     this.Slider={
@@ -429,7 +488,7 @@ VG.UI.VisualGraphicsDarkGraySkin=function()
 
     this.ToolBar={
 
-        Height : 26,
+        Height : 33,
 
         TopBorderColor : VG.Core.Color( 102, 102, 102 ),
         BottomBorderColor : VG.Core.Color( 160, 160, 160 ),
@@ -437,10 +496,12 @@ VG.UI.VisualGraphicsDarkGraySkin=function()
         BackGradColor : VG.Core.Color( 120, 120, 120 ),
 
         Separator : {
-            Color1 : VG.Core.Color( 82, 82, 82 ),
-            Color2 : VG.Core.Color( 126, 126, 126 ),
-            Size : VG.Core.Size( 2, 22 ),
-        },        
+            Color1 : VG.Core.Color( 102, 102, 102 ),
+            Color2 : VG.Core.Color( 148, 148, 148 ),
+            Size : VG.Core.Size( 2, 28 ),
+        },
+
+        IconSize : VG.Core.Size( 32, 27 ),
     };
 
     this.ToolButton={
@@ -458,6 +519,7 @@ VG.UI.VisualGraphicsDarkGraySkin=function()
         ClickedBackColor : VG.Core.Color( 149, 149, 149 ),
 
         TextMargin : VG.Core.Size( 10, 0 ),
+        IconSize : VG.Core.Size( 24, 24 ),
 
         MinimumWidth : 45,
     };

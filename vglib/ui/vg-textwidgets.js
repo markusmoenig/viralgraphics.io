@@ -447,6 +447,20 @@ VG.UI.BaseText.prototype.mouseDoubleClick=function( event )
 
         VG.Utils.scheduleRedrawInMs( 30 )
         VG.update();
+    } else
+    {
+        // --- Select the whole line
+
+        var text=this.textArray[this.cursorPosition.y];
+
+        if ( text.length )
+        {
+            this.selectionStart.y=this.selectionEnd.y=this.cursorPosition.y;
+            this.selectionStart.x=0; this.selectionEnd.x=text.length;
+
+            this.selectionIsValid=true;
+            VG.update();
+        }
     }
 
     if ( this.mouseDoubleClickCallback ) this.mouseDoubleClickCallback( this.textArray[this.cursorPosition.y] );
@@ -1338,7 +1352,7 @@ VG.UI.TextLineEdit.prototype.calcSize=function( canvas )
     size.height=VG.context.workspace.canvas.getLineHeight();
 
     if ( !this.embedded )
-        size=size.add( 16, 5 );
+        size=size.add( 16, 3 );
 
     this.maximumSize.height=size.height;
     this.checkSizeDimensionsMinMax( size );
@@ -1351,6 +1365,7 @@ VG.UI.TextLineEdit.prototype.calcSize=function( canvas )
 VG.UI.TextLineEdit.prototype.focusIn=function()
 {
     this.resetBlinkState();
+    this.selectAll();
 
     if ( this.focusInCallback )
         this.focusInCallback( this );
@@ -1360,13 +1375,13 @@ VG.UI.TextLineEdit.prototype.focusOut=function()
 { 
     if ( this.textHasChanged ) 
     {
-        if ( VG.UI.NumberEdit && this instanceof VG.UI.NumberEdit ) 
+        if ( VG.UI.NumberEdit && this instanceof VG.UI.NumberEdit && this.valueIsValid() ) 
         {
             if ( this.changed )
                 this.changed.call( VG.context, this.value, false, this );
 
             if ( this.collection && this.path )
-                this.collection.storeDataForPath( this.path, this.value );
+                this.collection.storeDataForPath( this.path, this.value, undefined, undefined, this.undoText );
 
         } else
         {
@@ -1374,7 +1389,7 @@ VG.UI.TextLineEdit.prototype.focusOut=function()
                 this.textChanged.call( VG.context, this.text, false, this );
 
             if ( this.collection && this.path )
-                this.collection.storeDataForPath( this.path, this.text );
+                this.collection.storeDataForPath( this.path, this.text, undefined, undefined, this.undoText );
         }
         this.textHasChanged=false;        
     }    
@@ -1393,17 +1408,17 @@ VG.UI.TextLineEdit.prototype.keyDown=function( keyCode, keysDown )
     {
         if ( this.textHasChanged )
         {
-            if (  VG.UI.NumberEdit && this instanceof VG.UI.NumberEdit ) 
+            if (  VG.UI.NumberEdit && this instanceof VG.UI.NumberEdit && this.valueIsValid() ) 
             {
                 if ( this.collection && this.path )
-                    this.collection.storeDataForPath( this.path, this.value );
+                    this.collection.storeDataForPath( this.path, this.value, undefined, undefined, this.undoText );
 
                 if ( this.changed )
                     this.changed( this.value, true, this );            
             } else
             {
                 if ( this.collection && this.path )
-                    this.collection.storeDataForPath( this.path, this.text );
+                    this.collection.storeDataForPath( this.path, this.text, undefined, undefined, this.undoText );
 
                 if ( this.textChanged )
                     this.textChanged( this.text, true, this );
@@ -1551,11 +1566,11 @@ VG.UI.TextEdit.prototype.focusOut=function()
 {
     if ( this.textHasChanged ) 
     {
+        if ( this.collection && this.path )
+            this.collection.storeDataForPath( this.path, this.text, undefined, undefined, this.undoText );
+
         if ( this.textChanged )
             this.textChanged.call( VG.context );
-
-        if ( this.collection && this.path )
-            this.collection.storeDataForPath( this.path, this.text );
 
         this.textHasChanged=false;
     }

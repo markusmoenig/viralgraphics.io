@@ -44,6 +44,12 @@ VG.downloadRequest=function( url, parameters, method )
          }
     }
 
+    var button = document.createElement('input');
+    button.setAttribute('type', 'submit');
+    form.appendChild(button);
+
+    document.body.appendChild(form);
+
     form.submit();
 };
 
@@ -67,8 +73,9 @@ VG.sendBackendRequest=function( url, parameters, callback, type, error_callback 
         }
     };
 
-    var serverUrl="https://visualgraphics.tv";
-    /*var serverUrl="http://localhost:3002";*/
+    var serverUrl="";
+
+    if ( VG.localVGLibPrefix ) serverUrl="https://visualgraphics.tv";
     var requestType="POST";
 
     if ( type ) requestType=type;
@@ -157,25 +164,23 @@ VG.remoteOpenFile=function( fileName, callback )
     VG.sendBackendRequest( string, JSON.stringify( parameters ), callback, "GET" );
 };
 
-VG.remoteSaveFile=function( fileName, data )
+VG.remoteSaveFile=function( fileName, data, callback )
 {
     var parameters={};
     parameters[fileName]=data;
 
     var string="/upload/" + VG.context.workspace.appId;
-    VG.sendBackendRequest( string, JSON.stringify( parameters ), function( responseText ) {
-        console.log( responseText );
-    }.bind( this ), "POST" );
+    VG.sendBackendRequest( string, JSON.stringify( parameters ), callback, "POST" );
 };
 
-VG.decompressImageData=function( data, image, finishedCallback )
+VG.decompressImageData=function( data, image, finishedCallback, options )
 {        
     var im=new Image();
     image.locked=true;
 
     im.onload=function() 
     { 
-        image.data=null;
+        //image.data=null;
         image.imageData=data;
 
         var textureCanvas=document.getElementById( 'textureCanvas' );
@@ -184,26 +189,31 @@ VG.decompressImageData=function( data, image, finishedCallback )
         ctx.canvas.width=im.width;
         ctx.canvas.height=im.height;
 
-        image.width=im.width;
-        image.height=im.height;
-        image.alloc();
+        var alwaysUseImage=false;
+        if ( options && options.alwaysUseImage )
+            alwaysUseImage=true;
+
+        if ( !alwaysUseImage ) {
+            if ( image.width !== im.width || image.height !== im.height )
+                image.resize( im.width, im.height );
+        }
 
         ctx.drawImage(im, 0, 0, im.width, im.height);
 
-        var pixelData=ctx.getImageData( 0, 0, im.width, im.height ).data;
+        var imageData=ctx.getImageData( 0, 0, im.width, im.height );
+        var pixelData=imageData.data;
 
-        for ( var h=0; h < im.height; ++h )
+        for ( var h=0; h < image.height; ++h )
         {
-            for ( var w=0; w < im.width; ++w )
-            {
-                var offset=h * image.width * 4 + w * 4
-                var dOffset=h * image.modulo + w * 4
-                //im.setPixelRGBA( w, h, pixelData[offset], pixelData[offset+1], pixelData[offset+2], pixelData[offset+3] );
+            var offset=h * imageData.width * 4;
+            var dOffset=h * image.modulo;
 
-                image.data[dOffset]=pixelData[offset];///255.0;
-                image.data[dOffset+1]=pixelData[offset+1];///255.0;
-                image.data[dOffset+2]=pixelData[offset+2];///255.0;
-                image.data[dOffset+3]=pixelData[offset+3];///255.0;
+            for ( var w=0; w < image.width; ++w )
+            {
+                image.data[dOffset++]=pixelData[offset++];
+                image.data[dOffset++]=pixelData[offset++];
+                image.data[dOffset++]=pixelData[offset++];
+                image.data[dOffset++]=pixelData[offset++];
             }
         }
 
@@ -212,12 +222,12 @@ VG.decompressImageData=function( data, image, finishedCallback )
         image.needsUpdate=true;
         VG.update();
 
-        if ( finishedCallback ) finishedCallback();
+        if ( finishedCallback ) finishedCallback( image );
     }
     im.src=data;  
 };
 
-VG.compressImage=function( image )
+VG.compressImage=function( image, format )
 {
     var ctx=textureCanvas.getContext('2d');
         
@@ -243,7 +253,10 @@ VG.compressImage=function( image )
     }
 
     ctx.putImageData( id, 0, 0 );
-    return ctx.canvas.toDataURL();// "image/jpeg" );
+
+    if ( format && format === "JPEG" )
+        return ctx.canvas.toDataURL( "image/jpeg" );
+    else return ctx.canvas.toDataURL();
 };
 
 VG.loadStyleSVG=function( style, svgName, callback ) 
@@ -264,7 +277,7 @@ VG.loadStyleSVG=function( style, svgName, callback )
     var path;
 
     if ( VG.localVGLibPrefix ) path=VG.localVGLibPrefix + "vglib/ui/styles/" + style + "/svg/" + svgName;
-    else path="vglib/ui/styles/" + style + "/svg/" + svgName;
+    else path="/vglib/ui/styles/" + style + "/svg/" + svgName;
 
     request.open( "GET", path, true );
     request.setRequestHeader( "Content-type", "application/json;charset=UTF-8" );
@@ -313,7 +326,7 @@ VG.loadStyleImage=function( style, imageName, callback )
      }
 
     if ( VG.localVGLibPrefix ) image.src=VG.localVGLibPrefix + "vglib/ui/styles/" + style + "/icons/" + imageName;
-    else image.src="vglib/ui/styles/" + style + "/icons/" + imageName;
+    else image.src="/vglib/ui/styles/" + style + "/icons/" + imageName;
 
     image.name=imageName;
     image.stylePath=style;
@@ -323,12 +336,16 @@ VG.copyToClipboard=function( type, data )
 {
     if ( type === "Text" ) VG.context.workspace.textClipboard=data;
     else
+    if ( type === "Image" ) VG.context.workspace.imageClipboard=data;
+    else
     if ( type === "Nodes" ) VG.context.workspace.nodesClipboard=data;
 };
 
 VG.clipboardPasteDataForType=function( type )
 {
     if ( type === "Text" ) return VG.context.workspace.textClipboard;
+    else
+    if ( type === "Image" ) return VG.context.workspace.imageClipboard;
     else
     if ( type === "Nodes" ) return VG.context.workspace.nodesClipboard;
     return null;

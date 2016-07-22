@@ -24,7 +24,7 @@
 
 // Web specific Implementations
 
-VG.handleImageDropEvent=function( event ) 
+VG.handleImageDropEvent_Dialog=function( event ) 
 {    
     event.stopPropagation();
     event.preventDefault();
@@ -68,7 +68,7 @@ VG.handleImageDropEvent=function( event )
     }
 }
 
-VG.handleDragOver=function( event ) 
+VG.handleDragOver_Dialog=function( event ) 
 {    
     event.stopPropagation();
     event.preventDefault();
@@ -82,6 +82,9 @@ VG.OpenFileDialog=function( fileType, callback )
     VG.UI.Dialog.call( this, "File Dialog" );
 
     VG.fileDialog=this;
+    VG.handleImageDropEvent=VG.handleImageDropEvent_Dialog;
+    VG.handleDragOver=VG.handleDragOver_Dialog;
+
     this.fileType=fileType;
     this.callback=callback;
 
@@ -148,7 +151,7 @@ VG.OpenFileDialog=function( fileType, callback )
 
         if ( this.fileType === VG.UI.FileDialog.Image ) {
             if ( this.callback && this.image.image ) 
-                this.callback( this.fileName, this.image.image );
+                this.callback( this.image.image.name, this.image.image );
         } else {
             if ( this.callback && this.fileContent ) 
                 this.callback( this.fileName, this.fileContent );

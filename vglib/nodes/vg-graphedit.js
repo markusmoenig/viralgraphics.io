@@ -20,19 +20,34 @@
 
 // ----------------------------------------------------------------- VG.Nodes.GraphEdit
 
-VG.Nodes.GraphEdit=function( customWidget, customWidgetSpace )
+VG.Nodes.GraphEdit=function( customWidget, customWidgetSpace, opts )
 {	
-    if ( !(this instanceof VG.Nodes.GraphEdit ) ) return new VG.Nodes.GraphEdit( customWidget, customWidgetSpace );
+    if ( !(this instanceof VG.Nodes.GraphEdit ) ) return new VG.Nodes.GraphEdit( customWidget, customWidgetSpace, opts );
 
     VG.UI.Frame.call( this );
+
+    this.options=opts ? opts : {};
 
     this.supportsFocus=true;
     this.graph=VG.Nodes.Graph();
 
     this.graphView=VG.Nodes.GraphView( this.graph );
 
-    this.containerLayout=VG.UI.Layout();
+    this.nodeNameEdit=VG.UI.TextLineEdit();
+    this.nodeNameEdit.disabled=true;
+    this.nodeNameEdit.textChanged=function( text ) {
+        var selected=this.controller.selected;
+        selected.name=text;
+    }.bind( this );
+
+    this.nodeNameEditLayout=VG.UI.LabelLayout( "Name", this.nodeNameEdit );
+    this.nodeNameEditLayout.margin.bottom=0;
+
+    this.containerLayout=VG.UI.Layout( this.nodeNameEditLayout );
     this.containerLayout.margin.set( 0, 0, 0, 0 );
+    this.containerLayout.title="Node Name and Settings";
+    this.containerLayout.vertical=true;
+    this.containerLayout.spacing=0;
 
     // --- Available Nodes
 
@@ -41,6 +56,9 @@ VG.Nodes.GraphEdit=function( customWidget, customWidgetSpace )
 
 	this.availableNodes=VG.UI.TreeWidget();
     this.availableNodesController=this.availableNodes.bind( this.dc, "nodes" );
+
+    this.availableNodesLayout=VG.UI.Layout( this.availableNodes );
+    this.availableNodesLayout.margin.clear();
 
     NodeFolder=function( name, open )
 	{    
@@ -64,21 +82,89 @@ VG.Nodes.GraphEdit=function( customWidget, customWidgetSpace )
 
     this.parseAvailableNodes();
 
+    // --- GraphParams
+
+    this.graphEditButton=VG.UI.ToolButton("Edit Script...");
+    this.graphEditButton.clicked=function() {
+
+        var graphData=this.controller.collection.dataForPath( this.controller.path );
+
+        if ( !graphData.graphParamsFunc )
+        {
+            graphData.graphParamsFunc="";
+            graphData.graphParamsData={};
+        }
+
+        var dialog=new VG.Nodes.GraphParamsDialog( this, graphData );
+        VG.context.workspace.showWindow( dialog );
+    }.bind( this );
+
+    this.graphEditWidget=VG.UI.Widget();
+
+    //this.graphParamsLayout=VG.UI.Layout( this.graphEditWidget );
+    //this.graphParamsLayout.vertical=true;
+
+    this.emptyWidget=VG.UI.Widget();
+    this.graphEditWidget.stackedLayout=VG.UI.StackedLayout( this.emptyWidget );
+
+    this.graphEditWidget.layout=VG.UI.Layout( this.graphEditWidget.stackedLayout, VG.UI.LayoutVSpacer(), VG.UI.Layout( this.graphEditButton ) );
+    this.graphEditWidget.layout.margin.clear();
+    this.graphEditWidget.layout.vertical=true;
+
+    this.graphEditWidget.paintWidget=function( canvas ) {
+        this.layout.rect.copy( this.rect );
+        this.layout.layout( canvas );
+    }.bind( this.graphEditWidget );
+
+    // --- SwitchLayout
+
+    var availableNodesButton=VG.UI.ToolButton("Available Nodes");
+    availableNodesButton.checkable=true;
+    availableNodesButton.checked=true;
+    availableNodesButton.clicked=function() {
+        this.stackedLayout.current=this.availableNodesLayout;
+    }.bind( this );
+    var graphParamsButton=VG.UI.ToolButton("Graph Parameters");
+    graphParamsButton.checkable=true;
+    graphParamsButton.clicked=function() {
+        this.stackedLayout.current=this.graphEditWidget;
+    }.bind( this );    
+    availableNodesButton.addExclusions( graphParamsButton );
+
+    var switchLayout=VG.UI.Layout( availableNodesButton, graphParamsButton );
+
+    this.stackedLayout=VG.UI.StackedLayout( this.availableNodesLayout, this.graphEditWidget );
+
+    this.mainSwitchLayout=VG.UI.Layout( switchLayout, this.stackedLayout );
+    this.mainSwitchLayout.vertical=true;
+    this.mainSwitchLayout.margin.clear();
+    this.mainSwitchLayout.spacing=0;
+
     // ---
 
-    this.dockLayout=VG.UI.SplitLayout( this.containerLayout, 70, this.availableNodes, 30 );
+    this.dockLayout=VG.UI.SplitLayout( this.containerLayout, 65, this.mainSwitchLayout, 35 );
     this.dockLayout.vertical=true;
     this.dockLayout.margin.clear();
 
     if ( !customWidget && !customWidgetSpace )
-        this.layout=VG.UI.SplitLayout( this.graphView, 80, this.dockLayout, 20 );
-    else
+    {
+        if ( this.options.toolBar )
+        {
+            this.toolBarLayout=VG.UI.Layout( this.options.toolBar, this.graphView );
+            this.toolBarLayout.vertical=true;
+            this.toolBarLayout.margin.clear();
+
+            this.layout=VG.UI.SplitLayout( this.toolBarLayout, 75, this.dockLayout, 25 );            
+        } else
+            this.layout=VG.UI.SplitLayout( this.graphView, 75, this.dockLayout, 25 );
+    } else
     {
         this.customLayout=VG.UI.SplitLayout( this.graphView, 100-customWidgetSpace, customWidget, customWidgetSpace );
         this.customLayout.margin.clear();
         this.customLayout.vertical=true;
         this.layout=VG.UI.SplitLayout( this.customLayout, 80, this.dockLayout, 20 );        
     }
+
     this.layout.margin.clear();
 
     this.frameType=VG.UI.Frame.Type.None;
@@ -102,6 +188,9 @@ VG.Nodes.GraphEdit.prototype.bind=function( collection, path )
     		if ( this.containerEdit ) {
     			this.containerLayout.removeChild( this.containerEdit );
     			this.containerEdit=null;
+
+                this.nodeNameEdit.disabled=true;
+                this.nodeNameEdit.text="";
     		}
 
     		if ( node && node.container )
@@ -109,6 +198,11 @@ VG.Nodes.GraphEdit.prototype.bind=function( collection, path )
     			this.containerEdit=VG.Nodes.ParamContainerEdit( node.container );
     			this.containerLayout.addChild( this.containerEdit );
     		}
+
+            if ( node ) {
+                this.nodeNameEdit.disabled=false;
+                this.nodeNameEdit.text=data.name;                
+            }
 
     	}.bind( this ), this );
 
@@ -128,7 +222,7 @@ VG.Nodes.GraphEdit.prototype.parseAvailableNodes=function( node, noUndo )
 {
     this.dc.nodes=[];
     var folderIndex=[];
-    this.availableNodesController.add( "", new NodeFolder( "Available Nodes", true ), true );
+    //this.availableNodesController.add( "", new NodeFolder( "Available Nodes", true ), true );
 
     // --- Get all Folders
     for (var key of VG.Nodes.availableNodes.keys() )
@@ -138,7 +232,7 @@ VG.Nodes.GraphEdit.prototype.parseAvailableNodes=function( node, noUndo )
         if ( stringArray.length >1 && folderIndex.indexOf( stringArray[0] ) === -1 )
         {
             var f=new NodeFolder( stringArray[0], false );
-            this.availableNodesController.add( "0", f, true );
+            this.availableNodesController.add( "", f, true );
 
             folderIndex.push( stringArray[0] );
         }
@@ -154,11 +248,11 @@ VG.Nodes.GraphEdit.prototype.parseAvailableNodes=function( node, noUndo )
             var index=folderIndex.indexOf( stringArray[0] );
 
             var f=new Node( stringArray[1], VG.Nodes.availableNodes.get(key) );
-            this.availableNodesController.add( "0." + index, f, true );
+            this.availableNodesController.add( String( index ), f, true );
         } else
         {
             var f=new Node( stringArray[0], VG.Nodes.availableNodes.get(key) );
-            this.availableNodesController.add( "0", f, true );          
+            this.availableNodesController.add( "", f, true );          
         }
     } 
 };
@@ -186,6 +280,36 @@ VG.Nodes.GraphEdit.prototype.reload=function( canvas )
     var terminal=this.getOutputTerminal();
     this.controller.modelChanged( true );
     if ( terminal ) this.graphView.previewNode.inputs[0].connectTo( terminal );
+};
+
+VG.Nodes.GraphEdit.prototype.revalidate=function()
+{
+    var graphData=this.controller.collection.dataForPath( this.controller.path );
+    this.applyGraphParams( graphData, graphData.graphParamsFunc );
+};
+
+VG.Nodes.GraphEdit.prototype.applyGraphParams=function( graphData, funcText )
+{
+    graphData.graphParamsFunc=funcText;
+
+    this.graphSettingsLayout=undefined;
+    createParams=undefined;
+
+    try {
+        if ( funcText ) {
+            eval( funcText );
+            if ( createParams ) {
+                this.graphSettingsLayout=createParams( this.graph, graphData.graphParamsData );
+            }
+        }
+    } catch ( e ) {
+        VG.log( e.message );
+    }
+
+    if ( this.graphSettingsLayout )
+    {
+        this.graphEditWidget.stackedLayout.current=this.graphSettingsLayout;
+    } else this.graphEditWidget.stackedLayout.current=this.emptyWidget;
 };
 
 VG.Nodes.GraphEdit.prototype.paintWidget=function( canvas )
@@ -241,23 +365,15 @@ VG.Nodes.GraphView=function( graph )
 	this.previewNode.rect=VG.Core.Rect( 0, 0, 200, 200 );
 	this.previewImage=VG.Core.Image( 198, 173 );
 
+    this.previewNodeContentWidth=198;
+    this.previewNodeContentHeight=173;
+
 	this.graph.previewNode=this.previewNode;
 
 	this.graphOutput=null;
 
     // --- Called when the Graph needs to be updated.
-    this.graph.updateCallback=function() {
-    	if ( this.previewNode.inputs[0].isConnected() )
-    	{
-    		var vector=undefined;
-
- 			if ( this.previewNode.inputs.length > 1 && this.previewNode.inputs[1].isConnected() )
- 				vector=this.previewNode.inputs[1].connectedTo[0].onCall();
-
-    		this.graphOutput=this.graph.run( this.previewNode.inputs[0].connectedTo[0], this.previewImage, vector );
-    		VG.update();
-    	}
-    }.bind( this );
+    this.graph.updateCallback=this.update.bind( this );
 
     // --- Called when a node property will change, initiate undo
     this.graph.nodePropertyWillChangeCallback=function( param, data ) {
@@ -322,7 +438,7 @@ VG.Nodes.GraphView.prototype.drawNode=function( canvas, node )
 
 	this.style.TitleFont.setSize( 12 * this.scale );
 	canvas.pushFont( this.style.TitleFont );
-    canvas.drawTextRect( node.name, this.workRect2, this.style.TitleTextColor, 0, 1 );	
+    canvas.drawTextRect( node.data.name, this.workRect2, this.style.TitleTextColor, 0, 1 );	
 
 	this.workRect2.set( this.workRect1.x + 1 * this.scale, this.workRect1.y + 24 * this.scale, this.workRect1.width - 2 * this.scale, 1 * this.scale );    
 	canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.workRect2, this.style.SeparatorColor );
@@ -414,8 +530,8 @@ VG.Nodes.GraphView.prototype.drawPreviewNode=function( canvas, node )
 
 	// --- Preview Rect
 	this.workRect1.set( this.rect.x + node.data.xPos + 1, this.rect.y + node.data.yPos + 25, node.rect.width-2, node.rect.height - 25 - 2);
-	if ( this.previewImage.width !== this.workRect1.width || this.previewImage.height !== this.workRect1.height )
-		this.previewImage=VG.Core.Image( this.workRect1.width, this.workRect1.height );
+	if ( !this.externalPreviewRes && (this.previewImage.width !== this.workRect1.width || this.previewImage.height !== this.workRect1.height) )
+		this.previewImage.resize( this.workRect1.width, this.workRect1.height );
 
 	var text="";
 
@@ -482,9 +598,9 @@ VG.Nodes.GraphView.prototype.drawPreviewNode=function( canvas, node )
     			canvas.popFont(); 			
     		}			
 		} else 	
-		if ( connTerminal.type === VG.Nodes.Terminal.Type.Sample2D ) 
+		if ( connTerminal.type === VG.Nodes.Terminal.Type.Sample ) 
 		{
-			text="Preview: Sample2D";
+			text="Preview: Sample";
 
             if (this.graphOutput && this.graphOutput.output)
             {
@@ -519,23 +635,33 @@ VG.Nodes.GraphView.prototype.drawPreviewNode=function( canvas, node )
                 var width, height;
                 var image=this.graphOutput.output;
 
-                var  aspectRatio=image.getHeight() / image.getWidth();
-                if ( this.previewImage.width * aspectRatio > this.previewImage.height )
+                var  aspectRatio=this.previewImage.height / this.previewImage.width;
+                if ( this.previewNodeContentWidth * aspectRatio > this.previewNodeContentHeight )
                 {
-                    width = this.previewImage.height / aspectRatio < image.getWidth() ? this.previewImage.height / aspectRatio : image.getWidth();
+                    width = this.previewNodeContentHeight / aspectRatio < image.getWidth() ? this.previewNodeContentHeight / aspectRatio : this.previewImage.width;
                 } else
                 {
-                    width = this.previewImage.width < image.getWidth() ? this.previewImage.width : image.getWidth();
+                    width = this.previewNodeContentWidth < this.previewImage.width ? this.previewNodeContentWidth : this.previewImage.width;
                 }
-                height = Math.floor( aspectRatio * this.previewImage.width );
+                height = Math.floor( aspectRatio * this.previewNodeContentWidth );
               
                 width=Math.floor( width );
 
-                var wOffset=Math.floor( ( (this.previewImage.width - width)/2 ) );
-                var hOffset=Math.floor( ( (this.previewImage.height - height)/2 ) );
+                var wOffset=Math.floor( ( (this.previewNodeContentWidth - width)/2 ) );
+                var hOffset=Math.floor( ( (this.previewNodeContentHeight - height)/2 ) );
 
-                canvas.drawImage( VG.Core.Point( this.workRect1.x + wOffset, this.workRect1.y + hOffset ), this.graphOutput.output,
-                    VG.Core.Size( width, height ) );
+                this.graphOutput.output.imageWidth=this.previewImage.width;
+                this.graphOutput.output.imageHeight=this.previewImage.height;
+
+                canvas.pushClipRect( this.workRect1 );
+
+                this.workRect1.set( this.workRect1.x + wOffset, this.workRect1.y + hOffset, width, height );
+                canvas.drawImage( this.workRect1, this.graphOutput.output, this.workRect1 );
+
+                canvas.popClipRect();
+
+                this.graphOutput.output.imageWidth=0;
+                this.graphOutput.output.imageHeight=0;
             }
 		} else
 		if ( connTerminal.type === VG.Nodes.Terminal.Type.Material ) 
@@ -568,6 +694,12 @@ VG.Nodes.GraphView.prototype.drawPreviewNode=function( canvas, node )
     canvas.popFont();    
 };
 
+VG.Nodes.GraphView.prototype.getOutputTerminal=function()
+{
+    if ( this.previewNode.inputs.length > 0 && this.previewNode.inputs[0].isConnected() )
+        return this.previewNode.inputs[0].connectedTo[0];
+};
+
 VG.Nodes.GraphView.prototype.getNodeHeight=function( node )
 { 
 	var height=25 + this.getNodeBodyHeight( node );
@@ -591,12 +723,10 @@ VG.Nodes.GraphView.prototype.getTerminalColor=function( t )
 	else
 	if ( t.type === VG.Nodes.Terminal.Type.String ) return this.style.TerminalColor2;
 	else
-	if ( t.type === VG.Nodes.Terminal.Type.Vector2 || t.type === VG.Nodes.Terminal.Type.Vector3 || t.type === VG.Nodes.Terminal.Type.Vector4 ) 
+	if ( t.type === VG.Nodes.Terminal.Type.Vector2 || t.type === VG.Nodes.Terminal.Type.Vector3 || t.type === VG.Nodes.Terminal.Type.Vector4 || t.type === VG.Nodes.Terminal.Type.Sample ) 
 		return this.style.TerminalColor3;
-	else		
-	if ( t.type === VG.Nodes.Terminal.Type.Sample2D || t.type === VG.Nodes.Terminal.Type.Sample3D ) return this.style.TerminalColor4;	
-	else
-	if ( t.type === VG.Nodes.Terminal.Type.Material ) return this.style.TerminalColor2;
+	//else		
+	//if ( t.type === VG.Nodes.Terminal.Type.Sample ) return this.style.TerminalColor4;	
 	else
 	if ( t.type === VG.Nodes.Terminal.Type.Texture ) return this.style.TerminalColor5;
 
@@ -821,6 +951,20 @@ VG.Nodes.GraphView.prototype.keyDown=function( keyCode, keysDown )
     }
  };
 
+VG.Nodes.GraphView.prototype.update=function()
+{
+    if ( this.previewNode.inputs[0].isConnected() )
+    {
+        var vector=undefined;
+
+        if ( this.previewNode.inputs.length > 1 && this.previewNode.inputs[1].isConnected() )
+            vector=this.previewNode.inputs[1].connectedTo[0].onCall();
+
+        this.graphOutput=this.graph.run( this.previewNode.inputs[0].connectedTo[0], this.previewImage, vector );
+        VG.update();
+    }
+};
+
 VG.Nodes.GraphView.prototype.paintWidget=function( canvas )
 {   
     var rect=this.rect;
@@ -844,12 +988,12 @@ VG.Nodes.GraphView.prototype.paintWidget=function( canvas )
     // --- Check if Controller has Content
 
     if ( !this.controller.isValid() ) {
-    
+    /*
         canvas.pushFont( VG.Font.Font( canvas.style.DefaultFontName, 60 ) );
         canvas.drawTextRect( "No Content", this.rect, VG.Core.Color( 255, 255, 255 ), 1, 1 );
-        canvas.popFont();
+        canvas.popFont();*/
 
-        canvas.setClipRect();
+        //canvas.setClipRect();
         return;
     }
 
@@ -999,3 +1143,23 @@ VG.Nodes.GraphView.prototype.clipboardDeleteSelection=function()
 };
 
 // --------------------- Clipboard End
+
+// -------------------------------------------------------------------- ShapeUploadDialog
+
+VG.Nodes.GraphParamsDialog=function( graphEditor, graphData )
+{
+    VG.UI.Dialog.call( this, "Graph Parameters Dialog" );
+
+    var codeEdit=VG.UI.CodeEdit( graphData.graphParamsFunc );
+
+    this.layout=VG.UI.Layout( codeEdit );
+
+    this.addButton( "Close", function() { this.close( this ); }.bind( this ) );
+    this.addButton( "Apply", function() { 
+        graphEditor.applyGraphParams( graphData, codeEdit.text );
+        this.close( this );
+    }.bind( this ) );
+};
+
+VG.Nodes.GraphParamsDialog.prototype=VG.UI.Dialog();
+

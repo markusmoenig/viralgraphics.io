@@ -54,12 +54,12 @@ VG.Controller.Base.prototype.addObserver=function( key, func, context )
 	}
 };
 
-VG.Controller.Base.prototype.notifyObservers=function( key )
+VG.Controller.Base.prototype.notifyObservers=function( key, arg )
 {
 	if ( this.observerKeys.indexOf( key ) !== -1 ) {
 		for( var i=0; i < this[key].length; ++i ) {
 			var observer=this[key][i];
-			observer.func.call( observer.context );
+			observer.func.call( observer.context, arg );
 		}
 	}
 
@@ -79,7 +79,6 @@ VG.Controller.Base.prototype.notifyObservers=function( key )
 
 					if ( restPath.indexOf( '.' ) === -1 ) {
 						// --- The path does not contain any more dots / controllers, update the value
-						//console.log( "Value Binding Needs Update: " + binding.path );
 
 						if ( binding.object.isWidget ) {
 							// --- Set the value to the binding object
@@ -131,6 +130,8 @@ VG.Controller.Array=function( collection, path )
     this.addObserverKey( "parentSelectionChanged" );
     this.addObserverKey( "selectionChanged" );
     this.addObserverKey( "changed" );
+    this.addObserverKey( "addItem" );
+    this.addObserverKey( "removeItem" );
 };
 
 VG.Controller.Array.prototype=VG.Controller.Base();
@@ -143,6 +144,11 @@ Object.defineProperty( VG.Controller.Array.prototype, "length",
         else return 0;
     }   
 });
+
+VG.Controller.Array.prototype.count=function()
+{
+    return this.length;
+};
 
 VG.Controller.Array.prototype.at=function( index )
 {
@@ -161,6 +167,8 @@ VG.Controller.Array.prototype.add=function( item, noUndo )
     	item=this.create( this.contentClassName );
     }
 
+    this.notifyObservers( "addItem", item );    
+
     array.push( item );
 
     if ( this.collection.__vgUndo && !noUndo ) 
@@ -178,6 +186,8 @@ VG.Controller.Array.prototype.insert=function( index, item, noUndo )
         item=this.create( this.contentClassName );
     }
 
+    this.notifyObservers( "addItem", item );    
+
     array.splice( index, 0, item );
 
     if ( this.collection.__vgUndo && !noUndo ) 
@@ -190,6 +200,8 @@ VG.Controller.Array.prototype.insert=function( index, item, noUndo )
 VG.Controller.Array.prototype.remove=function( item, noUndo )
 {
     var array=this.collection.dataForPath( this.path );
+
+    this.notifyObservers( "removeItem", item );    
 
     var index=array.indexOf( item );
     if ( index >= 0 )
@@ -280,6 +292,11 @@ VG.Controller.Array.prototype.isSelected=function( item )
     else return true;
 };
 
+VG.Controller.Array.prototype.setSelected=function( item )
+{
+    this.selected=item;
+};
+
 VG.Controller.Array.prototype.canRemove=function()
 {
 	if ( this.selected ) return true;
@@ -290,6 +307,36 @@ VG.Controller.Array.prototype.indexOf=function( item )
 {
     var array=this.collection.dataForPath( this.path );
     return array.indexOf( item );
+};
+
+VG.Controller.Array.prototype.applyUndoForMultipleChanges=function( item, undoName )
+{
+    if ( this.collection.__vgUndo ) 
+        this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.MultipleChanges, 
+            this.path, -1, JSON.stringify( item ), undoName );
+};
+
+VG.Controller.Array.prototype.applyMultipleChanges=function( undoItem, undo )
+{
+    var values=undo ? undoItem.oldValues : undoItem.newValues;
+
+    if ( undoItem.parentControllerPath ) {
+        // --- Adjust selection of parentController if necessary
+        var parentController=this.collection.controllerForPath( undoItem.parentControllerPath );
+        parentController.object.selected=parentController.object.at( undoItem.parentIndex );
+    }
+
+    for ( var i=0; i < values.length; ++i )
+    {
+        var object=values[i];
+        var item=this.at( object._index );
+
+        for ( var p=0; p < undoItem.propertyNames.length; ++p )
+        {
+            var propName=undoItem.propertyNames[p];
+            item[propName]=object[propName];
+        }
+    }
 };
 
 // --------------------------------------------- VG.Controller.Tree
@@ -315,6 +362,8 @@ VG.Controller.Tree=function( collection, path )
 
     this.addObserverKey( "selectionChanged" );
     this.addObserverKey( "changed" );
+    this.addObserverKey( "addItem" );
+    this.addObserverKey( "removeItem" );    
 };
 
 VG.Controller.Tree.prototype=VG.Controller.Base();
@@ -360,8 +409,6 @@ VG.Controller.Tree.prototype.at=function( index )
         }
     }
 
-    //console.log( "at", String( index ), item.text );
-
     return item; 
 };
 
@@ -372,6 +419,8 @@ VG.Controller.Tree.prototype.add=function( index, item, noUndo )
     if ( item === undefined && this.contentClassName.length ) {
         item=this.create( this.contentClassName );
     }
+
+    this.notifyObservers( "addItem", item );    
 
     // --- Add the item
 
@@ -431,9 +480,10 @@ VG.Controller.Tree.prototype.insert=function( index, item, noUndo )
         item=this.create( this.contentClassName );
     }
 
+    this.notifyObservers( "addItem", item );    
+
     // --- Insert the item
 
-    var itemIndex;
     var done=false;
 
     if ( index === "" ) 
@@ -466,7 +516,7 @@ VG.Controller.Tree.prototype.insert=function( index, item, noUndo )
     }
 
     if ( this.collection.__vgUndo && !noUndo ) 
-        this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.Add, this.path, itemIndex, JSON.stringify( item ) );
+        this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.Add, this.path, index, JSON.stringify( item ) );
 
     this.notifyObservers( "changed" );    
     return item;
@@ -475,6 +525,8 @@ VG.Controller.Tree.prototype.insert=function( index, item, noUndo )
 VG.Controller.Tree.prototype.remove=function( item, noUndo )
 {
     var array=this.collection.dataForPath( this.path );
+
+    this.notifyObservers( "removeItem", item );    
 
     var index=this.indexOf( item );
     var itemArray=this.arrayOfItem( item );
@@ -496,6 +548,50 @@ VG.Controller.Tree.prototype.remove=function( item, noUndo )
             this.selected=itemArray[0];
         }
     }
+};
+
+VG.Controller.Tree.prototype.move=function( sourceIndex, destIndex, mode, noUndo )
+{
+    // --- mode: 0 noop, 1 below on same hierarchy, 2 new child (expand hierachy)
+
+    var undoItem={
+        undo : { sourceIndex : destIndex, destIndex : sourceIndex, mode : 0 },
+        redo : { sourceIndex : sourceIndex, destIndex : destIndex, mode : mode },
+    };
+
+    var sourceItem=this.at( sourceIndex );
+    var sourceArray=this.arrayOfItem( sourceItem );
+    var destItem=this.at( destIndex );
+
+    sourceArray.splice( sourceArray.indexOf( sourceItem ), 1 );
+
+    if ( mode === 0 || mode === 1 )
+    {
+        // --- Stays in same hierarchy
+        var destArray=this.arrayOfItem( destItem );
+        var destIndex=destArray.indexOf( destItem );
+        if ( mode === 1 ) destIndex++;
+
+        destArray.splice( destIndex, 0, sourceItem );
+    } else
+    {
+        // --- Add as a new child
+
+        if ( !noUndo )
+        {
+            destIndex+=".0";
+
+            undoItem.undo.sourceIndex=destIndex;            
+            undoItem.redo.destIndex=destIndex;
+            undoItem.undo.mode=mode;
+        }
+
+        this.insert( destIndex, sourceItem, true );
+    }
+
+    if ( this.collection.__vgUndo && !noUndo ) 
+        this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.Move, this.path, sourceIndex, 
+            JSON.stringify( undoItem  ) );
 };
 
 VG.Controller.Tree.prototype.create=function( strClass )
@@ -578,8 +674,6 @@ VG.Controller.Tree.prototype.canRemove=function()
 
 VG.Controller.Tree.prototype.arrayOfItemChildren=function( curItem, item )
 {
-    //console.log( "indexOfChildren", path, curItem );
-
     if ( curItem.children.indexOf( item ) !== -1 )
     {
         return curItem.children;
@@ -626,8 +720,6 @@ VG.Controller.Tree.prototype.arrayOfItem=function( item )
 
 VG.Controller.Tree.prototype.indexOfChildren=function( curItem, path, item )
 {
-    //console.log( "indexOfChildren", path, curItem );
-
     if ( curItem.children.indexOf( item ) !== -1 )
     {
         path+=curItem.children.indexOf( item ).toString();
@@ -697,4 +789,22 @@ VG.Controller.Tree.prototype.parentOfItem=function( item )
     }
     
     return undefined;
+};
+
+VG.Controller.Tree.prototype.topLevelIndexOfIndex=function( index )
+{
+    if ( index === undefined ) {
+        if ( this.selected )
+            index=this.indexOf( this.selected );
+    }
+
+    if ( index )
+    {
+        if ( index.indexOf( '' ) === -1 ) return index;
+        else
+        {
+            var array=index.split('');
+            return array[0];
+        }
+    }
 };

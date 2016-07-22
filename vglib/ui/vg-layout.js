@@ -32,14 +32,15 @@ VG.UI.LayoutHSeparator=function()
 
     this.horizontalExpanding=false;
     this.verticalExpanding=true;
+
+    this.preferredSize.set( 1, 1 );
 };
 
 VG.UI.LayoutHSeparator.prototype=VG.UI.Widget();
 
 VG.UI.LayoutHSeparator.prototype.calcSize=function()
 {
-    var size=VG.Core.Size( 1,1 );
-    return size;
+    return this.preferredSize;
 };
 
 VG.UI.LayoutHSeparator.prototype.paintWidget=function( canvas )
@@ -48,7 +49,6 @@ VG.UI.LayoutHSeparator.prototype.paintWidget=function( canvas )
     
     //VG.context.style.drawToolSeparator( canvas, this );
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, VG.Core.Color("#BBC0C7") );
-
 };
 
 // ----------------------------------------------------------------- VG.UI.LayoutVSeparator
@@ -62,14 +62,15 @@ VG.UI.LayoutVSeparator=function()
 
     this.horizontalExpanding=true;
     this.verticalExpanding=false;
+
+    this.preferredSize.set( 1, 1 );
 };
 
 VG.UI.LayoutVSeparator.prototype=VG.UI.Widget();
 
 VG.UI.LayoutVSeparator.prototype.calcSize=function()
 {
-    var size=VG.Core.Size( 1,1 );
-    return size;
+    return this.preferredSize;
 };
 
 VG.UI.LayoutVSeparator.prototype.paintWidget=function( canvas )
@@ -953,10 +954,17 @@ VG.UI.SplitLayout.prototype.specialLayoutHitTest=function( pt )
                 VG.update();
             }
 
+            this.mouseCursorChanged=true;
+
             return true;      
         }
     }
-    VG.setMouseCursor( "default" );
+
+    if ( this.mouseCursorChanged ) {
+        VG.setMouseCursor( "default" );
+        this.mouseCursorChanged=false;
+    }
+
     if ( this.hasHoverState ) {
         this.hasHoverState=false;
         VG.update();
@@ -971,9 +979,10 @@ VG.UI.SplitLayout.prototype.hoverIn=function()
 
 VG.UI.SplitLayout.prototype.hoverOut=function()
 {
-    //console.log( "hoverOut" );
-
-    //this.dragOp=0;
+    if ( this.mouseCursorChanged ) {
+        VG.setMouseCursor( "default" );
+        this.mouseCursorChanged=false;
+    }
 };
 
 VG.UI.SplitLayout.prototype.mouseMove=function( event )
@@ -1033,6 +1042,8 @@ VG.UI.SplitLayout.prototype.mouseMove=function( event )
 
 VG.UI.SplitLayout.prototype.mouseDown=function( event )
 {
+    if ( !this.specialLayoutHitTest( event.pos ) ) return;
+
     var widget=this.children[this.dragOpItemIndex];
 
     if ( event.pos[this.primaryCoord] > ( widget.rect[this.primaryCoord] + widget.rect[this.primarySize] - VG.UI.stylePool.current.skin.SplitLayout.Size ) ) {
@@ -1069,9 +1080,8 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
     this.spacing=sepSize;
 
     var rect=this.rect;
-    var totalSpacing=(this.items.length-1) * sepSize;
 
-    var availableSpace=rect[this.primarySize] - totalSpacing - this.margin[this.primaryLesserMargin] - this.margin[this.primaryGreaterMargin];
+    var availableSpace=rect[this.primarySize] - this.margin[this.primaryLesserMargin] - this.margin[this.primaryGreaterMargin];
     var expandingChilds=0;
         
     for( var i=0; i < this.children.length; ++i ) {
@@ -1089,6 +1099,9 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
             } else*/ ++expandingChilds;
         }
     }
+
+    var totalSpacing=(expandingChilds-1) * sepSize;
+    availableSpace-=totalSpacing;
 
     var expandingChildSpace=availableSpace;    
     var minAdjustmentCorrection=0;
@@ -1156,17 +1169,6 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
                 }
 
                 primarySize+=item.offset + item.totalOffset;
-
-                // --- If the next widget is not expanding add the spacing to this expanding one
-
-                if ( i < (this.children.length-1) ) {
-                    var nextChild=this.children[i+1];
-                    if ( nextChild.isWidget && nextChild[this.primaryLayoutExpanding] === false )
-                        primarySize+=sepSize;
-                }
-
-                // ---
-
                 child.rect[this.primarySize]=primarySize;
 
                 child.rect.round();
@@ -1192,15 +1194,6 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
             }
 
             primarySize+=item.offset + item.totalOffset;
-
-            // --- If the next widget is not expanding add the spacing to this expanding one
-
-            if ( i < (this.children.length-1) ) {
-                var nextChild=this.children[i+1];
-                if ( nextChild.isWidget && nextChild[this.primaryLayoutExpanding] === false )
-                    primarySize+=sepSize;
-            }
-
             childRect[this.primarySize]=primarySize;
 
             child.rect.set( childRect );
@@ -1456,6 +1449,9 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
 
     this.minimumSize.set( 0, this.margin.top + this.margin.bottom );
 
+    if ( this.title )
+        this.minimumSize.height+=VG.UI.stylePool.current.skin.TitleBar.Height;
+
     // --- Compute number of visible items
 
     var visibleItems=0;
@@ -1469,6 +1465,8 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
 
     var totalSpacing=(visibleItems-1) * this.spacing;
     var availableSpace=rect.height - totalSpacing - this.margin.top - this.margin.bottom;
+    if ( this.title ) availableSpace-=VG.UI.stylePool.current.skin.TitleBar.Height;
+
     var expandingChilds=0;
 
     for( var i=0; i < this.children.length; ++i ) {

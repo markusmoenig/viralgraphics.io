@@ -36,7 +36,8 @@ VG.UI.NumberEdit=function( value, min, max, fixedPrecision )
     this.value=value;
 
     this.inputFilter=function( input ) {
-        var output="";
+        var output=input;
+        return output;
 
         var i=0; var afterComma=false, digitsAfterComma=0;
         var index=this.text.indexOf( '.' );
@@ -83,6 +84,7 @@ VG.UI.NumberEdit=function( value, min, max, fixedPrecision )
     this.minimumSize.width=40;
 
     this.fixedPrecision=fixedPrecision;
+    this.maxString=this.max ? this.max.toFixed( this.fixedPrecision ) : "0";
 
     this.horizontalExpanding=true;
     this.verticalExpanding=false;
@@ -122,6 +124,17 @@ VG.UI.NumberEdit.prototype.checkValueRange=function( value )
     if ( this.max && value > this.max ) value=this.max;
 
     return value;
+};
+
+VG.UI.NumberEdit.prototype.valueIsValid=function()
+{
+    var valid=true;
+
+    if ( isNaN( this.value ) ) valid=false;
+    if ( this.min && this.value < this.min ) valid=false;
+    if ( this.max && this.value > this.max ) valid=false;
+
+    return valid;
 };
 
 VG.UI.NumberEdit.prototype.calcSize=function( canvas )
@@ -220,7 +233,7 @@ VG.UI.Vector3Edit=function( x, y, z, min, max, fixedPrecision )
     this.value2Edit.changed=function( value, cont, obj ) {
         this.value.y=value;
         if ( this.collection && this.path )
-            this.collection.storeDataForPath( this.path, [this.value.x, this.value.y, this.value.z] );        
+            this.collection.storeDataForPath( this.path, [this.value.x, this.value.y, this.value.z] );
         if ( this.changed ) this.changed( this.value, cont, this );
     }.bind( this );
 
@@ -228,7 +241,7 @@ VG.UI.Vector3Edit=function( x, y, z, min, max, fixedPrecision )
     this.value3Edit.changed=function( value, cont, obj ) {
         this.value.z=value;
         if ( this.collection && this.path )
-            this.collection.storeDataForPath( this.path, [this.value.x, this.value.y, this.value.z] );        
+            this.collection.storeDataForPath( this.path, [this.value.x, this.value.y, this.value.z] );
         if ( this.changed ) this.changed( this.value, cont, this );
     }.bind( this );
 
@@ -264,6 +277,11 @@ VG.UI.Vector3Edit.prototype.bind=function( collection, path )
 VG.UI.Vector3Edit.prototype.valueFromModel=function( value )
 {
     if ( value === null ) this.value.set( 0, 0, 0 );
+    else if ( typeof value === 'string' || value instanceof String )
+    {
+        var arr=JSON.parse( value );
+        this.value.set( arr[0], arr[1], arr[2] );
+    }
     else if ( value instanceof Array )
         this.value.set( value[0], value[1], value[2] );
 
@@ -272,12 +290,19 @@ VG.UI.Vector3Edit.prototype.valueFromModel=function( value )
     this.value3Edit.value=this.value.z;
 
     if ( this.changed )
-        this.changed.call( VG.context, this.value, true, this );
+        this.changed.call( VG.context, this.value, true, this, true );
 };
 
 VG.UI.Vector3Edit.prototype.calcSize=function( canvas )
 {
     return this.value1Edit.calcSize( canvas );
+};
+
+VG.UI.Vector3Edit.prototype.enableXYZMode=function()
+{
+    this.value1Edit.customBorderColor=VG.Core.Color( "#bd2121" ); 
+    this.value2Edit.customBorderColor=VG.Core.Color( "#dbd92a" ); 
+    this.value3Edit.customBorderColor=VG.Core.Color( "#4445c6" ); 
 };
 
 VG.UI.Vector3Edit.prototype.paintWidget=function( canvas )

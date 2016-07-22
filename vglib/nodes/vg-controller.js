@@ -50,7 +50,7 @@ VG.Controller.Node.prototype=VG.Controller.Base();
 Object.defineProperty( VG.Controller.Node.prototype, "length", 
 {
     get: function() {
-        var array=this.collection.dataForPath( this.path );
+        var array=this.collection.dataForPath( this.path ).nodes;
         if ( array ) return array.length;
         else return 0;
     }   
@@ -58,7 +58,7 @@ Object.defineProperty( VG.Controller.Node.prototype, "length",
 
 VG.Controller.Node.prototype.at=function( index )
 {
-    var array=this.collection.dataForPath( this.path );
+    var array=this.collection.dataForPath( this.path ).nodes;
 
     if ( index < 0 || index >= array.length ) return undefined;
 
@@ -67,7 +67,7 @@ VG.Controller.Node.prototype.at=function( index )
 
 VG.Controller.Node.prototype.add=function( item, noUndo )
 {
-    var array=this.collection.dataForPath( this.path );
+    var array=this.collection.dataForPath( this.path ).nodes;
     if ( !array ) { VG.error( "VG.Controller.Node.add() : Controller has no content!" ); return; }
 
     if ( item.node )
@@ -103,7 +103,7 @@ VG.Controller.Node.prototype.add=function( item, noUndo )
 
 VG.Controller.Node.prototype.insert=function( index, item, noUndo )
 {
-    var array=this.collection.dataForPath( this.path );
+    var array=this.collection.dataForPath( this.path ).nodes;
 
     if ( item.node )
     {
@@ -138,7 +138,7 @@ VG.Controller.Node.prototype.insert=function( index, item, noUndo )
 
 VG.Controller.Node.prototype.remove=function( item, noUndo )
 {
-    var array=this.collection.dataForPath( this.path );
+    var array=this.collection.dataForPath( this.path ).nodes;
 
     item.node.disconnectAll();
 
@@ -163,7 +163,7 @@ VG.Controller.Node.prototype.remove=function( item, noUndo )
 
 VG.Controller.Node.prototype.changeProperty=function( index, name, data, noUndo )
 {
-    var array=this.collection.dataForPath( this.path );
+    var array=this.collection.dataForPath( this.path ).nodes;
     var item=array[index];
 
     if ( data !== null && typeof data === 'object' )
@@ -185,7 +185,7 @@ VG.Controller.Node.prototype.changeProperty=function( index, name, data, noUndo 
 
 VG.Controller.Node.prototype.disconnect=function( index, name, data, noUndo )
 {
-    var array=this.collection.dataForPath( this.path );
+    var array=this.collection.dataForPath( this.path ).nodes;
     var item=array[index];
 
     var sourceNode, destNode;
@@ -205,7 +205,7 @@ VG.Controller.Node.prototype.disconnect=function( index, name, data, noUndo )
 
 VG.Controller.Node.prototype.connect=function( index, name, data, noUndo )
 {
-    var array=this.collection.dataForPath( this.path );
+    var array=this.collection.dataForPath( this.path ).nodes;
     var item=array[index];
 
     var sourceNode, destNode;
@@ -225,7 +225,7 @@ VG.Controller.Node.prototype.connect=function( index, name, data, noUndo )
 
 VG.Controller.Node.prototype.modelChanged=function( forceRenew )
 {
-    var array=this.collection.dataForPath( this.path );
+    var array=this.collection.dataForPath( this.path ).nodes;
 
     if ( this.graph.previewNode ) 
         this.graph.previewNode.disconnectAll();
@@ -280,7 +280,7 @@ VG.Controller.Node.prototype.modelChanged=function( forceRenew )
 
 VG.Controller.Node.prototype.syncGraph=function()
 {
-    var array=this.collection.dataForPath( this.path );
+    var array=this.collection.dataForPath( this.path ).nodes;
 
     if ( this.graph.previewNode ) 
         this.graph.previewNode.disconnectAll();
@@ -378,12 +378,12 @@ VG.Controller.Node.prototype.canRemove=function()
 
 VG.Controller.Node.prototype.indexOf=function( item )
 {
-    var array=this.collection.dataForPath( this.path );
+    var array=this.collection.dataForPath( this.path ).nodes;
     return array.indexOf( item );
 };
 
 VG.Controller.Node.prototype.isValid=function()
 {
-    var array=this.collection.dataForPath( this.path );
+    var array=this.collection.dataForPath( this.path ).nodes;
     if ( !array ) return false; else return true;
 };

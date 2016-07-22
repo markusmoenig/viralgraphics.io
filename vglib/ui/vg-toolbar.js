@@ -156,22 +156,33 @@ VG.UI.ToolButton.prototype.addExclusions=function()
 VG.UI.ToolButton.prototype.calcSize=function( canvas )
 {
     var size=this.preferredSize;
-    
-    canvas.pushFont( canvas.style.skin.ToolButton.Font );
-    this.minimumSize.width=canvas.style.skin.ToolButton.MinimumWidth;
 
-    if ( !this.icon ) {
+    if ( !this.icon && !this.svgName && this.text ) 
+    {
+        canvas.pushFont( canvas.style.skin.ToolButton.Font );
+        this.minimumSize.width=canvas.style.skin.ToolButton.MinimumWidth;
+
         canvas.getTextSize( this.text, size );
         size.width+=canvas.style.skin.ToolButton.TextMargin.width; size.height=canvas.getLineHeight() + canvas.style.skin.ToolButton.TextMargin.height;
 
         if ( size.width < this.minimumSize.width )
             size.width=this.minimumSize.width;
-    } else size.set( 22 + 10, 22 + 10 );    
+
+        if ( this.__vgInsideToolBar ) size.height+=2;
+
+        canvas.popFont();
+    } else  {
+        if ( this.__vgInsideToolBar ) {
+            size.copy( canvas.style.skin.ToolBar.IconSize );
+        }
+        else
+        if ( this.iconSize ) size.copy( this.iconSize );
+        else size.set( canvas.style.skin.ToolButton.IconSize.width, canvas.style.skin.ToolButton.IconSize.height );
+    }
 
     if ( this.svgName && this.parent && this.parent.decorated )
         size.set( 33, 33 );
 
-    canvas.popFont();
     return size;
 };
 
@@ -226,6 +237,134 @@ VG.UI.ToolButton.prototype.mouseUp=function( event )
 VG.UI.ToolButton.prototype.paintWidget=function( canvas )
 {
     VG.UI.stylePool.current.drawToolButton( this, canvas );
+};
+
+// ----------------------------------------------------------------- VG.UI.ToolButtonGroup
+
+VG.UI.ToolButtonGroup=function( noneExclusiv )
+{
+    if ( !(this instanceof VG.UI.ToolButtonGroup) ) return new VG.UI.ToolButtonGroup( noneExclusiv );
+
+    VG.UI.Widget.call( this );
+    this.name="ToolButtonGroup";
+
+    this.horizontalExpanding=false;
+    this.verticalExpanding=false;
+
+    this.layout=VG.UI.Layout();
+    this.layout.margin.clear();
+    this.layout.spacing=1;
+
+    this._index=-1;
+
+    this.childWidgets=[];
+    this.noneExclusiv=noneExclusiv;
+};
+
+VG.UI.ToolButtonGroup.prototype=VG.UI.Widget();
+
+Object.defineProperty( VG.UI.ToolButtonGroup.prototype, "index", {
+    get: function() {
+        return this._index;
+    },
+    set: function( index ) {
+        this._index=index;
+
+        for ( var i=0; i < this.layout.children.length; ++i )
+            this.layout.children[i].checked=false;
+
+        this.layout.children[index].checked=true;
+
+        if ( this.changed ) this.changed( index, true, this );
+    }    
+});
+
+Object.defineProperty( VG.UI.ToolButtonGroup.prototype, "__vgInsideToolBar", {
+    set: function( index ) {
+        for ( var i=0; i < this.layout.children.length; ++i ) {
+            var child=this.layout.children[i];
+            child.__vgInsideToolBar=true;
+        }
+    }    
+});
+
+VG.UI.ToolButtonGroup.prototype.calcSize=function( canvas )
+{
+    return this.layout.calcSize( canvas );
+};
+
+VG.UI.ToolButtonGroup.prototype.addImageButton=function( iconName, toolTip )
+{
+    var button=VG.UI.ToolButton();
+    button.icon=VG.Utils.getImageByName( iconName );
+    button.toolTip=toolTip;
+
+    this.addButton( button );
+
+    return button;
+};
+
+VG.UI.ToolButtonGroup.prototype.addSVGButton=function( svgName, groupName, toolTip )
+{
+    var button=VG.UI.ToolButton();
+    button.svgName=svgName;
+    button.svgGroupName=groupName;
+    button.toolTip=toolTip;
+
+    this.addButton( button );
+
+    return button;
+};
+
+VG.UI.ToolButtonGroup.prototype.addTextButton=function( text, toolTip )
+{
+    var button=VG.UI.ToolButton( text );
+    button.toolTip=toolTip;
+
+    this.addButton( button );
+
+    return button;
+};
+
+VG.UI.ToolButtonGroup.prototype.addButton=function( button )
+{
+    //button.iconSize=VG.Core.Size( 28, 24 );
+    button.checkable=true;
+    button.changed=function( value, cont, object ) {
+        if ( !this.noneExclusiv )
+            this.index=this.layout.children.indexOf( object );
+        else {
+            if ( this.changed ) this.changed( this.layout.children.indexOf( object ), false, object );
+        }
+    }.bind( this );
+
+    this.layout.addChild( button );
+    this.childWidgets.push( button );
+
+    var size=this.layout.calcSize( VG.context.workspace.canvas );
+
+    this.minimumSize.copy( size );
+    this.maximumSize.copy( size );
+    this.preferredSize.copy( size );
+
+    if ( this._index === -1 ) this.index=0;
+
+    if ( this.noneExclusiv ) return;
+    for ( var i=0; i < this.layout.children.length; ++i )
+    {
+        var child=this.layout.children[i];
+
+        if ( child !== button ) {
+            child.exclusions.push( button );
+            button.exclusions.push( child );
+        }
+    }    
+};
+
+VG.UI.ToolButtonGroup.prototype.paintWidget=function( canvas )
+{
+    this.layout.rect.copy( this.rect);
+    this.layout.layout( canvas );
 };
 
 // ----------------------------------------------------------------- VG.UI.DecoratedQuickMenu
@@ -303,6 +442,8 @@ VG.UI.DecoratedQuickMenu.prototype.addItem=function( text, callback )
 
 VG.UI.DecoratedQuickMenu.prototype.mouseDown=function( event )
 {
+    var oldOpenState=this.open;
+
     // --- Test for Main Menu Click
     if ( this.popupRect.contains( event.pos ) )
     {
@@ -343,6 +484,9 @@ VG.UI.DecoratedQuickMenu.prototype.mouseDown=function( event )
 
     if ( this.open ) VG.context.workspace.mouseTrackerWidget=this;
     else VG.context.workspace.mouseTrackerWidget=null;
+
+    if ( this.open && !oldOpenState && this.aboutToShow )
+        this.aboutToShow();
 
     VG.update();
 };
@@ -475,6 +619,7 @@ VG.UI.ToolBar.prototype=VG.UI.Widget();
 VG.UI.ToolBar.prototype.addItem=function( item )
 {
     this.layout.addChild( item );
+    item.__vgInsideToolBar=true;
 }
 
 VG.UI.ToolBar.prototype.addItems=function()

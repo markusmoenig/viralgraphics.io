@@ -95,6 +95,7 @@ VG.UI.Workspace=function()
 
     this.textClipboard="";
     this.nodesClipboard="";
+    this.imageClipboard=undefined;
 
     this.singleShotCallbacks=[];
     this.aboutToSaveCallbacks=[];
@@ -102,9 +103,15 @@ VG.UI.Workspace=function()
     // --- Force a redraw every 2000ms
     this.autoRedrawInterval=2000;
 
+    // --- Current Project Info
+
+    this.projectName="Unnamed";
+    this.projectExtension=undefined;
+
     // --- Send an isLoggedIn request to the server to check if we are logged in or not.
 
     VG.sendBackendRequest( "/user/isLoggedIn", "", function( responseText ) {
+        //VG.log( responseText )
         var response=JSON.parse( responseText );
 
         if ( response.status == "ok" && response.loggedIn == true )   
@@ -142,6 +149,12 @@ VG.UI.Workspace=function()
           
         body.style["background-color"]=this.canvas.style.skin.StatusBar.BackColor.toHex();
     }    
+
+    // --- CmdCtrl Shortcut depending on platform
+
+    if ( this.operatingSystem === VG.HostProperty.OSMac )
+        VG.Events.KeyCodes.CmdCtrl=VG.Events.KeyCodes.AppleLeft;
+    else VG.Events.KeyCodes.CmdCtrl=VG.Events.KeyCodes.Ctrl;
 };
 
 VG.UI.Workspace.prototype=VG.UI.Widget();
@@ -334,6 +347,8 @@ VG.UI.Workspace.prototype.createDecoratedToolBar=function()
     this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Login );
     this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Signup );
     this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.UserTool );
+
+    return this.decoratedToolBar;
 };
 
 VG.UI.Workspace.prototype.addQuickMenuItem=function( text, callback )
@@ -623,7 +638,7 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
         this.dndValidDragTarget=undefined;
 
         if ( widgetUnderMouse.checkDragSourceItemId ) {
-            var accepts=widgetUnderMouse.checkDragSourceItemId( event.pos, this.dndItemId );
+            var accepts=widgetUnderMouse.checkDragSourceItemId( event.pos, this.dndItemId, this.dndItem );
             if ( accepts && widgetUnderMouse.acceptDragSourceItem ) {
 
                 // set mouse ptr to accept mode
@@ -684,7 +699,13 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
     this.windowUnderMouse=windowUnderMouse;
 
     if ( this.widgetUnderMouse && this.widgetUnderMouse.supportsAutoFocus === true && this.widgetUnderMouse !== this.focusWidget )
-        this.setFocus( this.widgetUnderMouse );
+    {
+        if ( !this.widgetUnderMouse.autoFocusRect )
+            this.setFocus( this.widgetUnderMouse );
+        else
+        if ( this.widgetUnderMouse.autoFocusRect.contains( event.pos ) )
+            this.setFocus( this.widgetUnderMouse );
+    }
 
     if ( this.focusWidget && this.focusWidget.mouseMove )
         this.focusWidget.mouseMove( event );
@@ -794,7 +815,7 @@ VG.UI.Workspace.prototype.mouseUp=function( button )
 
     // --- If the widget handles click events (buttons), send one.
 
-    if ( this.mouseDownWidget && this.mouseDownWidget === this.widgetUnderMouse && this.mouseDownWidget.clicked && !this.mouseDownWidget.disabled ) 
+    if ( this.mouseDownWidget && this.mouseDownWidget === this.widgetUnderMouse && this.mouseDownWidget.clicked && !this.mouseDownWidget.disabled && !this.mouseDownWidget.customClick ) 
         this.mouseDownWidget.clicked.call( VG.context, this.mouseDownWidget );
 
     this.mouseDownWidget=undefined;
@@ -867,9 +888,10 @@ VG.UI.Workspace.prototype.mouseWheel=function( step )
 
 VG.UI.Workspace.prototype.showContextMenu=function()
 {
-    if ( this.keysDown.length ) {
+    if ( this.keysDown.length || (this.widgetUnderMouse && this.widgetUnderMouse.noContextMenuSupport ) ) {
         // --- When a key is pressed send mouseDown Event
-        this.mouseDown( VG.Events.MouseButton.Right );
+        // Probably have to call this only on native desktop version
+        //this.mouseDown( VG.Events.MouseButton.Right );
         return;
     }
 
@@ -922,7 +944,8 @@ VG.UI.Workspace.prototype.keyDown=function( keyCode )
 
     // ---
 
-    this.keysDown.push( keyCode ); 
+    if ( this.keysDown.indexOf( keyCode ) === -1 )
+        this.keysDown.push( keyCode ); 
 
     if ( this.focusWidget && this.focusWidget.keyDown )
         this.focusWidget.keyDown( keyCode, this.keysDown );
@@ -950,6 +973,9 @@ VG.UI.Workspace.prototype.setFocus=function( widget )
     /**Sets focus to a VG.UI.Widget derived widget. Has to support supportsFocus
      * @param {VG.UI.Widget} widget - The widget to set focus to
      */
+
+     if ( this.focusVerification && !this.focusVerification( widget ) ) return;
+
     if ( widget && widget.supportsFocus && !widget.disabled && 
          widget.visualState !== VG.UI.Widget.VisualState.Focus ) 
     {
@@ -992,6 +1018,7 @@ VG.UI.Workspace.prototype.cycleFocus=function( widget )
     if ( this.focusWidget === widget ) {
 
         var parent=widget.parent;
+        if ( !parent || !parent.children ) return;
         var index=parent.children.indexOf( widget );
         if ( index >= 0 ) {
             ++index;
@@ -1023,7 +1050,7 @@ VG.UI.Workspace.prototype.tick=function( needsRedraw )
 
     // --- ToolTips Controller
 
-    if ( this.lastMouseMove !== -1 && current - this.lastMouseMove > 1000 && this.widgetUnderMouse && !this.widgetUnderMouse.disabled && 
+    if ( this.lastMouseMove !== -1 && current - this.lastMouseMove > 800 && this.widgetUnderMouse && !this.widgetUnderMouse.disabled && 
         this.widgetUnderMouse.toolTip && this.mouseDownWidget === undefined ) {
 
         this.toolTipWidget.rect.x=this.mousePos.x;
@@ -1227,46 +1254,41 @@ VG.UI.Workspace.prototype.modelOpenCallback=function()
             return;
         }
 
-        var fileDialog=VG.RemoteFileDialog( this.modelFileType, this.modelOpen.bind( this ), "Select File", "Open" );
-        this.showWindow( fileDialog );
+        //var fileDialog=VG.RemoteFileDialog( this.modelFileType, this.modelOpen.bind( this ), "Select File", "Open" );
+        //this.showWindow( fileDialog );
+
+        var openProject=VG.RemoteOpenProject( this, this.modelOpen.bind( this ) );
+        this.showWindow( openProject );        
     }
 };
 
-VG.UI.Workspace.prototype.modelOpen=function( callbackObject )
+VG.UI.Workspace.prototype.modelOpen=function( name, data )
 {
-    var path=callbackObject.filePath;
+    var path=name;
+    this.projectName=VG.Utils.fileNameFromPath( path, true );
 
-    if ( path.length > 0 ) {
-        VG.remoteOpenFile( path, function ( responseText ) {
+    if ( this.dataCollectionForLoadSave ) 
+    {
+        // --- Clear Undo History
+        this.dataCollectionForUndoRedo.clearUndo();
 
-            if ( this.dataCollectionForLoadSave ) 
-            {
-                var data=JSON.parse( responseText );
-                data=VG.Utils.decompressFromBase64( data.file );
+        // --- Load the data into the dataCollection
+        var dc=this.dataCollectionForLoadSave;
+        var json=JSON.parse( data );
 
-                // --- Clear Undo History
-                this.dataCollectionForUndoRedo.clearUndo();
-
-                // --- Load the data into the dataCollection
-                var dc=this.dataCollectionForLoadSave;
-                var json=JSON.parse( data );
-
-                for (var key in json ) {
-                    if ( dc.hasOwnProperty(key)) {
-                        dc[key]=json[key];
-                    }
-                }
-            } else
-            if ( this.callbackForOpen ) 
-            {
-                var data=JSON.parse( responseText );
-                this.callbackForOpen( data.file );
+        for (var key in json ) {
+            if ( dc.hasOwnProperty(key)) {
+                dc[key]=json[key];
             }
+        }
+    } else
+    if ( this.callbackForOpen ) 
+    {
+        this.callbackForOpen( name, data );
+    }
 
-            // --- Update the model            
-            this.dataCollectionForUndoRedo.updateTopLevelBindings();        
-        }.bind( this ) );
-    }    
+    // --- Update the model
+    this.dataCollectionForUndoRedo.updateTopLevelBindings();
 
     this.filePath=path;    
     VG.update();
@@ -1308,7 +1330,7 @@ VG.UI.Workspace.prototype.modelOpenLocalCallback=function()
     }.bind( this ) );
 };
 
-VG.UI.Workspace.prototype.modelSaveCallback=function()
+VG.UI.Workspace.prototype.modelSaveCallback=function( callback )
 {   
     if ( !this.filePath ) return;
 
@@ -1318,7 +1340,25 @@ VG.UI.Workspace.prototype.modelSaveCallback=function()
     if ( this.dataCollectionForLoadSave ) data=VG.Utils.compressToBase64( JSON.stringify( this.dataCollectionForLoadSave ) );
     else if ( this.callbackForSave ) data=this.callbackForSave();
 
-    VG.remoteSaveFile( this.filePath, data );
+    if ( this.lastSaveType === 2 || this.lastSaveType === undefined )
+    {
+        var params = {};
+        params.filename = this.filePath;
+        params.content = data;
+
+        VG.downloadRequest("/api/download", params, "POST");
+    } else {
+        VG.remoteSaveFile( this.filePath, data, function( data ) {
+
+            if ( this.statusBar ) {
+                var obj=JSON.parse( data );
+
+                if ( obj.status === 'ok' )
+                    this.statusBar.message( "\"" + VG.Utils.fileNameFromPath( this.filePath ) + "\" has been saved successfully.", 2000 );
+                else this.statusBar.message( "Error during saving \"" + VG.Utils.fileNameFromPath( this.filePath ) + "\"!", 2000 );
+            }
+        }.bind( this ) );
+    }
 };
 
 VG.UI.Workspace.prototype.modelSaveLocalCallback=function()
@@ -1342,7 +1382,7 @@ VG.UI.Workspace.prototype.modelSaveAsCallback=function()
 {    
     if ( this.dataCollectionForLoadSave || this.callbackForSave ) {
 
-        if ( !this.appId ) {
+        if ( !this.appId ) {//|| !this.userName ) {
 
             // --- Show Error Message when no appId (either not logged in or app does not yet exist )
 
@@ -1356,12 +1396,12 @@ VG.UI.Workspace.prototype.modelSaveAsCallback=function()
             return;
         }
 
-        var fileDialog=VG.RemoteFileDialog( this.modelFileType, this.modelSaveAs.bind( this ), "Select File to Save", "Save", true );
-        this.showWindow( fileDialog );
+        var saveProject=VG.RemoteSaveProject( this, this.modelSaveAs.bind( this ) );
+        this.showWindow( saveProject );
     } 
 };
 
-VG.UI.Workspace.prototype.modelSaveAs=function( callbackObject )
+VG.UI.Workspace.prototype.modelSaveAs=function( callbackObject, rcCallback )
 {
     var path=callbackObject.filePath;
 
@@ -1373,8 +1413,12 @@ VG.UI.Workspace.prototype.modelSaveAs=function( callbackObject )
         else if ( this.callbackForSave ) data=this.callbackForSave();
 
         this.filePath=path;
+        this.projectName=VG.Utils.fileNameFromPath( path, true );
 
-        if ( !callbackObject.download ) VG.remoteSaveFile( path, data );
+        if ( !callbackObject.download ) {
+            this.lastSaveType=1;
+            VG.remoteSaveFile( path, data, rcCallback );
+        }
         else
         {
             var params = {};
@@ -1382,6 +1426,8 @@ VG.UI.Workspace.prototype.modelSaveAs=function( callbackObject )
             params.content = data;
 
             VG.downloadRequest("/api/download", params, "POST");
+
+            this.lastSaveType=2;
         }
         return data;
     }    
@@ -1696,8 +1742,9 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
             object.text="New"; 
             object.svgName="glyphs.svg"; 
             //object.svgGroupName="New"; 
-            object.toolTip="Clears the current Project, i.e. resets the Application State.";
-            if ( parent instanceof VG.UI.Menu ) object.statusTip="Clears the current Project, i.e. resets the Application State.";
+            object.toolTip="Clear the current project, i.e. resets the application state.";
+            object.statusTip="Clear the current project, i.e. resets the application state.";
+
             object.clicked=this.modelNewCallback.bind( this );
             if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.addNewWidget( object );
             else object.disabled=true;
@@ -1710,20 +1757,13 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
             object.svgName="glyphs.svg"; 
             object.svgGroupName="Open"; 
 
-            if ( parent instanceof VG.UI.Menu ) {
-                if ( this.platform === VG.HostProperty.PlatformWeb ) {
-                    object.statusTip="Opens a Cloud based Project.";
-                } else {
-                    object.statusTip="Opens a Project.";
-                }
-            }
+            object.statusTip="Open an existing project...";
 
             if ( this.platform === VG.HostProperty.PlatformWeb ) {
                 object.clicked=this.modelOpenCallback.bind( this );
-                object.toolTip="Opens a Project from the Cloud. If you want to open a local Project please choose \"Open Local ...\" in the File Menu. " +
-                "You have to be logged in to use this function.";
+                object.toolTip="Open an existing project.";
             } else {
-                object.toolTip="Opens a local Project.";
+                object.toolTip="Open an existing project.";
                 object.clicked=this.modelOpenLocalCallback.bind( this );
             }
 
@@ -1732,28 +1772,15 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
 
             if ( this.callbackForOpen ) object.disabled=false;
 
-        break;     
-
-        case VG.UI.ActionItemRole.Open_Local: 
-            object.text="Open Local..."; 
-            object.statusTip="Opens a Local Project.";
-
-            //object.iconName="open.png"; 
-            object.clicked=this.modelOpenLocalCallback.bind( this );
-        break;           
+        break;         
 
         case VG.UI.ActionItemRole.Save: 
             object.text="Save"; 
             object.svgName="glyphs.svg"; 
             object.svgGroupName="Save"; 
 
-            if ( parent instanceof VG.UI.Menu ) {
-                if ( this.platform === VG.HostProperty.PlatformWeb ) {
-                    object.statusTip="Save the Project to the Cloud.";
-                } else {
-                    object.statusTip="Save the Project.";
-                }
-            }
+            object.statusTip="Save the project.";
+            object.toolTip="Save the project.";
 
             if ( this.platform === VG.HostProperty.PlatformWeb ) object.clicked=this.modelSaveCallback.bind( this );
             else object.clicked=this.modelSaveLocalCallback.bind( this );
@@ -1770,21 +1797,15 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
             object.svgName="glyphs.svg"; 
             object.svgGroupName="SaveAs"; 
 
-            if ( parent instanceof VG.UI.Menu ) {
-                if ( this.platform === VG.HostProperty.PlatformWeb ) {
-                    object.statusTip="Save the Project to the Cloud. Select Download in the File Requester if you want to Dowload the Project.";
-                } else {
-                    object.statusTip="Save the Project.";
-                }
-            }
+            object.statusTip="Save the project using a new file name.";
+            object.toolTip="Save the Project using a new file name.";
 
             if ( this.platform === VG.HostProperty.PlatformWeb ) { 
                 object.clicked=this.modelSaveAsCallback.bind( this );
-                object.toolTip="Saves the current Project to the Cloud. If you want to download the Project choose Download in the File Requester. " +
-                "You have to be logged in to use this function.";
             } else {
                 object.clicked=this.modelSaveAsLocalCallback.bind( this );
             }
+
             if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.addSaveWidget( object );
             else object.disabled=true;
 
@@ -1795,8 +1816,9 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
         case VG.UI.ActionItemRole.Undo: 
             object.text="Undo"; 
             object.iconName="undo.png";  
-            object.toolTip="Undoes the last user action in the Application.";
-            if ( parent instanceof VG.UI.Menu ) object.statusTip=object.toolTip;
+            object.toolTip="Undo the last user action in the Application.";
+            object.statusTip="Undo the last user action in the Application.";
+
             if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.addUndoWidget( object );
             else object.disabled=true;
             if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Undo );  
@@ -1808,8 +1830,9 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
         case VG.UI.ActionItemRole.Redo: 
             object.text="Redo"; 
             object.iconName="redo.png";   
-            object.toolTip="Redoes the last user action, previously undone via Undo.";
-            if ( parent instanceof VG.UI.Menu ) object.statusTip=object.toolTip;     
+            object.toolTip="Redo the last user action, previously undone via undo.";
+            object.statusTip="Redo the last user action, previously undone via undo.";
+
             if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.addRedoWidget( object );
             else object.disabled=true;
             if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Redo );
@@ -1821,7 +1844,7 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
         case VG.UI.ActionItemRole.Cut: 
             object.text="Cut"; 
 
-            if ( parent instanceof VG.UI.Menu ) object.statusTip="Deletes the selected Data and copies it into the Clipboard.";
+            if ( parent instanceof VG.UI.Menu ) object.statusTip="Delete the selected data and copies it to clipboard.";
             if ( parent instanceof VG.UI.Menu ) parent.aboutToShow=this.modelMenuActionRoleValidationCallback.bind( this );
             object.clicked=this.modelCutCallback.bind( this );                                   
             if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Cut );            
@@ -1829,28 +1852,28 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
 
         case VG.UI.ActionItemRole.Copy: 
             object.text="Copy";
-            if ( parent instanceof VG.UI.Menu ) object.statusTip="Copy the selected Data into the Clipboard.";
+            if ( parent instanceof VG.UI.Menu ) object.statusTip="Copy the selected data to the clipboard.";
             object.clicked=this.modelCopyCallback.bind( this );
             if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Copy );
         break;    
 
         case VG.UI.ActionItemRole.Paste: 
             object.text="Paste"; 
-            if ( parent instanceof VG.UI.Menu ) object.statusTip="Pastes the Data in the Clipboard into the current Widget.";
+            if ( parent instanceof VG.UI.Menu ) object.statusTip="Paste the clipboard data to the current widget.";
             object.clicked=this.modelPasteCallback.bind( this );
             if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Paste );            
         break;  
 
         case VG.UI.ActionItemRole.Delete: 
             object.text="Delete"; 
-            if ( parent instanceof VG.UI.Menu ) object.statusTip="Deletes the current Selection.";
+            if ( parent instanceof VG.UI.Menu ) object.statusTip="Delete the current selection.";
             if ( parent instanceof VG.UI.Menu ) parent.aboutToShow=this.modelMenuActionRoleValidationCallback.bind( this, parent );  
             object.clicked=this.modelDeleteCallback.bind( this );
         break;   
 
         case VG.UI.ActionItemRole.SelectAll: 
             object.text="Select All"; 
-            if ( parent instanceof VG.UI.Menu ) object.statusTip="Selects all Data in the current Widget.";
+            if ( parent instanceof VG.UI.Menu ) object.statusTip="Select all data in the current widget.";
             if ( parent instanceof VG.UI.Menu ) parent.aboutToShow=this.modelMenuActionRoleValidationCallback.bind( this, parent );  
             object.clicked=this.modelSelectAllCallback.bind( this );
             if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.SelectAll );            
@@ -1891,6 +1914,10 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
             object.text="Skin Cycle";
             object.svgName="glyphs.svg";
             object.svgGroupName="SkinCycle";
+
+            object.toolTip="Cycle through the available skins of the application."
+            object.statusTip="Cycle through the available skins of the application."
+
             object.clicked=function() {
                 var style=VG.UI.stylePool.current;
                 var skin=style.skin;
@@ -1898,8 +1925,6 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
 
                 if ( skinIndex < style.skins.length - 1 ) skinIndex++;
                 else skinIndex=0;
-
-                object.toolTip="Cycles through the available Skins of the Application Style."
 
                 style.skin=style.skins[skinIndex];
 
@@ -2019,4 +2044,9 @@ VG.UI.Workspace.prototype.dragOperationStarted=function( source, itemId, item )
         this.dndItemId=itemId;
         this.dndItem=item;
     }
+};
+
+VG.UI.Workspace.prototype.appReceivedFocus=function()
+{
+    this.keysDown=[];
 };

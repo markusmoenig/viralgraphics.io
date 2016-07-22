@@ -105,7 +105,7 @@ VG.GPUBuffer = function(type, size, dynamic, isIndexBuffer)
     this.dataBuffer=VG.Core.TypedArray( type, size );
 
 
-    if ((this.getStride() * this.dataBuffer.getSize()) % 16 != 0) VG.log("Warning: VG.GPUBuffer is not 16-byte alligned");
+    //if ((this.getStride() * this.dataBuffer.getSize()) % 16 != 0) VG.log("Warning: VG.GPUBuffer is not 16-byte alligned");
 
     //This shouldn't happend in native code as the enum is constant
     if (!this.dataBuffer.data) throw "Data is null, unkown/invalid type?";
@@ -300,6 +300,10 @@ VG.Shader = function(vertSrc, fragSrc)
      *  @member {enum} */
     this.blendType = VG.Shader.Blend.None;
 
+    /** BlendEquation default is VG.Shader.BlendEquation.Add
+     *  @member {enum} */
+    this.blendEquation = VG.Shader.BlendEquation.Add;
+
     /** BackFace culling, default is false
      *  @member {bool} */
     this.culling = false;
@@ -320,7 +324,8 @@ VG.Shader = function(vertSrc, fragSrc)
     VG.Renderer().addResource(this);
 }
 
-VG.Shader.Blend = { None: 0, Alpha: 1 };
+VG.Shader.Blend = { None: 0, Alpha: 1, Brush: 2, OneAlpha : 3, ReverseBrush : 4 };
+VG.Shader.BlendEquation = { Add: 0, Subtract: 1, ReverseSubtract : 2 };
 
 VG.Shader.prototype.create = function()
 {
@@ -412,10 +417,37 @@ VG.Shader.prototype.bind = function()
 
         switch (this.blendType)
         {
-        case VG.Shader.Blend.Alpha:
-            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            case VG.Shader.Blend.Alpha:
+                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
             break;
+
+            case VG.Shader.Blend.Brush:  
+                gl.blendFuncSeparate( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);    
+            break; 
+
+            case VG.Shader.Blend.OneAlpha:
+                gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+            break; 
+
+            case VG.Shader.Blend.ReverseBrush:
+                gl.blendFuncSeparate( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE_MINUS_SRC_ALPHA);    
+            break;  
         }
+
+        switch (this.blendEquation)
+        {
+            case VG.Shader.BlendEquation.Add:
+                gl.blendEquationSeparate( gl.FUNC_ADD, gl.FUNC_ADD );
+            break;
+
+            case VG.Shader.BlendEquation.Subtract:  
+                gl.blendEquationSeparate( gl.FUNC_SUBTRACT, gl.FUNC_SUBTRACT );
+            break;  
+
+            case VG.Shader.BlendEquation.ReverseSubtract:
+                gl.blendEquationSeparate( gl.FUNC_REVERSE_SUBTRACT, gl.FUNC_REVERSE_SUBTRACT );
+            break;     
+        }        
     }
 
     //depth states
@@ -724,8 +756,8 @@ VG.Texture = function(images, cube)
     if (!images instanceof Array) throw "images is not an array";
 
     this.images = images;
-
     this.id = 0;
+
     VG.Renderer().addResource(this);
 }
 
@@ -790,10 +822,9 @@ VG.Texture.prototype.create = function()
 
     var gl = VG.WebGL.gl;
 
+    this.images[0].needsUpdate=false;
     this.id = gl.createTexture(this.target);
-
     this.bind();
-
 
     if (this.mipmaps)
     {
@@ -881,7 +912,7 @@ VG.Texture.prototype.update = function(x, y, w, h)
 
 
     //if the dimmension has changed, recreate the texture from scratch
-    if (imW != this.initialRealWidth || imH != this.initialRealHeight)
+    if (imW != this.initialRealWidth || imH != this.initialRealHeight )
     {
         this.destroy();
         this.create();
@@ -919,14 +950,8 @@ VG.Texture.prototype.dispose = function()
     VG.Renderer().removeResource(this);
 }
 
-
-
 VG.Texture.Wrap = { Clamp: 0, Repeat: 1 };
 VG.Texture.Filter = { None: 0, Linear: 1, Bilinear: 2, Trilinear: 3, Anisotropic: 4 };
-
-
-
-
 
 
 
@@ -958,6 +983,7 @@ VG.RenderTarget = function(w, h, main)
 
     // this holds the texture
     this.texid = 0;
+    this.supportsStencil=false;
 
     VG.Renderer().addResource(this);
 }
@@ -980,7 +1006,7 @@ VG.RenderTarget.prototype.create = function()
     this.texid = gl.createTexture(gl.TEXTURE_2D);
 
     gl.bindTexture(gl.TEXTURE_2D, this.texid);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);//LINEAR
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -997,12 +1023,16 @@ VG.RenderTarget.prototype.create = function()
 
     gl.bindRenderbuffer(gl.RENDERBUFFER, this.rbid);
     //set the depth buffer, standard 16bit for better portability
-    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.w, this.h);
+    if ( !this.supportsStencil ) gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.w, this.h);
+    else gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.w, this.h);
+
+    // ---
 
     //attach the texture
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.texid, 0);
-    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.rbid);
-
+    //gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.rbid);
+    if ( !this.supportsStencil ) gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.rbid);
+    else gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.rbid);
 
     //make sure to clear to default
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
@@ -1199,9 +1229,9 @@ VG.RenderTarget.prototype.setScissor = function(rect)
     }
     else
     {
-        if (rect && (rect.width < 0 || rect.height < 0)) {
-            VG.log("RenderTarget.setScissor(glScissor) gets invalid rect(x, y, width, height) paramters : rect(%f, %f, %f, %f\n" + rect);
-        }
+        // if (rect && (rect.width < 0 || rect.height < 0)) {
+            // VG.log("RenderTarget.setScissor(glScissor) gets invalid rect(x, y, width, height) paramters : rect(%f, %f, %f, %f\n" + rect);
+        // }
         gl.disable(gl.SCISSOR_TEST);
     }
 }
@@ -1245,3 +1275,46 @@ VG.RenderTarget.prototype.checkStatusComplete = function()
     var gl = VG.WebGL.gl;
     return gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
 };
+
+VG.RenderTarget.prototype.setStencilMode = function( mode )
+{
+    var gl = VG.WebGL.gl;
+
+    if ( !this.supportsStencil ) return;
+
+    switch ( mode )
+    {
+        case VG.RenderTarget.StencilMode.None :
+            gl.disable( gl.STENCIL_TEST );
+        break;
+
+        case VG.RenderTarget.StencilMode.FillKeepOne :
+            gl.enable( gl.STENCIL_TEST );
+
+            gl.stencilFunc(gl.ALWAYS, 1, 0xFF); // Set any stencil to 1
+            gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+            gl.stencilMask( 0xFF );
+
+            gl.colorMask(false, false, false, false);
+            gl.clear( gl.STENCIL_BUFFER_BIT );
+        break;   
+
+        case VG.RenderTarget.StencilMode.DrawKeepOne :
+            gl.enable( gl.STENCIL_TEST );
+
+            gl.colorMask(true, true, true, true);
+            gl.stencilFunc( gl.EQUAL, 1, 0xFF); // Pass test if stencil value is 1
+            gl.stencilMask( 0x00 );
+        break;
+
+        case VG.RenderTarget.StencilMode.DrawInverse :
+            gl.enable( gl.STENCIL_TEST );
+
+            gl.colorMask(true, true, true, true);
+            gl.stencilFunc( gl.EQUAL, 0, 0xFF); // Pass test if stencil value is 0
+            gl.stencilMask( 0x00 );
+        break;
+    }
+};
+
+VG.RenderTarget.StencilMode = { None: 0, FillKeepOne : 1, DrawKeepOne : 2, DrawInverse : 3 };

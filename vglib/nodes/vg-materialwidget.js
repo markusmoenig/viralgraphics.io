@@ -219,13 +219,14 @@ VG.Nodes.MaterialPreview.prototype.setupDefaultScene = function(context, scene)
     this.object.position.y = 0;
 
     this.object.material=this.material;
-    VG.Render.MtlMaterial.recursiveCompile(this.object, context.lights);
+    //VG.Render.MtlMaterial.recursiveCompile(this.object, context.lights);
 }
 
 VG.Nodes.MaterialPreview.prototype.setMtlData = function( mtl )
 {
     this.material.opt=mtl;
-    VG.Render.MtlMaterial.recursiveCompile(this.object, this.context.lights);    
+    this.material.needsUpdate=true;
+    //VG.Render.MtlMaterial.recursiveCompile(this.object, this.context.lights);    
 };
 
 // -------------------------------------------------------------------- VG.Nodes.MaterialWidget

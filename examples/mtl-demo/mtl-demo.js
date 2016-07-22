@@ -339,6 +339,11 @@ MtlLoaderDemo = function(){
     });
 
 
+    //var cubeIndexed = VG.Render.Mesh.makeBoxIndexed(1, 1, 1);
+    //
+    //cubeIndexed.position = new VG.Math.Vector3(-3.0, 0, 0);
+    //cubeIndexed.parent = this.scene;
+
 
     //var aste = VG.Import.loadObj(files['asteroid.obj'], files, 0.5);
     //aste.parent = this.scene;

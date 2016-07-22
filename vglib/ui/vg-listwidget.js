@@ -31,7 +31,7 @@ VG.UI.ListWidget=function()
     if ( !(this instanceof VG.UI.ListWidget) ) return new VG.UI.ListWidget();
     
     VG.UI.Widget.call( this );
-    this.name="ListWidgetItem";
+    this.name="ListWidget";
 
     this.offset=0;
 
@@ -85,8 +85,8 @@ VG.UI.ListWidget.prototype.bind=function( collection, path )
         collection.addControllerForPath( this.controller, path );
     }
 
-    this.controller.addObserver( "changed", this.changed, this );    
-    this.controller.addObserver( "selectionChanged", this.selectionChanged, this );
+    this.controller.addObserver( "changed", this.changed.bind( this ) );
+    this.controller.addObserver( "selectionChanged", this.selectionChanged.bind( this ) );
 
     return this.controller;
 };
@@ -193,9 +193,9 @@ VG.UI.ListWidget.prototype.mouseDown=function( event )
 
     var selectedIndex=-1;
     var y=this.contentRect.y - this.offset;
-    var item=-1;
+    var item=undefined;
 
-    for ( var i=0; i < this.controller.length; ++i ) {
+    for ( var i=0; i < this.controller.count(); ++i ) {
         var item=this.controller.at( i ) ;
 
         if ( y + this.itemHeight + this.spacing >= event.pos.y && y <= event.pos.y ) {
@@ -205,33 +205,21 @@ VG.UI.ListWidget.prototype.mouseDown=function( event )
         y+=this.itemHeight + this.spacing;
     }
 
-    if ( selectedIndex >=0 && selectedIndex < this.controller.length )
+    if ( selectedIndex >=0 && selectedIndex < this.controller.count() )
         item=this.controller.at( selectedIndex );
 
     if ( this.controller.multiSelection ) 
-    {/*
-        if ( ! (totalSelected) ) {
-            item.selected=true;
-            changed=true;
-        } else {
-        if ( item.selected == false ) {
-            if ( ! ( event.keysDown.indexOf( VG.Events.KeyCodes.Shift ) >= 0 ) ) {
-                this.deselectAll();
-            }
-            item.selected=true;
-            changed=true;
-        } else {
-            if ( event.keysDown.indexOf( VG.Events.KeyCodes.Shift ) >= 0 ) {
-                item.selected=false;
-                changed=true;
-            }
-        }
-        }*/
-    } else {
-        if ( item !== -1 && !this.controller.isSelected( item ) ) {
-            this.controller.selected=item;
-        }
-    } 
+    {
+        if ( event.keysDown.indexOf( VG.Events.KeyCodes.Shift ) >= 0 )
+        {
+            if ( !this.controller.isSelected( item ) ) this.controller.addToSelection( item );
+            else this.controller.removeFromSelection( item );
+        } else
+        if ( item )
+            this.controller.setSelected( item );
+    } else
+    if ( item )
+        this.controller.setSelected( item );
 };
 
 VG.UI.ListWidget.prototype.vHandleMoved=function( offsetInScrollbarSpace )
@@ -245,18 +233,19 @@ VG.UI.ListWidget.prototype.verifyScrollbar=function( text )
 
     this.needsVScrollbar=false;
 
-    this.totalItemHeight=this.controller.length * this.itemHeight + (this.controller.length-1) * this.spacing;
-    this.heightPerItem=this.totalItemHeight / this.controller.length;
+    this.totalItemHeight=this.controller.count() * this.itemHeight + (this.controller.count()-1) * this.spacing;
+    this.heightPerItem=this.totalItemHeight / this.controller.count();
     this.visibleItems=this.contentRect.height / this.heightPerItem;
-    this.lastTopItem=Math.ceil( this.controller.length - this.visibleItems );
+    this.lastTopItem=Math.ceil( this.controller.count() - this.visibleItems );
 
     if ( this.totalItemHeight > this.contentRect.height )
         this.needsVScrollbar=true;
+    else this.offset=0;
 
     if ( this.needsVScrollbar && !this.vScrollbar ) {
         this.vScrollbar=VG.UI.ScrollBar( "ListWidget Scrollbar" );
         this.vScrollbar.callbackObject=this;
-    }    
+    }
 
     this.verified=true;
 };

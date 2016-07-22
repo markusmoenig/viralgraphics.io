@@ -56,8 +56,7 @@ VG.Nodes.Terminal=function( type, name, onCall, onConnect, onDisconnect )
     this.connectedTo=[];
 }
 
-VG.Nodes.Terminal.Type={ "Universal" : 0, "String" : 1, "Float" : 2, "Vector2" : 3, "Vector3" : 4, "Vector4" : 5, "Sample2D" : 6, "Sample3D" : 7, 
-    "Material" : 8, "Texture" : 9, "Docs.Enum" : -1 };
+VG.Nodes.Terminal.Type={ "Universal" : 0, "String" : 1, "Float" : 2, "Vector2" : 3, "Vector3" : 4, "Vector4" : 5, "Sample" : 6, "Texture" : 7, "Material" : 8,"Docs.Enum" : -1 };
 
 VG.Nodes.Terminal.prototype.connectTo=function( t, dontAddToLowLevelData )
 {
@@ -133,7 +132,9 @@ VG.Nodes.Terminal.prototype.canConnect=function( t )
     if ( this.input !== t.input && this.node !== t.node )
     {
         // --- Make sure terminal types match
-        if ( this.type === t.type || ( this.type === VG.Nodes.Terminal.Type.Universal || t.type === VG.Nodes.Terminal.Type.Universal ) )
+        if ( this.type === t.type || ( this.type === VG.Nodes.Terminal.Type.Universal || t.type === VG.Nodes.Terminal.Type.Universal ) ||
+            ( this.type === VG.Nodes.Terminal.Type.Vector4 && t.type === VG.Nodes.Terminal.Type.Sample ) ||
+            ( this.type === VG.Nodes.Terminal.Type.Sample && t.type === VG.Nodes.Terminal.Type.Vector4 ) )
         {
             // --- Input can have only one connection
             if ( ( this.input && this.isConnected() ) || ( t.input && t.isConnected() ) ) return false;

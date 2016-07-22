@@ -38,11 +38,12 @@ VG.UI.VisualGraphicsStyle=function()
 VG.UI.VisualGraphicsStyle.prototype.addSkin=function( skin )
 {
     this.skins.push( skin );
-    if ( !this.skin ) {
+    
+    if ( !this.skin )
         this.skin=skin;
-        skin.style=this;
-        this.skin.activate();
-    }
+
+    skin.style=this;
+    skin.activate();
 };
 
 // --- Button
@@ -90,13 +91,142 @@ VG.UI.VisualGraphicsStyle.prototype.drawButton=function( widget, canvas )
     if ( widget.disabled ) canvas.setAlpha( 1 );
 };
 
+// --- ButtonGroup
+
+VG.UI.VisualGraphicsStyle.prototype.drawButtonGroup=function( widget, canvas )
+{
+    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );    
+
+    this.rect1.copy( widget.rect );
+
+    canvas.pushFont( this.skin.ButtonGroup.Font );
+
+    for ( var i=0; i < widget.items.length; ++i )
+    {
+        var item=widget.items[i];
+
+        this.rect1.width=item.textWidth + 16;
+        this.rect1.height=item.textHeight;
+
+        if ( !widget.__vgInsideToolBar ) this.rect1.height+=4;
+
+        if ( item.icon ) this.rect1.width+=5 + item.icon.width;
+
+        this.rect1.y=widget.rect.y + ( widget.rect.height - this.rect1.height ) / 2;
+
+        var borderColor, backColor;
+
+        if ( widget.activeButton === item ) {
+            borderColor=this.skin.ButtonGroup.PressedBorderColor;
+            backColor=this.skin.ButtonGroup.PressedBackColor;
+        } else
+        if ( widget.hoverButton === item ) {
+            borderColor=this.skin.ButtonGroup.HoverBorderColor;
+            backColor=this.skin.ButtonGroup.HoverBackColor;
+            if ( item.statusTip ) widget.statusTip=item.statusTip;   
+        } else {
+            borderColor=this.skin.ButtonGroup.NormalBorderColor;
+            backColor=this.skin.ButtonGroup.NormalBackColor;
+        }
+
+        if ( widget.hasHoverState && item.rect.contains( VG.context.workspace.mousePos) )
+        {
+            borderColor=this.skin.ButtonGroup.HoverBorderColor;
+            backColor=this.skin.ButtonGroup.HoverBackColor;              
+            if ( item.statusTip ) widget.statusTip=item.statusTip;   
+        }
+    
+        // ---
+
+        if ( i === 0 )
+        {
+            this.rect2.copy( this.rect1 );
+
+            this.rect2.x+=1; this.rect2.width-=1;
+            this.rect2.height=1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, borderColor );
+
+            this.rect2.y+=this.rect1.height-1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, borderColor );
+
+            this.rect2.copy( this.rect1 );
+            this.rect2.y+=1; this.rect2.height-=2;
+            this.rect2.width=1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, borderColor );
+
+            this.rect2.copy( this.rect1 );
+            this.rect2.x+=1; this.rect2.width-=1;
+            this.rect2.y+=1; this.rect2.height-=2;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, backColor );
+        } else
+        if ( i === widget.items.length - 1 )        
+        {
+            this.rect2.copy( this.rect1 );
+
+            this.rect2.width-=1;
+            this.rect2.height=1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, borderColor );
+
+            this.rect2.y+=this.rect1.height-1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, borderColor );
+
+            this.rect2.copy( this.rect1 );
+            this.rect2.y+=1; this.rect2.height-=2;
+            this.rect2.x+=this.rect1.width - 1; this.rect2.width=1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, borderColor );
+
+            this.rect2.copy( this.rect1 );
+            this.rect2.width-=1;
+            this.rect2.y+=1; this.rect2.height-=2;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, backColor );
+        } else
+        {
+            this.rect2.copy( this.rect1 );
+
+            this.rect2.height=1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, borderColor );
+
+            this.rect2.y+=this.rect1.height-1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, borderColor );
+
+            this.rect2.copy( this.rect1 );
+            this.rect2.y+=1; this.rect2.height-=2;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, backColor );
+        }
+
+        item.rect.copy( this.rect1 );
+
+        this.rect2.copy( this.rect1 );
+
+        if ( item.icon ) {
+            this.rect2.x+=5;
+            this.rect2.y=widget.rect.y + (widget.rect.height - item.icon.height)/2;
+            canvas.drawImage( this.rect2, item.icon );
+        }
+
+        this.rect2.copy( this.rect1 );
+
+        this.rect2.x+=7;
+        this.rect2.width-=14;
+
+        canvas.drawTextRect( item.text, this.rect2, this.skin.ButtonGroup.TextColor, 1, 1 );
+
+        this.rect1.x+=this.rect1.width + 1;
+    }
+
+    canvas.popFont();
+
+    if ( widget.disabled ) canvas.setAlpha( 1 );
+};
+
+
 // --- CheckBox
 
 VG.UI.VisualGraphicsStyle.prototype.drawCheckBox=function( widget, canvas )
 {
     if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
 
-    var imageName=this.skin.prefix + "checkbox";
+    var imageName="checkbox";
 
     if ( widget.hasFocusState ) imageName+="_focus";
     if ( widget.hasHoverState ) imageName+="_hover";
@@ -105,7 +235,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawCheckBox=function( widget, canvas )
 
     imageName+=".png";
 
-    var image=VG.context.imagePool.getImageByName( imageName );
+    var image=VG.Utils.getImageByName( imageName );
 
     if ( image )
         canvas.drawImage( VG.Core.Point( widget.rect.x + (widget.rect.width-image.width)/2, widget.rect.y + (widget.rect.height-image.height)/2), image );
@@ -143,8 +273,8 @@ VG.UI.VisualGraphicsStyle.prototype.drawContextMenu=function( widget, canvas )
                 canvas.drawTextRect( item.text, this.rect1.add( 10, 0, -10, 0, this.rect2 ), this.skin.ContextMenu.DisabledTextColor, 0, 1 );                
             } else
             if ( item === widget.selected )  {
-                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ContextMenu.SelectedBackColor ); 
-                canvas.drawTextRect( item.text, this.rect1.add( 10, 0, -10, 0, this.rect2 ), this.skin.ContextMenu.TextColor, 0, 1 );
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ContextMenu.HighlightedBackColor ); 
+                canvas.drawTextRect( item.text, this.rect1.add( 10, 0, -10, 0, this.rect2 ), this.skin.ContextMenu.HighlightedTextColor, 0, 1 );
             } else {
                 canvas.drawTextRect( item.text, this.rect1.add( 10, 0, -10, 0, this.rect2 ), this.skin.ContextMenu.TextColor, 0, 1 );
             }
@@ -156,7 +286,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawContextMenu=function( widget, canvas )
 
                 var image=VG.context.imagePool.getImageByName( imageName );
                 if ( image ) {    
-                    canvas.drawImage( VG.Core.Point( itemRect.right() - image.width - 10, itemRect.y + (itemRect.height-image.height)/2), image );
+                    canvas.drawImage( VG.Core.Point( this.rect1.right() - image.width - 10, this.rect1.y + (this.rect1.height-image.height)/2), image );
                 }                
             }
 
@@ -439,7 +569,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDockWidget=function( widget, canvas )
     canvas.drawTextRect( widget.text, this.rect2, this.skin.DockWidget.HeaderTextColor, 0, 1 );
     canvas.popFont();
 
-    var imageName=this.skin.prefix + "darrow_";
+    var imageName="darrow_";
     if ( widget.rightIndicator ) imageName+="right.png";
     else imageName+="left.png";
 
@@ -526,7 +656,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDropDownMenu=function( widget, canvas )
 
         // --- Check if Menu is beneath or above the button depending on workspace height
 
-        widget.menuDown=true;
+        widget.menuDown=!widget.menuIsUp;
         if ( ( popupHeight + widget.rect.bottom() ) > VG.context.workspace.rect.bottom() )
             widget.menuDown=false;
 
@@ -654,13 +784,25 @@ VG.UI.VisualGraphicsStyle.prototype.drawListWidget=function( widget, canvas )
 
     paintRect.y=widget.contentRect.y - widget.offset;
 
-    for ( var i=0; i < widget.controller.length; ++i ) {
+    widget.childWidgets=[];
+    for ( var i=0; i < widget.controller.count(); ++i ) {
         var item=widget.controller.at( i ) ;
+        var isSelected=widget.controller.isSelected( item );
+
+        // --- Insert Potential Child Widgets of Items
+
+        if ( item.childWidgets ) {
+            for ( var c=0; c < item.childWidgets.length; ++c ) {
+                widget.childWidgets.push( item.childWidgets[c] );
+            }
+        }
+
+        // ---
 
         if ( paintRect.y + widget.itemHeight >= widget.contentRect.y ) 
         {
             this.rect1.copy( paintRect );
-            if ( !widget.controller.isSelected( item ) ) {
+            if ( !isSelected ) {
                 canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect1, this.skin.ListWidget.ItemBackColor );
                 canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1.shrink( 1, 1, this.rect1 ), this.skin.ListWidget.ItemBackColor );
             } else {
@@ -671,7 +813,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawListWidget=function( widget, canvas )
             if ( !widget.paintItemCallback ) {
                 this.rect1.copy( paintRect ); this.rect1.x+=8; this.rect1.width-=8;
                 canvas.drawTextRect( item.text, this.rect1, this.skin.ListWidget.TextColor, 0, 1 );
-            } else widget.paintItemCallback( canvas, item, paintRect, widget.controller.isSelected( item ) );
+            } else widget.paintItemCallback( canvas, item, paintRect, isSelected );
         }
 
         paintRect.y+=widget.itemHeight + widget.spacing;
@@ -798,12 +940,19 @@ VG.UI.VisualGraphicsStyle.prototype.drawMenu=function( widget, canvas )
 
 VG.UI.VisualGraphicsStyle.prototype.drawMenuBar=function( widget, canvas )
 {    
-    widget.contentRect.set( widget.rect );    
+    widget.contentRect.set( widget.rect );
+
+    widget.contentRect.height=1;
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.MenuBar.TopBorderColor );
+    widget.contentRect.y+=widget.rect.height-1;
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.MenuBar.BottomBorderColor );  
+
+    widget.rect.shrink( 0, 1, widget.contentRect );
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.MenuBar.BackColor );  
 
     canvas.pushFont( this.skin.MenuBar.Font );
 
-    var rect=this.rect1; this.rect1.set( widget.rect );
+    var rect=this.rect1; widget.rect.shrink( 0, this.skin.MenuBar.BorderSize, this.rect1 );// this.rect1.set( widget.rect );
     var size=this.rect2;
 
     for( var i=0; i < widget.items.length; ++i )
@@ -843,9 +992,9 @@ VG.UI.VisualGraphicsStyle.prototype.drawScrollBar=function( widget, canvas )
         this.rect1.copy( widget.rect ); this.rect1.width=1;
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ScrollBar.BorderColor );
 
-        var seg1ImageName=this.skin.prefix + "scrollbar_vtop";
-        var seg2ImageName=this.skin.prefix + "scrollbar_vmiddle";
-        var seg3ImageName=this.skin.prefix + "scrollbar_vbottom";
+        var seg1ImageName="scrollbar_vtop";
+        var seg2ImageName="scrollbar_vmiddle";
+        var seg3ImageName="scrollbar_vbottom";
         
         if (  VG.context.workspace.mouseTrackerWidget === widget ) {
             seg1ImageName+="_selected"; seg2ImageName+="_selected"; seg3ImageName+="_selected";
@@ -883,9 +1032,9 @@ VG.UI.VisualGraphicsStyle.prototype.drawScrollBar=function( widget, canvas )
         this.rect1.copy( widget.rect ); this.rect1.height=1;
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ScrollBar.BorderColor );
 
-        var seg1ImageName=this.skin.prefix + "scrollbar_hleft";
-        var seg2ImageName=this.skin.prefix + "scrollbar_hmiddle";
-        var seg3ImageName=this.skin.prefix + "scrollbar_hright";
+        var seg1ImageName="scrollbar_hleft";
+        var seg2ImageName="scrollbar_hmiddle";
+        var seg3ImageName="scrollbar_hright";
         
         if (  VG.context.workspace.mouseTrackerWidget === widget ) {
             seg1ImageName+="_selected"; seg2ImageName+="_selected"; seg3ImageName+="_selected";
@@ -937,11 +1086,11 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionBar=function( widget, canvas )
 
     this.rect2.set( this.rect1 );
     canvas.pushFont( this.skin.SectionBar.HeaderFont );
-    this.rect2.add( 5, 0, -5, 0, this.rect2 );
+    this.rect2.add( 30, 0, -30, 0, this.rect2 );
     canvas.drawTextRect( widget.text, this.rect2, this.skin.SectionBar.HeaderTextColor, 0, 1 );
     canvas.popFont();
 
-    var imageName=this.skin.prefix + "darrow_";
+    var imageName="darrow_";
     if ( widget.rightIndicator ) imageName+="right.png";
     else imageName+="left.png";
 
@@ -951,7 +1100,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionBar=function( widget, canvas )
         this.rect2.set( this.rect1 );
 
         if ( widget.rightIndicator ) {
-            this.rect2.x+=this.rect2.width - 14; this.rect2.width=image.width; 
+            this.rect2.x+=this.rect2.width - 7 - image.width; this.rect2.width=image.width; 
         } else {
             this.rect2.x+=6; this.rect2.width=image.width; 
         }
@@ -986,7 +1135,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionBarButton=function( widget, canva
 
     this.rect1.copy( widget.rect );
 
-    if ( widget.stripWidget.selectedButton === widget ) 
+    if ( widget.stripWidget.activeButton === widget ) 
     {
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin2px, this.rect1, this.skin.SectionBarButton.SelectedBorderColor );
         this.rect1.shrink( 1, 1, this.rect1 );
@@ -998,7 +1147,14 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionBarButton=function( widget, canva
         canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect2, this.skin.SectionBarButton.SelectedBackGradColor2, this.skin.SectionBarButton.SelectedBackGradColor1 );
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleCorners, this.rect1, this.skin.SectionBarButton.SelectedBorderColor );
 
-        canvas.drawTextRect( widget.text, this.rect1, this.skin.SectionBarButton.SelectedTextColor, 1, 1 );
+        if ( widget.textArray )
+        {
+            this.rect1.y-=8;
+            canvas.drawTextRect( widget.textArray[0], this.rect1, this.skin.SectionBarButton.SelectedTextColor, 1, 1 );
+            this.rect1.y+=16;
+            canvas.drawTextRect( widget.textArray[1], this.rect1, this.skin.SectionBarButton.SelectedTextColor, 1, 1 );
+        } else
+            canvas.drawTextRect( widget.text, this.rect1, this.skin.SectionBarButton.SelectedTextColor, 1, 1 );
     } else
     if ( widget.rect.contains( VG.context.workspace.mousePos ) )
     {
@@ -1012,7 +1168,14 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionBarButton=function( widget, canva
         canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect2, this.skin.SectionBarButton.HoverBackGradColor2, this.skin.SectionBarButton.HoverBackGradColor1 );
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleCorners, this.rect1, this.skin.SectionBarButton.HoverBorderColor );
 
-        canvas.drawTextRect( widget.text, this.rect1, this.skin.SectionBarButton.TextColor, 1, 1 );
+        if ( widget.textArray )
+        {
+            this.rect1.y-=8;
+            canvas.drawTextRect( widget.textArray[0], this.rect1, this.skin.SectionBarButton.TextColor, 1, 1 );
+            this.rect1.y+=16;
+            canvas.drawTextRect( widget.textArray[1], this.rect1, this.skin.SectionBarButton.TextColor, 1, 1 );
+        } else
+            canvas.drawTextRect( widget.text, this.rect1, this.skin.SectionBarButton.TextColor, 1, 1 );
     } else {
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin2px, this.rect1, this.skin.SectionBarButton.BorderColor );
         this.rect1.shrink( 1, 1, this.rect1 );
@@ -1024,12 +1187,320 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionBarButton=function( widget, canva
         canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect2, this.skin.SectionBarButton.BackGradColor2, this.skin.SectionBarButton.BackGradColor1 );
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleCorners, this.rect1, this.skin.SectionBarButton.BorderColor );
 
-        canvas.drawTextRect( widget.text, this.rect1, this.skin.SectionBarButton.TextColor, 1, 1 );
+        if ( widget.textArray )
+        {
+            this.rect1.y-=8;
+            canvas.drawTextRect( widget.textArray[0], this.rect1, this.skin.SectionBarButton.TextColor, 1, 1 );
+            this.rect1.y+=16;
+            canvas.drawTextRect( widget.textArray[1], this.rect1, this.skin.SectionBarButton.TextColor, 1, 1 );
+        } else
+            canvas.drawTextRect( widget.text, this.rect1, this.skin.SectionBarButton.TextColor, 1, 1 );
     }
 
     canvas.popFont();
     if ( widget.disabled ) canvas.setAlpha( 1 );    
 };
+
+// --- SectionBarSwitch
+
+VG.UI.VisualGraphicsStyle.prototype.drawSectionBarSwitch=function( widget, canvas )
+{
+    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
+    widget.contentRect.set( widget.rect );
+
+    var style=this;
+    function drawButton( rect, selected, text )
+    {
+        var borderColor=style.skin.SectionToolBarButton.BorderColor;
+        var backColor=undefined;
+
+        if ( selected ) {
+            borderColor=style.skin.SectionToolBarButton.BorderSelectedColor;
+            backColor=style.skin.SectionToolBarButton.BackSelectedColor;
+        }
+        else
+        if ( rect.contains( VG.context.workspace.mousePos ) ) {
+            borderColor=style.skin.SectionToolBarButton.BorderHoverColor;
+            backColor=style.skin.SectionToolBarButton.BackHoverColor;        
+        }
+
+        if ( backColor ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect, backColor );
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, rect, borderColor );
+
+        canvas.pushFont( style.skin.SectionBarSwitch.Font );
+        canvas.drawTextRect( text, rect, style.skin.SectionBarSwitch.TextColor, 1, 1 );
+        canvas.popFont();
+    };
+
+    var width=32;
+
+    this.rect1.copy( widget.rect );
+    this.rect1.width=width;
+    widget.leftRect.copy( this.rect1 );
+
+    drawButton( this.rect1, widget.left, widget.text1 );
+
+    this.rect1.copy( widget.rect );
+    this.rect1.x=this.rect1.right() - width;
+    this.rect1.width=width;
+    widget.rightRect.copy( this.rect1 );
+
+    drawButton( this.rect1, !widget.left, widget.text2 );
+
+    if ( widget.disabled ) canvas.setAlpha( 1 );      
+};
+
+// --- SectionToolBar
+
+VG.UI.VisualGraphicsStyle.prototype.drawSectionToolBar=function( widget, canvas )
+{
+    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );    
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.rect, this.skin.SectionToolBar.BorderColor1 );
+    widget.contentRect.set( widget.rect );
+    widget.contentRect.add( 0, 0, -4, 0, widget.contentRect );
+
+    this.rect1.set( widget.rect );
+    this.rect1.x+=this.rect1.width-2; this.rect1.width=1;
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SectionToolBar.BorderColor2 );
+
+    var that=this;
+    function drawSectionHeader( rect, layout ) {
+        that.rect2.copy( rect );
+        that.rect2.height=1;
+
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, that.rect2, that.skin.SectionToolBar.HeaderTopBorderColor );
+
+        that.rect2.y+=1;
+        that.rect2.height=19;
+
+        canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, that.rect2, that.skin.SectionToolBar.HeaderGradColor1, 
+            that.skin.SectionToolBar.HeaderGradColor2 );
+        canvas.pushFont( that.skin.SectionToolBar.HeaderFont );        
+        canvas.drawTextRect( layout.text, that.rect2, that.skin.SectionToolBar.HeaderTextColor, 1, 1 );
+        canvas.popFont();
+
+        that.rect2.y+=19;        
+        that.rect2.height=1;
+
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, that.rect2, that.skin.SectionToolBar.HeaderBottomBorderColor1 );
+        that.rect2.y+=1;
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, that.rect2, that.skin.SectionToolBar.HeaderBottomBorderColor2 );
+
+        rect.y+=24; rect.height-=24;
+    };
+
+    // ---
+
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.SectionToolBar.BackColor );
+
+    var yOffset=0;
+    for ( var i=0; i < widget.layout.length; ++i )
+    {
+        this.rect1.set( widget.contentRect );
+        this.rect1.y+=yOffset; this.rect1.height-=yOffset;
+
+        var layout=widget.layout.childAt( i );
+
+        //VG.log( "here " +i, this.rect1.toString() );
+
+        drawSectionHeader( this.rect1, layout );
+
+        layout.rect.copy( this.rect1 );
+        layout.layout( canvas );
+
+        var layoutHeight=layout.length * this.skin.SectionToolBarButton.Size.height + 4;
+        if ( layout.length ) layoutHeight+=layout.length-1;
+
+        yOffset+=24 + layoutHeight;
+    }
+
+    if ( widget.disabled ) canvas.setAlpha( 1 );    
+};
+
+// --- SectionBarButton
+
+VG.UI.VisualGraphicsStyle.prototype.drawSectionToolBarButton=function( widget, canvas )
+{
+    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
+    widget.contentRect.set( widget.rect );
+
+    this.rect1.copy( widget.rect );
+
+    var borderColor=this.skin.SectionToolBarButton.BorderColor;
+    var backColor=undefined;
+
+    if ( widget.sectionBarWidget.activeButton === widget ) {
+        borderColor=this.skin.SectionToolBarButton.BorderSelectedColor;
+        backColor=this.skin.SectionToolBarButton.BackSelectedColor;
+    }
+    else
+    if ( widget.rect.contains( VG.context.workspace.mousePos ) ) {
+        borderColor=this.skin.SectionToolBarButton.BorderHoverColor;
+        backColor=this.skin.SectionToolBarButton.BackHoverColor;        
+    }
+
+    if ( backColor ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, backColor );
+    canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect1, borderColor );
+
+    var imageName=widget.iconName;
+    var image=VG.context.imagePool.getImageByName( imageName );
+
+    if ( image && image.isValid() ) {
+
+        this.rect2.copy( this.rect1 );
+
+        this.rect2.x+=(this.rect2.width - image.width)/2;
+        this.rect2.y+=(this.rect2.height - image.height)/2;
+        canvas.drawImage( this.rect2, image );
+    }
+
+    if ( widget.disabled ) canvas.setAlpha( 1 );    
+};
+
+// --- ShiftWidget
+
+VG.UI.VisualGraphicsStyle.prototype.drawShiftWidget=function( widget, canvas )
+{
+    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
+    widget.contentRect.set( widget.rect );
+    widget.contentRect.height=widget.itemHeight;
+
+    if ( !widget.popup ) 
+    {
+        // --- Background
+
+        this.rect1.set( widget.contentRect );
+        this.rect1.shrink( 1, 0, this.rect1 );
+
+        if ( widget.mouseIsDown )
+        {
+            this.rect1.height=1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SnapperWidgetItem.SelectedTopBorderColor );
+            this.rect1.y+=widget.contentRect.height-1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SnapperWidgetItem.SelectedBottomBorderColor );
+
+            this.rect1.copy( widget.contentRect );
+            this.rect1.shrink( 0, 1, this.rect1 );
+            canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect1, this.skin.SnapperWidgetItem.SelectedBackGradColor1, this.skin.SnapperWidgetItem.SelectedBackGradColor2 );
+        } else
+        if ( !widget.hasHoverState )
+        {
+            this.rect1.height=1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SnapperWidgetItem.TopBorderColor );
+            this.rect1.y+=widget.contentRect.height-1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SnapperWidgetItem.BottomBorderColor );
+
+            this.rect1.copy( widget.contentRect );
+            this.rect1.shrink( 0, 1, this.rect1 );
+            canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect1, this.skin.SnapperWidgetItem.BackGradColor1, this.skin.SnapperWidgetItem.BackGradColor2 );
+        } else {
+            this.rect1.height=1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SnapperWidgetItem.HoverTopBorderColor );
+            this.rect1.y+=widget.contentRect.height-1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SnapperWidgetItem.HoverBottomBorderColor );
+
+            this.rect1.copy( widget.contentRect );
+            this.rect1.shrink( 0, 1, this.rect1 );
+            canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect1, this.skin.SnapperWidgetItem.HoverBackGradColor1, this.skin.SnapperWidgetItem.HoverBackGradColor2 );
+        }
+
+
+        // --- Arrows
+
+        this.rect2.copy( this.rect1 );
+
+        this.rect2.x+=10; this.rect2.y+=7;
+        this.rect2.width=10; this.rect2.height=15;
+        canvas.draw2DShape( VG.Canvas.Shape2D.ArrowLeft, this.rect2, this.skin.SnapperWidgetItem.TextColor );
+
+        this.rect2.copy( this.rect1 );
+
+        this.rect2.x+=this.rect2.width - 20; this.rect2.y+=7;
+        this.rect2.width=10; this.rect2.height=15;
+        canvas.draw2DShape( VG.Canvas.Shape2D.ArrowRight, this.rect2, this.skin.SnapperWidgetItem.TextColor );
+
+        // --- Text
+
+        canvas.pushFont( this.skin.SnapperWidgetItem.Font );    
+
+        if ( widget.index !== -1 )
+            canvas.drawTextRect( widget.childs[widget.index].text, this.rect1, this.skin.SnapperWidgetItem.TextColor, 1, 1 );
+
+        canvas.popFont();
+    } else
+    if ( widget.popup ) 
+    {
+        this.rect1.set( widget.contentRect );
+
+        widget.itemsDown=widget.childs.length - widget.index - 1;
+        if ( widget.itemsDown > widget.maxDown ) widget.itemsDown=widget.maxDown;
+
+        widget.itemsUp=widget.index;
+        if ( widget.itemsUp > widget.maxUp ) widget.itemsUp=widget.maxUp;
+
+        canvas.pushFont( this.skin.SnapperWidgetItem.Font );    
+
+        // --- Draw Down
+
+        var popupHeight=(widget.itemsDown+1+widget.itemsUp) * widget.itemHeight + widget.childs.length; 
+        this.rect2.set( this.rect1.x, this.rect1.y - widget.itemsUp * widget.itemHeight, this.rect1.width, popupHeight );
+
+        // ---
+
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, this.rect2, this.skin.Window.BorderColor2 );
+        this.rect2.shrink( 1, 1, this.rect2 );
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, this.skin.Window.BackColor );
+        widget.popupRect.copy( this.rect2 );
+
+        this.rect2.height=widget.itemHeight;
+
+        // --- Draw Down
+        var y=this.rect2.y + widget.itemsUp * widget.itemHeight;
+        for( var i=0; i <= widget.itemsDown; ++i )
+        {
+            var itemIndex=widget.index + i;
+            itemIndex=itemIndex % widget.childs.length;
+
+            this.rect1.set( this.rect2 );
+            this.rect1.y=y;
+
+            if ( itemIndex === widget.highlightedIndex )
+            {
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DropDownMenu.ItemSelectedBackColor );
+                canvas.drawTextRect( widget.childs[itemIndex].text, this.rect1, this.skin.DropDownMenu.ItemSelectedTextColor, 1, 1 );                
+            } else {
+                canvas.drawTextRect( widget.childs[itemIndex].text, this.rect1, this.skin.Window.HeaderTextColor, 1, 1 );
+            }
+
+            y+=widget.itemHeight;
+        }
+
+        // --- Draw Up
+        var y=this.rect2.y;
+        for( var i=0; i < widget.itemsUp; ++i )
+        {
+            var itemIndex=widget.index - widget.itemsUp + i;
+
+            this.rect1.set( this.rect2 );
+            this.rect1.y=y;
+
+            if ( itemIndex === widget.highlightedIndex )
+            {
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DropDownMenu.ItemSelectedBackColor );
+                canvas.drawTextRect(  widget.childs[itemIndex].text, this.rect1, this.skin.DropDownMenu.ItemSelectedTextColor, 1, 1 );                
+            } else {
+                canvas.drawTextRect( widget.childs[itemIndex].text, this.rect1, this.skin.Window.HeaderTextColor, 1, 1 );
+            }
+
+            y+=widget.itemHeight;
+        }        
+
+        canvas.popFont();
+    }
+
+    if ( widget.disabled ) canvas.setAlpha( 1 );    
+};
+
 
 // --- Slider
 
@@ -1051,9 +1522,23 @@ VG.UI.VisualGraphicsStyle.prototype.drawSlider=function( widget, canvas )
     if ( ( widget.step % 1 ) === 0 ) valueText=widget.value.toString();
     else valueText=widget.value.toFixed( 2 );
 
-    var valueTextSize=canvas.getTextSize( valueText );
-    valueTextSize.width+=10;
+    var valueTextSize;
 
+    if ( !widget.editable )
+        valueTextSize=canvas.getTextSize( valueText );
+    else {
+
+        canvas.pushFont( widget.edit.font );
+        valueTextSize=canvas.getTextSize( widget.edit.maxString );
+        canvas.popFont();
+
+        valueTextSize.width+=16;
+        if ( widget.min < 0 ) valueTextSize.width+=6;
+
+        if ( widget.edit.minimumSize.width > valueTextSize.width ) valueTextSize.width=widget.edit.minimumSize.width;
+    }
+
+    valueTextSize.width+=10;
     widget.sliderRect.width-=valueTextSize.width;
 
     var colorObject=this.skin.Slider.BarColors;
@@ -1069,22 +1554,54 @@ VG.UI.VisualGraphicsStyle.prototype.drawSlider=function( widget, canvas )
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.sliderRect, colorObject.Color4 );
     widget.sliderRect.x-=1; widget.sliderRect.width+=2;
 
-    canvas.drawTextRect( valueText, VG.Core.Rect( widget.sliderRect.right(), widget.contentRect.y, valueTextSize.width, widget.contentRect.height ), textColor, 2, 1 );
+    if ( !widget.editable )
+        canvas.drawTextRect( valueText, VG.Core.Rect( widget.sliderRect.right(), widget.contentRect.y, valueTextSize.width, widget.contentRect.height ), textColor, 2, 1 );
+    else {
+        widget.edit.rect.set( widget.sliderRect.right()+10, widget.contentRect.y, valueTextSize.width-10, widget.contentRect.height );
+        widget.edit.paintWidget( canvas );
+    }
 
     // --- Draw the handle
 
-    var distance=widget.max - widget.min;
-    var perPixel=widget.sliderRect.width / distance;
+    var offset;
 
-    var valueOffset=widget.value - widget.min;
-    var offset=valueOffset * perPixel;
+    if ( !widget.halfWidthValue )
+    {
+        // --- Normal Mode
+
+        var distance=widget.max - widget.min;
+        var perPixel=widget.sliderRect.width / distance;
+        var valueOffset=widget.value - widget.min;
+        
+        offset=valueOffset * perPixel;
+    } else
+    {
+        // --- A value is predefined at the middle of the slider
+
+        if ( widget.value <= widget.halfWidthValue )
+        {
+
+            var distance=widget.halfWidthValue - widget.min;
+            var perPixel=widget.sliderRect.width / 2 / distance;
+            var valueOffset=widget.value - widget.min;
+        
+            offset=valueOffset * perPixel;
+        } else
+        {
+            var distance=widget.max - widget.halfWidthValue;
+            var perPixel=widget.sliderRect.width / 2 / distance;
+            var valueOffset=widget.value - widget.halfWidthValue;
+        
+            offset=widget.sliderRect.width / 2 + valueOffset * perPixel;            
+        }
+    }
 
     widget.sliderHandleRect.x=widget.sliderRect.x + offset - leftSpace;
     widget.sliderHandleRect.y=widget.contentRect.y + (widget.contentRect.height - this.skin.Slider.HandleSize)/2;
     widget.sliderHandleRect.width=this.skin.Slider.HandleSize;
     widget.sliderHandleRect.height=this.skin.Slider.HandleSize;
 
-    var imageName=this.skin.prefix + "slider";
+    var imageName="slider";
     //if ( widget.hasHoverState ) imageName+="_hover";
     if ( widget.hasFocusState ) imageName+="_focus";
     imageName+=".png";
@@ -1115,7 +1632,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawSnapperWidgetItem=function( widget, canv
         this.rect1.shrink( 0, 1, this.rect1 );
         canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect1, this.skin.SnapperWidgetItem.SelectedBackGradColor1, this.skin.SnapperWidgetItem.SelectedBackGradColor2 );
     } else
-    if ( widget.hasHoverState )
+    if ( !widget.hasHoverState )
     {
         this.rect1.height=1;
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SnapperWidgetItem.TopBorderColor );
@@ -1150,9 +1667,22 @@ VG.UI.VisualGraphicsStyle.prototype.drawSnapperWidgetItem=function( widget, canv
         canvas.draw2DShape( VG.Canvas.Shape2D.ArrowRight, this.rect2, this.skin.SnapperWidgetItem.TextColor );
     }
 
+    // --- Enabler
+
+    if ( widget.enablerCB )
+    {
+        widget.enablerCB.rect.copy( this.rect1 );
+        widget.enablerCB.rect.x+=(this.rect1.width - widget.enablerCB.minimumSize.width) - 10;
+        widget.enablerCB.rect.y+=(this.rect1.height - widget.enablerCB.minimumSize.height)/2;
+        widget.enablerCB.rect.width=widget.enablerCB.minimumSize.width;
+        widget.enablerCB.rect.height=widget.enablerCB.minimumSize.height;
+        widget.enablerCB.paintWidget( canvas );
+    }
+
     // --- Text
 
     this.rect1.x+=30; this.rect1.width-=30;
+    this.rect1.height-=2;
 
     canvas.pushFont( this.skin.SnapperWidgetItem.Font );    
     canvas.drawTextRect( widget.text, this.rect1, this.skin.SnapperWidgetItem.TextColor, 0, 1 );
@@ -1404,9 +1934,8 @@ VG.UI.VisualGraphicsStyle.prototype.drawTextLineEdit=function( widget, canvas )
 
     widget.contentRect.set( widget.rect );
     if ( widget.hasFocusState ) {
-        widget.contentRect.shrink( 3, 3, this.rect1 );
+        widget.contentRect.shrink( 2, 2, this.rect1 );
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TextLineEdit.FocusBackgroundColor );
-
 
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin2px, widget.contentRect, this.skin.TextLineEdit.FocusBorderColor1 );
         widget.contentRect.shrink( 1, 1, widget.contentRect );
@@ -1430,16 +1959,22 @@ VG.UI.VisualGraphicsStyle.prototype.drawTextLineEdit=function( widget, canvas )
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TextLineEdit.BackgroundColor );
 
         widget.contentRect.shrink( 1, 1, widget.contentRect );
-        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.TextLineEdit.BorderColor1 );
+
+        if ( widget.customBorderColor ) canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, widget.customBorderColor );
+        else canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.TextLineEdit.BorderColor1 );
+        //canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.TextLineEdit.BorderColor1 );
         widget.contentRect.shrink( 1, 1, widget.contentRect );
-        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, widget.contentRect, this.skin.TextLineEdit.BorderColor2 );
+
+        //if ( widget.customBorderColor ) canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, widget.contentRect, widget.customBorderColor );
+        //else 
+            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, widget.contentRect, this.skin.TextLineEdit.BorderColor2 );
 
         widget.contentRect.shrink( 1, 1, widget.contentRect );       
     }
 
     // ---
 
-    widget.contentRect.shrink( 7, 0, widget.contentRect );
+    widget.contentRect.shrink( 5, 0, widget.contentRect );
 
     var textLine;
 
@@ -1465,15 +2000,19 @@ VG.UI.VisualGraphicsStyle.prototype.drawTextLineEdit=function( widget, canvas )
         var offset=0;
         var text=textLine.slice( offset );
         canvas.getTextSize( text, size );
-    
-        while ( ( (size.width + 3) > widget.contentRect.width ) && text.length )
+
+        while ( ( (size.width /*+ 3 */) > widget.contentRect.width ) && text.length )
         {
             // --- Text is too long for the contentRect, cut of chars at the front until it fits.
+
+            if ( offset >= widget.cursorPosition.x ) break;
+
             ++offset;
             text=textLine.slice( offset );
             canvas.getTextSize( text, size );
         }
-    
+
+
         if ( widget.selectionIsValid && widget.hasFocusState )
             widget.drawSelectionForLine( canvas, 0, widget.contentRect, text, this.skin.TextLineEdit.FocusBorderColor2 );
         else if ( widget.selectionIsValid )
@@ -1542,11 +2081,11 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolBar=function( widget, canvas )
 VG.UI.VisualGraphicsStyle.prototype.drawToolButton=function( widget, canvas )
 {
     if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
-    widget.contentRect.set( widget.rect );
+    widget.contentRect.copy( widget.rect );
 
     // --- Border / Background
 
-    if ( widget.mouseIsDown && !widget.disabled ) {
+    if ( widget.mouseIsDown && !widget.disabled || widget.checked ) {
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.ToolButton.ClickedBorderColor );
         widget.contentRect.shrink( 1, 1, widget.contentRect);
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.ToolButton.ClickedBackColor );
@@ -1564,6 +2103,8 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolButton=function( widget, canvas )
         }
     }    
 
+    canvas.pushClipRect( widget.contentRect );
+
     if ( widget.svgName ) {
         // --- SVG
         var svg=VG.Utils.getSVGByName( widget.svgName );
@@ -1571,17 +2112,10 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolButton=function( widget, canvas )
         {
             svgGroup=svg.getGroupByName( widget.svgGroupName );
             widget.rect.shrink( 3, 3, this.rect4 );
-            /*
-            if ( widget.parent && widget.parent.decorated ) {
-
-                this.rect4.y+=(this.rect4.width - svgGroup.width)/2;
-                this.rect4.width=svgGroup.width;
-                this.rect4.height=svgGroup.height;                
-            }*/
             canvas.drawSVG( svg, svgGroup, this.rect4, this.skin.ToolButton.TextColor );
         }
     } else
-    if ( widget.iconName ) {
+    if ( widget.icon || widget.iconName ) {
         // --- Icon
         if ( !widget.icon ) widget.icon=VG.context.imagePool.getImageByName( widget.iconName );
         if ( widget.icon && widget.icon.isValid() ) 
@@ -1598,6 +2132,8 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolButton=function( widget, canvas )
         canvas.popFont();
     }
 
+    canvas.popClipRect();
+
     if ( widget.disabled ) canvas.setAlpha( 1 );
 };
 
@@ -1606,7 +2142,8 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolButton=function( widget, canvas )
 VG.UI.VisualGraphicsStyle.prototype.drawToolSeparator=function( widget, canvas )
 {
     this.rect1.copy( widget.rect );
-    this.rect1.width=1;
+    this.rect1.y+=(widget.rect.height - this.skin.ToolBar.Separator.Size.height)/2;
+    this.rect1.height=this.skin.ToolBar.Separator.Size.height; this.rect1.width=1;
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ToolBar.Separator.Color1 );
     this.rect1.x+=1;
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ToolBar.Separator.Color2 );
@@ -1616,6 +2153,8 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolSeparator=function( widget, canvas )
 
 VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
 {
+    var itemHeight=widget.itemHeight;
+
     // --- drawItemChildren
 
     function drawItemChildren( style, paintRect, item, selBackgroundRect )
@@ -1643,7 +2182,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
                         widget.items.push( VG.UI.TreeWidgetItem( child, paintRect ) );
                         drawItem( style, child, widget.controller.isSelected( child ), paintRect, selBackgroundRect );  
 
-                        paintRect.y+=widget.itemHeight + widget.spacing;    
+                        paintRect.y+=itemHeight + widget.spacing;    
                     }
 
                     if ( child.children && child.open ) 
@@ -1670,15 +2209,15 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
 
             if ( item.open ) {
                 style.rect4.x=rect.x + 5; style.rect4.width=11;
-                style.rect4.y=rect.y + 9; style.rect4.height=2;
+                style.rect4.y=rect.y + Math.floor( (itemHeight-2)/2); style.rect4.height=2;
                 canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect4, style.skin.TreeWidget.ChildControlColor );
             } else {
                 style.rect4.x=rect.x + 5; style.rect4.width=10;
-                style.rect4.y=rect.y + 9; style.rect4.height=2;
+                style.rect4.y=rect.y + Math.floor( (itemHeight-2)/2); style.rect4.height=2;
                 canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect4, style.skin.TreeWidget.ChildControlColor );
 
                 style.rect4.x=rect.x + 9; style.rect4.width=2;
-                style.rect4.y=rect.y + 5; style.rect4.height=10;
+                style.rect4.y=rect.y + Math.floor( (itemHeight-10)/2); style.rect4.height=10;
                 canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect4, style.skin.TreeWidget.ChildControlColor );                
             }
         } else {
@@ -1693,8 +2232,21 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
             canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect3.shrink( 1, 1, style.rect3 ), style.skin.TreeWidget.ItemSelectedBackColor );
         }
 
-        style.rect3.x+=7; style.rect3.width-=7;
-        canvas.drawTextRect( item.text, style.rect3, style.skin.TreeWidget.TextColor, 0, 1 );  
+        // --- Insert Potential Child Widgets of Items
+        if ( item.childWidgets ) {
+            for ( var c=0; c < item.childWidgets.length; ++c ) {
+                widget.childWidgets.push( item.childWidgets[c] );
+            }
+        }
+        // ---
+
+        if ( widget.paintItemCallback ) {
+            widget.paintItemCallback( canvas, item, style.rect3, isSelected );
+        } else {
+
+            style.rect3.x+=7; style.rect3.width-=7;            
+            canvas.drawTextRect( item.text, style.rect3, style.skin.TreeWidget.TextColor, 0, 1 );  
+        }
     };
 
     // ---
@@ -1729,7 +2281,6 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
 
     canvas.pushClipRect( widget.contentRect );
 
-    widget.itemHeight=this.skin.TreeWidget.Font.size + 8;
     widget.contentRect.x+=this.skin.ListWidget.Margin.left; 
     widget.contentRect.y+=this.skin.ListWidget.Margin.top;
     widget.contentRect.width-=2*this.skin.ListWidget.Margin.right; 
@@ -1739,6 +2290,8 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
         widget.verifyScrollbar();
 
     // ---
+
+    widget.childWidgets=[];
 
     widget.items=null;
     widget.items=[];
@@ -1750,7 +2303,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
     // ---
 
     var paintRect=this.rect2; this.rect2.copy( widget.contentRect );
-    paintRect.height=widget.itemHeight;
+    paintRect.height=itemHeight;
 
     if ( widget.needsVScrollbar ) paintRect.width-=this.skin.ScrollBar.Size;
 
@@ -1787,7 +2340,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
                 widget.items.push( VG.UI.TreeWidgetItem( item, paintRect ) );
                 drawItem( this, item, widget.controller.isSelected( item ), paintRect, selBackgroundRect, indentTop );
 
-                paintRect.y+=widget.itemHeight + widget.spacing;    
+                paintRect.y+=itemHeight + widget.spacing;    
             }
 
             if ( item.children && item.open ) drawItemChildren( this, paintRect, item, selBackgroundRect );
@@ -1881,7 +2434,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawWindow=function( widget, canvas )
 
         this.rect2.shrink( 2, 2, this.rect2 );
 
-        var imageName=this.skin.prefix + "windowclose";
+        var imageName="windowclose";
         if ( widget.closeRect.contains( VG.context.workspace.mousePos ) ) imageName+="_hover";
         imageName+=".png";
         var image=VG.context.imagePool.getImageByName( imageName );

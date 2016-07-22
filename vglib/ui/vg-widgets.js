@@ -292,14 +292,14 @@ VG.UI.Widget.prototype.setDragSourceId=function( id )
 
 // ----------------------------------------------------------------- VG.UI.Widget3D
 
-VG.UI.RenderWidget=function()
+VG.UI.RenderWidget=function( noRealtime )
 {
     /** Creates an RenderWidget to perform arbitrary realtime 2D/3D rendering.
      *  
      *  The method render() is called to perform the rendering and needs to be overriden. The widget receives
      *  calls to render() in 60 fps per second.
      */
-    if ( !(this instanceof VG.UI.RenderWidget) ) return new VG.UI.RenderWidget();
+    if ( !(this instanceof VG.UI.RenderWidget) ) return new VG.UI.RenderWidget( noRealtime );
 
     VG.UI.Widget.call( this );
  
@@ -311,7 +311,7 @@ VG.UI.RenderWidget=function()
     this._mainRT = VG.Renderer().mainRT;
 
     this.clearBackground=true;
-    VG.context.workspace.autoRedrawInterval=0;
+    if ( !noRealtime ) VG.context.workspace.autoRedrawInterval=0;
 };
 
 VG.UI.RenderWidget.prototype=VG.UI.Widget();
@@ -341,6 +341,9 @@ VG.UI.RenderWidget.prototype.paintWidget=function( canvas )
     if ( VG.context.workspace.mainRect ) this._mainRT.setViewport( VG.context.workspace.mainRect );
     else this._mainRT.setViewport(VG.context.workspace.rect);
     canvas.popClipRect();
+
+    if ( this.context.trace )
+        canvas.drawImage( this.rect, this.context.traceContext.image );
 };
 
 // ----------------------------------------------------------------- VG.UI.Frame
@@ -389,6 +392,8 @@ VG.UI.Image=function( image )
 
     } else    
     this._image=VG.Core.Image();
+
+    this.adjustSizeToImage=true;
 };
 
 VG.UI.Image.prototype=VG.UI.Frame();
@@ -408,6 +413,9 @@ Object.defineProperty( VG.UI.Image.prototype, "image", {
 
 VG.UI.Image.prototype.calcSize=function()
 {
+    if ( this.adjustSizeToImage === false )
+        return this.preferredSize;
+
     var size=VG.Core.Size( 0, 0 );
 
     if ( this._image.isValid() ) {
@@ -535,8 +543,10 @@ VG.UI.Button.prototype.calcSize=function( canvas )
 
         if ( size.width < 80 ) size.width=80;  
 
-        size.width+=10;
-        size.height+=15;//27;   
+        size.width+=20;
+
+        if ( !this.__vgInsideToolBar ) size.height+=15;
+        else size.height+=11;
 
         this.minimumSize.set( size );
     } else {
@@ -553,7 +563,7 @@ VG.UI.Button.prototype.calcSize=function( canvas )
         this.minimumSize.set( size );      
     }
 
-    this.checkSizeDimensionsMinMax( size );    
+    this.checkSizeDimensionsMinMax( size );
 
     canvas.popFont();
 
@@ -562,7 +572,7 @@ VG.UI.Button.prototype.calcSize=function( canvas )
 
 VG.UI.Button.prototype.mouseDown=function( event )
 {
-    if ( this.rect.contains( event.pos) )
+    if ( this.rect.contains( event.pos) && !this.disabled )
         this.mouseIsDown=true;
 };
 
@@ -713,6 +723,48 @@ VG.UI.ScrollBar.prototype.mouseMove=function( event )
     }    
 };
 
+VG.UI.ScrollBar.prototype.getHandleOffset=function()
+{
+    if ( this.direction === VG.UI.ScrollBar.Direction.Vertical )
+    {    
+        return this.handleRect.y - this.rect.y;
+    } else
+    if ( this.direction === VG.UI.ScrollBar.Direction.Horizontal )
+    {
+        return this.handleRect.x - this.rect.x;
+    };    
+};
+
+VG.UI.ScrollBar.prototype.setHandleOffset=function( offset )
+{
+    if ( this.direction === VG.UI.ScrollBar.Direction.Vertical )
+    {
+        if ( offset != this.handleOffset ) {
+
+            this.handleOffset=offset;
+
+            if ( this.callbackObject && this.callbackObject.vHandleMoved ) {
+                this.verifyHandleRect();
+                this.callbackObject.vHandleMoved( this.handleRect.y - this.rect.y );
+            }
+            VG.update();
+        }
+    } else
+    if ( this.direction === VG.UI.ScrollBar.Direction.Horizontal )
+    {
+        if ( offset != this.handleOffset ) {
+
+            this.handleOffset=offset;
+
+            if ( this.callbackObject && this.callbackObject.hHandleMoved ) {
+                this.verifyHandleRect();
+                this.callbackObject.hHandleMoved( this.handleRect.x - this.rect.x );
+            }
+            VG.update();
+        }
+    }       
+};
+
 VG.UI.ScrollBar.prototype.mouseDown=function( event )
 {
     this.calibrateHandleOffset();
@@ -824,7 +876,7 @@ VG.UI.CheckBox.prototype.valueFromModel=function( value )
     else this.checked=value;  
 
     if ( this.changed )
-        this.changed.call( VG.context );   
+        this.changed( this.checked );   
 
     VG.update();    
 };
@@ -837,7 +889,7 @@ VG.UI.CheckBox.prototype.mouseDown=function( event )
     else this.checked=true;
 
     if ( this.collection && this.path )
-        this.collection.storeDataForPath( this.path, this.checked );   
+        this.collection.storeDataForPath( this.path, this.checked, undefined, undefined, this.undoText );   
 
     if ( this.changed )
         this.changed( this.checked, this );
@@ -852,6 +904,226 @@ VG.UI.CheckBox.prototype.mouseUp=function( event )
 VG.UI.CheckBox.prototype.paintWidget=function( canvas )
 {
     VG.UI.stylePool.current.drawCheckBox( this, canvas );
+};
+
+// ----------------------------------------------------------------- VG.UI.ShiftWidget
+
+VG.UI.ShiftWidgetItem=function( text, widget )
+{
+    this.text=text;
+    this.widget=widget;
+};
+
+VG.UI.ShiftWidget=function()
+{
+    if ( !(this instanceof VG.UI.ShiftWidget) ) return VG.UI.ShiftWidget.creator( arguments );
+
+    VG.UI.Widget.call( this );
+    this.name="ShiftWidget";
+
+    this.horizontalExpanding=true;
+    this.verticalExpanding=true;
+
+    this.minimumSize.set( 60, 40 );
+    this.maximumSize.set( 32768, 32768 );
+    this.preferredSize.set( 60, 40 );
+
+    this.supportsFocus=false;
+
+    this.childs=[];
+    this.index=-1;
+    this.popup=false;
+
+    this.popupRect=VG.Core.Rect();
+    this.layout=VG.UI.StackedLayout();
+
+    this.maxUp=5; this.maxDown=5;
+    this.itemHeight=30;
+
+    for( var i=0; i < arguments.length; i+=2 )
+        if ( String( arguments[i] ).length ) this.addChild( arguments[i], arguments[i+1] );
+};
+
+VG.UI.ShiftWidget.prototype=VG.UI.Widget();
+
+Object.defineProperty( VG.UI.ShiftWidget.prototype, "index", {
+    get: function() {
+        return this._index;
+    },
+    set: function( index ) {
+        this._index=index;
+
+        if ( index === -1 )
+            this.layout.current=undefined;
+        else
+            this.layout.current=this.childs[index].widget;
+    }    
+});
+
+VG.UI.ShiftWidget.prototype.clear=function( text )
+{
+    this.childs=[];
+    this.index=-1;
+};
+
+VG.UI.ShiftWidget.prototype.text=function( text )
+{
+    var text="";
+    if ( this.index !== -1 ) text=this.childs[this.index];
+    return text;
+};
+
+VG.UI.ShiftWidget.prototype.addChild=function( text, widget )
+{
+    this.layout.addChild( widget );
+    this.childs.push( new VG.UI.ShiftWidgetItem( text, widget ) );
+    if ( this.index === -1 ) this.index=0;
+};
+
+VG.UI.ShiftWidget.prototype.addChilds=function()
+{
+    for( var i=0; i < arguments.length; i+=2 )
+        this.addItem( arguments[i], arguments[i+1] );
+};
+
+VG.UI.ShiftWidget.prototype.calcSize=function( canvas )
+{
+    var size=this.preferredSize;
+    return size;
+};
+
+VG.UI.ShiftWidget.prototype.bind=function( collection, path )
+{
+    this.collection=collection;
+    this.path=path;
+    collection.addValueBindingForPath( this, path );
+};
+
+VG.UI.ShiftWidget.prototype.valueFromModel=function( value )
+{
+    //VG.log( "TextEdit.valueFromModel: " + value );
+
+    if ( value === null ) this.index=0;
+    else this.index=value;
+
+    if ( this.changed )
+        this.changed( this.index, this.childs[this.index], this );
+};
+
+VG.UI.ShiftWidget.prototype.applyNewIndex=function( index )
+{
+    this.index=index;    
+    if ( this.collection && this.path )
+        this.collection.storeDataForPath( this.path, this.index );
+
+    if ( this.changed )
+        this.changed( index, this.childs[index].widget, this );
+};
+
+VG.UI.ShiftWidget.prototype.focusIn=function()
+{
+    if ( this.focusInCallback )
+        this.focusInCallback( this );
+};
+
+VG.UI.ShiftWidget.prototype.keyDown=function( keyCode )
+{
+    if ( VG.UI.Widget.prototype.keyDown.call( this, keyCode ) )
+        return;
+
+    if ( this.popup )
+    {
+        if ( keyCode == VG.Events.KeyCodes.Esc )
+        {
+            this.index=this.oldIndex;
+            this.popup=false;
+            VG.update();
+        }
+    } else
+    {
+        if ( keyCode == VG.Events.KeyCodes.ArrowUp )
+        {
+            if ( this.index > 0 ) {
+                this.applyNewIndex( this.index -1 );
+                VG.update();
+            }
+        } else        
+        if ( keyCode == VG.Events.KeyCodes.ArrowDown )
+        {
+            if ( this.index < (this.childs.length -1 )) {
+                this.applyNewIndex( this.index + 1 );
+                VG.update();
+            }
+        }
+    }
+};
+
+VG.UI.ShiftWidget.prototype.mouseMove=function( event )
+{
+    if ( this.popup && this.popupRect && this.popupRect.contains( event.pos ) )
+    {
+        var y=event.pos.y - this.popupRect.y;
+        var index= Math.floor( y / this.itemHeight );
+
+        this.highlightedIndex=(this.index - this.itemsUp + index );
+        this.highlightedIndex=VG.Math.clamp( this.highlightedIndex, 0, this.childs.length-1 );
+        VG.update();
+    }
+};
+
+VG.UI.ShiftWidget.prototype.mouseDown=function( event )
+{
+    if ( event.pos.x - this.rect.x < 25 )
+    {
+        var index;
+        if ( this.index === 0 ) index=this.childs.length-1;
+        else index=this.index-1;
+
+        this.applyNewIndex( index );
+    } else
+    if ( this.rect.right() - event.pos.x < 25 )
+    {
+        var index=(this.index + 1 ) % this.childs.length;
+        this.applyNewIndex( index );
+    } else
+    if ( this.rect.contains( event.pos ) ) {
+        VG.context.workspace.mouseTrackerWidget=this;
+
+        this.highlightedIndex=this.index;
+        this.popup=true;
+        this.oldIndex=this.index;
+    }
+};
+
+VG.UI.ShiftWidget.prototype.mouseUp=function( event )
+{
+    VG.context.workspace.mouseTrackerWidget=null;    
+
+    if ( this.popup && this.highlightedIndex !== this.oldIndex )
+        this.applyNewIndex( this.highlightedIndex );
+
+    this.popup=false;
+
+    VG.update();
+};
+
+VG.UI.ShiftWidget.prototype.paintWidget=function( canvas )
+{
+    this.contentRect.copy( this.rect );
+
+    if ( this.popup && canvas.delayedPaintWidgets.indexOf( this ) === -1 ) {
+        canvas.delayedPaintWidgets.push( this );
+    } else 
+    {
+        if ( this.index !== -1 ) {
+
+            this.layout.rect.copy( this.rect );
+            this.layout.rect.y+=this.itemHeight; this.layout.rect.height-=this.itemHeight;
+            this.layout.layout( canvas );
+        }
+
+        VG.UI.stylePool.current.drawShiftWidget( this, canvas );        
+    }
 };
 
 // ----------------------------------------------------------------- VG.UI.DropDownMenu
@@ -1059,22 +1331,36 @@ VG.UI.StatusBar=function()
     this.layout.margin.left=10;
     this.layout.margin.top=10;
 
-    this.label=VG.UI.Label( "" );
-    this.label.hAlignment=VG.UI.HAlignment.Left;
+    // ---
 
-    this.layout.addChild( this.label );
+    this.messageLayout=VG.UI.Layout();
+
+    this.messageLayout.margin.left=10;
+    this.messageLayout.margin.top=10;
+
+    this.messageLabel=VG.UI.Label( "" );
+    this.messageLabel.hAlignment=VG.UI.HAlignment.Left;
+    this.messageLabel.vAlignment=VG.UI.HAlignment.Bottom;
+
+    this.messageLayout.addChild( this.messageLabel );
 
     this.spacer=VG.UI.LayoutHSpacer();
-    this.layout.addChild( this.spacer );
+    this.messageLayout.addChild( this.spacer );
 };
 
 VG.UI.StatusBar.prototype=VG.UI.Widget();
 
 VG.UI.StatusBar.prototype.message=function( message, timeout )
 {
-    this.label.text=message;
+    this.messageLabel.text=message;
     if ( timeout ) this.messageTimeOutTime=Date.now() + timeout;
     else this.messageTimeOutTime=0;
+    VG.update();
+};
+
+VG.UI.StatusBar.prototype.addWidget=function( widget )
+{
+    this.layout.addChild( widget );
 };
 
 VG.UI.StatusBar.prototype.paintWidget=function( canvas )
@@ -1082,10 +1368,17 @@ VG.UI.StatusBar.prototype.paintWidget=function( canvas )
     VG.UI.stylePool.current.drawStatusBar( this, canvas );
 
     if ( this.messageTimeOutTime && this.messageTimeOutTime < Date.now() )
-        this.label.text="";
+        this.messageLabel.text="";
 
-    this.layout.rect.set( this.rect );
-    this.layout.layout( canvas );
+    if ( this.messageLabel.text === "" )
+    {
+        this.layout.rect.set( this.rect );
+        this.layout.layout( canvas );
+    } else
+    {
+        this.messageLayout.rect.set( this.rect );
+        this.messageLayout.layout( canvas );        
+    }
 };
 
 // ----------------------------------------------------------------- VG.UI.TabWidget
@@ -1182,7 +1475,7 @@ VG.UI.TabWidget.prototype.paintWidget=function( canvas )
 
 // ----------------------------------------------------------------- VG.UI.SnapperWidgetItem
 
-VG.UI.SnapperWidgetItem=function( text, object, open )
+VG.UI.SnapperWidgetItem=function( text, object, open, enabler )
 {
     VG.UI.Widget.call( this );
 
@@ -1197,7 +1490,16 @@ VG.UI.SnapperWidgetItem=function( text, object, open )
 
     this.minimumSize.height=VG.UI.stylePool.current.skin.SnapperWidgetItem.Height;
     this.maximumSize.height=VG.UI.stylePool.current.skin.SnapperWidgetItem.Height;
-    this.preferredSize.height=VG.UI.stylePool.current.skin.SnapperWidgetItem.Height;    
+    this.preferredSize.height=VG.UI.stylePool.current.skin.SnapperWidgetItem.Height;
+
+    if ( enabler ) {
+        this.enablerCB=VG.UI.CheckBox();
+        this.enablerCB.undoText=enabler.undoText;
+        this.enablerCB.bind( enabler.dc, enabler.path );
+        this.enablerCB.changed=enabler.changed;
+
+        this.childWidgets=[ this.enablerCB ];
+    }
 };
 
 VG.UI.SnapperWidgetItem.prototype=VG.UI.Widget();
@@ -1256,15 +1558,30 @@ VG.UI.SnapperWidget=function( text )
 
 VG.UI.SnapperWidget.prototype=VG.UI.Widget();
 
-VG.UI.SnapperWidget.prototype.addItem=function( text, object, open )
+Object.defineProperty( VG.UI.SnapperWidget.prototype, "disabled", {
+    get: function() {
+        return this._disabled;
+    },
+    set: function( value ) {
+        this._disabled=value;
+        for( var i=0; i < this.layout.children.length; ++i )
+        {
+            this.layout.children[i].disabled=value;
+        }
+    }    
+});
+
+VG.UI.SnapperWidget.prototype.addItem=function( text, object, open, enabler )
 {
-    var item=new VG.UI.SnapperWidgetItem( text, object, open );
+    var item=new VG.UI.SnapperWidgetItem( text, object, open, enabler );
 
     this.items.push( item );
     this.layout.addChild( item );
     this.layout.addChild( object );
 
     VG.update();
+
+    return item;
 };
 
 VG.UI.SnapperWidget.prototype.addItems=function()
@@ -1275,25 +1592,10 @@ VG.UI.SnapperWidget.prototype.addItems=function()
 
 VG.UI.SnapperWidget.prototype.mouseMove=function( event )
 {
-    //if ( event.pos.y >= this.rect.y && event.pos.y <= this.rect.y + VG.UI.stylePool.current.skin.TabWidgetHeader.Height )
-    //    VG.update();
 };
 
 VG.UI.SnapperWidget.prototype.mouseDown=function( event )
 {
-    /*
-    if ( event.pos.y >= this.rect.y && event.pos.y <= this.rect.y + VG.UI.stylePool.current.skin.TabWidgetHeader.Height )
-    {
-        for ( var i=0; i < this.items.length; ++i )
-        {
-            var item=this.items[i];    
-
-            if ( event.pos.x >= item.rect.x && event.pos.x <= item.rect.x + item.rect.width ) {
-                this.layout.current=item.object;
-                if ( this.changed ) this.changed( item.object );
-            }
-        }
-    }*/
 };
 
 VG.UI.SnapperWidget.prototype.mouseUp=function( event )
@@ -1315,9 +1617,9 @@ VG.UI.SnapperWidget.prototype.paintWidget=function( canvas )
 
 // ----------------------------------------------------------------- VG.UI.Slider
 
-VG.UI.Slider=function( min, max, step )
+VG.UI.Slider=function( min, max, step, editable, precision )
 {
-    if ( !(this instanceof VG.UI.Slider) ) return new VG.UI.Slider( min, max, step );
+    if ( !(this instanceof VG.UI.Slider) ) return new VG.UI.Slider( min, max, step, editable, precision );
 
     VG.UI.Widget.call( this );
     this.name="Slider";
@@ -1331,33 +1633,71 @@ VG.UI.Slider=function( min, max, step )
     this.min=min;
     this.max=max;
     this.step=step;
-    this.value=min;
+    this._value=min;
 
     this.sliderRect=VG.Core.Rect();
     this.sliderHandleRect=VG.Core.Rect();
 
     this.checked=false;
     this.dragging=false;
+
+    if ( editable ) {
+        this.editable=true;
+        this.edit=VG.UI.NumberEdit( min, min, max, precision );
+        this.edit.changed=function( value, cont, object, fromModel ) {
+            this.value=value;
+
+            if ( this.collection && this.path )
+                this.collection.storeDataForPath( this.path, this.value, undefined, undefined, this.undoText );   
+
+            if ( this.changed )
+                this.changed.call( VG.context, this.value, false, this, fromModel );            
+        }.bind( this );
+        this.childWidgets=[ this.edit ];
+    }
 };
 
 VG.UI.Slider.prototype=VG.UI.Widget();
+
+Object.defineProperty( VG.UI.Slider.prototype, "value", {
+    get: function() {
+        return this._value;
+    },
+    set: function( value ) {
+        this._value=value;
+        if ( this.edit )
+            this.edit.value=value;    
+    }    
+});
+
+Object.defineProperty( VG.UI.Slider.prototype, "toolTip", {
+    get: function() {
+        return this._toolTip;
+    },
+    set: function( value ) {
+        this._toolTip=value;
+        if ( this.edit )
+            this.edit.toolTip=value;    
+    }    
+});
 
 VG.UI.Slider.prototype.bind=function( collection, path )
 {
     this.collection=collection;
     this.path=path;
-    collection.addValueBindingForPath( this, path ); 
+    collection.addValueBindingForPath( this, path );
 };
 
 VG.UI.Slider.prototype.valueFromModel=function( value )
 {
-    //console.log( "Slider.valueFromModel: " + value );
-
     if ( value === null ) this.value=this.min;
     else this.value=value;  
 
     if ( this.changed )
-        this.changed.call( VG.context );   
+        this.changed.call( VG.context, value, false, this, true );  
+
+    if ( this.edit )
+        this.edit.value=value;
 
     VG.update();    
 };
@@ -1376,6 +1716,8 @@ VG.UI.Slider.prototype.mouseDown=function( event )
     {
         this.startValue=this.value;
         this.dragging=true;
+
+        VG.context.workspace.mouseTrackerWidget=this;
     } else
     if ( event.pos.x >= this.sliderRect.x && event.pos.x <= (this.sliderRect.x + this.sliderRect.width) )
     {
@@ -1403,16 +1745,48 @@ VG.UI.Slider.prototype.gotoPixelOffset=function( offset )
     if ( offset < 0 ) offset=0;
     if ( offset >= this.sliderRect.width ) offset=this.sliderRect.width;
 
-    var distance=this.max - this.min;
-    var perPixel=distance / this.sliderRect.width;
+    var oldValue=this.value;
 
-    if ( this.step == Math.round( this.step ) )
-        this.value=this.min + Math.round( offset * perPixel );
-    else
-        this.value=this.min + offset * perPixel;
+    if ( !this.halfWidthValue )
+    {
+        var distance=this.max - this.min;
+        var perPixel=distance / this.sliderRect.width;
 
-    if ( this.changed )
-        this.changed.call( VG.context, this.value, true, this );      
+        if ( this.step == Math.round( this.step ) )
+            this.value=this.min + Math.round( offset * perPixel );
+        else
+            this.value=this.min + offset * perPixel;
+    } else
+    {
+        if ( offset <= this.sliderRect.width / 2 )
+        {
+            var distance=this.halfWidthValue - this.min;
+            var perPixel=distance / this.sliderRect.width * 2;
+
+            if ( this.step == Math.round( this.step ) )
+                this.value=this.min + Math.round( offset * perPixel );
+            else
+                this.value=this.min + offset * perPixel;
+        } else
+        {
+            offset-=this.sliderRect.width / 2;
+            var distance=this.max - this.halfWidthValue;
+            var perPixel=distance / this.sliderRect.width * 2;
+
+            if ( this.step == Math.round( this.step ) )
+                this.value=this.halfWidthValue + Math.round( offset * perPixel );
+            else
+                this.value=this.halfWidthValue + offset * perPixel;
+        }
+    }
+
+    if ( oldValue !== this.value ) {
+        if ( this.changed )
+            this.changed.call( VG.context, this.value, true, this );
+
+        if ( this.edit )
+            this.edit.value=this.value;
+    }
 };
 
 VG.UI.Slider.prototype.mouseUp=function( event )
@@ -1420,12 +1794,13 @@ VG.UI.Slider.prototype.mouseUp=function( event )
     if ( this.dragging ) {
 
         if ( this.collection && this.path )
-            this.collection.storeDataForPath( this.path, this.value );   
+            this.collection.storeDataForPath( this.path, this.value, undefined, undefined, this.undoText );   
 
         if ( this.changed )
             this.changed.call( VG.context, this.value, false, this );  
     }
     this.dragging=false;    
+    VG.context.workspace.mouseTrackerWidget=null;
 };
 
 VG.UI.Slider.prototype.paintWidget=function( canvas )
@@ -1435,104 +1810,52 @@ VG.UI.Slider.prototype.paintWidget=function( canvas )
     VG.UI.stylePool.current.drawSlider( this, canvas );  
 };
 
-// ----------------------------------------------------------------- VG.UI.Slider
+// ----------------------------------------------------------------- VG.UI.ColorWheel
 
-VG.UI.ColorWheel=function( big )
+VG.UI.ColorWheel=function( expanding )
 {
-    if ( !(this instanceof VG.UI.ColorWheel) ) return new VG.UI.ColorWheel( big );
+    if ( !(this instanceof VG.UI.ColorWheel) ) return new VG.UI.ColorWheel( expanding );
 
     VG.UI.Widget.call(this);
     this.name="ColorWheel";
     this.supportsFocus=true;
 
-    this.dragging=false;
-    this._control=VG.UI.ColorWheel.Control.None;
-
     this.horizontalExpanding=true;
     this.verticalExpanding=true;
 
-    if ( big )
-    {
-        this._pickerSize=300;
-        this._circleSize=this._pickerSize * 0.9; //80%
-    } else 
-    {
-        this._pickerSize=150;
-        this._circleSize=this._pickerSize * 0.8; //80%
-    }
+    this._hue=0;
+    this._saturation=1.0;
+    this._lightness=0.5;
 
-    this.minimumSize=VG.Core.Size(this._pickerSize * 1.10, this._pickerSize );
-    this.maximumSize=VG.Core.Size( 1000, this._pickerSize);
-    
-    this._alpha=1.0;
-    
-    this._lsSelector = VG.Core.Point();
-
-
+    this.hueDot=new VG.Math.Vector2();
 
     this._color=VG.Core.Color();
 
-    //utility colors for painting (light sturation)
-    this._ls1=VG.Core.Color();
-    this._ls2=VG.Core.Color();
-    this._ls3=VG.Core.Color();
+    // --- Triangle Colors
+    this.ls1=VG.Core.Color();
+    this.ls2=VG.Core.Color();
+    this.ls3=VG.Core.Color();
 
-    this._circleOffset=60.0;
-    this._circleTickness=10.0;
-
-    //in local space, sightly smaller than the widget to allow an alpha slider
-    var circleXOffset = (this._pickerSize - this._circleSize) / 2;
-    this._circleRect = VG.Core.Rect(/*circleXOffset*/0, /*10*/0, this._circleSize, this._circleSize);
-
-    this._hueSelector = VG.Core.Point();
-
-    this._lsRect=VG.Core.Rect();
-
-
-    //set default values
-    this.hue=0;
-    this.saturation=1.0;
-    this.lightness=0.5;
+    // --- Triangle Points
+    this.ls1Pt=new VG.Math.Vector2();
+    this.ls2Pt=new VG.Math.Vector2();
+    this.ls3Pt=new VG.Math.Vector2();
 
     this.toRGBA();
 
-    // ---
+    this.borderColor=VG.Core.Color( 128, 128, 128 );
+    this.centerColor=VG.Core.Color( 70, 70, 70 );
 
-    this.rEdit=VG.UI.NumberEdit( 0, 0, 255, 0 );
-    this.rEdit.font.setSize( 12 );
-    this.rEdit.maximumSize.width=40;
-    this.rEdit.changed=function( value ) {
-        var col=VG.Core.Color( value, this._color.g * 255, this._color.b * 255, this._color.a * 255 );
-        //this._color.r=value / 255.0;
-        this.color=col;
-        //hthis.toRGBA();
-        //VG.log( this._color.g );
-    }.bind( this );
-    var rLabel=VG.UI.Label("R");
-    rLabel.font.setSize( 12 );
+    this.hueSize=12;
 
-    this.gEdit=VG.UI.NumberEdit( 0, 0, 255, 0 );
-    this.gEdit.font.setSize( 12 );
-    this.gEdit.maximumSize.width=40;
-    var gLabel=VG.UI.Label("G");
-    gLabel.font.setSize( 12 );
+    if ( !expanding )
+    {
+        this.setFixedSize( 80, 80 );
+        this.hueSize=8;
+    }
 
-    this.bEdit=VG.UI.NumberEdit( 0, 0, 255, 0 );
-    this.bEdit.font.setSize( 12 );
-    this.bEdit.maximumSize.width=40;
-    var bLabel=VG.UI.Label("B");
-    bLabel.font.setSize( 12 );
-
-    this.rgbLayout=VG.UI.Layout( VG.UI.LayoutHSpacer(), rLabel, this.rEdit, gLabel, this.gEdit, bLabel, this.bEdit, VG.UI.LayoutHSpacer() );
-    this.rgbLayout.spacing=1;
-    this.rgbLayout.margin.clear();
-    this.layout=this.rgbLayout;
-    this.layout.parent=this;
-
-    //this.childWidgets=[ this.rEdit, this.gEdit, this.bEdit ];
+    this.lastRect=VG.Core.Rect();
 };
-
-VG.UI.ColorWheel.Control = { None: 0, Hue: 1, LightSat: 2, Alpha: 3 }; 
 
 VG.UI.ColorWheel.prototype=VG.UI.Widget(); 
 
@@ -1545,31 +1868,18 @@ Object.defineProperty(VG.UI.ColorWheel.prototype, "hue",
 
         this._hue = hue;
 
-        var rect = this.getCircleRect();
-        var vC = new VG.Math.Vector2(this._circleSize / 2, this._circleSize / 2);
-
-        var vD = new VG.Math.Vector2();
-        vD.dirFromAngle(VG.Math.rad(this._hue - 180));
-
-        vD.mul(this._circleSize * 0.45);
-
-        vD = vC.clone().add(vD);
-
-        this._hueSelector.x = vD.x;
-        this._hueSelector.y = vD.y;
         this.toRGBA();
-    }    
+    } 
 });
 
 Object.defineProperty(VG.UI.ColorWheel.prototype, "saturation", 
 {
     get: function() {
-        return this._sat;
+        return this._saturation;
     },
     set: function(sat) {
 
-        this._sat = VG.Math.clamp(sat, 0.0, 1.0);
-        this._lsSelector.x = this._sat * this._circleSize * 0.5;
+        this._saturation = VG.Math.clamp(sat, 0.0, 1.0);
         this.toRGBA();
     }    
 });
@@ -1577,12 +1887,11 @@ Object.defineProperty(VG.UI.ColorWheel.prototype, "saturation",
 Object.defineProperty(VG.UI.ColorWheel.prototype, "lightness", 
 {
     get: function() {
-        return this._lit;
+        return this._ligtness;
     },
     set: function(lit) {
 
-        this._lit = VG.Math.clamp(lit, 0.0, 1.0);
-        this._lsSelector.y = this._lit * this._circleSize * 0.5;
+        this._ligtness = VG.Math.clamp(lit, 0.0, 1.0);
         this.toRGBA();
     }    
 });
@@ -1598,31 +1907,45 @@ Object.defineProperty(VG.UI.ColorWheel.prototype, "color",
 
         var hsl = this._color.toHSL();
 
-        this.hue = VG.Math.deg(hsl.h) + 180;
-        this.saturation = hsl.s;
-        this.lightness = hsl.l;
+        this.hue = hsl.h * 360;
+        this._saturation = hsl.s;
+        this._lightness = hsl.l;
+
+        this.toRGBA();
     }    
 });
+
+VG.UI.ColorWheel.prototype.bind=function( collection, path )
+{
+    this.collection=collection;
+    this.path=path;
+    collection.addValueBindingForPath( this, path );
+};
+
+VG.UI.ColorWheel.prototype.valueFromModel=function( value )
+{
+    if ( value === null ) this.color=VG.Core.Color.Black;
+    else this.color=VG.Core.Color( value );
+
+    if ( this.changed )
+        this.changed.call( VG.context, this._color, false, this, true ); 
+
+    VG.update();    
+};
 
 VG.UI.ColorWheel.prototype.toRGBA=function()
 {
     var h = this._hue;
-    var s = this._sat;
-    var l = this._lit;
+    var s = this._saturation;
+    var l = this._lightness;
 
     this._color.setHSL(h, s, l);
-    this._color.a = this._alpha;
 
-    this._ls1.setHSL(h, 0.0, 0.0);
-    this._ls2.setHSL(h, 1.0, 0.5);
-    this._ls3.setHSL(h, 0.0, 1.0);
+    this.ls1.setHSL(h, 0.0, 0.0);
+    this.ls2.setHSL(h, 1.0, 0.5);
+    this.ls3.setHSL(h, 0.0, 1.0);
 
-    if ( this.rEdit )
-        this.rEdit.value=VG.Math.clamp( Math.round( this._color.r * 255), 0, 255 );
-    if ( this.gEdit )
-        this.gEdit.value=VG.Math.clamp( Math.round( this._color.g * 255), 0, 255 );
-    if ( this.bEdit )
-        this.bEdit.value=VG.Math.clamp( Math.round( this._color.b * 255), 0, 255 );
+    this.dirty=true;
 }
 
 VG.UI.ColorWheel.prototype.calcSize=function( canvas )
@@ -1632,217 +1955,314 @@ VG.UI.ColorWheel.prototype.calcSize=function( canvas )
 
 VG.UI.ColorWheel.prototype.mouseMove=function(event)
 {
-    var c = this.computeConstants(event);
-    this.update(c);
-}
+    if ( this.hueDrag ) {
+        this.computeHueFromEvent( event );
+        this.toRGBA();       
+        
+        if ( this.changed )
+            this.changed( this._color, true, this );
 
-VG.UI.ColorWheel.prototype.computeConstants=function(event)
-{
-    /* Computes mouse related constants needed by the click lookup and update function */
-
-
-    var rect = this.getCircleRect();
-
-    var cons = {};
-
-    cons.w = rect.width;
-    cons.h = rect.width;
-
-    cons.localX = event.pos.x - rect.x;
-    cons.localY = event.pos.y - rect.y;
-
-    var inRect = this.getLightSatRect(rect);
-
-    cons.iw = inRect.width;
-    cons.ih = inRect.height;
-
-    cons.ilocalX = VG.Math.clamp(event.pos.x - inRect.x, 0, cons.iw);
-    cons.ilocalY = VG.Math.clamp(event.pos.y - inRect.y, 0, cons.ih);
-
-
-    //the center
-    cons.vC = new VG.Math.Vector2(cons.w / 2, cons.h / 2);
-
-    //mouse click position
-    cons.vM = new VG.Math.Vector2(cons.localX, cons.localY);
-
-
-    cons.vD = cons.vM.clone().sub(cons.vC);
-    cons.vD.normalize();
-
-    cons.vD.mul(this._circleSize * 0.45);
-
-    cons.vDist = cons.vC.dist(cons.vM);
-
-    cons.v1 = cons.vC.clone().add(cons.vD);
-
-    return cons;
-}
-
-VG.UI.ColorWheel.prototype.update=function(c)
-{
-    if (!this.dragging) return;
-
-    switch (this._control)
+        VG.update();
+    } else
+    if ( this.slDrag )
     {
-    case VG.UI.ColorWheel.Control.Hue:
-
-        this._hue = VG.Math.deg(c.vC.angleTo(c.v1)) + 180;
+        this.computeSLFromEvent( event );
+        this.toRGBA();       
         
-        this._hueSelector.x = c.v1.x;
-        this._hueSelector.y = c.v1.y;
+        if ( this.changed )
+            this.changed( this._color, true, this );
 
-
-        break;
-
-    case VG.UI.ColorWheel.Control.LightSat:
-
-        w = c.iw;
-        h = c.ih;
-
-        var localX = c.ilocalX;
-        var localY = c.ilocalY;
-
-
-        var hH = h / 2;
-
-        //clamp it into the triangle
-        this._sat = localX / w;
-
-        localY = VG.Math.clamp(localY, hH - hH * (1.0 - this._sat), hH + hH * (1.0 - this._sat));
-
-        this._lit = localY / h;
-
-        this._lsSelector.x = localX;
-        this._lsSelector.y = localY;
-        
-        break;
-
+        VG.update();
     }
-
-    //TODO check if the color changed, otherwise skip this bit bellow
-    this.toRGBA();
-
-    if (this.changed)
-        this.changed.call(VG.context, this._color, true, this ); 
-
-    VG.update();
 }
 
 VG.UI.ColorWheel.prototype.mouseUp=function(event)
 {
-    this._control = VG.UI.ColorWheel.Control.None;
-    this.dragging=false;
+    if ( this.hueDrag || this.slDrag ) 
+    {
+        if ( this.collection && this.path )        
+            VG.context.dc.storeDataForPath( this.path, this._color.toHex(), undefined, undefined, this.undoText );
 
-    if (this.changed)
-        this.changed.call(VG.context, this._color, false, this );     
+        if ( this.changed )
+            this.changed( this._color, false, this );
+    }
+
+    VG.context.workspace.mouseTrackerWidget=null;
+
+    this.hueDrag=false;
+    this.slDrag=false;    
 };
 
 VG.UI.ColorWheel.prototype.mouseDown=function(event)
 { 
-    var c = this.computeConstants(event);
-    
-    //distance from the circle's center
-    if (c.vDist < this._circleSize * 0.30)
+    VG.context.workspace.mouseTrackerWidget=this;
+
+    var centerX=this.rect.x + this.rect.width / 2, centerY=this.rect.y + this.rect.height / 2;
+
+    var dCX=centerX - event.pos.x, dCY=centerY - event.pos.y;
+    var dToCenter=Math.sqrt( dCX * dCX + dCY * dCY );
+
+    this.hueDrag=false;
+
+    if ( dToCenter >= this.circleSize/2 - this.hueSize )
     {
-        this._control = VG.UI.ColorWheel.Control.LightSat;
-        this.dragging = true;
+        this.hueDrag=true;
+        this.computeHueFromEvent( event );
+
+        this.toRGBA();
+
+        if ( this.changed )
+            this.changed( this._color, true, this );
+
+        VG.update();
+    } else
+    {
+        this.slDrag=true;
+        this.computeSLFromEvent( event );
+
+        this.toRGBA();
+
+        if ( this.changed )
+            this.changed( this._color, true, this );
+
+        VG.update();
     }
+};
+
+VG.UI.ColorWheel.prototype.computeHueFromEvent=function( event )
+{
+    var localX = event.pos.x - this.rect.x;
+    var localY = event.pos.y - this.rect.y;    
+
+    //the center
+    var center = new VG.Math.Vector2( this.circleSize /2, this.circleSize / 2 );
+
+    //mouse click position
+    var mouse = new VG.Math.Vector2( localX, localY );
+
+    var vD = mouse.clone().sub( center );
+    vD.normalize();
+
+    vD.mul( this.circleSize / 2 - this.hueSize / 2 );
+
+    var v1 = center.clone().add( vD );
+
+    this._hue = VG.Math.deg( center.angleTo( v1 ) ) + 180;
+};
+
+VG.UI.ColorWheel.prototype.computeSLFromEvent=function( event )
+{
+    function pDistance(x, y, x1, y1, x2, y2) 
+    {
+      var A = x - x1;
+      var B = y - y1;
+      var C = x2 - x1;
+      var D = y2 - y1;
+
+      var dot = A * C + B * D;
+      var len_sq = C * C + D * D;
+      var param = -1;
+      if (len_sq != 0) //in case of 0 length line
+          param = dot / len_sq;
+
+      var xx, yy;
+
+      if (param < 0) {
+        xx = x1;
+        yy = y1;
+      }
+      else if (param > 1) {
+        xx = x2;
+        yy = y2;
+      }
+      else {
+        xx = x1 + param * C;
+        yy = y1 + param * D;
+      }
+
+      var dx = x - xx;
+      var dy = y - yy;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    function isLeft( a, b, c) {
+        return ((b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x)) > 0;
+    };
+
+    var dSL13X=this.ls3Pt.x - this.ls1Pt.x;
+    var dSL13Y=this.ls3Pt.y - this.ls1Pt.y;
+
+    var midX=this.ls3Pt.x - dSL13X * 0.5;
+    var midY=this.ls3Pt.y - dSL13Y * 0.5;
+
+    var dWidthX=midX - this.ls2Pt.x;
+    var dWidthY=midY - this.ls2Pt.y;    
+
+    var rectWidth=Math.sqrt( dWidthX * dWidthX + dWidthY * dWidthY );
+    var rectHeight=Math.sqrt( dSL13X * dSL13X + dSL13Y * dSL13Y );
+
+    // --- Get Saturation
+
+    var xPosOk=isLeft( this.ls3Pt, this.ls1Pt, { x: event.pos.x, y: event.pos.y } );
+    if ( xPosOk ) {
+        var xDist=pDistance( event.pos.x, event.pos.y, this.ls1Pt.x + 100 * dSL13X, this.ls1Pt.y + 100 * dSL13Y, 
+            this.ls3Pt.x - 100 * dSL13X, this.ls3Pt.y - 100 * dSL13Y );
+    } else xDist=0;
+
+    this._saturation=VG.Math.clamp( xDist / rectWidth, 0, 1.0 );
+
+    // --- Get Lightness
+
+    var yDist=pDistance( event.pos.x, event.pos.y, this.ls2Pt.x - 100 * dWidthX, this.ls2Pt.y - 100 * dWidthY, 
+        midX + 100 * dWidthX, midY + 100 * dWidthY );
+
+    var yBelowMidLine=isLeft( { x : midX, y : midY }, this.ls2Pt, { x: event.pos.x, y: event.pos.y } );
+
+    var clipHeight=rectHeight/2 - rectHeight/2 * (this._saturation)
+
+    yDist=VG.Math.clamp( yDist, 0, clipHeight );
+
+    if ( !yBelowMidLine ) 
+        this._lightness=VG.Math.clamp( 0.5 - yDist / rectHeight, 0, 1 );
     else
-    if (c.vDist < this._circleSize * 0.50)
-    { 
-        this._control = VG.UI.ColorWheel.Control.Hue;
-        this.dragging = true;
-    }
+        this._lightness=VG.Math.clamp( 0.5 + yDist / rectHeight, 0, 1 );
+};
 
-    this.update(c);
-}
-
-VG.UI.ColorWheel.prototype.getLightSatRect=function(rect)
+VG.UI.ColorWheel.prototype.computeUI=function(canvas)
 {
-    var inRect = VG.Core.Rect();
+    this.circleSize=Math.min( this.rect.width, this.rect.height );
 
-    inRect.x = rect.x + ((this._circleSize * 0.5) * 0.5) + this._circleSize * 0.05;
-    inRect.y = rect.y + ((this._circleSize * 0.5) * 0.5);
-    inRect.width = this._circleSize * 0.5;
-    inRect.height = this._circleSize * 0.5;
+    // --- Hue Dot
 
-    return inRect;
-}
+    var vC = new VG.Math.Vector2(this.circleSize / 2, this.circleSize / 2);
 
-VG.UI.ColorWheel.prototype.getCircleRect=function()
-{
-    var rect = VG.Core.Rect(this._circleRect);
-    rect.x += this.rect.x;
+    var vD = new VG.Math.Vector2();
+    vD.dirFromAngle(VG.Math.rad(this._hue - 180));
+    vD.normalize();
 
-    if ( this.rect.width > this._circleSize ) rect.x += (this.rect.width - this._circleSize)/2;
-    rect.y += this.rect.y;
+    vD.mul( this.circleSize /2 - this.hueSize / 2 );
 
-    return rect;
-}
+    this.hueDot.copy( vC );
+    this.hueDot.add( vD );
 
-VG.UI.ColorWheel.prototype.paintWidget=function(canvas)
-{
-    var rect = this.getCircleRect();
-    var cSize = rect.width;
-    var hcSize = cSize / 2;
+    // --- SL Triangle
 
-    //canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect, VG.UI.stylePool.current.skin.Widget.BackgroundColor);
+    var vD = new VG.Math.Vector2();
+    vD.dirFromAngle(VG.Math.rad(this._hue - 180));
+    vD.normalize();
 
-    var inRect = this.getLightSatRect(rect);
+    vD.mul( this.circleSize /2 - this.hueSize - 2 );
 
-    //circle debug draw
-    var cRect = VG.Core.Rect();
+    this.ls2Pt.copy( vC );
+    this.ls2Pt.x+=this.rect.x; this.ls2Pt.y+=this.rect.y;
+    this.ls2Pt.add(vD);
 
-    cRect.x = rect.x + (hcSize - cSize * 0.4);
-    cRect.y = rect.y + (hcSize - cSize * 0.4);
-    cRect.width = cSize * 0.8;
-    cRect.height = cSize * 0.8;
+    //
 
+    var vD = new VG.Math.Vector2();
+    vD.dirFromAngle(VG.Math.rad(this._hue - 180 + 120));
+    vD.normalize();
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.CircleHue, rect);
-    //TODO Hardcoded color, pick a color from the style instead
-    canvas.draw2DShape( VG.Canvas.Shape2D.Circle, cRect, VG.Core.Color(70, 70, 70) );
+    vD.mul( this.circleSize /2 - this.hueSize - 2 );
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.ArrowRightGradient, inRect, this._ls1, this._ls2, this._ls3);
+    this.ls1Pt.copy( vC );
+    this.ls1Pt.x+=this.rect.x; this.ls1Pt.y+=this.rect.y;    
+    this.ls1Pt.add(vD);
 
-    //hue selector dot
-    var hueRect = VG.Core.Rect();
+    //
 
-    hueRect.x = rect.x + (this._hueSelector.x - 5);
-    hueRect.y = rect.y + (this._hueSelector.y - 5);
+    var vD = new VG.Math.Vector2();
+    vD.dirFromAngle(VG.Math.rad(this._hue - 180 - 120));
+    vD.normalize();
 
-    hueRect.width = 10;
-    hueRect.height = 10;
+    vD.mul( this.circleSize /2 - this.hueSize - 2 );
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.Circle, hueRect, VG.Core.Color(255, 255, 255));
+    this.ls3Pt.copy( vC );
+    this.ls3Pt.x+=this.rect.x; this.ls3Pt.y+=this.rect.y;    
+    this.ls3Pt.add(vD);
 
+    // --- SL Dot
 
-    //light sauration selection dot
-    var lsRect = VG.Core.Rect();
+    var getNormal = function( p1, p2, D ){
+        var d = p2.clone();
+        d.sub(p1);
+        var n = new VG.Math.Vector2(-d.y, d.x);
+        n.normalize();
+        var R = n.clone();
+        R.mul(D);
+        R.add(p1);
+        return R;
+    };
 
-    lsRect.x = inRect.x + (this._lsSelector.x - 2.5);
-    lsRect.y = inRect.y + (this._lsSelector.y - 2.5);
+    var dSL13X=this.ls3Pt.x - this.ls1Pt.x;
+    var dSL13Y=this.ls3Pt.y - this.ls1Pt.y;
 
-    lsRect.width = 5;
-    lsRect.height = 5;
+    var ptOnBase=new VG.Math.Vector2( this.ls3Pt.x - dSL13X  * (1-this._lightness), 
+        this.ls3Pt.y - dSL13Y * (1-this._lightness) );
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.Circle, lsRect, VG.Core.Color(255, 255, 255));
+    // --- get the distance of mid point of base to the tip
 
+    var midX=this.ls3Pt.x - dSL13X * 0.5;
+    var midY=this.ls3Pt.y - dSL13Y * 0.5;
+
+    var dWidthX=midX - this.ls2Pt.x;
+    var dWidthY=midY - this.ls2Pt.y;    
+
+    var distance=Math.sqrt( dWidthX * dWidthX + dWidthY * dWidthY );
+    this.slDot=getNormal( ptOnBase, this.ls1Pt, distance * this._saturation );
 
     // ---
 
-    var numberEditSize=this.rEdit.calcSize( canvas );
+    this.dirty=false;
+};
 
+VG.UI.ColorWheel.prototype.paintWidget=function(canvas)
+{
+    if ( !this.lastRect.equals( this.rect ) ) this.dirty=true;
+    if ( this.disabled ) canvas.setAlpha( 0.8 );
 
-    this.rgbLayout.rect.x=this.rect.x; this.rgbLayout.rect.y=this.rect.y + this.rect.height - numberEditSize.height;
-    this.rgbLayout.rect.width=this.rect.width; this.rgbLayout.rect.height=numberEditSize.height;
+    if ( this.dirty )
+        this.computeUI();
 
+    var rect=this.contentRect;
+    rect.copy( this.rect );
 
-    //this.rEdit.rect.x=this.rect.x; this.rEdit.rect.y=this.rect.y + this.rect.height - numberEditSize.height;
-    //this.rEdit.rect.width=50; this.rEdit.rect.height=numberEditSize.height;
+    canvas.draw2DShape( VG.Canvas.Shape2D.CircleHue, rect );
+    canvas.draw2DShape( VG.Canvas.Shape2D.CircleOutline, rect, this.borderColor );
 
-    this.rgbLayout.layout( canvas );
+    rect.shrink( this.hueSize, this.hueSize, rect );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Circle, rect, this.centerColor );    
+
+    // --- Hue Dot
+
+    rect.x = this.rect.x + ( this.hueDot.x - this.hueSize/2 );
+    rect.y = this.rect.y + ( this.hueDot.y - this.hueSize/2 );
+
+    rect.width = this.hueSize;
+    rect.height = this.hueSize;
+
+    canvas.draw2DShape( VG.Canvas.Shape2D.Circle, rect, VG.Core.Color.White );    
+    canvas.draw2DShape( VG.Canvas.Shape2D.CircleOutline, rect, VG.Core.Color.Black );    
+
+    // --- SL Triangle
+
+    canvas.addTriangle2D( this.ls1Pt.x, this.ls1Pt.y, 
+        this.ls2Pt.x, this.ls2Pt.y, this.ls3Pt.x, this.ls3Pt.y, this.ls1, this.ls2, this.ls3 );
+
+    // --- SL Dot
+
+    rect.x=this.slDot.x - 4;
+    rect.y=this.slDot.y - 4;
+
+    rect.width = 8;
+    rect.height = 8;
+
+    canvas.draw2DShape( VG.Canvas.Shape2D.Circle, rect, VG.Core.Color.White );    
+    rect.shrink( 1, 1, rect );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Circle, rect, VG.Core.Color.Black );    
+
+    this.lastRect.copy( this.rect );
+    if ( this.disabled ) canvas.setAlpha( 1 );    
 };
 
 // ----------------------------------------------------------------- VG.UI.ToolTipWidget
@@ -1892,7 +2312,7 @@ VG.UI.ToolTipWidget.prototype.setToolTip=function( canvas, widget )
         if ( size.width > this.width ) this.width=size.width;
     }
 
-    this.width+=2 * canvas.style.skin.ToolTip.BorderSize.width;
+    this.width+=2 * canvas.style.skin.ToolTip.BorderSize.width + 2;
     canvas.popFont();
 };
 
@@ -2111,6 +2531,7 @@ VG.UI.IconStrip.prototype.selectionChanged=function()
 
 VG.UI.IconStrip.prototype.paintWidget=function( canvas )
 {
+    return;
     this.iconStripHeight=this.rect.height - 4 - 5 - canvas.style.skin.IconStrip.TextStripHeight;
 
     this.itemHeight=Math.floor( this.iconStripHeight-2 );
@@ -2194,8 +2615,11 @@ VG.UI.ChatWidget=function()
     this.htmlView.elements.body.margin.left=5;
     this.htmlView.elements.body.margin.top=5;
     this.htmlView.elements.br.lineHeight=0;
-    this.htmlView.elements.body.spacing=2;
-    this.htmlView.html="Please login to use the Community Chat Feature.";
+    this.htmlView.elements.body.spacing=3;
+    this.htmlView.elements.body.font=VG.Font.Font( "Open Sans Semibold", 13 );
+    this.htmlView.elements.b.font=VG.Font.Font( "Open Sans Bold", 13 );
+
+    this.htmlView.html="Please Login to use the Community Chat Feature.";
 
     this.textLineEdit=VG.UI.TextLineEdit();
     this.textLineEdit.disabled=true;
@@ -2209,7 +2633,7 @@ VG.UI.ChatWidget=function()
     }.bind( this );
 
     this.bottomLayout=VG.UI.Layout( this.textLineEdit, this.postButton );
-    this.bottomLayout.margin.clear();
+    this.bottomLayout.margin.set( 0, 1, 0, 0 );
 
     this.layout=VG.UI.Layout( this.htmlView, this.bottomLayout );
     this.layout.margin.clear();
@@ -2231,7 +2655,7 @@ VG.UI.ChatWidget.prototype.setUserInfo=function( userName, appId )
     this.postButton.disabled=!appId;
 
     if ( appId ) this.htmlView.html=this.messages;
-    else this.htmlView.html="Please login to use the Community Chat Feature.";
+    else this.htmlView.html="Please Login to use the Community Chat Feature.";
 };
 
 VG.UI.ChatWidget.prototype.paintWidget=function( canvas )
@@ -2579,4 +3003,401 @@ VG.UI.AppEditWidget.prototype.paintWidget=function( canvas )
 {
     this.mainLayout.rect.copy( this.rect );
     this.mainLayout.layout( canvas );
+};
+
+// ----------------------------------------------------------------- VG.UI.HistoryWidgetController
+
+VG.UI.HistoryWidgetController=function()
+{
+    this.name="HistoryWidgetController";
+
+    this.emptyProject={ text : "Last Available State" };
+};
+
+Object.defineProperty( VG.UI.HistoryWidgetController.prototype, "selected", 
+{
+    get: function() {
+        return this._visible;
+    },
+    set: function( visible ) {
+    }    
+});
+
+VG.UI.HistoryWidgetController.prototype=VG.UI.Widget();
+
+VG.UI.HistoryWidgetController.prototype.at=function( index )
+{
+    //VG.log( "HistoryWidgetController at", index );
+
+    if ( index === 0 ) return this.emptyProject;
+
+    var dc=VG.context.workspace.dataCollectionForUndoRedo;
+    var steps=dc.__vgUndo.steps;
+    return steps[index-1];
+};
+
+VG.UI.HistoryWidgetController.prototype.count=function( index )
+{
+    //VG.log( "HistoryWidgetController count" );
+
+    var dc=VG.context.workspace.dataCollectionForUndoRedo;
+
+    if ( dc ) {
+        var undo=dc.__vgUndo;
+        if ( undo ) return undo.steps.length+1;
+        else return 0;
+    } else return 0;    
+};
+
+VG.UI.HistoryWidgetController.prototype.isSelected=function( item )
+{
+    //VG.log( "HistoryWidgetController isSelected", item );
+
+    var dc=VG.context.workspace.dataCollectionForUndoRedo;
+    var undo=dc.__vgUndo;
+
+    if ( undo.stepIndex === 0 ) {
+        return item === this.emptyProject;
+    } else {
+        return undo.steps[undo.stepIndex-1] === item;
+    }
+};
+
+VG.UI.HistoryWidgetController.prototype.setSelected=function( item )
+{
+    var dc=VG.context.workspace.dataCollectionForUndoRedo;
+    var undo=dc.__vgUndo;
+
+    var offset=0;
+
+    if ( item !== this.emptyProject ) {
+        offset=undo.steps.indexOf( item ) + 1;
+    }
+
+    if ( offset > undo.stepIndex )
+    {
+        var diff=offset - undo.stepIndex;
+        //VG.log( diff, "forwards" );
+
+        for ( var i=0; i < diff; ++i ) {
+            undo.redo();
+        }
+    } else {
+        var diff=undo.stepIndex - offset;
+        //VG.log( diff, "backwards" );
+
+        for ( var i=0; i < diff; ++i ) {
+            undo.undo();
+        }
+    }
+};
+
+// ----------------------------------------------------------------- VG.UI.HistoryWidget
+
+VG.UI.HistoryWidget=function()
+{
+    if ( !(this instanceof VG.UI.HistoryWidget) ) return new VG.UI.HistoryWidget();
+
+    VG.UI.Widget.call( this );
+
+    this.listWidget=VG.UI.ListWidget();
+    this.listWidget.controller=new VG.UI.HistoryWidgetController();
+
+    this.childWidgets=[ this.listWidget ];
+};
+
+VG.UI.HistoryWidget.prototype=VG.UI.Widget();
+
+VG.UI.HistoryWidget.prototype.paintWidget=function( canvas )
+{
+    canvas.hasBeenResized=true;
+    this.listWidget.rect.copy( this.rect );
+    this.listWidget.paintWidget( canvas );
+    canvas.hasBeenResized=false;    
+};
+
+// ----------------------------------------------------------------- VG.UI.ButtonGroup
+
+VG.UI.ButtonGroupItem=function( text, icon, statusTip )
+{    
+    this.text=text;
+    this.icon=icon;
+    this.rect=VG.Core.Rect();
+    this.statusTip=statusTip;
+
+    var canvas=VG.context.workspace.canvas;
+    canvas.pushFont( VG.UI.stylePool.current.skin.ButtonGroup.Font );
+    this.textWidth=canvas.getTextSize( this.text ).width + 2 * 8;
+    this.textHeight=canvas.getLineHeight();
+    canvas.popFont();
+};
+
+VG.UI.ButtonGroup=function()
+{
+    if ( !(this instanceof VG.UI.ButtonGroup) ) return VG.UI.ButtonGroup.creator( arguments );
+
+    VG.UI.Widget.call( this );
+    this.name="ButtonGroup";
+
+    this.supportsFocus=true;
+    this.items=[];
+
+    for( var i=0; i < arguments.length; i+=3 )
+        this.addButton( arguments[i], arguments[i+1], arguments[i+2] );
+};
+
+VG.UI.ButtonGroup.prototype=VG.UI.Widget();
+
+VG.UI.ButtonGroup.prototype.addButton=function( text, icon, statusTip )
+{
+    var button=new VG.UI.ButtonGroupItem( text, icon, statusTip );
+    this.items.push( button );
+
+    if ( this.activeButton === undefined ) {
+        this.activeButton=button;
+        this.index=this.items.indexOf( this.activeButton );
+
+        if ( this.selected )
+            this.selected( this.items.indexOf( this.activeButton ) );
+    }
+
+    VG.update();
+    return button;
+};
+
+VG.UI.ButtonGroup.prototype.addButtons=function()
+{
+    for( var i=0; i < arguments.length; i+=3 )
+        this.addButton( arguments[i], arguments[i+1], arguments[i+2] );    
+};
+
+VG.UI.ButtonGroup.prototype.focusIn=function()
+{
+    for ( var i=0; i < this.items.length; ++i )
+    {
+        var item=this.items[i];
+
+        if ( item.rect.contains( VG.context.workspace.mousePos ) ) 
+        {
+            this.hoverButton=item;
+            this.activeButton=this.hoverButton;
+            this.index=this.items.indexOf( this.activeButton );
+
+            if ( this.activeButton && this.changed )
+                this.changed( this.items.indexOf( this.activeButton ) );
+
+            VG.update();            
+        }
+    }
+};
+
+VG.UI.ButtonGroup.prototype.mouseMove=function( event )
+{
+    this.hoverButton=undefined;   
+
+    for ( var i=0; i < this.items.length; ++i )
+    {
+        var item=this.items[i];
+
+        if ( item.rect.contains( event.pos ) ) {
+
+            this.hoverButton=item;
+            break;
+        }
+    }
+
+    VG.update();
+};
+
+VG.UI.ButtonGroup.prototype.mouseDown=function( event )
+{
+    this.activeButton=this.hoverButton;
+    this.index=this.items.indexOf( this.activeButton );
+
+    if ( this.activeButton && this.changed )
+        this.changed( this.items.indexOf( this.activeButton ) );
+
+    VG.update();
+};
+
+VG.UI.ButtonGroup.prototype.mouseUp=function( event )
+{   
+};
+
+VG.UI.ButtonGroup.prototype.calcSize=function( canvas )
+{
+    this.preferredSize.width=0;
+
+    for ( var i=0; i < this.items.length; ++i ) {
+        var item=this.items[i];
+
+        this.preferredSize.width+=item.textWidth + 16;
+        if ( item.icon ) this.preferredSize.width+=5 + item.icon.width;
+        this.preferredSize.height=item.textHeight;
+        if ( !this.__vgInsideToolBar ) this.preferredSize.height+=4;
+    }
+
+    this.preferredSize.width+=(this.items.length-1);
+
+    this.maximumSize.width=this.preferredSize.width;
+    this.maximumSize.height=this.preferredSize.height;
+
+    return this.preferredSize;
+};
+
+VG.UI.ButtonGroup.prototype.paintWidget=function( canvas )
+{
+    VG.UI.stylePool.current.drawButtonGroup( this, canvas );
+};
+
+// ----------------------------------------------------------------- VG.UI.DropArea
+
+VG.handleImageDropEvent_DropArea=function( event ) 
+{    
+    event.stopPropagation();
+    event.preventDefault();
+
+    var files = event.dataTransfer.files;
+    var file = files[0];
+    var fileType;
+
+    var match=true;
+
+    if ( match ) 
+    {
+        var reader=new FileReader();
+
+        reader.onload = function( e ) 
+        {
+            VG.dropArea.fileDropped( file.name, reader.result );
+        }
+
+        if ( VG.dropArea.typeName === "Image" || VG.dropArea.typeName === "Binary" )
+            reader.readAsDataURL( file ); 
+        else reader.readAsText( file ); 
+    }
+}
+
+VG.handleDragOver_DropArea=function( event ) 
+{    
+    event.stopPropagation();
+    event.preventDefault();
+    event.dataTransfer.dropEffect='copy';
+};
+
+VG.UI.DropArea=function( typeName, paintCallback, droppedCallback )
+{
+    if ( !(this instanceof VG.UI.DropArea) ) return VG.UI.DropArea.creator( arguments );
+
+    VG.UI.Widget.call( this );
+    this.name="DropArea";
+
+    this.typeName=typeName;
+
+    this.supportsFocus=true;
+    this.platform=VG.context.workspace.platform;
+    this.paintCallback=paintCallback;
+    this.droppedCallback=droppedCallback;
+
+    this.horizontalExpanding=true;
+    this.verticalExpanding=true;
+
+    if ( this.platform === VG.HostProperty.PlatformWeb )
+    {
+        // --- Web, initialize DnD area
+
+        VG.dropArea=this;
+        VG.handleImageDropEvent=VG.handleImageDropEvent_DropArea;
+        VG.handleDragOver=VG.handleDragOver_DropArea;
+
+        VG.dropZone.addEventListener('dragover', VG.handleDragOver, false);
+        VG.dropZone.addEventListener('drop', VG.handleImageDropEvent, false);
+
+        this.makeVisible=true;
+    } else
+    {
+        this.button=VG.UI.Button( "Import " + typeName + " ...");
+        this.button.clicked=function() {
+
+            if ( typeName === "Image" ) {
+
+                var fileDialog=VG.OpenFileDialog( VG.UI.FileDialog.Image, function( name, image ) {
+                    this.image=image;
+                    image.name=name;
+                    this.droppedCallback( name, image.imageData, image );
+                }.bind( this ) );
+            }
+        }.bind( this );
+    }
+};
+
+VG.UI.DropArea.prototype=VG.UI.Widget();
+
+VG.UI.DropArea.prototype.fileDropped=function( name, data )
+{
+    if ( this.typeName !== 'Image' && this.droppedCallback )
+        this.droppedCallback( name, data );
+
+    if ( this.typeName === 'Image' && !this.paintCallback )
+    {
+        if ( !this.image ) this.image=VG.Core.Image();
+
+        this.image.name=name;
+
+        VG.decompressImageData( data, this.image, function() {
+            this.droppedCallback( name, data, this.image );
+            VG.update();
+        }.bind( this ) );
+
+        if ( this.platform !== VG.HostProperty.PlatformWeb ) {
+            this.droppedCallback( name, data, this.image );
+            VG.update();
+        }
+    }
+};
+
+VG.UI.DropArea.prototype.disableDropZone=function()
+{
+    if ( this.platform === VG.HostProperty.PlatformWeb )
+    {    
+        VG.dropZone.style.display="none";
+        this.makeVisible=true;
+    }
+};
+
+VG.UI.DropArea.prototype.paintWidget=function( canvas )
+{
+    if ( !this.visible ) return;
+
+    if ( this.paintCallback )
+        this.paintCallback( canvas );
+    else
+    {
+
+        if ( this.typeName === "Image" && this.image && this.image.isValid() )
+        {
+            canvas.drawScaledImage( this.rect, this.image, this.rect );
+        } else
+        if ( this.platform === VG.HostProperty.PlatformWeb ) {
+
+            var text=this.customText ? this.customText : "Drop " + this.typeName + " Here";
+
+            canvas.drawTextRect( text, this.rect, VG.UI.stylePool.current.skin.Widget.TextColor, 1, 1 );
+        }
+    }
+
+    if ( this.platform === VG.HostProperty.PlatformWeb )
+    {
+        VG.dropZone.style.left=String( this.rect.x ) + "px";
+        VG.dropZone.style.top=String( this.rect.y ) + "px";
+        VG.dropZone.style.width=String( this.rect.width ) + "px";
+        VG.dropZone.style.height=String( this.rect.height ) + "px";
+
+        if ( this.makeVisible ) {
+            VG.dropZone.style.display="inline";
+            this.makeVisible=false;
+        }
+    }
+
+    canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect, VG.UI.stylePool.current.skin.TextEdit.BorderColor1 );    
 };

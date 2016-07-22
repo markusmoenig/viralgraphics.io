@@ -31,9 +31,19 @@ VG.Data.Binding=function( object, path )
     this.path=path;
 };
 
-VG.Data.Base=function()
+VG.Data.Base=function( name, extension )
 {
-    if ( !(this instanceof VG.Data.Base) ) return new VG.Data.Base();
+    if ( !(this instanceof VG.Data.Base) ) return new VG.Data.Base( name, extension );
+
+    Object.defineProperty( this, "__vgName", { 
+        enumerable: false, 
+        writable: true
+    });
+
+    Object.defineProperty( this, "__vgExtension", { 
+        enumerable: false, 
+        writable: true
+    });  
 
 	Object.defineProperty( this, "__vgControllerBindings", { 
         enumerable: false, 
@@ -48,7 +58,10 @@ VG.Data.Base=function()
     Object.defineProperty( this, "__vgUndo", { 
         enumerable: false, 
         writable: true
-    });
+    });  
+
+    this.__vgName=name ? name : "";
+    this.__vgExtension=extension ? extension : "";
 
     this.__vgControllerBindings=[];
     this.__vgValueBindings=[];
@@ -127,7 +140,7 @@ VG.Data.Base.prototype.dataForPath=function( path )
     return null;
 };
 
-VG.Data.Base.prototype.storeDataForPath=function( path, value, noUndo, forceStorage )
+VG.Data.Base.prototype.storeDataForPath=function( path, value, noUndo, forceStorage, undoText )
 {
     /**Stores a given value for the given path and creates an undo step. Widgets like a Checkbox widget use this function to store
      * user changes inside the model. However this function can also be used directly to store value changes.
@@ -135,6 +148,7 @@ VG.Data.Base.prototype.storeDataForPath=function( path, value, noUndo, forceStor
      * @param {object} value - The data value to store inside the model.
      * @param {boolean} noUndo - Optional, if true blocks the creation of an undo step for the value change.
      * @param {boolean} forceStorage - Optional, if true forces storing of the value. Normally if the model value is the same as the new value
+     * @param {undoText} undoText - An optional custom text for this undo step.
      * this function will not store it, however to make sure this value is always stored set forceStorage to true. This is useful for undo groups
      * where the initial value may be the same as in the model but other value changes inside the group will change values.
      * @returns {VG.Data.UndoItem} The undo item created for this data value step. To add further undo steps into this group just call addSubItem() on the
@@ -144,7 +158,7 @@ VG.Data.Base.prototype.storeDataForPath=function( path, value, noUndo, forceStor
     var undo=undefined;
     if ( path.indexOf( '.' ) === -1 ) 
     {
-        if ( this.__vgUndo && !noUndo ) undo=this.__vgUndo.pathValueAboutToChange( this, path, value );        
+        if ( this.__vgUndo && !noUndo ) undo=this.__vgUndo.pathValueAboutToChange( this, path, value, undefined, undoText );        
         this[path]=value;
     } else 
     {
@@ -153,7 +167,7 @@ VG.Data.Base.prototype.storeDataForPath=function( path, value, noUndo, forceStor
 
             if ( object[this.valueSegmentOfPath(path)] !== value || forceStorage ) {
 
-                if ( this.__vgUndo && !noUndo ) undo=this.__vgUndo.pathValueAboutToChange( this, path, value );
+                if ( this.__vgUndo && !noUndo ) undo=this.__vgUndo.pathValueAboutToChange( this, path, value, undefined, undoText );
                 object[this.valueSegmentOfPath(path)]=value;
             }
     	}
@@ -217,19 +231,19 @@ VG.Data.Base.prototype.updateTopLevelBindings=function()
     }    
 };
 
-VG.Data.Base.prototype.clearUndo=function()
+VG.Data.Base.prototype.clearUndo=function( dontInvokeClearCallback )
 {
     if ( this.__vgUndo ) 
-        this.__vgUndo.clear();
+        this.__vgUndo.clear( dontInvokeClearCallback );
 };
 
 // -------------
 
-VG.Data.Collection=function( name )
+VG.Data.Collection=function( name, extension )
 {
-    if ( !(this instanceof VG.Data.Collection) ) return new VG.Data.Collection( name );
+    if ( !(this instanceof VG.Data.Collection) ) return new VG.Data.Collection( name, extension );
 
-    VG.Data.Base.call( this );
+    VG.Data.Base.call( this, name, extension );
 };
 
 VG.Data.Collection.prototype=VG.Data.Base();
