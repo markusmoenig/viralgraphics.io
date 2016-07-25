@@ -1,0 +1,7 @@
+
+name = ShaderTunnel
+version = 1.0
+url = shadertunnel
+author = Markus Moenig
+
+sources = shadertunnel.js

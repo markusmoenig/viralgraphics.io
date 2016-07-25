@@ -1,0 +1,7 @@
+
+name = HelloWorld
+version = 1.0
+url = helloworld
+author = Markus Moenig
+
+sources = helloworld.js
