@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv> and Contributors
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,22 +21,20 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-// --------------------------------------------- VG.Canvas
+/**
+ * Creates an VG.Canvas object.<br>
+ * 
+ * VG.Canvas implements the basic drawing operations for Widgets inside an VG.UI.Workspace. Use it to draw 2D shapes, images and text. It implements these
+ * functions based on the OpenGL ES 2 wrapper integrated into Visual Graphics.<br>
+ *
+ * The VG.Canvas for a given Workspace is passed to the calcSize() and paintWidget() calls of every Widget. If you ever need to access the VG.Canvas outside
+ * these functions you can find references at both VG.context.canvas and VG.context.workspace.
+ *
+ * @constructor 
+ */
 
 VG.Canvas=function()
 {
-    /**
-     * Creates an VG.Canvas object.<br>
-     * 
-     * VG.Canvas implements the basic drawing operations for Widgets inside an VG.UI.Workspace. Use it to draw 2D shapes, images and text. It implements these
-     * functions based on the OpenGL ES 2 wrapper integrated into Visual Graphics.<br>
-     *
-     * The VG.Canvas for a given Workspace is passed to the calcSize() and paintWidget() calls of every Widget. If you ever need to access the VG.Canvas outside
-     * these functions you can find references at both VG.context.canvas and VG.context.workspace.
-     *
-     * @constructor
-    */
-
     if ( arguments.length != 1 ) {
         if ( this instanceof VG.Canvas ) {
             this.canvas=0;
@@ -147,46 +145,55 @@ VG.Canvas=function()
     this.clipRects=[];
 };
 
+/**
+ * An enum of 2D primitives which can be drawn via {@link VG.Canvas.draw2DShape}.
+ * @enum {Number}
+ */
+
 VG.Canvas.Shape2D={ "Rectangle" : 0, "VerticalGradient" : 1, "HorizontalGradient" : 2, "RectangleOutline" : 3,  "RectangleOutlineMin1px" : 4,  "RectangleOutlineMin2px" : 5,  
                     "RoundedRectangleOutline1px" : 6, "RoundedRectangle2px" : 7, "RectangleCorners" : 8, 
-                    "FlippedTriangle" : 9, "ArrowLeft" : 10, "ArrowRight" : 11, "Circle": 12, "CircleOutline": 13, "ArrowRightGradient": 14, "DropShadow_NoTop7px" : 15, "Docs.Enum" : 9000 };
+                    "FlippedTriangle" : 9, "ArrowLeft" : 10, "ArrowRight" : 11, "Circle": 12, "CircleOutline": 13, "ArrowRightGradient": 14, "DropShadow_NoTop7px" : 15 };
+
+/**
+ * Pushes the given VG.Font.Font to the canvas. It will be used until a popFont() call takes it off the top of the font stack. Every pushFont() call needs to have a matching popFont()
+ * call.
+ * @param {VG.Font.Font} font - The font to use
+ */
 
 VG.Canvas.prototype.pushFont=function( font )
 {
-    /**Pushes the given VG.Font.Font to the canvas. It will be used until a popFont() call takes it off the top of the font stack. Every pushFont() call needs to have a matching popFont()
-     * call.
-     * @param {VG.Font.Font} font - The font to use
-     */
-
     this.fontIndex++;
     this.fonts.splice( this.fontIndex, 0, font );
 };
 
+/**
+ * Takes the current font of the font stack and the canvas resumes using the new font at the top of the stack.
+ */
+
 VG.Canvas.prototype.popFont=function( font )
 {
-    /**Takes the current font of the font stack and the canvas resumes using the new font at the top of the stack.
-     */
-
     this.fonts.splice( this.fontIndex, 1 );
     --this.fontIndex;
 };
 
+/**
+ * Sets a new alpha value to the canvas. All following drawing operations will use this new alpha value. Calls {@link VG.Canvas.flush} to draw all pending triangles.
+ * @param {number} alpha - The new alpha value to use, has to be in the range of 0..1.
+ */
+
 VG.Canvas.prototype.setAlpha=function( alpha )
 {
-    /**Sets a new alpha value to the canvas. All following drawing operations will use this new alpha value.
-     * @param {number} alpha - The new alpha value to use, has to be in the range of 0..1.
-     */
-
     this.flush();    
     this.alpha = alpha;
 };
 
+/**
+ * Sets a new clipping rectangle. All drawing outside this rectangle will be ignored. Pass null to reset to no clipping.
+ * @param {VG.Core.Rect} rect - The new clipping rectangle to use or null to reset to no clipping.
+ */
+
 VG.Canvas.prototype.pushClipRect=function( rect )
 {
-    /**Sets a new clipping rectangle. All drawing outside this rectangle will be ignored. Pass null to reset to no clipping.
-     * @param {VG.Core.Rect} rect - The new clipping rectangle to use or null to reset to no clipping.
-     */
-
     this.flush();
 
     if ( rect ) 
@@ -213,6 +220,10 @@ VG.Canvas.prototype.pushClipRect=function( rect )
     }
 };
 
+/**
+ * Takes the current rectangle of the clip stack.
+ */
+
 VG.Canvas.prototype.popClipRect=function()
 {
     if ( this.clipRects.length <= 0 ) { VG.error( "popClipRect -- Stack Underflow"); return; }
@@ -226,27 +237,30 @@ VG.Canvas.prototype.popClipRect=function()
     else this.rt.setScissor();
 };
 
+/**
+ * Flushes all triangle caches. Called by {@link VG.UI.Workspace} at the end of a redraw operation to make sure all triangles are painted.
+ */  
+
 VG.Canvas.prototype.flush=function()
-{
-    /**Flushes all triangle caches. Called by VG.UI.Workspace at the end of a redraw operation to make sure all triangles are painted.
-     */    
+{  
     if (this.triCount) this.flushTris();    
 };
 
+/**
+ * Draws a 2D triangle using the specified coordinates and the VG.Core.Color for each coordinate.
+ * @param {number} x1 - The x1 coordinate
+ * @param {number} y1 - The y1 coordinate
+ * @param {number} x2 - The x2 coordinate
+ * @param {number} y2 - The y2 coordinate
+ * @param {number} x3 - The x3 coordinate
+ * @param {number} y3 - The y3 coordinate
+ * @param {number} col1 - The color at the x1, y1 coordinate
+ * @param {number} col2 - The color at the x2, y2 coordinate
+ * @param {number} col3 - The color at the x3, y3 coordinate
+ */
+
 VG.Canvas.prototype.addTriangle2D=function( x1, y1, x2, y2, x3, y3, col1, col2, col3 )
 { 
-    /**Draws a 2D triangle using the specified coordinates and the VG.Core.Color for each coordinate.
-     * @param {number} x1 - The x1 coordinate
-     * @param {number} y1 - The y1 coordinate
-     * @param {number} x2 - The x2 coordinate
-     * @param {number} y2 - The y2 coordinate
-     * @param {number} x3 - The x3 coordinate
-     * @param {number} y3 - The y3 coordinate
-     * @param {number} col1 - The color at the x1, y1 coordinate
-     * @param {number} col2 - The color at the x2, y2 coordinate
-     * @param {number} col3 - The color at the x3, y3 coordinate
-     */
-
     var db = this.triBufferDB;
 
     db.set(this.triCount++, x1);
@@ -277,15 +291,17 @@ VG.Canvas.prototype.addTriangle2D=function( x1, y1, x2, y2, x3, y3, col1, col2, 
         this.flushTris();
 }
 
+/**
+ * Draws a 2D rectangle using the specified coordinates and VG.Core.Color.
+ * @param {number} x1 - The x1 coordinate
+ * @param {number} y1 - The y1 coordinate
+ * @param {number} x2 - The x2 coordinate
+ * @param {number} y2 - The y2 coordinate
+ * @param {number} col - The color of the rectangle.
+ */
+
 VG.Canvas.prototype.addSolidRectangle2D=function( x1, y1, x2, y2, col )
 {
-    /**Draws a 2D rectangle using the specified coordinates and VG.Core.Color.
-     * @param {number} x1 - The x1 coordinate
-     * @param {number} y1 - The y1 coordinate
-     * @param {number} x2 - The x2 coordinate
-     * @param {number} y2 - The y2 coordinate
-     * @param {number} col - The color of the rectangle.
-     */    
     this.addTriangle2D(x1, y1, x2, y1, x1, y2, col, col, col);
     this.addTriangle2D(x1, y2, x2, y1, x2, y2, col, col, col);
 };
@@ -316,17 +332,17 @@ VG.Canvas.prototype.flushTris=function()
     this.triCount = 0;
 }
 
-// --------------------------------------------- VG.Canvas.prototype.draw2DShape
+/**
+ * Draws a 2D Shape using the specified rectangle and colors.
+ * @param {VG.Canvas.Shape2D} shape - The shape as specified in the VG.Canvas.Shape2D enum
+ * @param {VG.Core.Rect} rect - The rectangle for the shape
+ * @param {VG.Core.Color} col1 - The main color of the shape
+ * @param {VG.Core.Color} col2 - The optional 2nd color of the shape. Usage depends on shape type.
+ * @param {VG.Core.Color} col3 - The optional 3rd color of the shape. Usage depends on shape type.
+ */ 
 
 VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
 {
-    /**Draws a 2D Shape using the specified rectangle and colors.
-     * @param {VG.Canvas.Shape2D} shape - The shape as specified in the VG.Canvas.Shape2D enum
-     * @param {VG.Core.Rect} rect - The rectangle for the shape
-     * @param {VG.Core.Color} col1 - The main color of the shape
-     * @param {VG.Core.Color} col2 - The optional 2nd color of the shape. Usage depends on shape type.
-     * @param {VG.Core.Color} col3 - The optional 3rd color of the shape. Usage depends on shape type.
-     */    
     switch( shape )
     {
         case VG.Canvas.Shape2D.Rectangle:
@@ -647,15 +663,15 @@ VG.Canvas.prototype.drawCurve=function(x1, y1, x2, y2, x3, y3, x4, y4, thick, se
     }
 }
 
-// --------------------------------------------- VG.Canvas.prototype.drawImage
+/**
+ * Draws an image at the specified position, optionaly scales it to the given size.
+ * @param {VG.Core.Point} point - The position of the image
+ * @param {VG.Core.Image} image - The image to draw.
+ * @param {VG.Core.Size} size - Optional, the size to scale the image to.
+ */
 
 VG.Canvas.prototype.drawImage=function( pt, image, size )
 {
-    /**Draws an image at the specified position, optionaly scales it to the given size.
-     * @param {VG.Core.Point} point - The position of the image
-     * @param {VG.Core.Image} image - The image to draw.
-     * @param {VG.Core.Size} size - The size to scale the image to, optional.
-     */
     this.flush();
 	
 	var tex = this.renderer.getTexture(image);
@@ -673,14 +689,14 @@ VG.Canvas.prototype.drawImage=function( pt, image, size )
     this.renderer.drawQuad(tex, width, height, pt.x, pt.y, this.alpha);
 };
 
-// --------------------------------------------- VG.Canvas.prototype.drawScaledImage
+/**
+ * Downscales an image into the specified rectangle. During downscaling the aspect ratio of the image is honored and the image is centered inside the rectangle.
+ * @param {VG.Core.Rect} rect - The rectangle to draw into
+ * @param {VG.Core.Image} image - The image to draw
+ */  
 
 VG.Canvas.prototype.drawScaledImage=function( rect, image )
-{
-    /**Downscales an image into the specified rectangle. During downscaling the aspect ratio of the image is honored and the image is centered inside the rectangle.
-     * @param {VG.Core.Rect} rect - The rectangle to draw into
-     * @param {VG.Core.Image} image - The image to draw
-     */      
+{    
     // --- Get new Width and Height based on Aspect Ratio
     var aspectRatio=image.height / image.width;
 
@@ -698,19 +714,19 @@ VG.Canvas.prototype.drawScaledImage=function( rect, image )
     this.drawImage( VG.Core.Point( rect.x + xOffset, rect.y + yOffset ), image, VG.Core.Size( newWidth, newHeight ) );
 };
 
-// --------------------------------------------- VG.Canvas.prototype.drawTiledImage
+
+/**
+ * Fills the given fillRect with the given image. The image is tiled optionally in the horizontal and vertical directions.
+ * @param {VG.Core.Rect} rect - The rectangle to fill.
+ * @param {VG.Core.Image} image - The image to tile
+ * @param {bool} horizontal - True if the image should be tiled horizontally.
+ * @param {bool} vertical - True if the image should be tiled vertically.
+ * @param {number} horOffset - Optional, the horizontal offset can be adjusted with this value, for example a value of -10 would adjust the image 10 pixels to the left on each iteration.
+ * @param {number} verOffset - Optional, adjust the vertical offset.
+ */ 
 
 VG.Canvas.prototype.drawTiledImage=function( fillRect, image, horizontal, vertical, horOffset, verOffset )
-{
-    /**Fills the given fillRect with the given image. The image is tiled optionally in the horizontal and vertical directions.
-     * @param {VG.Core.Rect} rect - The rectangle to fill.
-     * @param {VG.Core.Image} image - The image to tile
-     * @param {bool} horizontal - True if the image should be tiled horizontally.
-     * @param {bool} vertical - True if the image should be tiled vertically.
-     * @param {number} horOffset - Optional, the horizontal offset can be adjusted with this value, for example a value of -10 would adjust the image 10 pixels to the left on each iteration.
-     * @param {number} verOffset - Optional, adjust the vertical offset.
-     */     
-
+{    
     if ( !image.isValid() ) return;
     var rect=VG.Core.Rect( fillRect.x, fillRect.y, image.width, image.height );
     this.pushClipRect( fillRect );
@@ -734,16 +750,15 @@ VG.Canvas.prototype.drawTiledImage=function( fillRect, image, horizontal, vertic
     this.popClipRect();
 };
 
-// --------------------------------------------- VG.Canvas.prototype.getTextSize
+/**
+ * Returns the size of the given text using the current canvas font. Returns an VG.Core.Size, optionally you can pass the size object to use.
+ * @param {string} text - The text to analyze for size using the current canvas font.
+ * @param {VG.Core.Size} size - The size object to use, optional.
+ * @returns {VG.Core.Size}
+ */ 
 
 VG.Canvas.prototype.getTextSize=function( text, size )
 {
-    /**Returns the size of the given text using the current canvas size. Returns an VG.Core.Size, optionally you can pass the size object to use.
-     * @param {string} text - The text to analyze for size using the current canvas font.
-     * @param {VG.Core.Size} size - The size object to use, optional.
-     * @returns {VG.Core.Size}
-     */ 
-
     var font=this.fonts[this.fontIndex];
     var x=0;
     var baseLine=0;
@@ -853,30 +868,28 @@ VG.Canvas.prototype.wordWrap=function( text, start, width, textLines, dontAppend
 }
 
 
-// --------------------------------------------- VG.Canvas.prototype.getLineHeight
+/**
+ * Returns the height of one line of text using the current canvas font.
+ * @returns {number}
+ */ 
 
 VG.Canvas.prototype.getLineHeight=function()
 {
-    /**Returns the height of one line of text using the current canvas font.
-     * @returns {number}
-     */ 
-
     var font=this.fonts[this.fontIndex];
     return font.triFont.height * font.scale;
 }
 
-// --------------------------------------------- VG.Canvas.prototype.drawTextRect
+/**
+ * Draws one line of text using the current canvas font aligned inside the given rectangle. Optionally rotates the font.
+ * @returns {string} text - The text to draw.
+ * @returns {VG.Core.Rect} rect - The rectangle to align the text into
+ * @returns {VG.Core.Color} col - The color to use for the text drawing
+ * @returns {number} halign - The horizontal alignment method: 0 is left, 1 centered and 2 is right. TODO: Move into enum
+ * @returns {number} valign - The vertical alignment method: 0 is top (plus font descender), 1 centered, 2 is bottom and 3 is top without descender. TODO: Move into enum
+ */ 
 
 VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angle, crX, crY)
-{    
-    /**Draws one line of text using the current canvas font aligned inside the given rectangle. Optionally rotates the font.
-     * @returns {string} text - The text to draw.
-     * @returns {VG.Core.Rect} rect - The rectangle to align the text into
-     * @returns {VG.Core.Color} col - The color to use for the text drawing
-     * @returns {number} halign - The horizontal alignment method: 0 is left, 1 centered and 2 is right. TODO: Move into enum
-     * @returns {number} valign - The vertical alignment method: 0 is top (plus font descender), 1 centered, 2 is bottom and 3 is top without descender. TODO: Move into enum
-     */ 
-
+{ 
     var font=this.fonts[this.fontIndex];
 
     var b=font.triFont.buffer;

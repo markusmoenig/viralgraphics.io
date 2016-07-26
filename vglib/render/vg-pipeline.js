@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv> and Contributors
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,21 +21,22 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/** Render pipeline 
+ *  @constructor */
+
 VG.Render.Pipeline = function()
 {
-    /** Render pipeline 
-     *  @constructor */
-
-    /** Defualt material 
+    /** Default material 
      *  @member {VG.Render.Material} */
     this.defaultMaterial = new VG.Render.SimpleMaterial();
 }
 
+/** Draws a mesh with the given context 
+ *  @param {VG.Render.Context} context - The context 
+ *  @param {VG.Render.Mesh} mesh - The mesh to render */
+
 VG.Render.Pipeline.prototype.drawMesh = function(context, mesh)
 {
-    /** Draws a mesh with the given context 
-     *  @param {VG.Render.Context} context - The context 
-     *  @param {VG.Render.Mesh} mesh - The mesh to render */
     var material = mesh.material || this.defaultMaterial;
     material.bind(context);
 
@@ -48,12 +49,13 @@ VG.Render.Pipeline.prototype.drawMesh = function(context, mesh)
     VG.Renderer().drawMesh(mesh, -1, material.shader);
 };
 
+/**
+ * Update the env map for every object in scene that have
+ * material MtlMaterial and opt.illum 3, 4, 5, 6, 7.
+ */
+
 VG.Render.Pipeline.prototype.updateEnvMapping = function(context, scene)
 {
-    /**
-     * Update the env map for every object in scene that have
-     * material MtlMaterial and opt.illum 3, 4, 5, 6, 7.
-     */
     var renderables = scene.findAllVisible(context, true);
     var faces = ['cube_top', 'cube_bottom', 'cube_front',
         'cube_back', 'cube_left', 'cube_right'];
@@ -137,30 +139,32 @@ VG.Render.Pipeline.prototype.updateEnvMapping = function(context, scene)
     context.camera = savedCamera;
 };
 
+/**
+ * Test hit for all visible meshes scene
+ * @param context {VG.Render.Context} WebGL context
+ * @param {VG.Render.SceneManager} scene - The scene to render
+ * @param x {Number} x of test pixel
+ * @param y {Number} y of test pixel
+ * @return {VG.Render.Mesh} mesh hit at point (x, y) , or null if none hit
+ */
+
 VG.Render.Pipeline.prototype.hitTestScene = function(context, scene, x, y)
 {
-    /**
-     * Test hit for all visible meshes scene
-     * @param context {VG.Render.Context} WebGL context
-     * @param {VG.Render.SceneManager} scene - The scene to render
-     * @param x {Number} x of test pixel
-     * @param y {Number} y of test pixel
-     * @return {VG.Render.Mesh} mesh hit at point (x, y) , or null if none hit
-     */
     var renderables = scene.findAllVisible(context, true);
     return this.hitTestMeshes(context, renderables, x, y);
 };
 
+/**
+ * Test hit among meshes at pixel x, y
+ * @param context {VG.Render.Context} WebGL context
+ * @param meshes {Array[]} Array of hit-able mesh
+ * @param x {Number} x of test pixel
+ * @param y {Number} y of test pixel
+ * @return {VG.Render.Mesh} mesh hit at point (x, y) , or null if none hit
+ */
+
 VG.Render.Pipeline.prototype.hitTestMeshes = function(context, meshes, x, y)
 {
-    /**
-     * Test hit among meshes at pixel x, y
-     * @param context {VG.Render.Context} WebGL context
-     * @param meshes {Array[]} Array of hit-able mesh
-     * @param x {Number} x of test pixel
-     * @param y {Number} y of test pixel
-     * @return {VG.Render.Mesh} mesh hit at point (x, y) , or null if none hit
-     */
     var vSrc = [
         '#version 100',
         'attribute vec4 position;',
@@ -282,13 +286,13 @@ VG.Render.Pipeline.prototype.hitTestMeshes = function(context, meshes, x, y)
     return meshes[selectedId];
 };
 
+/** Draws an scene manager with the given context
+ *  @param {VG.Render.Context} context - The context 
+ *  @param {VG.Render.SceneManager} scene - The scene to render 
+ *  @param {Number} delta - The delta time */
+
 VG.Render.Pipeline.prototype.drawScene = function(context, scene, delta)
 {
-    /** Draws an scene manager with the given context
-     *  @param {VG.Render.Context} context - The context 
-     *  @param {VG.Render.SceneManager} scene - The scene to render 
-     *  @param {Number} delta - The delta time */
-
 	var traced = false;
 
 	if (context.trace)
@@ -359,11 +363,11 @@ VG.Render.Pipeline.prototype.drawScene = function(context, scene, delta)
     }    
 }
 
+/** Render context
+ *  @constructor */
+
 VG.Render.Context = function()
 {
-    /** Render context
-     *  @constructor */
-
     /** Camera to get view and projection matrices 
      *  @member {VG.Render.Camera} */
     this.camera = new VG.Render.Camera();
@@ -549,10 +553,11 @@ VG.Render.Context.prototype.tracerStop=function()
     this.traceContext=undefined;
 };
 
+/** Flag to notify scene changed (for ray tracer)
+ *  @param {bool} changed */
+
 VG.Render.Context.prototype.setSceneChanged = function(changed)
 {
-    /** Flag to notify scene changed (for ray tracer)
-     *  @param {bool} changed */
     if (this.traceContext)
         this.traceContext.sceneChanged = changed;
 }

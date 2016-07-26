@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv> and contributors.
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,12 +21,13 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
  
+/**Creates a new HtmlView widget that can render HTML source text. 
+ * @constructor 
+ */
+
+
 VG.UI.HtmlView=function( html )
 {
-    /**Creates a new HtmlView widget that can render HTML source text.
-    * @constructor
-    */
-
     if ( !(this instanceof VG.UI.HtmlView) ) return new VG.UI.HtmlView( html );
 
     VG.UI.Widget.call( this );

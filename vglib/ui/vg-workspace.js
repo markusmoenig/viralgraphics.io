@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,19 +21,20 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * Creates an VG.UI.Workspace class.<br>
+ * VG.UI.Workspace represents the visual workspace of every VG application or game. Before your application gets started, a VG.UI.Workspace object will be created
+ * and passed as the first argument to vgMain(). 
+ *
+ * <br>VG.context is the context of your application and set as "this" for vgMain(). A reference to the application Workspace is set in 
+ * VG.context.workspace.
+ * 
+ * @constructor 
+ * @tutorial Workspace
+ */
+
 VG.UI.Workspace=function()
 {
-    /**
-     * Creates an VG.UI.Workspace class.<br>
-     * VG.UI.Workspace represents the visual workspace of every VG application or game. Before your application gets started, a VG.UI.Workspace object will be created
-     * and passed as the first argument to vgMain(). 
-     *
-     * <br>VG.context is the context of your application and set as "this" for vgMain(). A reference to the application Workspace is set in 
-     * VG.context.workspace.
-     * 
-     * @constructor
-    */
-
     if ( !(this instanceof VG.UI.Workspace) ) return new VG.UI.Workspace();
     
     VG.UI.Widget.call( this );
@@ -41,7 +42,7 @@ VG.UI.Workspace=function()
     this.name="Workspace";
     this.focusWidget=0;
     
-    /** Holds the content of the Workspace and has to be set within vgMain() to either a VG.UI.Widget derived object or one of the Layout objects. That object will fill the
+    /** Holds the content of the Workspace and has to be set within vgMain() to either a VG.UI.Widget derived object or one of the Layout objects. This object will fill the
      * available space of the Workspace and is the root object for all display widgets.
      *  @member {object} */    
     this.content=0; 
@@ -49,8 +50,8 @@ VG.UI.Workspace=function()
     this.needsRedraw=true;
     this.redrawList=new Array();
     
-    /** The VG.Canvas for the Workspace, used for all drawing operations.
-     *  @member {object} */    
+    /** The {@link VG.Canvas} for the Workspace, used for all drawing operations.
+     *  @member {VG.Canvas} */    
     this.canvas=VG.Canvas();
     this.canvas.style=VG.UI.stylePool.current;
 
@@ -189,11 +190,6 @@ Object.defineProperty( VG.UI.Workspace.prototype, "content",
 
 VG.UI.Workspace.prototype.resize=function( width, height )
 {
-    /**Resizes the Workspace. Used by the host environment (Webbrowser, Desktop etc.) to resize the Workspace and trigger a redraw.
-     * @param {number} width - The new width of the workspace
-     * @param {number} height - The new height of the workspace
-     */
-
     this.rect.setSize( width, height );
     this.contentRect.set( this.rect );
 
@@ -203,14 +199,15 @@ VG.UI.Workspace.prototype.resize=function( width, height )
     VG.Renderer().onResize( width, height );
 };
 
+/**
+ * Adds a Dock widget to the Workspace.
+ * @param {VG.UI.DockWidget} widget - The DockWidget to add to the Workspace
+ * @param {VG.UI.DockWidgetLocation} location - Currently limited to VG.UI.DockWidgetLocation.Left and VG.UI.DockWidgetLocation.Right.
+ * @param {number} percent - Optional, the width this dock widget should cover in percent, default is 20.
+ */
+
 VG.UI.Workspace.prototype.addDockWidget=function( dockWidget, location, percent )
 {
-    /**Adds a Dock widget to the Workspace.
-     * @param {VG.UI.DockWidget} widget - The DockWidget to add to the Workspace
-     * @param {VG.UI.DockWidgetLocation} location - Currently limited to VG.UI.DockWidgetLocation.Left and VG.UI.DockWidgetLocation.Right.
-     * @param {number} percent - Optional, the width this dock widget should cover in percent.
-     */
-
     if ( !location ) location=VG.UI.DockWidgetLocation.Left;
 
     if ( !percent )
@@ -230,20 +227,23 @@ VG.UI.Workspace.prototype.addDockWidget=function( dockWidget, location, percent 
     this.recalcLayoutPercentages();
 };
 
+/**
+ * Removes the given dock widget from the Workspace.
+ * @param {VG.UI.DockWidget} widget - The DockWidget to remove from the Workspace.
+ */
+
 VG.UI.Workspace.prototype.removeDockWidget=function( dockWidget )
 {
-    /**Removes the given dock widget from the Workspace.
-     * @param {VG.UI.DockWidget} widget - The DockWidget to remove from the Workspace.
-     */
     this.layout.removeChild( dockWidget );
 };
 
+/**
+ * Detaches a Dock widget from the Workspace.
+ * @param {VG.UI.DockWidget} widget - The DockWidget to detach from the Workspace
+ */
+
 VG.UI.Workspace.prototype.detachDockWidget=function( dockWidget )
 {
-    /**Detaches a Dock widget from the Workspace.
-     * @param {VG.UI.DockWidget} widget - The DockWidget to detach from the Workspace
-     */
-
     dockWidget._oldPercent=dockWidget.rect.width / this.layout.rect.width * 100.0;
 
     this.layout.removeChild( dockWidget );
@@ -300,19 +300,23 @@ VG.UI.Workspace.prototype.recalcLayoutPercentages=function()
         this.layout.setChildPercentAt( contentOffset, percent );
 };
 
+/**
+ * Adds a VG.UI.ToolBar to the top of the Workspace
+ * @param {VG.UI.ToolBar} toolbar - The toolbar to add. Several Toolbars can be added to each Workspace
+ */
+
 VG.UI.Workspace.prototype.addToolBar=function( toolbar )
 {
-    /**Adds a VG.UI.ToolBar to the top of the Workspace
-     * @param {VG.UI.ToolBar} toolbar - The toolbar to add. Several Toolbars can be added to each Workspace
-     */    
     this.toolbars.push( toolbar );
 };
 
+/**
+ * Adds a VG.UI.MenuBar to the top of the Workspace
+ * @param {VG.UI.MenuBar} menubar - The VG.UI.MenuBar to add. Several MenuBars can be added to each Workspace.
+ */ 
+
 VG.UI.Workspace.prototype.addMenuBar=function( menubar )
-{
-    /**Adds a VG.UI.MenuBar to the top of the Workspace
-     * @param {VG.UI.MenuBar} menubar - The VG.UI.MenuBar to add. Several MenuBars can be added to each Workspace.
-     */      
+{ 
     this.menubars.push( menubar );
     this.paintMenubar=VG.getHostProperty( VG.HostProperty.DrawMenus );
 };
@@ -321,6 +325,10 @@ VG.UI.Workspace.prototype.enableEmbeddedMode=function( callback )
 {
     this.embeddedModeCallback=callback;
 };
+
+/**
+ * Adds a decorated ToolBar (VG.UI.DecoratedToolBar) to the application.
+ */
 
 VG.UI.Workspace.prototype.createDecoratedToolBar=function()
 {
@@ -968,12 +976,13 @@ VG.UI.Workspace.prototype.textInput=function( text )
     this.ignoreTextInput=false;
 };
 
+/**
+ * Sets focus to a VG.UI.Widget derived widget. The widget has to support supportsFocus
+ * @param {VG.UI.Widget} widget - The widget to set focus to.
+ */
+
 VG.UI.Workspace.prototype.setFocus=function( widget )
 {
-    /**Sets focus to a VG.UI.Widget derived widget. Has to support supportsFocus
-     * @param {VG.UI.Widget} widget - The widget to set focus to
-     */
-
      if ( this.focusVerification && !this.focusVerification( widget ) ) return;
 
     if ( widget && widget.supportsFocus && !widget.disabled && 
@@ -1646,12 +1655,14 @@ VG.UI.Workspace.prototype.registerDataCollection=function( dataCollection, roles
     }
 };
 
+/**
+ * Registers a callback for a specified callback type.
+ * @param {VG.UI.CallbackType} type - The type of the callback
+ * @param {function} func - The callback which gets invoked for the specified callback type
+ */ 
+
 VG.UI.Workspace.prototype.registerCallback=function( type, callback )
-{
-    /**Registers a callback for a specified callback type.
-     * @param {VG.UI.CallbackType} type - The type of the callback
-     * @param {function} func - The callback which gets invoked for the specified callback type
-     */      
+{     
     switch ( type ) {
 
         case VG.UI.CallbackType.New: 
@@ -1938,15 +1949,16 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
     }
 };
 
+/**
+ * Returns a rectangle with the visible screen area. Useful on Websites when the VG app is larger than the visible size and the browser
+ * uses a scrollbar. In this case the returned rectangle contains the width and height of the visible area along with its offet. On all other
+ * platforms the returned retangle is the same size as the Workspace rectangle.
+ * @param {VG.Core.Rect} rect - Optional, the rectangle to fill out. If undefined a new rect will be allocated.
+ * @returns A filled out rectangle with the visible screen space.
+ */
+
 VG.UI.Workspace.prototype.getVisibleScreenRect=function( rect )
 {
-    /**Returns a rectangle with the visible screen area. Useful on Websites when the VG app is larger than the visible size and the browser
-     * uses a scrollbar. In this case the returned rectangle contains the width and height of the visible area along with its offet. On all other
-     * platforms the returned retangle is the same size as the Workspace rectangle.
-     * @param {VG.Core.Rect} rect - Optional, the rectangle to fill out. If undefined a new rect will be allocated.
-     * @returns A filled out rectangle with the visible screen space.
-     */    
-
     if ( !rect ) rect=VG.Core.Rect();
 
     if ( VG.getHostProperty( VG.HostProperty.Platform ) === VG.HostProperty.PlatformWeb ) {
@@ -1959,11 +1971,13 @@ VG.UI.Workspace.prototype.getVisibleScreenRect=function( rect )
     return rect;
 };
 
+/**
+ * Shows the VG.UI.Window derived object, like VG.UI.Dialog on the Workspace.
+ * @param {VG.UI.Window} window - The window to display. Be sure to call the close() function of the Window / Dialog to close it after use.
+ */
+
 VG.UI.Workspace.prototype.showWindow=function( window )
 {
-    /**Shows the VG.UI.Window derived object, like VG.UI.Dialog on the Workspace.
-     * @param {VG.UI.Window} window - The window to display. Be sure to call the close() function of the Window / Dialog to close it after use.
-     */     
     if ( this.windows.indexOf( window ) !== -1 ) return;
 
     var screenRect=this.getVisibleScreenRect();

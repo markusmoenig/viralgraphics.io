@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -138,7 +138,17 @@ VG.UI.LayoutVSpacer.prototype.paintWidget=function( canvas )
     this.contentRect.set( this.rect );
 };
 
-// ----------------------------------------------------------------- VG.UI.Layout
+/**
+ * The base clase and most simple layout class. It arranges child objects either horizontally or vertically. Layouts can contain {@link VG.UI.Widget} based classes or other layouts.
+ * @borrows VG.UI.Widget.disabled as VG.UI.Layout.disabled
+ * @borrows VG.UI.Widget.visible as VG.UI.Layout.visible
+ * @property {number} length - The number of child objects in this layout (read-only).
+ * @property {bool} horizontal - If true, child objects are arranged horizontally (the default).
+ * @property {bool} vertical - If true, child objects are arranged vertically.
+ * @constructor
+ * @tutorial Layouts
+ * @param {object} object - The  objects to add to the layout.
+ */
 
 VG.UI.Layout=function()
 {
@@ -284,16 +294,38 @@ VG.UI.Layout.prototype.initLayoutAccessors=function()
     }
 };
 
+/**
+ * Adds a small title to the top of the layout.
+ * @param {string} title - The title text to show.
+ */
+
 VG.UI.Layout.prototype.addTitle=function( title )
 {
     this.title=title;
 };
 
-VG.UI.Layout.prototype.insertAt=function( index, child )
+/**
+ * Inserts a child object at a specific index to this layout.
+ * @param {number} index - The index position to insert the child at.
+ * @param {object} child - The child oject to add.
+ */
+
+VG.UI.Layout.prototype.insertChildAt=function( index, child )
 {
     this.children.splice( index, 0, child );
     child.parent=this;
 };
+
+// Legacy
+VG.UI.Layout.prototype.insertAt=function( index, child )
+{
+    this.insertChildAt( index, child );
+};
+
+/**
+ * Adds a child object to the end of this layout.
+ * @param {object} child - The child object to add to this layout.
+ */
 
 VG.UI.Layout.prototype.addChild=function( child )
 {
@@ -301,6 +333,10 @@ VG.UI.Layout.prototype.addChild=function( child )
     child.parent=this;
 };
 
+/**
+ * Adds child objects to the end of this layout.
+ * @param {object} childs - The child objects to add to this layout.
+ */
 
 VG.UI.Layout.prototype.addChilds=function()
 {
@@ -308,10 +344,21 @@ VG.UI.Layout.prototype.addChilds=function()
         this.addChild( arguments[i] );
 };
 
+/**
+ * Returns the child object at the given index.
+ * @param {number} index - The index position to of the object to return.
+ * @returns {object} The object at the given index.
+ */
+
 VG.UI.Layout.prototype.childAt=function( index )
 {
     return this.children[index];
 };
+
+/**
+ * Removes the given child object from the layout.
+ * @param {object} child - The child object to remove.
+ */
 
 VG.UI.Layout.prototype.removeChild=function( child )
 {
@@ -320,6 +367,12 @@ VG.UI.Layout.prototype.removeChild=function( child )
         this.children.splice( index, 1 );
     }    
 };
+
+/**
+ * Returns true of the layout contains the given child object.
+ * @param {object} child - The child object.
+ * @returns {bool} True if the layout contains the child object, false otherwise.
+ */
 
 VG.UI.Layout.prototype.contains=function( child )
 {
@@ -856,7 +909,20 @@ VG.UI.SplitLayoutItem=function()
     this.rect=VG.Core.Rect();
 };
 
-// ----------------------------------------------------------------- VG.UI.SplitLayout
+/**
+ * This layout arranges it's relatively sized child objects next to each other. Expanding child object can be resized by the use of a small bar next the object. 
+ * Each object is given a percentage (out of 100) which defines its relative size compared to the other child objects.
+ * Layouts can contain {@link VG.UI.Widget} based classes or other layouts.
+ * @borrows VG.UI.Widget.disabled as VG.UI.Layout.disabled
+ * @borrows VG.UI.Widget.visible as VG.UI.Layout.visible
+ * @property {number} length - The number of child objects in this layout (read-only).
+ * @property {bool} horizontal - If true, child objects are arranged horizontally (the default).
+ * @property {bool} vertical - If true, child objects are arranged vertically.
+ * @constructor
+ * @tutorial Layouts
+ * @param {object} child - The  object to add to the layout.
+ * @param {number} percent - The relative size of the object in percent.
+ */
 
 VG.UI.SplitLayout=function()
 {
@@ -893,6 +959,12 @@ VG.UI.SplitLayout.prototype.calcSize=function( canvas )
     return size;
 }
 
+/**
+ * Adds a child object to the end of this layout.
+ * @param {object} child - The child object to add to the layout.
+ * @param {number} percent - The relative size of the object in percent (out of 100).
+ */
+
 VG.UI.SplitLayout.prototype.addChild=function( child, percent )
 {
     this.children.push( child );
@@ -906,7 +978,14 @@ VG.UI.SplitLayout.prototype.addChild=function( child, percent )
     this.items.push( item );
 };
 
-VG.UI.SplitLayout.prototype.insertChild=function( index, child, percent )
+/**
+ * Inserts a child object at a specific index to this layout.
+ * @param {number} index - The index position to insert the child at.
+ * @param {object} child - The child oject to add.
+ * @param {number} percent - The relative size of the object in percent (out of 100). 
+ */
+
+VG.UI.SplitLayout.prototype.insertChildAt=function( index, child, percent )
 {
     child.parent=this;    
     this.children.splice( index, 0, child );   
@@ -919,6 +998,17 @@ VG.UI.SplitLayout.prototype.insertChild=function( index, child, percent )
     this.items.splice( index, 0, item );       
 };
 
+// Legacy
+VG.UI.SplitLayout.prototype.insertChild=function( index, child )
+{
+    this.insertChildAt( index, child );
+};
+
+/**
+ * Removes the given child object from the layout.
+ * @param {object} child - The child object to remove.
+ */
+
 VG.UI.SplitLayout.prototype.removeChild=function( child )
 {
     var index=this.children.indexOf( child );
@@ -928,10 +1018,22 @@ VG.UI.SplitLayout.prototype.removeChild=function( child )
     }
 };
 
+/**
+ * Returns the relative child object's percentage at the given index.
+ * @param {number}  index - The index of the child object.
+ * @returns {number} The child object's relative percentage.
+ */
+
 VG.UI.SplitLayout.prototype.getChildPercentAt=function( index )
 {
     return this.items[index].percent;
 };
+
+/**
+ * Sets the child object's relative percentage at the given index.
+ * @param {number} index - The index of the child object.
+ * @param {number} percent - The relative size of the object in percent (out of 100).  
+ */
 
 VG.UI.SplitLayout.prototype.setChildPercentAt=function( index, percent )
 {
@@ -1244,7 +1346,17 @@ VG.UI.LabelLayoutItem=function( label, widget )
     this.widget=widget;
 };
 
-// ----------------------------------------------------------------- VG.UI.LabelLayout
+/**
+ * Arranges it's child objects vertically with a text label to the left of each child object.
+ * Layouts can contain {@link VG.UI.Widget} based classes or other layouts.
+ * @borrows VG.UI.Widget.disabled as VG.UI.Layout.disabled
+ * @borrows VG.UI.Widget.visible as VG.UI.Layout.visible
+ * @property {number} length - The number of child objects in this layout (read-only).
+ * @constructor
+ * @tutorial Layouts
+ * @param {string} label - The text label of the object.
+ * @param {object} child - The  object to add to the layout.
+ */
 
 VG.UI.LabelLayout=function()
 {
@@ -1285,6 +1397,12 @@ VG.UI.LabelLayout.prototype.calcSize=function( canvas )
 
     return this.size;
 };
+
+/**
+ * Adds a child object to the end of this layout.
+ * @param {string} label - The text label of the child object to add.
+ * @param {object} child - The child object to add to the layout.
+ */
 
 VG.UI.LabelLayout.prototype.addChild=function( label, widget )
 {
@@ -1624,7 +1742,18 @@ VG.UI.LabelLayout.prototype.setVScrollbarDimensions=function( canvas )
     this.vScrollbar.setScrollBarContentSize( this.size.height, this.contentRect.height );
 };
 
-// ----------------------------------------------------------------- VG.UI.StackedLayout
+/**
+ * Arranges it's child objects stacked on top of each other. The <i>current</i> property defines the currently visible child object at the top of the stack. By default the first added child object
+ * is currently visible.
+ * Layouts can contain {@link VG.UI.Widget} based classes or other layouts.
+ * @borrows VG.UI.Widget.disabled as VG.UI.Layout.disabled
+ * @borrows VG.UI.Widget.visible as VG.UI.Layout.visible
+ * @property {number} length - The number of child objects in this layout (read-only).
+ * @property {object} current - The currently visible child object.
+ * @constructor
+ * @tutorial Layouts
+ * @param {object} child - Optional, the  object to add to the layout.
+ */
 
 VG.UI.StackedLayout=function()
 {
@@ -1658,6 +1787,11 @@ Object.defineProperty( VG.UI.StackedLayout, "current",
         }
     }    
 });
+
+/**
+ * Adds a child object to the layout.
+ * @param {object} child - The child object to add to the layout.
+ */
 
 VG.UI.StackedLayout.prototype.addChild=function( child )
 {

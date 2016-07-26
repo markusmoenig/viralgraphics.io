@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv> and Contributors
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,16 +21,19 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * Contains importer functions for various file formats.
+ * @namespace
+ */
+
 VG.Import = {};
-VG.Import.loadObj = function(text, auxFiles, scale) {
-    /**
-     * @param auxFiles
-     */
+
     /**
      * Parse Wavefront .obj according to:
      *      http://en.wikipedia.org/wiki/Wavefront_.obj_file
      *      http://www.martinreddy.net/gfx/3d/OBJ.spec
      *      http://www.fileformat.info/format/wavefrontobj/egff.htm
+     * @example 
      * About .obj file:
      *      Vertex data:
      *          v,
@@ -73,8 +76,11 @@ VG.Import.loadObj = function(text, auxFiles, scale) {
      *          group-mesh
      *          ....
      * @param text input .obj file as string
+     * @param auxFiles     
      * @returns {VG.Render.Mesh} root mesh
      */
+
+VG.Import.loadObj = function(text, auxFiles, scale) {
     if (!text) {
         VG.log("Input not valid .obj file contents.");
         return;
@@ -203,12 +209,11 @@ VG.Import.loadObj = function(text, auxFiles, scale) {
     return rootMesh;
 };
 
-VG.Import.loadMtl = function(text)
-{
     /**
      * Parse MTL according to:
      * http://paulbourke.net/dataformats/mtl/
      *
+     * @example
      * supports:
      *  -. material name statemenet
      *      newmtl
@@ -237,6 +242,8 @@ VG.Import.loadMtl = function(text)
      *      refl
      */
 
+VG.Import.loadMtl = function(text)
+{
     if(text === undefined){
         return;
     }

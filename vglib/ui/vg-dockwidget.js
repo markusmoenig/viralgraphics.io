@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,16 +21,15 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-// ----------------------------------------------------------------- VG.UI.DockWidget
+/**Creates an VG.UI.DockWidget.<br>
+ * Dock widgets can be added to the left or right side of an {@link VG.UI.Workspace} and can contain a list of vertically stacked Widgets or Layouts. Dock Widgets can be resized. Use
+ * addItem() and addItems() to add items to the Dock widget.
+ * @param {string} title - The title of the Dock Widget.
+ * @constructor
+ */
 
 VG.UI.DockWidget=function( text )
 {
-    /**Creates an VG.UI.DockWidget.<br>
-     * Dock widgets can be added to the left or right side of an VG.UI.Workspace and can contain a list of vertically stacked Widgets or Layouts. Dock Widgets can be resized. Use
-     * addItem() and addItems() to add items to the Dock widget.
-     * @param {string} title - The title of the Dock Widget.
-     * @constructor
-     */
     if ( !(this instanceof VG.UI.DockWidget) ) return new VG.UI.DockWidget( text );
 
     VG.UI.Widget.call( this );
@@ -128,20 +127,22 @@ VG.UI.DockWidget.prototype.calcSize=function( canvas )
     return size;
 };
 
+/**Adds an item, either a Widget or a Layout, to the Dock widget.
+ * @param {widget} widget - Widget or layout to add
+ */
+
 VG.UI.DockWidget.prototype.addItem=function( item )
-{
-    /**Adds an item, either a Widget or a Layout, to the Dock widget.
-     * @param {widget} widget - Widget or layout to add
-     */    
+{   
     this.layout.addChild( item );
 };
 
+/**Adds a list of items, either a Widget or a Layout, to the Dock widget.
+ * @param {widget} widgets - Widget or layout to add
+ * @param {widget} ...
+ */  
+
 VG.UI.DockWidget.prototype.addItems=function( item )
-{
-    /**Adds a list of items, either a Widget or a Layout, to the Dock widget.
-     * @param {widget} widgets - Widget or layout to add
-     * @param {widget} ...
-     */       
+{     
     for( var i=0; i < arguments.length; ++i )
         this.layout.addChild( arguments[i] );    
 };
@@ -156,16 +157,14 @@ VG.UI.DockWidget.prototype.paintWidget=function( canvas )
     this.minimumSize.set( this.layout.minimumSize );
 };
 
-// ----------------------------------------------------------------- VG.UI.DockStripWidget
+/**Creates a VG.UI.SectionBar.<br>
+ * SectionBars can be added to the left or right side of an {@link VG.UI.Workspace} and can contain a list of vertically stacked VG.UI.SectionBarButtons. SectionBars cannot be resized. Use
+ * addItem() and addItems() to add items to the SectionBar.
+ * @constructor
+ */
 
 VG.UI.SectionBar=function( text )
 {
-    /**Creates an VG.UI.SectionBar.<br>
-     * SectionBars can be added to the left or right side of an VG.UI.Workspace and can contain a list of vertically stacked VG.UI.SectionBarButtons. SectionBars cannot be resized. Use
-     * addItem() and addItems() to add items to the SectionBar.
-     * @constructor
-     */
-
     if ( !(this instanceof VG.UI.SectionBar) ) return new VG.UI.SectionBar( text );
 
     VG.UI.DockWidget.call( this );
@@ -204,11 +203,12 @@ VG.UI.SectionBar.prototype.mouseUp=function( event )
 {
 };
 
+/**Adds an VG.UI.SectionBarButton to the SectionBar.
+ * @param {VG.UI.SectionBarButton} button - Button to add to the SectionBar
+ */
+
 VG.UI.SectionBar.prototype.addItem=function( item )
-{
-    /**Adds an VG.UI.SectionBarButton to the SectionBar.
-     * @param {VG.UI.SectionBarButton} button - Button to add to the SectionBar
-     */       
+{  
     this.layout.addChild( item );
 
     if ( item instanceof VG.UI.SectionBarButton ) {
@@ -218,45 +218,46 @@ VG.UI.SectionBar.prototype.addItem=function( item )
     }
 };
 
+/**Adds a Button to the SectionBar.
+ * @param {string} text - The text of the button to add.
+ */
+
 VG.UI.SectionBar.prototype.addButton=function( text )
 {
-    /**Adds a Button to the SectionBar.
-     * @param {string} text - The text of the button to add.
-     */       
-
     var button=VG.UI.SectionBarButton( text );
     this.addItem( button );
     return button;
 };
 
-VG.UI.SectionBar.prototype.addSwitch=function( text1, text2 )
-{
-    /**Adds a Button to the SectionBar.
-     * @param {string} text - The text of the button to add.
-     */       
+/**Adds a SwitchButton to the SectionBar.
+ * @param {string} text - The text of the button to add.
+ */
 
+VG.UI.SectionBar.prototype.addSwitch=function( text1, text2 )
+{ 
     var switchButton=VG.UI.SectionBarSwitch( text1, text2 );
     this.addItem( switchButton );
     return switchButton;
 };
 
+/**Adds a separator to the SectionBar.
+ * @param {string} text - The text of the button to add.
+ */
+
 VG.UI.SectionBar.prototype.addSeparator=function( text )
 {
-    /**Adds a Button to the SectionBar.
-     * @param {string} text - The text of the button to add.
-     */       
-
     var sep=VG.UI.SectionBarSeparator();
     this.addItem( sep );
     return sep;
 };
 
+/**Adds a list of items to the SectionBar.
+ * @param {VG.UI.SectionBarButton} button - Button to add to the SectionBar
+ * @param {VG.UI.SectionBarSeparator} ...     
+ */
+
 VG.UI.SectionBar.prototype.addItems=function( item )
-{
-    /**Adds a list of VG.UI.DockStripButton to the SectionBar.
-     * @param {VG.UI.DockStripButton} button - Button to add to the SectionBar
-     * @param {VG.UI.DockStripButton} ...     
-     */      
+{ 
     for( var i=0; i < arguments.length; ++i )
         this.addItem( arguments[i] );    
 };
@@ -285,16 +286,14 @@ VG.UI.SectionBar.prototype.paintWidget=function( canvas )
     this.layout.layout( canvas );  
 };
 
-// ----------------------------------------------------------------- VG.UI.SectionBarButton
+/**Creates an VG.UI.SectionBarButton.<br>
+ * DockStripButtons can be added to VG.UI.SectionBars. They contain either text or images.
+ * @param {string} text - The text of the button.
+ * @constructor
+ */
 
 VG.UI.SectionBarButton=function( text )
 {
-    /**Creates an VG.UI.SectionBarButton.<br>
-     * DockStripButtons can be added to VG.UI.SectionBars. They contain either text or images.
-     * @param {string} text - The text of the button.
-     * @constructor
-     */
-
     if ( !(this instanceof VG.UI.SectionBarButton) ) return new VG.UI.SectionBarButton( text );
     this.text=arguments[0];
 
@@ -410,14 +409,14 @@ VG.UI.SectionBarSwitch.prototype.paintWidget=function( canvas )
     VG.UI.stylePool.current.drawSectionBarSwitch( this, canvas );
 };
 
-// ----------------------------------------------------------------- VG.UI.SectionBarSeparator
+
+/**Creates an VG.UI.SectionBarSeparator.<br>
+ * A SectionBarSeparator can be added to VG.UI.SectionBar and draws a horizontal separator line.
+ * @constructor
+ */
 
 VG.UI.SectionBarSeparator=function()
-{
-    /**Creates an VG.UI.SectionBarSeparator.<br>
-     * A SectionBarSeparator can be added to VG.UI.SectionBar and draws a horizontal separator line.
-     * @constructor
-     */    
+{ 
     if ( !(this instanceof VG.UI.SectionBarSeparator )) return new VG.UI.SectionBarSeparator();
 
     VG.UI.Widget.call( this );
@@ -449,16 +448,14 @@ VG.UI.SectionBarSeparator.prototype.paintWidget=function( canvas )
     }
 };
 
-// ----------------------------------------------------------------- VG.UI.SectionToolBar
+/**Creates a VG.UI.SectionToolBar.<br>
+ * SectionToolBars can be added to the left or right side of an {@link VG.UI.Workspace} and can contain a list of vertically stacked {@link VG.UI.SectionToolBarButton}s which are grouped into sections. 
+ * SectionToolBars cannot be resized.
+ * @constructor
+ */
 
 VG.UI.SectionToolBar=function( text )
 {
-    /**Creates a VG.UI.SectionToolBar.<br>
-     * SectionToolBars can be added to the left or right side of an VG.UI.Workspace and can contain a list of vertically stacked VG.UI.SectionBarButtons. SectionBars cannot be resized. Use
-     * addItem() and addItems() to add items to the SectionBar.
-     * @constructor
-     */
-
     if ( !(this instanceof VG.UI.SectionToolBar) ) return new VG.UI.SectionToolBar( text );
 
     VG.UI.DockWidget.call( this );
@@ -502,12 +499,13 @@ VG.UI.SectionToolBar.prototype.mouseUp=function( event )
 {
 };
 
+/**Adds a new section to the to the SectionToolBar.
+ * @param {string} text - The text of the section to add
+ * @returns {VG.UI.Layout}
+ */
+
 VG.UI.SectionToolBar.prototype.addSection=function( text )
 {
-    /**Adds an VG.UI.SectionBarButton to the SectionBar.
-     * @param {VG.UI.SectionBarButton} button - Button to add to the SectionBar
-     */
-
     var layout=VG.UI.Layout();
     layout.vertical=true;
     layout.margin.clear();
@@ -517,6 +515,12 @@ VG.UI.SectionToolBar.prototype.addSection=function( text )
     this.layout.addChild( layout );
     return layout;
 };
+
+/**Adds an VG.UI.SectionToolBarButton to the given section.
+ * @param {VG.UI.Layout} section - The section to add thew new button to.
+ * @param {string} iconName - Name of the icon to add to the section.
+ * @returns {VG.UI.SectionToolBarButton}
+ */
 
 VG.UI.SectionToolBar.prototype.addButton=function( section, iconName )
 {
@@ -562,12 +566,6 @@ VG.UI.SectionToolBar.prototype.paintWidget=function( canvas )
 
 VG.UI.SectionToolBarButton=function( iconName )
 {
-    /**Creates an VG.UI.SectionToolBarButton.<br>
-     * DockStripButtons can be added to VG.UI.SectionBars. They contain either text or images.
-     * @param {string} text - The text of the button.
-     * @constructor
-     */
-
     if ( !(this instanceof VG.UI.SectionToolBarButton) ) return new VG.UI.SectionToolBarButton( iconName );
     
     VG.UI.Widget.call( this );

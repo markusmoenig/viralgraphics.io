@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,18 +21,35 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * Contains all UI related classes.
+ * @namespace 
+ */
+
 VG.UI = {};
 
 VG.UI.HAlignment={ "Left" : 0, "Centered" : 1, "Right" : 2 };
 VG.UI.VAlignment={ "Top" : 0, "Centered" : 1, "Bottom" : 2 };
 
-VG.UI.DataCollectionRole={ "LoadSaveRole" : 1, "UndoRedoRole" : 2, "Docs.Enum" : -1 };
-VG.UI.CallbackType={ "New" : 0, "UndoRedo" : 1, "Open" : 2, "Save" : 3, "LoggedStateChanged" : 4, "Docs.Enum" : -1 };
+VG.UI.DataCollectionRole={ "LoadSaveRole" : 1, "UndoRedoRole" : 2 };
 
-VG.UI.DockWidgetLocation={ "Left" : 0, "Right" : 1, "Floating" : 2, "Docs.Enum" : -1 };
+/**
+ * The different callback types which can be registered via {@link VG.UI.Workspace.registerCallback} and get called when the specified action is triggered
+ * inside the Visual Graphics model.
+ * @enum
+ */
+VG.UI.CallbackType={ /** @type {callback} Called when a New operation is triggered by the user. */ "New" : 0, 
+	/**  @type {callback} Called when an Undo/Redo operation is triggered by the user. A single argument is passed to the callback with the undo/redo path. Only needed if the app needs some special UI updates for certain paths. */"UndoRedo" : 1, 
+	/**  @type {callback} Called when the user selects open. This overrides the default Model behavior. Data to read into the app state is passed to the callback. */"Open" : 2, 
+	/**  @type {callback} Called when the user selects save. This overrides the default Model behavior. Data to save needs to be returned by this callback. */ "Save" : 3, 
+	/**  @type {callback} Called when the user logged state changes, i.e. logged in / logged out. Read out the arguments for details. */ "LoggedStateChanged" : 4 };
+
+VG.UI.DockWidgetLocation={ "Left" : 0, "Right" : 1, "Floating" : 2 };
 
 VG.UI.ActionItemRole={ "None" : 0, "New" : 1, "Open" : 2, "Save" : 3, "SaveAs" : 4, "Undo" : 5, "Redo" : 6, "Open_Local" : 7, "Cut" : 8, "Copy" : 9, "Paste" : 10, "Delete" : 11, "SelectAll" : 12, 
-	"Login" : 13, "Signup" : 14, "UserTool" : 15, "QuickMenu" : 16, "SkinCycyle" : 17, "Docs.Enum" : -1 };
+	"Login" : 13, "Signup" : 14, "UserTool" : 15, "QuickMenu" : 16, "SkinCycyle" : 17 };
+
+/** Maximum size for layours */
 
 VG.UI.MaxLayoutSize=32768;
 
@@ -42,8 +59,7 @@ VG.UI.FileDialog={
 	"Image" : 0,
 	"Text" : 1,
 	"Project" : 2,
-	"Binary" : 3,
-	"Docs.Enum" : -1
+	"Binary" : 3
 };
 
 // --- Styles

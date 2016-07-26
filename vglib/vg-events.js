@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,8 +21,22 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * Contains all events supported by the Visual Graphics UI system.
+ * @namespace
+ */
 VG.Events = {};
-VG.Events.MouseButton={ "Left" : 0, "Right" : 1, "Docs.Enum" : 9000 };
+
+/**
+ * Mouse buttons.
+ * @enum
+ */
+VG.Events.MouseButton={ "Left" : 0, "Right" : 1 };
+
+/**
+ * KeyCodes.
+ * @enum
+ */
 VG.Events.KeyCodes={ "Backspace" : 8, "Tab" : 9, "Enter" : 13, "Shift" : 16, "Ctrl" : 17, "Alt" : 18, "Pause" : 19,
 	"CapsLock" : 20, "Esc" : 27,  "Space" : 32, "PageUp" : 33, "PageDow" : 34, "End" : 35, "Home" : 36, "ArrowLeft" : 37, "ArrowUp" : 38,
 	 "ArrowRight" : 39,  "ArrowDown" : 40,  "PrintScrn" : 44,  "Insert" : 45,  "Delete" : 46, 
@@ -34,15 +48,15 @@ VG.Events.KeyCodes={ "Backspace" : 8, "Tab" : 9, "Enter" : 13, "Shift" : 16, "Ct
 	 "F1" : 112, "F2" : 113, "F3" : 114, "F4" : 115, "F5" : 116, "F6" : 117, "F7" : 118, "F8" : 119, "F9" : 120, "F10" : 121,
 	 "F11" : 122, "F11" : 123,
 	 "NumLock" : 144, "ScrollLock" : 145,
-     "Docs.Enum" : 9000
 	};
 
-// ----------------------------------------------------------------- VG.Events.MouseMoveEvent
+/**
+ * Creates an MouseMoveEvent. Send to the focus Widget on user mouse move.
+ * @constructor
+ */    
 
 VG.Events.MouseMoveEvent=function()
-{
-    /**Creates an MouseMoveEvent. Send to the focus Widget on user mouse move.
-     */    	
+{	
     if (!(this instanceof VG.Events.MouseMoveEvent)) return new VG.Events.MouseMoveEvent();
     
     /** The current mouse position. 
@@ -52,13 +66,13 @@ VG.Events.MouseMoveEvent=function()
     this.pos=VG.Core.Point();
 };
 
-// ----------------------------------------------------------------- VG.Events.MouseDownEvent
+/**
+ * Creates an MouseDownEvent. Send to the focus Widget on user initiated mouse button press.
+ * @constructor
+ */    
 
 VG.Events.MouseDownEvent=function( workspace )
 {
-    /**Creates an MouseDownEvent. Send to the focus Widget on user initiated mouse button press.
-     */    
-
     if (!(this instanceof VG.Events.MouseDownEvent)) return new VG.Events.MouseDownEvent( workspace );
     
     /** The current mouse position. 
@@ -72,18 +86,18 @@ VG.Events.MouseDownEvent=function( workspace )
     this.button=VG.Events.MouseButton.Left;
 
     /** An array containing all currently pressed keys.
-     * @member {VG.Events.MouseButton}
+     * @member {array}
      */     
     this.keysDown=workspace.keysDown;
 };
 
-// ----------------------------------------------------------------- VG.Events.MouseUpEvent
+/**
+ * Creates an MouseUpEvent. Send to the focus Widget on user initiated mouse button release.
+ * @constructor
+ */    
 
 VG.Events.MouseUpEvent=function( workspace )
 {
-    /**Creates an MouseUpEvent. Send to the focus Widget on user initiated mouse button release.
-     */    
-
     if (!(this instanceof VG.Events.MouseUpEvent)) return new VG.Events.MouseUpEvent( workspace );
     
     /** The current mouse position. 
@@ -97,7 +111,7 @@ VG.Events.MouseUpEvent=function( workspace )
     this.button=VG.Events.MouseButton.Left;
 
     /** An array containing all currently pressed keys.
-     * @member {VG.Events.MouseButton}
+     * @member {array}
      */     
     this.keysDown=workspace.keysDown;
 };

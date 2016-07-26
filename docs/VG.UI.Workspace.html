@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Class: Workspace</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Class: Workspace</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+            <span class="ancestors"><a href="VG.html">VG</a><a href="VG.UI.html">.UI</a>.</span>Workspace</h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+    
+
+    <h4 class="name" id="Workspace"><span class="type-signature"></span>new Workspace<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Creates an VG.UI.Workspace class.<br>
+VG.UI.Workspace represents the visual workspace of every VG application or game. Before your application gets started, a VG.UI.Workspace object will be created
+and passed as the first argument to vgMain(). 
+
+<br>VG.context is the context of your application and set as "this" for vgMain(). A reference to the application Workspace is set in 
+VG.context.workspace.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="UI_vg-workspace.js.html">UI/vg-workspace.js</a>, <a href="UI_vg-workspace.js.html#line36">line 36</a>
+    </li></ul></dd>
+    
+
+    
+    <dt class="tag-tutorial">Tutorials:</dt>
+    <dd class="tag-tutorial">
+        <ul>
+            <li><a href="tutorial-Workspace.html">Workspace</a></li>
+        </ul>
+    </dd>
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id="canvas"><span class="type-signature"></span>canvas<span class="type-signature"> :<a href="VG.Canvas.html">VG.Canvas</a></span></h4>
+
+
+
+
+<div class="description">
+    The <a href="VG.Canvas.html">VG.Canvas</a> for the Workspace, used for all drawing operations.
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type"><a href="VG.Canvas.html">VG.Canvas</a></span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="UI_vg-workspace.js.html">UI/vg-workspace.js</a>, <a href="UI_vg-workspace.js.html#line55">line 55</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="content"><span class="type-signature"></span>content<span class="type-signature"> :object</span></h4>
+
+
+
+
+<div class="description">
+    Holds the content of the Workspace and has to be set within vgMain() to either a VG.UI.Widget derived object or one of the Layout objects. This object will fill the
+available space of the Workspace and is the root object for all display widgets.
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="UI_vg-workspace.js.html">UI/vg-workspace.js</a>, <a href="UI_vg-workspace.js.html#line48">line 48</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id="addDockWidget"><span class="type-signature"></span>addDockWidget<span class="signature">(widget, location, percent)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Adds a Dock widget to the Workspace.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>widget</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="VG.UI.DockWidget.html">VG.UI.DockWidget</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The DockWidget to add to the Workspace</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>location</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">VG.UI.DockWidgetLocation</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Currently limited to VG.UI.DockWidgetLocation.Left and VG.UI.DockWidgetLocation.Right.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>percent</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Optional, the width this dock widget should cover in percent, default is 20.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="UI_vg-workspace.js.html">UI/vg-workspace.js</a>, <a href="UI_vg-workspace.js.html#line209">line 209</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="addMenuBar"><span class="type-signature"></span>addMenuBar<span class="signature">(menubar)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Adds a VG.UI.MenuBar to the top of the Workspace
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>menubar</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">VG.UI.MenuBar</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The VG.UI.MenuBar to add. Several MenuBars can be added to each Workspace.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="UI_vg-workspace.js.html">UI/vg-workspace.js</a>, <a href="UI_vg-workspace.js.html#line318">line 318</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="addToolBar"><span class="type-signature"></span>addToolBar<span class="signature">(toolbar)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Adds a VG.UI.ToolBar to the top of the Workspace
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>toolbar</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">VG.UI.ToolBar</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The toolbar to add. Several Toolbars can be added to each Workspace</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="UI_vg-workspace.js.html">UI/vg-workspace.js</a>, <a href="UI_vg-workspace.js.html#line308">line 308</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="createDecoratedToolBar"><span class="type-signature"></span>createDecoratedToolBar<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Adds a decorated ToolBar (VG.UI.DecoratedToolBar) to the application.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="UI_vg-workspace.js.html">UI/vg-workspace.js</a>, <a href="UI_vg-workspace.js.html#line333">line 333</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="detachDockWidget"><span class="type-signature"></span>detachDockWidget<span class="signature">(widget)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Detaches a Dock widget from the Workspace.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>widget</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="VG.UI.DockWidget.html">VG.UI.DockWidget</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The DockWidget to detach from the Workspace</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="UI_vg-workspace.js.html">UI/vg-workspace.js</a>, <a href="UI_vg-workspace.js.html#line245">line 245</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="getVisibleScreenRect"><span class="type-signature"></span>getVisibleScreenRect<span class="signature">(rect)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Returns a rectangle with the visible screen area. Useful on Websites when the VG app is larger than the visible size and the browser
+uses a scrollbar. In this case the returned rectangle contains the width and height of the visible area along with its offet. On all other
+platforms the returned retangle is the same size as the Workspace rectangle.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>rect</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="VG.Core.Rect.html">VG.Core.Rect</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Optional, the rectangle to fill out. If undefined a new rect will be allocated.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="UI_vg-workspace.js.html">UI/vg-workspace.js</a>, <a href="UI_vg-workspace.js.html#line1960">line 1960</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    A filled out rectangle with the visible screen space.
+</div>
+
+
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="registerCallback"><span class="type-signature"></span>registerCallback<span class="signature">(type, func)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Registers a callback for a specified callback type.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>type</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="VG.UI.html#.CallbackType">VG.UI.CallbackType</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The type of the callback</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>func</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The callback which gets invoked for the specified callback type</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="UI_vg-workspace.js.html">UI/vg-workspace.js</a>, <a href="UI_vg-workspace.js.html#line1664">line 1664</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="removeDockWidget"><span class="type-signature"></span>removeDockWidget<span class="signature">(widget)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Removes the given dock widget from the Workspace.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>widget</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="VG.UI.DockWidget.html">VG.UI.DockWidget</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The DockWidget to remove from the Workspace.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="UI_vg-workspace.js.html">UI/vg-workspace.js</a>, <a href="UI_vg-workspace.js.html#line235">line 235</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="setFocus"><span class="type-signature"></span>setFocus<span class="signature">(widget)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Sets focus to a VG.UI.Widget derived widget. The widget has to support supportsFocus
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>widget</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="VG.UI.Widget.html">VG.UI.Widget</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The widget to set focus to.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="UI_vg-workspace.js.html">UI/vg-workspace.js</a>, <a href="UI_vg-workspace.js.html#line984">line 984</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="showWindow"><span class="type-signature"></span>showWindow<span class="signature">(window)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Shows the VG.UI.Window derived object, like VG.UI.Dialog on the Workspace.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>window</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="VG.UI.Window.html">VG.UI.Window</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The window to display. Be sure to call the close() function of the Window / Dialog to close it after use.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="UI_vg-workspace.js.html">UI/vg-workspace.js</a>, <a href="UI_vg-workspace.js.html#line1979">line 1979</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="VG.Canvas.html">Canvas</a></li><li><a href="VG.Controller.Array.html">Array</a></li><li><a href="VG.Controller.Base.html">Base</a></li><li><a href="VG.Controller.Tree.html">Tree</a></li><li><a href="VG.Core.Color.html">Color</a></li><li><a href="VG.Core.Image.html">Image</a></li><li><a href="VG.Core.ImagePool.html">ImagePool</a></li><li><a href="VG.Core.Margin.html">Margin</a></li><li><a href="VG.Core.NormalizedColor.html">NormalizedColor</a></li><li><a href="VG.Core.Point.html">Point</a></li><li><a href="VG.Core.Rect.html">Rect</a></li><li><a href="VG.Core.Size.html">Size</a></li><li><a href="VG.Core.Timer.html">Timer</a></li><li><a href="VG.Core.TypedArray.html">TypedArray</a></li><li><a href="VG.Events.MouseDownEvent.html">MouseDownEvent</a></li><li><a href="VG.Events.MouseMoveEvent.html">MouseMoveEvent</a></li><li><a href="VG.Events.MouseUpEvent.html">MouseUpEvent</a></li><li><a href="VG.Math.Aabb.html">Aabb</a></li><li><a href="VG.Math.Matrix4.html">Matrix4</a></li><li><a href="VG.Math.Quat.html">Quat</a></li><li><a href="VG.Math.Vector2.html">Vector2</a></li><li><a href="VG.Math.Vector3.html">Vector3</a></li><li><a href="VG.Math.Vector4.html">Vector4</a></li><li><a href="VG.Render.BoxMesh.html">BoxMesh</a></li><li><a href="VG.Render.Camera.html">Camera</a></li><li><a href="VG.Render.Material.html">Material</a></li><li><a href="VG.Render.Mesh.html">Mesh</a></li><li><a href="VG.Render.MtlMaterial.html">MtlMaterial</a></li><li><a href="VG.Render.OrbitCamera.html">OrbitCamera</a></li><li><a href="VG.Render.SceneManager.html">SceneManager</a></li><li><a href="VG.Render.SceneNode.html">SceneNode</a></li><li><a href="VG.Render.SimpleMaterial.html">SimpleMaterial</a></li><li><a href="VG.Render.SphereMesh.html">SphereMesh</a></li><li><a href="VG.UI.Dialog.html">Dialog</a></li><li><a href="VG.UI.DockWidget.html">DockWidget</a></li><li><a href="VG.UI.HtmlView.html">HtmlView</a></li><li><a href="VG.UI.Image.html">Image</a></li><li><a href="VG.UI.LabelLayout.html">LabelLayout</a></li><li><a href="VG.UI.Layout.html">Layout</a></li><li><a href="VG.UI.RenderWidget.html">RenderWidget</a></li><li><a href="VG.UI.SectionBar.html">SectionBar</a></li><li><a href="VG.UI.SectionBarButton.html">SectionBarButton</a></li><li><a href="VG.UI.SectionBarSeparator.html">SectionBarSeparator</a></li><li><a href="VG.UI.SectionToolBar.html">SectionToolBar</a></li><li><a href="VG.UI.SplitLayout.html">SplitLayout</a></li><li><a href="VG.UI.StackedLayout.html">StackedLayout</a></li><li><a href="VG.UI.StatusDialog.html">StatusDialog</a></li><li><a href="VG.UI.Widget.html">Widget</a></li><li><a href="VG.UI.Window.html">Window</a></li><li><a href="VG.UI.Workspace.html">Workspace</a></li></ul><h3>Namespaces</h3><ul><li><a href="VG.html">VG</a></li><li><a href="VG.context.html">context</a></li><li><a href="VG.Controller.html">Controller</a></li><li><a href="VG.Core.html">Core</a></li><li><a href="VG.Events.html">Events</a></li><li><a href="VG.Import.html">Import</a></li><li><a href="VG.Math.html">Math</a></li><li><a href="VG.Render.html">Render</a></li><li><a href="VG.UI.html">UI</a></li></ul><h3>Tutorials</h3><ul><li><a href="tutorial-Data Model.html">Data Model</a></li><li><a href="tutorial-Layouts.html">Layouts</a></li><li><a href="tutorial-Widget Basics.html">Widget Basics</a></li><li><a href="tutorial-Workspace.html">Workspace</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Jul 26 2016 11:47:29 GMT+0700 (ICT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

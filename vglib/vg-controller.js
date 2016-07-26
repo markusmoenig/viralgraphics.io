@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,6 +21,11 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * Contains the controllers of the data model of Visual Graphics.
+ * @namespace
+ */
+
 VG.Controller = {};
 
 VG.Controller.Observer=function( func, context )
@@ -32,6 +37,11 @@ VG.Controller.Observer=function( func, context )
     if ( context === undefined ) this.context=VG.context;
     else this.context=context;
 };
+
+/**
+ * The base class for all controllers. Implements observer handling.
+ * @constructor
+ */
 
 VG.Controller.Base=function()
 {
@@ -46,6 +56,11 @@ VG.Controller.Base.prototype.addObserverKey=function( key )
 	this.observerKeys.push( key );
 };
 
+/**
+ * Adds an observer to the controller.
+ * @param {string} key - The observer key
+ * @param {function} func - The callback function.
+ */
 
 VG.Controller.Base.prototype.addObserver=function( key, func, context )
 {
@@ -106,7 +121,18 @@ VG.Controller.Base.prototype.notifyObservers=function( key, arg )
 	}
 };
 
-// --------------------------------------------- VG.Controller.Array
+/**
+ * Creates an array controller which handles objects inside a flat array.</br>
+ * You will not need to create this controller yourself, it is mostly returned by widgets like {@link VG.UI.ListWidget}.
+ * </br>Supports the following observer keys: "parentSelectionChanged", "selectionChanged", "changed", "addItem", "removeItem".
+ * @property {object} selected - The currently selected object.
+ * @property {array} selection - The currently selected objects when <i>multiSelection</i> is on.
+ * @property {bool} multiSelection - Set to true if this controller should handle multiple selections, default is false.
+ * @property {number} length - The number of items managed by the controller (read-only).
+ * @constructor
+ * @tutorial Data Model
+ * @augments VG.Controller.Base
+ */
 
 VG.Controller.Array=function( collection, path )
 {
@@ -150,6 +176,12 @@ VG.Controller.Array.prototype.count=function()
     return this.length;
 };
 
+/**
+ * Returns the object at the given index
+ * @param {string} index - The index of the object.
+ * @returns {object} The object at the given index.
+ */
+
 VG.Controller.Array.prototype.at=function( index )
 {
     var array=this.collection.dataForPath( this.path );
@@ -158,6 +190,13 @@ VG.Controller.Array.prototype.at=function( index )
 
     return array[index];
 };
+
+/**
+ * Adds an object to the controller.
+ * Triggers installed "addItem" observers.
+ * @param {object} item - The object to add. Item can be undefined if you set the <i>contentClassName</i> property of the controller.
+ * @param {bool} noUndo - Set to true if you don't want to trigger an undo step for this action inside the data model. Default is false.
+ */
 
 VG.Controller.Array.prototype.add=function( item, noUndo )
 {
@@ -178,6 +217,14 @@ VG.Controller.Array.prototype.add=function( item, noUndo )
     return item;
 };
 
+/**
+ * Insert an object to the controller.
+ * Triggers installed "addItem" observers.
+ * @param {number} index - The index position to insert the object at.
+ * @param {object} item - The object to add. Item can be undefined if you set the <i>contentClassName</i> property of the controller.
+ * @param {bool} noUndo - Set to true if you don't want to trigger an undo step for this action inside the data model. Default is false.
+ */
+
 VG.Controller.Array.prototype.insert=function( index, item, noUndo )
 {
     var array=this.collection.dataForPath( this.path );
@@ -196,6 +243,13 @@ VG.Controller.Array.prototype.insert=function( index, item, noUndo )
     this.notifyObservers( "changed" );    
     return item;
 };
+
+/**
+ * Removes an object from the controller.
+ * Triggers installed "removeItem" observers. 
+ * @param {object} item - The object to remove.
+ * @param {bool} noUndo - Set to true if you don't want to trigger an undo step for this action inside the data model. Default is false.
+ */
 
 VG.Controller.Array.prototype.remove=function( item, noUndo )
 {
@@ -253,6 +307,11 @@ Object.defineProperty( VG.Controller.Array.prototype, "selected",
     }    
 });
 
+/**
+ * Adds an object to the selection.
+ * @param {object} item - The object to add to the selection.
+ */
+
 VG.Controller.Array.prototype.addToSelection=function( item )
 {
 	if ( !this._selected ) this._selected=item;
@@ -263,6 +322,11 @@ VG.Controller.Array.prototype.addToSelection=function( item )
 
 	this.notifyObservers( "selectionChanged" );	
 };
+
+/**
+ * Removes an object from the selection.
+ * @param {object} item - The object to remove from the selection.
+ */
 
 VG.Controller.Array.prototype.removeFromSelection=function( item )
 {
@@ -284,6 +348,12 @@ VG.Controller.Array.prototype.removeFromSelection=function( item )
 	this.notifyObservers( "selectionChanged" );    
 };
 
+/**
+ * Returns true if the given object is selected.
+ * @param {object} item - The object to check for selection.
+ * @returns {bool} True if the item is selected, false otherwise.
+ */
+
 VG.Controller.Array.prototype.isSelected=function( item )
 {
     var index=this.selection.indexOf( item );
@@ -297,11 +367,22 @@ VG.Controller.Array.prototype.setSelected=function( item )
     this.selected=item;
 };
 
+/**
+ * Returns true if you can remove the current item, i.e. if it is non null.
+ * @returns {bool} True if you can remove the current item.
+ */
+
 VG.Controller.Array.prototype.canRemove=function()
 {
 	if ( this.selected ) return true;
 	else return false;
 };
+
+/**
+ * Returns the index of the item.
+ * @param {object} item - The object to get the index for.
+ * @returns {number} The index of the object.
+ */
 
 VG.Controller.Array.prototype.indexOf=function( item )
 {
@@ -339,7 +420,19 @@ VG.Controller.Array.prototype.applyMultipleChanges=function( undoItem, undo )
     }
 };
 
-// --------------------------------------------- VG.Controller.Tree
+/**
+ * Creates an array controller which handles nested object hierarchies.</br>
+ * Note that index locations for this controller are not numbers but string, like "0.1" or "" to indicate the root level.
+ * You will not need to create this controller yourself, it is mostly returned by widgets like {@link VG.UI.TreeWidget}.
+ * </br>Supports the following observer keys: "selectionChanged", "changed", "addItem", "removeItem".
+ * @property {object} selected - The currently selected object.
+ * @property {array} selection - The currently selected objects when <i>multiSelection</i> is on.
+ * @property {bool} multiSelection - Set to true if this controller should handle multiple selections, default is false.
+ * @property {number} length - The number of items managed by the controller (read-only).
+ * @constructor
+ * @tutorial Data Model
+ * @augments VG.Controller.Base 
+ */
 
 VG.Controller.Tree=function( collection, path )
 {
@@ -377,6 +470,12 @@ Object.defineProperty( VG.Controller.Tree.prototype, "length",
     }   
 });
 
+/**
+ * Returns the object at the given index
+ * @param {string} index - The index of the object.
+ * @returns {object} The object at the given index.
+ */
+
 VG.Controller.Tree.prototype.at=function( index )
 {
     var array=this.collection.dataForPath( this.path );
@@ -411,6 +510,13 @@ VG.Controller.Tree.prototype.at=function( index )
 
     return item; 
 };
+
+/**
+ * Adds an object to the controller.
+ * Triggers installed "addItem" observers.
+ * @param {object} item - The object to add. Item can be undefined if you set the <i>contentClassName</i> property of the controller.
+ * @param {bool} noUndo - Set to true if you don't want to trigger an undo step for this action inside the data model. Default is false.
+ */
 
 VG.Controller.Tree.prototype.add=function( index, item, noUndo )
 {
@@ -472,6 +578,14 @@ VG.Controller.Tree.prototype.add=function( index, item, noUndo )
     return item;
 };
 
+/**
+ * Insert an object to the controller.
+ * Triggers installed "addItem" observers.
+ * @param {number} index - The index position to insert the object at.
+ * @param {object} item - The object to add. Item can be undefined if you set the <i>contentClassName</i> property of the controller.
+ * @param {bool} noUndo - Set to true if you don't want to trigger an undo step for this action inside the data model. Default is false.
+ */
+
 VG.Controller.Tree.prototype.insert=function( index, item, noUndo )
 {
     var array=this.collection.dataForPath( this.path );
@@ -522,6 +636,13 @@ VG.Controller.Tree.prototype.insert=function( index, item, noUndo )
     return item;
 };
 
+/**
+ * Removes an object from the controller.
+ * Triggers installed "removeItem" observers. 
+ * @param {object} item - The object to remove.
+ * @param {bool} noUndo - Set to true if you don't want to trigger an undo step for this action inside the data model. Default is false.
+ */
+
 VG.Controller.Tree.prototype.remove=function( item, noUndo )
 {
     var array=this.collection.dataForPath( this.path );
@@ -549,6 +670,14 @@ VG.Controller.Tree.prototype.remove=function( item, noUndo )
         }
     }
 };
+
+/**
+ * Moves an object from one index to another index.
+ * @param {string} sourceIndex - The source index of the item.
+ * @param {string} destIndex - The destination index of the item.
+ * @param {number} mode - 0 noop, 1 below on same hierarchy, 2 new child (expand hierachy)
+ * @param {bool} noUndo - Set to true if you don't want to trigger an undo step for this action inside the data model. Default is false.
+ */
 
 VG.Controller.Tree.prototype.move=function( sourceIndex, destIndex, mode, noUndo )
 {
@@ -627,6 +756,11 @@ Object.defineProperty( VG.Controller.Tree.prototype, "selected",
     }    
 });
 
+/**
+ * Adds an object to the selection.
+ * @param {object} item - The object to add to the selection.
+ */
+
 VG.Controller.Tree.prototype.addToSelection=function( item )
 {
     if ( !this._selected ) this._selected=item;
@@ -637,6 +771,11 @@ VG.Controller.Tree.prototype.addToSelection=function( item )
 
     this.notifyObservers( "selectionChanged" ); 
 };
+
+/**
+ * Removes an object from the selection.
+ * @param {object} item - The object to remove from the selection.
+ */
 
 VG.Controller.Tree.prototype.removeFromSelection=function( item )
 {
@@ -658,6 +797,12 @@ VG.Controller.Tree.prototype.removeFromSelection=function( item )
     this.notifyObservers( "selectionChanged" );    
 };
 
+/**
+ * Returns true if the given object is selected.
+ * @param {object} item - The object to check for selection.
+ * @returns {bool} True if the item is selected, false otherwise.
+ */
+
 VG.Controller.Tree.prototype.isSelected=function( item )
 {
     var index=this.selection.indexOf( item );
@@ -665,6 +810,11 @@ VG.Controller.Tree.prototype.isSelected=function( item )
     if ( index === -1 ) return false;
     else return true;
 };
+
+/**
+ * Returns true if you can remove the current item, i.e. if it is non null.
+ * @returns {bool} True if you can remove the current item.
+ */
 
 VG.Controller.Tree.prototype.canRemove=function()
 {
@@ -741,6 +891,12 @@ VG.Controller.Tree.prototype.indexOfChildren=function( curItem, path, item )
     }        
     return -1;
 };
+
+/**
+ * Returns the index of the item.
+ * @param {object} item - The object to get the index for.
+ * @returns {number} The index of the object.
+ */
 
 VG.Controller.Tree.prototype.indexOf=function( item )
 {

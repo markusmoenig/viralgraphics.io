@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv> and Contributors
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,41 +21,46 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-// ----------------------------------------------------------------- VG.UI.Widget
+/**
+ * Creates a Widget object.<br>
+ * The Widget class is the base class for all user interface elements inside VG.UI.Workspace. Mostly, widgets are part of Layouts, however widgets can also
+ * contain other widgets.<br>
+ * A widget paints its user interface during paintWidget() according to its rect property which has been set by its parent prior to calling paintWidget().
+ * @constructor
+ * @tutorial Widget Class
+ */
 
 VG.UI.Widget=function()
 {
-    /**Creates a Widget object.<br>
-     * The Widget class is the base class for all user interface elements inside VG.UI.Workspace. Mostly, widgets are part of Layouts, however widgets can also
-     * contain other widgets.<br>
-     * A widget paints its user interface during paintWidget() according to its rect property which has been set by its parent prior to calling paintWidget().
-     * @constructor
-     */
-
     if ( !(this instanceof VG.UI.Widget) ) return new VG.UI.Widget();
     
     this.name="Widget";
     this.rect=VG.Core.Rect();
     this.contentRect=VG.Core.Rect();
 
-    /**The optional layout of the Widget, only used by widgets which contain a complex layout, default is null
+    /**The optional layout of the Widget, only used by widgets which contain a sub-layout, default is null.
      * @member {object} */
     this.layout=0;
     
-    /**The visual state of the Widget, set by the Workspace prior to a paintWidget call. Can be one of VG.UI.Widget.VisualState.Normal, VG.UI.Widget.VisualState.Hover,
-     * VG.UI.Widget.VisualState.Normal, VG.UI.Widget.VisualState.Clicked or VG.UI.Widget.VisualState.Focus.
-     * @member {VG.UI.Widget.VisualState} */    
+    /**The visual state of the Widget as defined in {@link VG.UI.Widget.VisualState}, set by {@link VG.UI.Workspace}.
+     * @member {VG.UI.Widget.VisualState} VG.UI.Widget.visualState */    
     this.visualState=VG.UI.Widget.VisualState.Normal;
 
+    /** True if the widget has focus state. An easier and quicker to use alternative than to read out {@link VG.UI.Widget.VisualState}
+    * @member {bool}
+    */
     this.hasFocusState=false;
+    /** True if the widget has hover state. An easier and quicker to use alternative than to read out {@link VG.UI.Widget.VisualState}
+    * @member {bool}
+    */    
     this.hasHoverState=false;
     
-    /**The disabled state of the Widget, false by default. This property is set by the developer based on the state of his application.
-     * @member {bool} */        
+    /**The disabled state of the object, false by default.
+     * @member {bool} VG.UI.Widget.disabled */
     this._disabled=false;
 
-    /**The visible state of the Widget, true by default. If false, the widget will not be shown inside Layouts. Set by the developer based on the state of his application.
-     * @member {bool} */     
+    /**The visible state of the object, true by default. If false, the object will not be shown inside layouts.
+     * @member {bool} VG.UI.Widget.visible */     
     this._visible=true;
 
     /**If true indicates that the Widgets supports focus, i.e. accepts mouse and keyboard events. Default is false.
@@ -68,41 +73,37 @@ VG.UI.Widget=function()
     this.supportsAutoFocus=false;
     this.noFocusDrawing=false;
 
-    /**If the widget is part of a layout, this property indicates to the Layout that it the Widget supports expanding in the horizontal direction and does not have a fixed width.
-     * If not expanding it has a fixed width wich is set to the size calculated by calcSize().
-     * This field is set by the widget developer based on the behaviour of the Widget and by application developers to modify the behaviour of existing Widgets. 
+    /**If the widget is part of a layout, this property indicates to the Layout that the Widget supports expanding in the horizontal direction and does not have a fixed width.
+     * If not expanding it has a fixed width which is set to the size calculated by calcSize().
      * The default state depends on the Widget implementation.
-     * @member {bool} */    
+     * @member {bool} VG.UI.Widget.horizontalExpanding */    
     this._horizontalExpanding=true;
 
-    /**If the widget is part of a layout, this property indicates to the Layout that it the Widget supports expanding in the vertical direction and does not have a fixed height.
-     * If not expanding it has a fixed height wich is set to the size calculated by calcSize().
-     * This field is set by the widget developer based on the behaviour of the Widget and by application developers to modify the behaviour of existing Widgets. 
+    /**If the widget is part of a layout, this property indicates to the Layout that the Widget supports expanding in the vertical direction and does not have a fixed height.
+     * If not expanding it has a fixed height which is set to the size calculated by calcSize().
      * The default state depends on the Widget implementation.
-     * @member {bool} */     
+     * @member {bool} VG.UI.Widget.verticalExpanding */     
     this._verticalExpanding=true;
     
     this.canvas=0;
     this.parent=0;
 
-    /**The minimumSize of the widget, defaults to 0, 0. Used in layouts to identify the minimum size for the Widget. This size is often set automatically during calcSize() by
-    * the Widget itself. Application developer however can also set the size manually to modify the Widget behavior inside Layouts.
-    * @member {VG.Core.Size}.*/
+    /**The minimumSize of the widget, defaults to 0, 0. Used in layouts to identify the minimum size for the Widget.
+    * @member {VG.Core.Size} */
     this.minimumSize=VG.Core.Size( 0, 0 );
 
-    /**The maximumSize of the widget, defaults to 32768, 32768. Used in layouts to identify the maximum size for the Widget. This size is often set automatically during calcSize() by
-    * the Widget itself. Application developer however can also set the size manually to modify the Widget behavior inside Layouts. Defaults to VG.UI.MaxLayoutSize.
-    * @member {VG.Core.Size}.*/    
+    /**The maximumSize of the widget, defaults to {@link VG.UI.MaxLayoutSize}.
+    * @member {VG.Core.Size} */    
     this.maximumSize=VG.Core.Size( 32768, 32768 );
 
-    /**The preferredSize of the widget, defaults to 100, 100. Used in layouts to identify the preferred size for the Widget. This size is returned by calcSize().
-    * @member {VG.Core.Size}.*/    
+    /**The preferredSize of the widget, defaults to 100, 100. Used in layouts to identify the preferred size for the Widget. This size is returned by calcSize() by default.
+    * @member {VG.Core.Size} */    
     this.preferredSize=VG.Core.Size( 100, 100 );
 
-    /**If the Widget contains other VG.UI.Widget derived Widgets at fixed positions, which also need Keyboard or Mouse Events, the Widget can assign an array to the childWidgets
-     * property and can push the Widget references. The Workspace will than take these widget into consideration for all user based events. The Widget has to set the rect and
-     * call paintWidget() however itself in its own paintWidget() member. Defaults to null.
-     * @member {array}. */
+    /**If the Widget contains other VG.UI.Widget derived Widgets at fixed positions, which also need keyboard or mouse events, the Widget can assign an array to childWidgets
+     * containing the references to these child widgets. The Workspace will than take these widget into consideration for all user based events. The Widget however has to handle
+     * all paintWidget() calls for it's child widget itself, including setting their rect. Defaults to null.
+     * @member {array} */
     this.childWidgets=null;
 
     this.isWidget=true;
@@ -111,7 +112,15 @@ VG.UI.Widget=function()
     this.dragSourceId=undefined;
 };
 
-VG.UI.Widget.VisualState={ "Normal" : 0, "Hover" : 1, "Clicked" : 2, "Focus" : 3, "Docs.Enum" : 9000 };
+/**
+ * Enum for the visible state of a widget stored in {@link VG.UI.Widget.visualState}
+ * @enum
+ */
+
+VG.UI.Widget.VisualState={ /** @type {number} Widget has normal state */ "Normal" : 0, 
+    /** @type {number} Mouse is on top of the widget */ "Hover" : 1, 
+    /** @type {number} Widget is being clicked */ "Clicked" : 2, 
+    /** @type {number} Widget has focus*/ "Focus" : 3 };
 
 Object.defineProperty( VG.UI.Widget.prototype, "disabled", 
 {
@@ -161,53 +170,55 @@ Object.defineProperty( VG.UI.Widget.prototype, "verticalExpanding",
     }    
 });
 
+/** Sets keyboard and mouse focus to this Widget.*/
+
 VG.UI.Widget.prototype.setFocus=function()
 {
-    /**Sets keyboard and mouse focus to this Widget.*/  
     VG.context.workspace.setFocus( this );
 };
 
+/**Key down event, send to the widget when it has focus and the user is pressing a key. The keycode together with an array containing all currently pressed keys are passed as arguments.
+ * @param {VG.Events.KeyCodes} keyCode - Keycode of the key
+ * @param {array} keysDown - An array containing a list of all currently pressed keys
+ */
+
 VG.UI.Widget.prototype.keyDown=function( keyCode, keysDown )
 {
-    /**Key down event, send to the widget when it has focus and the user is pressing a key. It is passed the code of the pressed key together with an array which
-     * contains all currently pressed keys (including modifiers).
-     * @param {VG.Events.KeyCodes} Keycode of the pressed key
-     * @param {array} An array containing a list of all currently pressed keys
-     */
-
     if ( this.supportsFocus && keyCode === VG.Events.KeyCodes.Tab )
         VG.context.workspace.cycleFocus( this );
 };
 
+/**Key up event, send to the widget when it has focus and the user is releasing a key. The keycode together with an array containing all currently pressed keys are passed as arguments.
+ * @param {VG.Events.KeyCodes} keyCode - Keycode of the released key
+ * @param {array} keysDown - An array containing a list of all currently pressed keys
+ */
+
 VG.UI.Widget.prototype.keyUp=function( keyCode, keysDown )
 {
-    /**Key up event, send to the widget when it has focus and the user is releasing a key. It is passed the code of the released key together with an array which
-     * contains all currently pressed keys (including modifiers).
-     * @param {VG.Events.KeyCodes} Keycode of the released key
-     * @param {array} An array containing a list of all currently pressed keys
-     */
-
 };
+
+/**Mouse move event, send to the widget when it has focus and the user is moving the mouse.
+ * @param {VG.Events.MouseMoveEvent} event - Event containing the mouse position
+ */
 
 VG.UI.Widget.prototype.mouseMove=function( event )
 {
-    /**Mouse move event, send to the widget when it has focus and the user is moving the mouse.
-     * @param {VG.Events.MouseMoveEvent} Event containing the mouse position
-     */    
 };
+
+ /**Mouse down event, send to the widget when one of the mouse buttons has been pressed and the widget has focus.
+  * @param {VG.Events.MouseDownEvent} event - Event containing information about the mouse state
+  */
 
 VG.UI.Widget.prototype.mouseDown=function( event )
 {
-    /**Mouse down event, send to the widget when one of the mouse buttons has been pressed and the widget has focus.
-     * @param {VG.Events.MousDownEvent} Event containing information about the mouse state
-     */    
 };
+
+/**Mouse up event, send to the widget when one of the mouse buttons has been released and the widget has focus.
+ * @param {VG.Events.MouseUpEvent} event - Event containing information about the mouse state
+ */
 
 VG.UI.Widget.prototype.mouseUp=function( event )
 {
-    /**Mouse up event, send to the widget when one of the mouse buttons has been released and the widget has focus.
-     * @param {VG.Events.MouseUpEvent} Event containing information about the mouse state
-     */    
 };
 
 VG.UI.Widget.prototype.showContextMenu=function( event )
@@ -216,38 +227,39 @@ VG.UI.Widget.prototype.showContextMenu=function( event )
         this.contextMenu.activate( event.pos );
 }
 
+/**Paints the widget. Called by the parent when the widget should be painted. The rect member of the widget has been set to the valid
+ * dimensions for the Widget before this call. All paint operations should be clipped to this rectangle.
+ * @param {VG.Canvas} canvas - Canvas object providing convenience 2D draw functions
+ */
+
 VG.UI.Widget.prototype.paintWidget=function( canvas )
 {
-    /**Paints the widget. Called by the parent when the widget should be painted. The rect member of the widget has been set to the valid
-     * dimensions for the Widget. All paint operations should be inside this rectangle.
-     * @param {VG.Canvas} canvas - Canvas object providing convenience 2D draw functions
-     */  
-
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, VG.UI.stylePool.current.skin.Widget.BackgroundColor );
     
     if ( this.layout ) this.layout.layout( canvas );
 };
 
+/**Returns the recommended size for the Widget. Used by Layouts to calculate the Widget dimensions. If the Widget is not expanding
+ * vertically or horizontally the Layout will fix the widget to the returned size. If the Widget is expanding, the Layout will consider
+ * the returned size relatively to the sizes of the other Widgets in the layout. <br>The minimumSize and maximumSize dimensions can also be set
+ * inside calcSize(), these are used to restrict dimensions of expanding widgets.
+ * The default implementation returns {@link VG.UI.Widget.preferredSize}. This function only needs to be overriden if the widget is adjusting its size dynamically depending on its state.
+ * @returns {VG.Core.Size}
+ */
+
 VG.UI.Widget.prototype.calcSize=function( canvas )
 {
-    /**Returns the recommended size for the Widget. Used by Layouts to calculate the Widget dimensions. If the Widget is not expanding
-     * vertically or horizontally the Layout will fix the widget to the returned size. If the Widget is expanding, the Layout will consider
-     * the returned size relatively to the sizes of the other Widgets in the layout. <br>The minimumSize and maximumSize dimensions can also be set
-     * inside calcSize(), these are used to restrict dimensions of expanding widgets.
-     * @returns {VG.Core.Size}
-     */
-
      return this.preferredSize;
 };
 
+/**Sets a fixed size for the Widget. Convenience function which adjusts the minimumSize, maximumSize and preferredSize properties as well as setting
+ * horizontalExpanding and verticalExpanding to false.
+ * @param {number} width - The fixed width
+ * @param {number} width - The fixed height
+ */
+
 VG.UI.Widget.prototype.setFixedSize=function( width, height )
 {
-    /**Sets a fixed size for the Widget. Convenience function which adjusts the minimumSize, maximumSize and preferredSize properties as well as setting
-     * horizontalExpanding and verticalExpanding to false.
-     * @param {number} width - The fixed width
-     * @param {number} width - The fixed height
-     */
-
      this.minimumSize.width=this.maximumSize.width=this.preferredSize.width=width;
      this.minimumSize.height=this.maximumSize.height=this.preferredSize.height=height;
      this.horizontalExpanding=false; this.verticalExpanding=false;
@@ -290,15 +302,16 @@ VG.UI.Widget.prototype.setDragSourceId=function( id )
     this.dragSourceId=id;
 };
 
-// ----------------------------------------------------------------- VG.UI.Widget3D
+/** 
+ * Creates an RenderWidget to perform arbitrary realtime 2D/3D rendering.
+ *  
+ * The method render() is called to perform the rendering and needs to be overriden. The widget receives
+ * calls to render() in 60 fps per second.
+ * @constructor 
+ */
 
 VG.UI.RenderWidget=function( noRealtime )
 {
-    /** Creates an RenderWidget to perform arbitrary realtime 2D/3D rendering.
-     *  
-     *  The method render() is called to perform the rendering and needs to be overriden. The widget receives
-     *  calls to render() in 60 fps per second.
-     */
     if ( !(this instanceof VG.UI.RenderWidget) ) return new VG.UI.RenderWidget( noRealtime );
 
     VG.UI.Widget.call( this );
@@ -316,10 +329,12 @@ VG.UI.RenderWidget=function( noRealtime )
 
 VG.UI.RenderWidget.prototype=VG.UI.Widget();
 
+/** Called to perform rendering, must be overrided, otherwise this does nothing 
+ * @param {number} delta - The time passed in seconds from the last call to this method
+ */
+
 VG.UI.RenderWidget.prototype.render=function(delta)
 {
-    /** Called to perform rendering, must be overrided, otherwise this does nothing 
-     *  @param {number} delta - The time passed in seconds from the last call to this method */
 }
 
 VG.UI.RenderWidget.prototype.paintWidget=function( canvas )
@@ -342,7 +357,7 @@ VG.UI.RenderWidget.prototype.paintWidget=function( canvas )
     else this._mainRT.setViewport(VG.context.workspace.rect);
     canvas.popClipRect();
 
-    if ( this.context.trace )
+    if ( this.context && this.context.trace )
         canvas.drawImage( this.rect, this.context.traceContext.image );
 };
 
@@ -367,7 +382,14 @@ VG.UI.Frame.prototype.paintWidget=function( canvas )
     VG.UI.stylePool.current.drawFrame( this, canvas );
 };
 
-// ----------------------------------------------------------------- VG.UI.Image
+/** 
+ * Displays an image. 
+ *
+ * @property {VG.Core.Image} image - The image object to show.
+ * @property {string} imageName - The name of the image to load from the applications image pool.
+ * @constructor 
+ * @param image {VG.Core.Image|string} image - The image to display, can either be an image object or the name of the image which will be retrieved from the applications {@link VG.Core.ImagePool|image pool}.
+ */
 
 VG.UI.Image=function( image )
 {

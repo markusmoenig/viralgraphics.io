@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,7 +21,16 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-if ( !VG ) var VG = {};
+if ( !VG )
+
+/** @namespace */
+ VG = {};
+
+/**
+ * Enum for Host Visual Graphics is running on
+ * @readonly
+ * @enum {number}
+ */
 
 VG.HostProperty={ 
 	"Platform" : 0,
@@ -38,18 +47,19 @@ VG.HostProperty={
 
 	"DrawMenus" : 12,
 
-	"ProjectChangedState" : 20,
-
-	"Docs.Enum" : 9000
+	"ProjectChangedState" : 20
 };
 
 VG.AnimationTick=1000.0 / 60.0;
 
-// --- Application Context
+/** 
+ * The context applications are running in. vgMain() of the application is running in this context.
+ * @namespace 
+ */
 
 VG.context={};
 
-// --- Global Redraw
+/** Forces a redraw of the UI during the next tick. */
 
 VG.update=function()
 {
@@ -57,13 +67,10 @@ VG.update=function()
     if ( VG.hostUpdate ) VG.hostUpdate();
 };
 
-// --- Log & Error Functions, these will be overriden by V-IDE
+/** Prints the arguments to the console of the current host. */
 
 VG.log=function()
 {
-	/** Prints the arguments on the native console. If V-IDE is running also prints the arguments in V-IDEs Runtime Log.
-	**/
-
 	var string="";
 
 	for( var i=0; i < arguments.length; ++i ) string+=String( arguments[i] ) + " ";
@@ -74,11 +81,10 @@ VG.log=function()
 	if ( VG.globalVIDEInstance ) VG.globalVIDEInstance.addToRuntimeLog( string );
 };
 
+/** Prints the error arguments to the console of the current host. */
+
 VG.error=function()
 {
-	/** Prints the arguments on the console. V-IDE replaces this function and prints the arguments in its Runtime Window.
-	**/
-
 	var string="Error: ";
 
 	for( var i=0; i < arguments.length; ++i ) string+=String( arguments[i] ) + " ";

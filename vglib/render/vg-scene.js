@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv> and Contributors
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,26 +21,27 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
  
+/** Scene Node, for standalone usage or with a scene manager.
+ *  When used with a pipeline override onDraw(pipeline, context, delta) to make it renderable 
+ *  @param {VG.Render.SceneNode} parent - The parent, can be null 
+ * @constructor */
+
 VG.Render.SceneNode = function(parent)
 {
-    /** Scene Node, for standalone usage or with a scene manager.
-     *  When used with a pipeline override onDraw(pipeline, context, delta) to make it renderable 
-     *  @param {VG.Render.SceneNode} parent - The parent, can be null */
-
     /** Parent scene node  
      *  @member {VG.Render.SceneNode} */
     this.parent = parent;
 
     /** Local position 
-     *  @member {VG.Math.Vector3} */
+     *  @member {VG.Math.Vector3} VG.Render.SceneNode.position */
     this._position = new VG.Math.Vector3(0.0, 0.0, 0.0);
 
     /** Local rotation 
-     *  @member {VG.Math.Quat} */
+     *  @member {VG.Math.Quat} VG.Render.SceneNode.rotation */
     this._rotation = new VG.Math.Quat();
 
     /** Local scale 
-     *  @member {VG.Math.Vector3} */
+     *  @member {VG.Math.Vector3} VG.Render.SceneNode.scale */
     this._scale = new VG.Math.Vector3(1.0, 1.0, 1.0);
 
     /** Local Bounds 
@@ -134,20 +135,20 @@ Object.defineProperty(VG.Render.SceneNode.prototype, "rotation",
     }
 });
 
+/** Resets position, scale and rotation to identity */
+
 VG.Render.SceneNode.prototype.resetLocalTransform = function()
 {
-    /** Resets position, scale and rotation to identity */
-
     this.position.set(0, 0, 0);
     this.scale.set(1, 1, 1);
     this.rotation.setIdentity();
 }
 
+/** Returns world-space bounds 
+ *  @return {VG.Math.Aabb} */
+
 VG.Render.SceneNode.prototype.getBounds = function()
 {
-    /** Returns world-space bounds 
-     *  @return {VG.Math.Aabb} */
-
     var aabb = this.__cacheAabb;
 
     if (this.hasBounds)
@@ -159,11 +160,11 @@ VG.Render.SceneNode.prototype.getBounds = function()
     return aabb;
 }
 
+/** Returns the world transform of this node 
+ *  @return {VG.Math.Matrix4} */
+
 VG.Render.SceneNode.prototype.getTransform = function()
 {
-    /** Returns the world transform of this node 
-     *  @return {VG.Math.Matrix4} */
-
     var m = this.__cacheM1;
 
     m.setIdentity();
@@ -185,23 +186,23 @@ VG.Render.SceneNode.prototype.getTransform = function()
     return m;
 }
 
+/** Utility wrapper to set the rotation from Euler angles in degrees 
+ *  @param {Number} yaw - Angle in degrees
+ *  @param {Number} pitch - Angle in degrees
+ *  @param {Number} roll - Angle in degrees */
+
 VG.Render.SceneNode.prototype.setRotation = function(yaw, pitch, roll)
 {
-    /** Utility wrapper to set the rotation from Euler angles in degrees 
-     *  @param {Number} yaw - Angle in degrees
-     *  @param {Number} pitch - Angle in degrees
-     *  @param {Number} roll - Angle in degrees */
-
     this._rotation.setEuler(VG.Math.rad(yaw), VG.Math.rad(pitch), VG.Math.rad(roll));
 }
 
+/** Increments the rotation 
+ *  @param {Number} yaw - Delta angle in degrees
+ *  @param {Number} pitch - Delta angle in degrees
+ *  @param {Number} roll - Delta angle in degrees */
+
 VG.Render.SceneNode.prototype.incRotation = function(yaw, pitch, roll)
 {
-    /** Increments the rotation 
-     *  @param {Number} yaw - Delta angle in degrees
-     *  @param {Number} pitch - Delta angle in degrees
-     *  @param {Number} roll - Delta angle in degrees */
-
     var q = this.__cacheQ1;
 
     q.setEuler(VG.Math.rad(yaw), VG.Math.rad(pitch), VG.Math.rad(roll));
@@ -216,24 +217,26 @@ VG.Render.SceneNode.prototype.incRotation = function(yaw, pitch, roll)
 
 
 
-
+/** Manages scene nodes with culling and ordering techniques,
+ *  this class extends the SceneNode class, therefore same parent/child
+ *  works with this 
+ * @constructor
+ * @augments VG.Render.SceneNode 
+ */
 
 VG.Render.SceneManager = function()
 {
-    /** Manages scene nodes with culling and ordering techniques,
-     *  this class extends the SceneNode class, therefore same parent/child
-     *  works with this */
 	VG.Render.SceneNode.call(this);
 }
 
 VG.Render.SceneManager.prototype = Object.create(VG.Render.SceneNode.prototype);
 
+/** Finds all nodes that are visible by the given context 
+ *  @param {VG.Render.Context} context - The render context 
+ *  @param {BOol} onlyDrawable - If true only consideres nodes with onDraw callback defined */
+
 VG.Render.SceneManager.prototype.findAllVisible = function(context, onlyDrawable)
 {
-    /** Finds all nodes that are visible by the given context 
-     *  @param {VG.Render.Context} context - The render context 
-     *  @param {BOol} onlyDrawable - If true only consideres nodes with onDraw callback defined */
-
     var visible = [];
 
     var CullChildren = function(node)
@@ -255,6 +258,3 @@ VG.Render.SceneManager.prototype.findAllVisible = function(context, onlyDrawable
 
     return visible;
 }
-
-
-

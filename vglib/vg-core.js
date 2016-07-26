@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,6 +21,12 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/** 
+ * Contains the core classes used by Visual Graphics. These classes are meant to be used in the UI aspect of Visual Graphics. For realtime graphics
+ * please use the classes contained in {@link VG.Math}.
+ * @namespace 
+ */
+
 VG.Core = {};
 
 // --- Global function to be able to chain constructors using apply
@@ -34,15 +40,15 @@ Function.prototype.creator=function( aArgs )
 
 // --------------------------------------------- VG.Core.Point
 
+/**
+* Creates a new VG.Core.Point class.
+* @constructor 
+* @param {Number | VG.Core.Point} value - Either the x value or a VG.Core.Point class
+* @param {Number} y - The Y Value
+*/
+
 VG.Core.Point=function()
 {
-    /** Creates a new VG.Core.Point class.
-     *
-     *  @constructor 
-     *  @param {Number | VG.Core.Point} value - Either the x value or a VG.Core.Point class
-     *  @param {Number} y - The Y Value
-     */
-
     if ( !(this instanceof VG.Core.Point ) ) return VG.Core.Point.creator( arguments );    
 
     /** The x coordinate, default is 0
@@ -61,14 +67,14 @@ VG.Core.Point=function()
     }
 };
 
+/**
+ * Sets the Point values directly.
+ * @param {Number | VG.Core.Point} value - Either the x value of the Point or a Point class
+ * @param {Number} y - Y Value
+ */
+
 VG.Core.Point.prototype.set=function()
 {
-    /** Sets the Point values.
-     *
-     *  @param {Number | VG.Core.Point} value - Either the x value of the Point or a Point class
-     *  @param {Number} y - Y Value
-     */
-
     if ( arguments.length == 2 ) {
         this.x=arguments[0]; this.y=arguments[1];
     } else if ( arguments.length == 1 ) {
@@ -76,48 +82,48 @@ VG.Core.Point.prototype.set=function()
     }
 };
 
+/** 
+ * Copy the Point values from the given {@link VG.Core.Point} class.
+ * @param {VG.Core.Point} value - A Point class
+ */
+
 VG.Core.Point.prototype.copy=function()
 {
-    /** Copy the Point values.
-     *
-     *  @param {VG.Core.Point} value - A Point class
-     */
-
     this.x=arguments[0].x; this.y=arguments[0].y;
 };
 
+/** 
+ * Returns true if the given {@link VG.Core.Point} is equal.
+ * @param {VG.Core.Point} point - The point to compare
+ * @returns {bool}
+ */  
+
 VG.Core.Point.prototype.equals=function( arg )
 {
-    /** Returns true if the given VG.Core.Point is equal.
-     *
-     *  @param {VG.Core.Point} point - The point to compare
-     *  @returns {bool}
-     */    
-
     if ( this.x === arg.x && this.y === arg.y )
         return true; else return false;
 };
 
+/**
+ * Returns a string version of this class.
+ * @returns {String}
+ */ 
+
 VG.Core.Point.prototype.toString=function()
-{
-    /** Returns a string version of this class.
-     *
-     *  @returns {String}
-     */        
+{       
     return "VG.Core.Point( " + this.x + ", " + this.y + " );";
 };
 
-// --------------------------------------------- VG.Core.Size
+
+/** 
+ * Creates a new VG.Core.Size class.
+ * @constructor 
+ * @param {Number | VG.Core.Size} value - Either the width value or a VG.Core.Size class
+ * @param {Number} height - The height value
+ */
 
 VG.Core.Size=function()
 {
-    /** Creates a new VG.Core.Size class.
-     *
-     *  @constructor 
-     *  @param {Number | VG.Core.Size} value - Either the width value or a VG.Core.Size class
-     *  @param {Number} height - The height value
-     */
-
     if ( !(this instanceof VG.Core.Size ) ) return VG.Core.Size.creator( arguments );    
 
     /** The width, default is 0.
@@ -130,17 +136,22 @@ VG.Core.Size=function()
 
     if ( arguments.length === 2 ) {
         this.width=arguments[0]; this.height=arguments[1];
-    }
+    } else
+    if ( arguments.length === 1 ) {
+        this.width=arguments[0].width; this.height=arguments[0].height;
+    }    
 };
+
+/** 
+ * Creates a new VG.Core.Size class with the values of this class and adds the given values to it. Returns the new class. Optionally an
+ * @param {Number | VG.Core.Point} value - Either the width value or a VG.Core.Size class
+ * @param {Number} height - Height value
+ * @param {VG.Core.Size} resultSize - Optional, use this size instead of allocating a new one
+ * @returns {VG.Core.Size}
+ */
 
 VG.Core.Size.prototype.add=function( width, height, resultSize )
 {
-    /** Creates a new VG.Core.Size class with the values of this class and adds the given values to it. Returns the new class.
-     *  @param {Number | VG.Core.Point} value - Either the width value or a VG.Core.Size class
-     *  @param {Number} height - Height value
-     *  @returns {VG.Core.Size}     
-     */
-
     var size;
     if ( !resultSize ) size=new VG.Core.Size( this ); else { if ( resultSize !== this ) resultSize.copy( this ); size=resultSize; }
 
@@ -152,14 +163,14 @@ VG.Core.Size.prototype.add=function( width, height, resultSize )
     return size;
 };
 
+/** 
+ * Sets the Size values directly.
+ * @param {Number | VG.Core.Point} value - Either the width value or a VG.Core.Size class
+ * @param {Number} height - Height value
+ */
+
 VG.Core.Size.prototype.set=function( width, height )
 {
-    /** Sets the Size values.
-     *
-     *  @param {Number | VG.Core.Point} value - Either the width value or a VG.Core.Size class
-     *  @param {Number} height - Height value
-     */
-
     if ( arguments.length == 2 ) {
         this.width=width; this.height=height;
     } else
@@ -168,49 +179,50 @@ VG.Core.Size.prototype.set=function( width, height )
     }
 };
 
+/** 
+ * Copies the values from an {@link VG.Core.Size} object.
+ * @param {Number | VG.Core.Point} size - A VG.Core.Size class
+ */
+
 VG.Core.Size.prototype.copy=function()
 {
-    /** Copies the values from an VG.Core.Size object.
-     *
-     *  @param {Number | VG.Core.Point} size - A VG.Core.Size class
-     */
-
     this.width=arguments[0].width; this.height=arguments[0].height;
 };
 
+/** 
+ * Returns true if the given VG.Core.Size is equal.
+ * @param {VG.Core.Size} size - The VG.Core.Size to compare
+ *  @returns {bool}
+ */  
+
 VG.Core.Size.prototype.equals=function( arg )
 {
-    /** Returns true if the given VG.Core.Size is equal.
-     *
-     *  @param {VG.Core.Size} size - The VG.Core.Size to compare
-     *  @returns {bool}
-     */  
-
     if ( this.width === arg.width && this.height === arg.height )
         return true; else return false;
 };
 
+/** Returns a string version of this class.
+ *  @returns {String}
+ */
+
 VG.Core.Size.prototype.toString=function()
-{
-    /** Returns a string version of this class.
-     *  @returns {String}
-     */        
+{      
     return "VG.Core.Size( " + this.width + ", " + this.height + " );";
 };
 
-// --------------------------------------------- VG.Core.Rect
+
+/** 
+ * Creates a new VG.Core.Rect class containing the x, y coordinates and width, height values of the rectangle.
+ *
+ *  @constructor 
+ *  @param {Number | VG.Core.Rect} value - Either the x coordinate or a VG.Core.Rect class
+ *  @param {Number} y - The y coordinate
+ *  @param {Number} width - The width value
+ *  @param {Number} height - The height value
+ */
 
 VG.Core.Rect=function()
 {
-    /** Creates a new VG.Core.Rect class containing the x, y coordinates and width, height values of the rectangle.
-     *
-     *  @constructor 
-     *  @param {Number | VG.Core.Rect} value - Either the x coordinate or a VG.Core.Rect class
-     *  @param {Number} y - The y coordinate
-     *  @param {Number} width - The width value
-     *  @param {Number} height - The height value
-     */
-
     if ( !(this instanceof VG.Core.Rect ) ) return VG.Core.Rect.creator( arguments );    
 
     /** The x coordinate of the rectangle, default is 0.
@@ -239,18 +251,18 @@ VG.Core.Rect=function()
     }
 };
 
+/** 
+ * Creates a new VG.Core.Rect class with the values of this class and adds the given rectangle values to it. Returns the new class.
+ * @param {number | VG.Core.Rect} value - Either the width value or a VG.Core.Rect class
+ * @param {number} y - Y Coordinate
+ * @param {number} width - Width value
+ * @param {number} height - Height value
+ * @param {VG.Core.Rect} resultRect - Optional, use this rect instead of allocating a new one
+ * @returns {VG.Core.Rect}
+ */
+
 VG.Core.Rect.prototype.add=function( x, y, width, height, resultRect )
 {
-    /** Creates a new VG.Core.Rect class with the values of this class and adds the given rectangle values to it. Returns the new class.
-     * 
-     *  @param {number | VG.Core.Rect} value - Either the width value or a VG.Core.Rect class
-     *  @param {number} y - Y Coordinate
-     *  @param {number} width - Width value
-     *  @param {number} height - Height value
-     *  @param {VG.Core.Rect} resultRect - Optional, use this rect instead of allocating a new one
-     *  @returns {VG.Core.Rect}
-     */
-
     var rect;
     if ( !resultRect ) rect=new VG.Core.Rect( this ); else { if ( resultRect !== this ) resultRect.copy( this ); rect=resultRect; }
     
@@ -266,25 +278,26 @@ VG.Core.Rect.prototype.add=function( x, y, width, height, resultRect )
     return rect;
 };
 
+/** Sets all values to 0. */
+
 VG.Core.Rect.prototype.clear=function()
 {
-    /** Sets all values to 0. */
-
     this.x=0; this.y=0;
     this.width=0; this.height=0;
 };
 
+/** 
+ * Creates a new VG.Core.Rect class with the values of this class and subtracts the given width and height values from it. Adjusts the x, y coordinates
+ * so that the new rectangle is centered on this rectangle. Returns the new class.
+ *
+ *  @param {Number} width - Width value to subtract.
+ *  @param {Number} height - Height walue to subtract.
+ *  @param {VG.Core.Rect} resultRect - Optional, use this rect instead of allocating a new one
+ *  @returns {VG.Core.Rect}
+ */  
+
 VG.Core.Rect.prototype.shrink=function( width, height, resultRect )
 {
-    /** Creates a new VG.Core.Rect class with the values of this class and subtracts the given width and height values from it. Adjust the x, y coordinates
-     * so that the new rectangle is centered on the this rectangle. Returns the new class.
-     *
-     *  @param {Number} width - Width value to subtract.
-     *  @param {Number} height - Height walue to subtract.
-     *  @param {VG.Core.Rect} resultRect - Optional, use this rect instead of allocating a new one     
-     *  @returns {VG.Core.Rect}     
-     */  
-
     var rect;
     if ( !resultRect ) rect=new VG.Core.Rect( this ); else { if ( resultRect !== this ) resultRect.copy( this ); rect=resultRect; }
 
@@ -294,14 +307,14 @@ VG.Core.Rect.prototype.shrink=function( width, height, resultRect )
     return rect;    
 };
 
+/** 
+ * Sets the position values.
+ * @param {Number | VG.Core.Point} value - Either the new x coordinate value or a VG.Core.Point class
+ * @param {Number} y - New y Coordinate
+ */
+
 VG.Core.Rect.prototype.setPos=function( x, y )
 {
-    /** Sets the position values.
-     * 
-     *  @param {Number | VG.Core.Point} value - Either the new x coordinate value or a VG.Core.Point class
-     *  @param {Number} y - New y Coordinate
-     */
-
     if ( arguments.length === 2 ) {
         this.x=x; this.y=y;
     } else {
@@ -310,23 +323,24 @@ VG.Core.Rect.prototype.setPos=function( x, y )
     }
 };
 
+/**
+ * Returns the position of this rectangle as a {@link VG.Core.Point} class.
+ * @returns {VG.Core.Point}
+ */
+
 VG.Core.Rect.prototype.pos=function()
 {
-    /** Returns the position of this rectangle as a VG.Core.Point class.
-     *  @returns {VG.Core.Point}
-     */
-
     return VG.Core.Point( this.x, this.y );
 };
 
+/** 
+ * Sets the size values.
+ * @param {Number | VG.Core.Point} value - Either the new width value or a VG.Core.Size class
+ * @param {Number} y - New height value
+ */
+
 VG.Core.Rect.prototype.setSize=function( width, height )
 {
-    /** Sets the size values.
-     * 
-     *  @param {Number | VG.Core.Point} value - Either the new width value or a VG.Core.Size class
-     *  @param {Number} y - New height value
-     */
-
     if ( arguments.length === 2 ) {    
         this.width=width; this.height=height;
     } else {
@@ -335,25 +349,26 @@ VG.Core.Rect.prototype.setSize=function( width, height )
     }    
 };
 
+/** 
+ * Returns the size of this rectangle as a {@link VG.Core.Size} class.
+ * @returns {VG.Core.Size}
+ */
+
 VG.Core.Rect.prototype.size=function()
 {
-    /** Returns the size of this rectangle as a VG.Core.Size class.
-     *  @returns {VG.Core.Size}
-     */
-
     return VG.Core.Size( this.width, this.height );
 };
 
+/** 
+ * Sets the values of the rectangle directly.
+ * @param {Number | VG.Core.Rect} value - Either the x coordinate or a VG.Core.Rect class
+ * @param {Number} y - The y coordinate
+ * @param {Number} width - The width value
+ * @param {Number} height - The height value
+ */
+
 VG.Core.Rect.prototype.set=function( rect )
 {
-    /** Sets the values of the rectangle.
-     *
-     *  @param {Number | VG.Core.Rect} value - Either the x coordinate or a VG.Core.Rect class
-     *  @param {Number} y - The y coordinate
-     *  @param {Number} width - The width value
-     *  @param {Number} height - The height value
-     */
-
     if ( arguments.length === 4 ) {
         this.x=arguments[0]; this.y=arguments[1];
         this.width=arguments[2]; this.height=arguments[3];
@@ -363,69 +378,81 @@ VG.Core.Rect.prototype.set=function( rect )
     }
 };
 
+/**
+ * Copies the values of the given rectangle.
+ * @param {VG.Core.Rect} rect - The VG.Core.Rect object to copy
+ */
+
 VG.Core.Rect.prototype.copy=function( rect )
 {
-    /** Copies the values of the given rectangle.
-     *
-     *  @param {VG.Core.Rect} rect - The VG.Core.Rect object to copy
-     */
-
     this.x=rect.x; this.y=rect.y;
     this.width=rect.width; this.height=rect.height;
 };
 
+/** 
+ * Returns the upper left position as a {@link VG.Core.Point} class.
+ * @returns {VG.Core.Point}
+ */
+
 VG.Core.Rect.prototype.upperLeft=function()
 {
-    /** Returns the upper left position as a VG.Core.Point class.
-     *  @returns {VG.Core.Point}
-     */    
     return new VG.Core.Point( this.x, this.y );
 };
 
+/** 
+ * Returns the upper right position as a {@link VG.Core.Point} class.
+ * @returns {VG.Core.Point}
+ */   
+
 VG.Core.Rect.prototype.upperRight=function()
-{
-    /** Returns the upper right position as a VG.Core.Point class.
-     *  @returns {VG.Core.Point}
-     */        
+{     
     return new VG.Core.Point( this.x+this.width, this.y );
 };
 
+/** 
+ * Returns the lower left coordinate as a {@link VG.Core.Point} class.
+ * @returns {VG.Core.Point}
+ */   
+
 VG.Core.Rect.prototype.lowerLeft=function()
-{
-    /** Returns the lower left coordinate as a VG.Core.Point class.
-     *  @returns {VG.Core.Point}
-     */        
+{     
     return new VG.Core.Point( this.x, this.y + this.height-1 );
 };
 
+/** 
+ * Returns the lower right coordinate of this rectangle as a {@link VG.Core.Point} class.
+ * @returns {VG.Core.Point}
+ */     
+
 VG.Core.Rect.prototype.lowerRight=function()
-{
-    /** Returns the lower right coordinate of this rectangle as a VG.Core.Point class.
-     *  @returns {VG.Core.Point}
-     */        
+{   
     return new VG.Core.Point( this.x + this.width, this.y + this.height-1 );
 };
 
+/**
+ * Returns the right x coordinate.
+ * @returns {Number}
+ */
+
 VG.Core.Rect.prototype.right=function()
-{
-    /** Returns the right x coordinate.
-     *  @returns {Number}
-     */       
+{    
     return this.x+this.width;
 };
 
+/**
+ * Returns the bottom y coordinate.
+ * @returns {Number}
+ */
+
 VG.Core.Rect.prototype.bottom=function()
-{
-    /** Returns the bottom y coordinate.
-     *  @returns {Number}
-     */       
+{  
     return this.y+this.height;
 };
 
+/** Rounds all values, afterwards all values of the rectangle are integers. */
+
 VG.Core.Rect.prototype.round=function()
 {
-    /** Rounds all values, afterwards all values of the rectangle are integers. */
-
     this.x=Math.round( this.x );
     this.y=Math.round( this.y );
     this.width=Math.round( this.width );
@@ -434,26 +461,28 @@ VG.Core.Rect.prototype.round=function()
     return this;
 };
 
+/**
+ * Returns true if the two rectangles are equal, i.e. all values are a perfect match
+ * @param {VG.Core.Rect} rect - A VG.Core.Rect class to compare.
+ * @returns {bool}
+ */
+
 VG.Core.Rect.prototype.equals=function( arg )
 {
-    /** Returns true if the two rectangles are equal, i.e. all values are a perfect match
-     *
-     *  @param {VG.Core.Rect} rect - A VG.Core.Rect class to compare.
-     *  @returns {bool}
-     */
-
     if ( this.x === arg.x && this.y === arg.y && this.width === arg.width && this.height === arg.height )
         return true; else return false;
 };
 
+/** 
+ * Returns true if the VG.Core.Point or VG.Core.Rect are completely contained in this rectangle.
+ *
+ * @param {VG.Core.Rect | VG.Core.Point | Number} value - A VG.Core.Rect or VG.Core.Point class or a Number representing the x value
+ * @param {Number} y - The Y Value
+ * @returns {bool}
+ */
+
 VG.Core.Rect.prototype.contains=function( arg )
 {
-    /** Returns true if the VG.Core.Point or VG.Core.Rect are completely contained in this rectangle.
-     *
-     *  @param {VG.Core.Rect | VG.Core.Point} value - A VG.Core.Rect or VG.Core.Point class
-     *  @returns {bool}
-     */
-
     if ( arg instanceof VG.Core.Point ) {
         if ( (this.x <= arg.x) && (this.y <= arg.y) && (this.x + this.width >= arg.x) && (this.y + this.height >= arg.y) )
             return true; else return false;
@@ -470,14 +499,15 @@ VG.Core.Rect.prototype.contains=function( arg )
     return false;
 };
 
+/**
+ * Returns a resultant rectangle of the intersection of this and rect if they intersect. If they don't, returns null.
+ *
+ * @param {VG.Core.Rect} rect - A VG.Core.Rect class
+ * @returns {VG.Core.Rect}
+ */
+
 VG.Core.Rect.prototype.intersect=function( rect )
 {
-    /** Returns the resultant rectangle of the intersection of this and rect if they intersect. If they don't, returns null.
-     *
-     *  @param {VG.Core.Rect} rect - A VG.Core.Rect class
-     *  @returns {VG.Core.Rect}
-     */
-
     if( rect instanceof VG.Core.Rect ) {
 
         var left = Math.max( this.x, rect.x );
@@ -496,14 +526,16 @@ VG.Core.Rect.prototype.intersect=function( rect )
     }
 };
 
+/** 
+ * Returns the resultant rectangle of the union of this and rect. Applies to and returns resultRect if defined.
+ *
+ * @param {VG.Core.Rect} rect - A VG.Core.Rect class
+ * @param {VG.Core.Rect} resultRect - Optional, use this rect instead of allocating a new one
+ * @returns {VG.Core.Rect}
+ */
+
 VG.Core.Rect.prototype.union=function( rect, resultRect )
 {
-    /** Returns the resultant rectangle of the union of this and rect. Applies to and returns resultRect if defined.
-     *
-     *  @param {VG.Core.Rect} rect - A VG.Core.Rect class
-     *  @returns {VG.Core.Rect}
-     */
-
     if( rect instanceof VG.Core.Rect ) {
 
         var left = Math.min( this.x, rect.x );
@@ -523,38 +555,40 @@ VG.Core.Rect.prototype.union=function( rect, resultRect )
     }
 };
 
+/** 
+ * Returns a string version of this class.
+ * @returns {String}
+ */
+
 VG.Core.Rect.prototype.toString=function()
 {
-    /** Returns a string version of this class.
-     *  @returns {String}
-     */    
     return "VG.Core.Rect( " + this.x + ", " + this.y + ", " + this.width + ", " + this.height + " );";
 };
 
+/** 
+ * Returns true if the rectangle is valid, i.e. both width and height are greater than 0, otherwise returns false.
+ *  @returns {String}
+ */ 
+
 VG.Core.Rect.prototype.isValid=function()
 {
-    /** Returns true if the rectangle is valid, i.e. both width and height are bigger than 0, otherwise returns false.
-     *  @returns {String}
-     */    
-    
     if ( this.width > 0 && this.height > 0 ) return true;
     else return false;
 };
 
-// --------------------------------------------- VG.Core.Margin
+
+/** 
+ * Creates a new VG.Core.Margin class, used to specify the margins of Layouts.
+ * @constructor 
+ * @param {Number | VG.Core.Margin} value - Either the left margin or a VG.Core.Margin class
+ * @param {Number} top - Top margin
+ * @param {Number} right - Right margin
+ * @param {Number} bottom - Bottom margin
+ */
 
 VG.Core.Margin=function()
 {
-    if ( !(this instanceof VG.Core.Margin ) ) return VG.Core.Margin.creator( arguments );    
-
-    /** Creates a new VG.Core.Margin class, used to specify the margins of Layouts.
-     *
-     *  @constructor 
-     *  @param {Number | VG.Core.Margin} value - Either the left margin or a VG.Core.Margin class
-     *  @param {Number} top - Top margin
-     *  @param {Number} right - Right margin
-     *  @param {Number} bottom - Bottom margin
-     */
+    if ( !(this instanceof VG.Core.Margin ) ) return VG.Core.Margin.creator( arguments );
 
     /** The left margin, default is 0.
      *  @member {Number} */  
@@ -583,16 +617,16 @@ VG.Core.Margin=function()
     }
 };
  
+/** 
+ * Sets the values of the margin.
+ * @param {Number | VG.Core.Margin} value - Either the left margin or a VG.Core.Margin class
+ * @param {Number} top - Top margin
+ * @param {Number} right - Right margin
+ * @param {Number} bottom - Bottom margin
+ */
+
 VG.Core.Margin.prototype.set=function( left, top, right, bottom )
 {
-    /** Sets the values of the margin.
-     *
-     *  @param {Number | VG.Core.Margin} value - Either the left margin or a VG.Core.Margin class
-     *  @param {Number} top - Top margin
-     *  @param {Number} right - Right margin
-     *  @param {Number} bottom - Bottom margin
-     */
-
     if ( arguments.length === 4 ) {
         this.left=left; this.top=top;
         this.right=right; this.bottom=bottom;
@@ -603,37 +637,40 @@ VG.Core.Margin.prototype.set=function( left, top, right, bottom )
     }    
 };
 
+/** Sets all values of the Margin to 0.*/
+
 VG.Core.Margin.prototype.clear=function()
 {
-    /** Sets all values of the Margin to 0.*/
-
     this.left=0; this.top=0;
     this.right=0; this.bottom=0;    
 };
 
+/** Returns a string version of this class.
+ *  @returns {String}
+ */ 
+
 VG.Core.Margin.prototype.toString=function()
-{
-    /** Returns a string version of this class.
-     *  @returns {String}
-     */    
+{  
     return "VG.Core.Margin( " + this.left + ", " + this.top + ", " + this.right + ", " + this.bottom + " );";
 };
 
-// --------------------------------------------- VG.Color
+
+/** 
+ * Creates a new VG.Core.Color which specifies a specific RGB color, including alpha. Internally the color values are represented normalized between
+ * 0 .. 1.<br>
+ * There are several constructors available:<ul>
+ * <li>The copy constructor takes a single VG.Core.Color value.</li>
+ * <li>The HEX constructor takes a single string value of the form "#ffffff".</li>
+ * <li>You can specify RGB values using either 3 arguments for red, green and blue or 4 values including alpha. All these values are between 0..255.</li>
+ *</ul>
+ * Internally all values are stored as normalized value between 0..1. If you want to pass normalized value to an constructor please use the
+ * {@link VG.Core.NormalizedColor} constructor.
+ * @constructor
+ */
 
 VG.Core.Color=function()
 {
     if ( !(this instanceof VG.Core.Color ) ) return VG.Core.Color.creator( arguments );    
-
-    /** Creates a new VG.Core.Color which specifies a specific RGB color, including alpha. Internally the color values are represented normalized between
-     * 0 .. 1.<br>
-     * There are several constructors available:<ul>
-     * <li>The copy constructor takes a single VG.Core.Color value.</li>
-     * <li>The HEX constructor takes a single string value of the form "#ffffff".</li>
-     * <li>You can specify RGB values using either 3 arguments for red, green and blue or 4 values including alpha. All these values are between 0..255.</li>
-     *</ul>
-     * @constructor      
-     */
 
     /** The red color value, normalized between 0..1, default is 0.
      *  @member {Number} */  
@@ -669,16 +706,18 @@ VG.Core.Color=function()
     }
 };
 
+/** 
+ * Creates a new {@link VG.Core.Color} class which specifies a specific RGB color, including alpha. Internally the color values are represented normalized between
+ * 0 .. 1.<br>
+ * There are several constructors available:<ul>
+ * <li>The copy constructor takes a single VG.Core.Color value.</li>
+ * <li>You can specify RGB values using either 3 arguments for red, green and blue or 4 values including alpha. All these values are between 0..1.</li>
+ *</ul>
+ * @constructor      
+ */
+
 VG.Core.NormalizedColor=function()
 {
-    /** Creates a new VG.Core.Color which specifies a specific RGB color, including alpha. Internally the color values are represented normalized between
-     * 0 .. 1.<br>
-     * There are several constructors available:<ul>
-     * <li>The copy constructor takes a single VG.Core.Color value.</li>
-     * <li>You can specify RGB values using either 3 arguments for red, green and blue or 4 values including alpha. All these values are between 0..1.</li>
-     *</ul>
-     * @constructor      
-     */
 	var color = VG.Core.Color();
     if ( arguments.length === 1 ) 
     {
@@ -698,6 +737,11 @@ VG.Core.NormalizedColor=function()
 	return color;
 };
 
+/** 
+ * Copies the color values from the given color.
+ * @param {VG.Core.Color} color - The color class to copy the values from.
+ */
+
 VG.Core.Color.prototype.copy=function(color)
 {
     this.r = color.r;
@@ -706,52 +750,55 @@ VG.Core.Color.prototype.copy=function(color)
     this.a = color.a;
 }
 
+/** 
+ * Sets the color values directly. All values have to be between 0..1.
+ * @param {number} r - The red color value.
+ * @param {number} g - The green color value.
+ * @param {number} b - The blue color value.
+ * @param {number} a - Optional, the alpha value.
+ */
+
 VG.Core.Color.prototype.set=function( r, g, b, a )
 {
-    /** Sets the color values to the values of the given color.
-     *  @param {VG.Core.Color} color - The color class to copy the values from.
-     */
     this.r = r;
     this.g = g;
     this.b = b;
     if ( a !== undefined ) this.a = a;
 }
 
+/** 
+ * Multiplies the color values with the given value. The results are clamped between 0..1.
+ * @param {Number} value - The value to multiply each color value with.
+ */    
+
 VG.Core.Color.prototype.mul=function(d)
 {
-    /** Multiplies the color values with the given value. The results are clamped between 0..1.
-     *  @param {Number} value - The value to multiply each color value with.
-     */    
     this.r = VG.Math.clamp(this.r * d, 0.0, 1.0);
     this.g = VG.Math.clamp(this.g * d, 0.0, 1.0);
     this.b = VG.Math.clamp(this.b * d, 0.0, 1.0);
     this.a = VG.Math.clamp(this.a * d, 0.0, 1.0);
 }
 
+/**
+ * Sets the color values to RGBA values between 0..255.
+ * @param {number} r - The red color value.
+ * @param {number} g - The green color value.
+ * @param {number} b - The blue color value.
+ * @param {number} a - Optional, the alpha value.
+ */  
+
 VG.Core.Color.prototype.setRGBA=function( r, g, b, a )
-{
-    /** Sets the color values to RGBA values between 0..255.
-     *  @param {number} r - The red color value between 0.255
-     *  @param {number} g - The green color value between 0.255
-     *  @param {number} b - The blue color value between 0.255
-     *  @param {number} a - The alpha value between 0.255
-     */    
+{  
     this.r=r/255.0; this.g=g/255.0; this.b=b/255.0; 
     if ( a !== undefined ) this.a=a/255.0;
 };
 
-VG.Core.Color.prototype.setValue=function( r, g, b, a )
-{
-    /** Sets the color values to RGBA values between 0..1.
-     *  @param {number} r - The red color value between 0..1
-     *  @param {number} g - The green color value between 0..1
-     *  @param {number} b - The blue color value between 0..1
-     *  @param {number} a - The alpha value between 0..1
-     */    
-    this.r=r; this.g=g; this.b=b; this.a=a;
-};
+/**
+ * Copies the color values from the given array.
+ * @param {array} value - The array to copy the color values from.
+ */ 
 
-VG.Core.Color.prototype.setValueArray=function(value)
+VG.Core.Color.prototype.setArray=function(value)
 {
 	if (0 < value.length)
 		this.r = value[0];
@@ -763,12 +810,13 @@ VG.Core.Color.prototype.setValueArray=function(value)
 		this.a = value[3];
 }
 
+/** 
+ * Returns an object containing the converted HSL values for this color.
+ * @returns {Object} Containing the converted h, s, l values. 
+ */
+
 VG.Core.Color.prototype.toHSL=function()
-{
-    /** Returns an object containing the converted HSL values for this color.
-    * @returns {Object} Containing the converted h, s, l values.
-    */
-    
+{   
     var max = Math.max(this.r, this.g, this.b);
     var min = Math.min(this.r, this.g, this.b);
 
@@ -810,14 +858,15 @@ VG.Core.Color.prototype.toHSL=function()
     return { h: h, s: s, l: l };
 }
 
+/**
+ * Sets the internal color values to the given HSL values.
+ * @param {Number} h - Hue value
+ * @param {Number} s - Saturation value
+ * @param {Number} l - Lightness value
+ */
+
 VG.Core.Color.prototype.setHSL=function(h, s, l)
 {
-    /** Sets the internal color values to the given HSL values
-     * @param {Number} h - Hue value
-     * @param {Number} s - Saturation value
-     * @param {Number} l - Lightness value
-     */
-
     function hueAngle(hue, x, y)
     {
         if (hue < 0.0)
@@ -856,12 +905,13 @@ VG.Core.Color.prototype.setHSL=function(h, s, l)
     }
 }
 
+/**
+ * Returns a string containing a hex representation of this color, i.e. "#ffffff"
+ * @returns {String}
+ */
+
 VG.Core.Color.prototype.toHex=function()
 {
-    /** Returns a string containing a hex representation of this color, i.e. "#ffffff"
-    * @returns {String}
-    */
-
     // Based on http://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
 
     function componentToHex(c) {
@@ -872,12 +922,13 @@ VG.Core.Color.prototype.toHex=function()
     return "#" + componentToHex( Math.round( this.r * 255.0 ) ) + componentToHex( Math.round( this.g * 255.0 ) ) + componentToHex( Math.round( this.b * 255.0 ) );
 }
 
+/** 
+ * Sets the internal color values to the given Hex value.
+ * @param {String} hex - Hex value in the form "#ffffff"
+ */
+
 VG.Core.Color.prototype.setHex=function( hex )
 {
-    /** Sets the internal color values to the given Hex valu.
-     * @param {String} hex - Hex value in the form "#ffffff"
-     */
-
     // Based on http://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
     // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
     var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
@@ -892,18 +943,21 @@ VG.Core.Color.prototype.setHex=function( hex )
     this.b=parseInt(result[3], 16) / 255.0;
 }
 
-// --------------------------------------------- VG.Core.Timer
+
+/** 
+ * Clock/Timer for delta calculation 
+ * @constructor
+ */
 
 VG.Core.Timer=function()
 {
-    /** Clock/Timer for delta calculation */
-
     this.prev=0; //old time
 }
 
+/** Returns the time elapsed since the last call to this method in seconds (float) */
+
 VG.Core.Timer.prototype.getDelta = function()
 {
-    /** Returns the time elapsed since the last call to this method in seconds (float) */
     var nt = Date.now();
 
     var diff=0.001 * (nt -this.prev);
@@ -913,21 +967,23 @@ VG.Core.Timer.prototype.getDelta = function()
     return diff;
 }
 
+/** Predefined Black Color Object */
 VG.Core.Color.Black=VG.Core.Color();
+/** Predefined White Color Object */
 VG.Core.Color.White=VG.Core.Color( 255, 255, 255 );
 
-// --------------------------------------------- VG.Core.Image
+
+/** 
+ * Creates a new VG.Core.Image class containing the color values of an image. Image Data is allocated via an Uint8Array typed array. The image data is allocated
+ * in the power of two of the width and height values to ensure direct WebGL / OpenGL support. realWidth and realHeight contain the power of the two sizes.
+ *
+ * @param {Number | VG.Core.Image} value - Either the width or a VG.Core.Image class to copy width/height values from
+ * @param {Number} height - Height value
+ * @constructor     
+ */
 
 VG.Core.Image=function()
 {    
-    /** Creates a new VG.Core.Image class containing the color values of an image. Image Data is allocated via an Uint8Array typed array. The image data is allocated
-     * in the power of two of the width and height values to ensure direct WebGL / OpenGL support. realWidth and realHeight contain the power of two sizes.
-     *
-     * @param {Number | VG.Core.Image} value - Either the width or a VG.Core.Image class to copy width/height values from
-     * @param {Number} height - Height value
-     * @constructor     
-     */
-
     if ( !(this instanceof VG.Core.Image ) ) return VG.Core.Image.creator( arguments );    
 
     /** The user specified width of the Image.
@@ -954,7 +1010,7 @@ VG.Core.Image=function()
      *  @member {Number} */      
     this.modulo=0;
 
-    /** Determines if the image is forced power of two
+    /** Determines if the image is forced power of two, default is true.
      *  @member {Bool} */
     this.forcePowerOfTwo = true;
 
@@ -975,10 +1031,12 @@ VG.Core.Image=function()
     this.alloc();
 };
 
+/**
+ * Allocates the image data. If forcePowerOfTwo is true (the default) allocates the image data in the power of two.
+ */
+
 VG.Core.Image.prototype.alloc=function()
 {
-    /**Allocates a power of two sized image data based on width and height values of the image.
-     */
     this.data=0;
     this.modulo=0;
 
@@ -1001,14 +1059,15 @@ VG.Core.Image.prototype.alloc=function()
     }
 }
 
+/**
+ * Gets a pixel color at position x, y.
+ * @param {number} position x coordinate
+ * @param {number} position y coordinate
+ * @param {VG.Core.Color} The color class to store the pixel data.
+ */
+
 VG.Core.Image.prototype.getPixel=function( x, y, color )
 {
-    /**Gets a pixel color at position x, y.
-     * @param {number} position x coordinate
-     * @param {number} position y coordinate
-     * @param {VG.Core.Color} The color class to store the pixel data.
-     */
-
     if ( !color ) color=VG.Core.Color();
     var offset=y * this.modulo + x * 4;
     color.r=this.data[offset] / 255;
@@ -1019,16 +1078,18 @@ VG.Core.Image.prototype.getPixel=function( x, y, color )
     return color;
 };
 
+/**
+ * Sets pixel color at position
+ * @param {number} position x coordinate
+ * @param {number} position y coordinate
+ * @param {number} 0.0 to 1.0 red channel
+ * @param {number} 0.0 to 1.0 green channel
+ * @param {number} 0.0 to 1.0 blue channel
+ * @param {number} 0.0 to 1.0 alpha channel
+*/
+
 VG.Core.Image.prototype.setPixel=function( x, y, r, g, b, a )
 {
-    /**Sets pixel color at position
-     * @param {number} position x coordinate
-     * @param {number} position y coordinate
-     * @param {number} 0.0 to 1.0 red channel
-     * @param {number} 0.0 to 1.0 green channel
-     * @param {number} 0.0 to 1.0 blue channel
-     * @param {number} 0.0 to 1.0 alpha channel
-     */
     var offset=y * this.modulo + x * 4;
     this.data[offset]=r * 255;
     this.data[offset+1]=g * 255;
@@ -1036,16 +1097,18 @@ VG.Core.Image.prototype.setPixel=function( x, y, r, g, b, a )
     this.data[offset+3]=a * 255;
 };
 
+/**
+ * Sets pixel color at position
+ * @param {number} position x coordinate
+ * @param {number} position y coordinate
+ * @param {number} 0 to 255 red channel
+ * @param {number} 0 to 255 green channel
+ * @param {number} 0 to 255 blue channel
+ * @param {number} 0 to 255 alpha channel
+*/
+
 VG.Core.Image.prototype.setPixelRGBA=function( x, y, r, g, b, a )
 {
-    /**Sets pixel color at position
-     * @param {number} position x coordinate
-     * @param {number} position y coordinate
-     * @param {number} 0 to 255 red channel
-     * @param {number} 0 to 255 green channel
-     * @param {number} 0 to 255 blue channel
-     * @param {number} 0 to 255 alpha channel
-     */
     var offset=y * this.modulo + x * 4;
     this.data[offset]=r;
     this.data[offset+1]=g;
@@ -1061,12 +1124,14 @@ VG.Core.Image.prototype.powerOfTwo=function (value, pow) {
     return pow;
 };
 
+/** 
+ * Resizes the image (all image data is lost) using the given width and height.
+ * @param {number} width - The new width of the image.
+ * @param {number} height - The new height of the image.
+ */
+
 VG.Core.Image.prototype.resize=function( width, height )
 {
-    /** Copies the values of the given image using a new data array.
-     * @param {VG.Core.Image} image - The image to copy  
-     */
-
     if ( !this.isValid() || this.width !== width || this.height !== height ) {
         this.width=width; this.height=height;
         this.alloc();
@@ -1074,11 +1139,12 @@ VG.Core.Image.prototype.resize=function( width, height )
     this.needsUpdate=true;
 };
 
+/** 
+ * Clears the image data with 0 values.
+ */
+
 VG.Core.Image.prototype.clear=function()
 {
-    /** Clears the image data with 0 values.
-     */
-
     if ( this.data.fill ) this.data.fill( 0 );
     else
     {
@@ -1087,12 +1153,13 @@ VG.Core.Image.prototype.clear=function()
     }
 };
 
+/** 
+ * Copies the values of the given image using a new data array.
+ * @param {VG.Core.Image} image - The image to copy  
+ */
+
 VG.Core.Image.prototype.set=function( image )
 {
-    /** Copies the values of the given image using a new data array.
-     * @param {VG.Core.Image} image - The image to copy  
-     */
-
     this.width=image.width; this.height=image.height;
     this.realWidth=image.realWidth; this.realHeight=image.realHeight;
     this.modulo=image.modulo;
@@ -1103,21 +1170,23 @@ VG.Core.Image.prototype.set=function( image )
     this.data=new Uint8Array( image.data );    
 };
 
+/** 
+ * Copies the values of the given image using a new data array.
+ * @param {VG.Core.Image} image - The image to copy  
+ */
+
 VG.Core.Image.prototype.copy=function( image )
 {
-    /** Copies the values of the given image using a new data array.
-     * @param {VG.Core.Image} image - The image to copy  
-     */
-
     this.set( image );   
 };
 
+/** 
+ * Multiplies the given VG.Core.Color with every pixel of the image.
+ * @param {VG.Core.Color} color - The color to multiply the image data with.
+ */
+
 VG.Core.Image.prototype.mul=function( color )
 {
-    /** Multiplies the given VG.Core.Color with every pixel of the image.
-     * @param {VG.Core.Color} color - The color to multiply the image data with.
-     */
-
     for ( var h=0; h < this.height; ++h ) {
         for ( var w=0; w < this.width; ++w )
         {
@@ -1130,89 +1199,98 @@ VG.Core.Image.prototype.mul=function( color )
     }
 };
 
+/** 
+ * Returns true if the image has valid image data associated with it.
+ * Returns {bool}
+ */
+
 VG.Core.Image.prototype.isValid=function()
 {
-    /** Returns true if the image has valid image data associated with it.
-     * Returns {bool}
-     */
-
     if ( this.width && this.height && this.data && !this.locked ) return true;
     else return false;
 };
 
+/**
+ * Invalidates the image by setting the data and dimensions of the image to 0.
+ */    
+
 VG.Core.Image.prototype.invalidate=function()
 {
-    /** Invalidates the image by setting the data and dimensions of the image to 0.
-     */    
     this.data=null;
     this.width=0; this.height=0;
 };
 
+/** Get the real width of the image (power of two).
+ * @return {Number}
+ */ 
+
 VG.Core.Image.prototype.getRealWidth=function()
 {
-    /** Get the real width of the image (power of two).
-	 * @return {Number}
-     */    
     return this.realWidth;
 };
 
+/** 
+ * Get the real height of the image (power of two).
+ * @return {Number}
+ */ 
+
 VG.Core.Image.prototype.getRealHeight=function()
 {
-    /** Get the real height of the image (power of two).
-	 * @return {Number}
-     */    
     return this.realHeight;
 };
 
+/** 
+ * Get the user specified width of the Image.
+ * @return {Number}
+ */
+
 VG.Core.Image.prototype.getWidth=function()
 {
-    /** Get the user specified width of the Image.
-	 * @return {Number}
-     */
     return this.width;
 };
 
+/** 
+ * Get the user specified height of the Image.
+ * @return {Number}
+ */
+
 VG.Core.Image.prototype.getHeight=function()
 {
-    /** Get the user specified height of the Image.
-	 * @return {Number}
-     */
     return this.height;
 };
 
-// --------------------------------------------- VG.Core.ImagePool
+
+/** 
+ * Creates an VG.Core.ImagePool class. The default image pool of every Visual Graphics application is located at VG.context.imagePool. It is filled automatically
+ * on application startup with all application images as well as with images used by the Style. You can retrieve images from the default pool
+ * using VG.Utils.getImageByName() which in turn calls VG.context.imagePool.getImageByName().
+ *  @constructor 
+ */
 
 VG.Core.ImagePool=function()
 {  
     if ( !(this instanceof VG.Core.ImagePool) ) return new VG.Core.ImagePool();
 
-    /** Creates an VG.Core.ImagePool class. The default image pool of every VG application is located at VG.context.imagePool. It is filled automatically
-     * on application startup with all application images as well as with images used by the Style. You can retrieve images from the default pool
-     * using VG.Utils.getImageByName() which in turn calls VG.context.imagePool.getImageByName().
-     */
-
     this.images=[];
 }
 
-// --- addImage
+/** 
+ * Adds an image to the pool.
+ * param {VG.Core.Image} image - The image to add.
+ */
 
 VG.Core.ImagePool.prototype.addImage=function( image )
 {
-    /** Adds an image to the pool.
-     * param {VG.Core.Image} image - The image to add.
-     */
-
     this.images.push( image );
 };
 
-// --- getImageByName
+/** 
+ * Returns an image from the pool based on its name.
+ * @returns {VG.Core.Image} or null if no image with the given name was found.
+ */
 
 VG.Core.ImagePool.prototype.getImageByName=function( name )
 {
-    /** Returns an image from the pool based on its name.
-     * @returns {VG.Core.Image} or null if no image with the given name was found.
-     */
-
     for( var i=0; i < this.images.length; ++i ) {
         if ( this.images[i].name === name )
             return this.images[i];
@@ -1238,16 +1316,14 @@ VG.Core.ImagePool.prototype.getImageByName=function( name )
 
 VG.context.imagePool=VG.Core.ImagePool();
 
-// --------------------------------------------- VG.Core.TypedArray
+/** Creates a new Typed Array
+ *  @constructor
+ *  @param {enum} type - The buffer type: VG.Core.TypedArray.Type.Float, VG.Core.TypedArray.Type.Uint8, VG.Core.TypedArray.Uint16, VG.Core.TypedArray.Uint32
+ *  @param {number} size - The buffer size (not in bytes but in elements)
+ */
 
 VG.Core.TypedArray = function( type, size )
 {
-    /** Creates a new Typed Array
-     *  @constructor
-     *  @param {enum} type - The buffer type: VG.Core.TypedArray.Type.Float, VG.Core.TypedArray.Type.Uint8, VG.Core.TypedArray.Uint16, VG.Core.TypedArray.Uint32
-     *  @param {number} size - The buffer size (not in bytes but in elements)
-     *  */
-
     if ( !(this instanceof VG.Core.TypedArray) ) return new VG.Core.TypedArray( type, size );
 
     this.data = null;
@@ -1270,30 +1346,41 @@ VG.Core.TypedArray = function( type, size )
     }
 };
 
+/**
+ * @enum
+ * The available typed array types
+*/
+
 VG.Core.TypedArray.Type = { Float: 0, Uint8: 1, Uint16: 2, Uint32: 3 };
+
+/** 
+ * Sets the array data by index
+ * @param {number} index - The index in the array, must be < size 
+ * @param {*} The value to set
+ */
 
 VG.Core.TypedArray.prototype.set=function( index, value )
 {
-    /** Sets the array data by index
-     *  @param {number} index - The index in the array, must be < size 
-     *  @param {*} The value to set*/
-
     this.data[index] = value;
 };
 
+/** 
+ * Gets the array data by index
+ * @param {number} index - The index in the array, must be < size 
+ * @returns {*} 
+ */
+
 VG.Core.TypedArray.prototype.get=function( index )
 {
-    /** Gets the array data by index
-     *  @param {number} index - The index in the array, must be < size 
-     *  @returns {*} */
-
     return this.data[index];
 };
 
+/** 
+ * Returns the size of the typed array (not in bytes but elements).
+ *  @returns {number}
+ */
+
 VG.Core.TypedArray.prototype.getSize = function()
 {
-    /** Returns the size (not in bytes but elements)
-     *  @returns {number}
-     *  */
     return this.data.length;
 };

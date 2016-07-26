@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,20 +21,18 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-// ----------------------------------------------------------------- VG.UI.Widget
+/**Creates an VG.UI.Window object.<br>
+ *
+ * Windows are standalone, well, windows, floating on the {@link VG.UI.Workspace} space. They are not part of any layout inside the Workspace. You can create, or derive, from a Window
+ * and apply your own layout to the Window by setting its layout property. In contrast to VG.UI.Dialog, VG.UI.Window is not modal, i.e. you can still use other user interface
+ * elements in the Workspace. <br>
+ * Windows can be shown by calling {@link VG.UI.Workspace.showWindow}.
+ * @param {string} title - The title of the Window
+ * @constructor
+ */
 
 VG.UI.Window=function( title )
 {
-    /**Creates an VG.UI.Window object.<br>
-     *
-     * Windows are standalone, well, windows, floating on the VG.UI.Workspace space. They are not part of any layout inside the Workspace. You can create, or derive, from a Window
-     * and apply your own layout to the Window by setting its layout property. In contrast to VG.UI.Dialog, VG.UI.Window is not modal, i.e. you can still use other user interface
-     * elements in the Workspace. <br>
-     * Windows can be shown by calling the showWindow() member function of VG.UI.Workspace.
-     * @param {string} title - The title of the Window
-     * @constructor
-     **/
-
     if ( !(this instanceof VG.UI.Window) ) return new VG.UI.Window( title );
     
     VG.UI.Widget.call( this );
@@ -155,19 +153,17 @@ VG.UI.Window.prototype.mouseUp=function( event )
     VG.context.workspace.mouseTrackerWidget=0;    
 };
 
-// ----------------------------------------------------------------- VG.UI.Dialog
+/**Creates an VG.UI.Dialog object. VG.UI.Dialog inherits from VG.UI.Window.<br>
+ *
+ * Dialogs are modal Windows, i.e. other user interface elements in the Workspace will be disabled while a Dialog is visible. Dialogs support a button row at the bottom
+ * of the Dialog. You can call addButton() and addButtonSpacer() to populate the Dialog with buttons.
+ * Dialogs can be shown by calling {@link VG.UI.Workspace.showWindow}.
+ * @param {string} title - The title of the Dialog
+ * @constructor
+ */
 
 VG.UI.Dialog=function( title )
 {
-    /**Creates an VG.UI.Dialog object. VG.UI.Dialog inherits from VG.UI.Window.<br>
-     *
-     * Dialogs are modal Windows, i.e. other user interface elements in the Workspace will be disabled while a Dialog is visible. Dialogs support a button row at the bottom
-     * of the Dialog. You can call addButton() and addButtonSpacer() to populate the Dialog with buttons.
-     * Dialogs can be shown by calling the showWindow() member function of VG.UI.Workspace.
-     * @param {string} title - The title of the Dialog
-     * @constructor
-     **/
-
     if ( !(this instanceof VG.UI.Dialog) ) return new VG.UI.Dialog( title );
     
     VG.UI.Window.call( this );
@@ -225,14 +221,14 @@ VG.UI.Dialog.prototype.calcSize=function( canvas )
     return size;
 };
 
+/**Adds a button to the Dialog. Buttons are added from the left to right. To close the window, the callback function of the button has to call this.close().
+ * @param {string} text - The text of the button
+ * @param {function} func - The callback function which gets invoked when the button is pressed. Make sure to call this.close() in the callback if you want to
+ * close the Dialog
+ */
+
 VG.UI.Dialog.prototype.addButton=function( text, func )
 {
-    /**Adds a button to the Dialog. Buttons are added from the left to right. To close the window, the callback function of the button has to call this.close().
-     * @param {string} text - The text of the button
-     * @param {function} func - The callback function which gets invoked when the button is pressed. Make sure to call this.close() in the callback if you want to
-     * close the Dialog
-     **/
-
     var button=VG.UI.Button( text );
 
     if ( func ) button.clicked=func;
@@ -241,12 +237,13 @@ VG.UI.Dialog.prototype.addButton=function( text, func )
     this.buttonLayout.addChild( button );
 };
 
+/**Adds horizontal space to the button layout. If space is defined, it adds the value of space in pixels, otherwise the space is set to expanding, meaning
+ * it will take as much space as available.
+ * @param {number} space - The space to add to the button layout in pixels, if undefined, it will take as much space as available (expanding)
+ */
+
 VG.UI.Dialog.prototype.addButtonSpacer=function( space )
-{
-    /**Adds horizontal space to the button layout. If space is defined, it adds the value of space in pixels, otherwise the space is set to expanding, meaning
-     * it will take as much space as available.
-     * @param {number} space - The space to add to the button layout in pixels, if undefined, it will take as much space as available (expanding)
-     **/    
+{    
     var spacer=VG.UI.LayoutHSpacer();
 
     if ( space ) spacer.maximumSize.width=space;
@@ -301,19 +298,18 @@ VG.UI.Dialog.prototype.paintWidget=function( canvas )
     this.buttonLayout.layout( canvas );
 };
 
-// ----------------------------------------------------------------- VG.UI.StatusDialog
+/**Creates an VG.UI.StatusDialog object. VG.UI.StatusDialog inherits from {@link VG.UI.Dialog}.<br>
+ *
+ * Shows an Dialog with a status icon and a user defined message and title. Adds a "Close" button to the Dialog by default.
+ * @param {VG.UI.StatusDialog.Type} type - The status icon to show, currently supported are VG.UI.StatusDialog.Type.Error, VG.UI.StatusDialog.Type.Warning and
+ * VG.UI.StatusDialog.Type.Question.
+ * @param {string} title - The title of the status dialog.
+ * @param {string} message - The user message to show to the user. Can be multine text.
+ * @constructor
+ */
 
 VG.UI.StatusDialog=function( type, title, message )
 {
-    /**Creates an VG.UI.StatusDialog object. VG.UI.StatusDialog inherits from VG.UI.Dialog.<br>
-     *
-     * Shows an Dialog with a status icon and a user defined message and title. Adds a "Close" button to the Dialog by default.
-     * @param {VG.UI.StatusDialog} status - The status icon to show, currently supported are VG.UI.StatusDialog.Type.Error, VG.UI.StatusDialog.Type.Warning and
-     * VG.UI.StatusDialog.Type.Question.
-     * @param {string} message - The user message to show to the user. Can be multine text.
-     * @constructor
-     **/
-
     if ( !(this instanceof VG.UI.StatusDialog) ) return new VG.UI.StatusDialog( type, title, message );
     
     VG.UI.Dialog.call( this );
@@ -349,5 +345,9 @@ VG.UI.StatusDialog=function( type, title, message )
 
 VG.UI.StatusDialog.prototype=VG.UI.Dialog();
 
-VG.UI.StatusDialog.Type={ "Success" : 0, "Error" : 1, "Warning" : 2, "Question" : 3, "Docs.Enum" : 9000 };
+/** The supported types for {@link VG.UI.StatusDialog}.
+ * @enum
+ */
+
+VG.UI.StatusDialog.Type={ "Success" : 0, "Error" : 1, "Warning" : 2, "Question" : 3 };
 

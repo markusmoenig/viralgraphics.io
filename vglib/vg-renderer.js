@@ -24,8 +24,6 @@
 /* Type enum */
 VG.Type = { Float: 0, Uint8: 1, Uint16: 2, Uint32: 3 };
 
-
-
 VG.Renderer = function()
 {
     if (!(this instanceof VG.Renderer))
@@ -378,9 +376,11 @@ VG.Renderer.prototype.drawMesh = function(mesh, element, shader)
 VG.Renderer.Primitive = { Triangles: 0, Lines: 1, TriangleStrip: 2, LineStrip: 3, Points: 4 };
 
 
-// The render namespace
+/**
+ * Namespace contains all realtime Scene / Mesh / Material classes.
+ * @namespace
+ */
 VG.Render = {};
-
 
 VG.Render.TraceContext = function()
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv> and Contributors
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,34 +21,39 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/** Triangle-based mesh for realtime rendering 
+ * @constructor
+ * @param {VG.SceneNode} parent - The parent, can be null
+ * @augments VG.Render.SceneNode
+ * @example
+ * To create mesh with texture coordinates use:
+ * 
+ * this.vertexCount = triCount * 3;
+ * var layout =[
+ *   { name: "position", offset: 0, stride: 4 },
+ *   { name: "normal", offset: 4, stride: 4 }
+ * ];
+ *
+ * if (usingTextureCoordinates) {
+ *   layout.push({name: 'texCoord', offset: 8, stride: 2});
+ * }
+ *
+ * this.addVertexBuffer(VG.Type.Float, layout);
+ * this.layout = this.generateStaticLayout();
+ *
+ * ...
+ *
+ * var face = [
+ *   {position: ..., normal: ..., texCoord: ...},
+ *   {position: ..., normal: ..., texCoord: ...},
+ *   {position: ..., normal: ..., texCoord: ...}
+ * ];
+ *
+ * this.setTriangle(index, face);
+ */ 
+
 VG.Render.Mesh = function(parent)
 {
-    /** Triangle-based mesh for realtime rendering 
-     *  @constructor
-     *  @param {VG.SceneNode} parent - The parent, can be null */
-
-    /*
-     To create mesh with texture coordinates use this:
-     this.vertexCount = triCount * 3;
-     var layout =[
-         { name: "position", offset: 0, stride: 4 },
-         { name: "normal", offset: 4, stride: 4 }
-     ];
-     if (usingTextureCoordinates) {
-        layout.push({name: 'texCoord', offset: 8, stride: 2});
-     }
-     this.addVertexBuffer(VG.Type.Float, layout);
-     this.layout = this.generateStaticLayout();
-
-     ...
-
-     var face = [
-        {position: ..., normal: ..., texCoord: ...},
-        {position: ..., normal: ..., texCoord: ...},
-        {position: ..., normal: ..., texCoord: ...}
-      ]
-      this.setTriangle(index, face);
-     */
     VG.Render.SceneNode.call(this, parent);
     
     /** Identifies this node is mesh node in native.
@@ -91,11 +96,12 @@ VG.Render.Mesh = function(parent)
 
 VG.Render.Mesh.prototype = Object.create(VG.Render.SceneNode.prototype);
 
+/**
+ * Clone this mesh, while not duplicating vBuffer
+ * @return cloned object
+ */
+
 VG.Render.Mesh.prototype.clone = function(){
-    /**
-     * Clone this mesh, while not duplicating vBuffer
-     * @return cloned object
-     */
     var mesh = new VG.Render.Mesh();
     mesh = Object.assign(mesh, this);
     mesh._parent = undefined;
@@ -119,10 +125,12 @@ VG.Render.Mesh.prototype.clone = function(){
     return mesh;
 };
 
+/** True if the mesh is properly initialized 
+ *  @returns {Bool} 
+ */
+
 VG.Render.Mesh.prototype.isValid = function()
 {
-    /** True if the mesh is properly initialized 
-     *  @returns {Bool} */
 	return this.vertexCount != -1 && this.vBuffers.length != 0;
 }
 
@@ -133,17 +141,18 @@ VG.Render.Mesh.prototype.load = function(jsobj)
      *  */    
 }
 
+/**
+ * Extract triangles from buffer.
+ * For now, supporting only non-indexed buffer.
+ * Implementation rely on assumptions that it's webgl buffer
+ * Not support index buffer yet.
+ * Assumption they are to be drawn with GL_TRIANGLES
+ * @param {Object{vb:{GPUBuffer}, stride:{Number}, layout: []}}
+ * @return {attribute1: [], ...} example: {position: [1, 2, 3, ...], normal: [1, ...]}
+ */
+
 VG.Render.Mesh.prototype.extractTrisFromBuffer = function(buffer)
 {
-    /**
-     * Extract triangles from buffer.
-     * For now, supporting only non-indexed buffer.
-     * Implementation rely on assumptions that it's webgl buffer
-     * Not support index buffer yet.
-     * Assumption they are to be drawn with GL_TRIANGLES
-     * @param {Object{vb:{GPUBuffer}, stride:{Number}, layout: []}}
-     * @return {attribute1: [], ...} example: {position: [1, 2, 3, ...], normal: [1, ...]}
-     */
     var gl = VG.WebGL.gl;
     var vb = buffer.vb;
     var db = vb.getDataBuffer();
@@ -172,16 +181,17 @@ VG.Render.Mesh.prototype.extractTrisFromBuffer = function(buffer)
     }
 };
 
+/**
+ * load from faces with form: {v: [], vt: [], vn: [], f: [[{v: , vn:, vt: } ... ] ... ]}
+ * the result will be non-indexed triangle mesh
+ * @param faces Dictionary {v: [], vt: [], vn: [], f: []}
+ * @param {Float} scale - scale the loaded object, default to 1
+ * @return {{x:{min: int, max: int}, y:{min: int, max: int}, z:{min: int, max: int}}} Bounding box of object.
+ * @private
+ */
+
 VG.Render.Mesh.prototype._trianglesFromIndexedFaces = function(faces, scale)
 {
-    /**
-     * load from faces with form: {v: [], vt: [], vn: [], f: [[{v: , vn:, vt: } ... ] ... ]}
-     * the result will be non-indexed triangle mesh
-     * @param faces Dictionary {v: [], vt: [], vn: [], f: []}
-     * @param {Float} scale - scale the loaded object, default to 1
-     * @return {{x:{min: int, max: int}, y:{min: int, max: int}, z:{min: int, max: int}}} Bounding box of object.
-     * @private
-     */
     // not using index buffer
     scale = scale === undefined ? 1.0 : scale;
 
@@ -285,40 +295,32 @@ VG.Render.Mesh.prototype._trianglesFromIndexedFaces = function(faces, scale)
     return box;
 };
 
-VG.Render.Mesh.prototype.loadFromSTL = function(objText, scale)
-{
-    /** Initializes and loads the mesh from an .stl string
-     *  @param {String} objText - The .obj text content
-     *  @param {Float} scale - scale the loaded object, default to 1
-     * @return {{x:{min: int, max: int}, y:{min: int, max: int}, z:{min: int, max: int}}} Bounding box of object.
-     */
-
-    var objData = VG.Utils.parseSTL(objText);
-    return this._trianglesFromIndexedFaces(objData, scale);
-};
+/** Returns wether this mesh indexed or not, if false then this.iBuffer should be null */
 
 VG.Render.Mesh.prototype.isIndexed = function()
 {
-    /** Returns wether this mesh indexed or not, if false then this.iBuffer should be null */
     return this.iBuffer ? true : false;
 }
 
+/** Returns the index count. */
+
 VG.Render.Mesh.prototype.getIndexCount = function()
 {
-	/** Returns the index count. */
 	return this.iBuffer.getDataBuffer().getSize();
 }
 
+/** Checks if ther are sub-facets. */
+
 VG.Render.Mesh.prototype.hasSubFacets = function()
 {
-	/** Checks if ther are sub-facets. */
 	return this.elements.length > 0;
 }
 
+/** Disposes all the buffers and set this mesh as invalid, safe to call if invalid,
+ *  also safe to re-initialize */
+
 VG.Render.Mesh.prototype.dispose = function()
 {
-    /** Disposes all the buffers and set this mesh as invalid, safe to call if invalid,
-     *  also safe to re-initialize */
     if (this.isValid())
 	{
 		for (var i = 0; i < this.vBuffers.length; i++)
@@ -340,11 +342,11 @@ VG.Render.Mesh.prototype.dispose = function()
     this.elements = [];
 }
 
+/** Updates all buffers, for more efficient cherry-pick update, access this.iBuffer and this.vBuffers directly
+ *  this also updates the scene node bounds */
+
 VG.Render.Mesh.prototype.update = function()
 {
-    /** Updates all buffers, for more efficient cherry-pick update, access this.iBuffer and this.vBuffers directly
-     *  this also updates the scene node bounds */
-
     if (this.isIndexed())
 		this.iBuffer.update();
 
@@ -369,11 +371,11 @@ VG.Render.Mesh.prototype.update = function()
     }
 }
 
+/** Returns attribute definition that holds the specified attribute as [bufferIndex, layoutIndex] 
+ *  @return {Object} */
+
 VG.Render.Mesh.prototype.getAttrDef = function(name)
 {
-    /** Returns attribute definition that holds the specified attribute as [bufferIndex, layoutIndex] 
-     *  @return {Object} */
-
     for (var i = 0; i < this.vBuffers.length; i++)
     {
         var layout = this.vBuffers[i].layout;
@@ -390,14 +392,14 @@ VG.Render.Mesh.prototype.getAttrDef = function(name)
     return false;
 }
 
+/** Adds a vertex buffer with the defined attribute layout. 
+ *  @param {VG.Type} type - The array element type, offset and stride should be pass as element count not bytes.
+ *  @param {Array} vertexLayout - The vertex layout as an array of { name, offset, stride } not in bytes.
+ *  @param {Boolean} generateLayout - creates static layout to use for reading/writing reference
+ */
+
 VG.Render.Mesh.prototype.addVertexBuffer = function(type, vertexLayout, generateLayout)
 {
-    /** Adds a vertex buffer with the defined attribute layout. 
-     *  @param {VG.Type} type - The array element type, offset and stride should be pass as element count not bytes.
-     *  @param {Array} vertexLayout - The vertex layout as an array of { name, offset, stride } not in bytes.
-	 *  @param {Boolean} generateLayout - creates static layout to use for reading/writing reference
-	 */
-
     var vBuffer = { vb: null, layout: vertexLayout, stride: 0 };
 
     for (var i = 0; i < vBuffer.layout.length; i++)
@@ -417,10 +419,10 @@ VG.Render.Mesh.prototype.addVertexBuffer = function(type, vertexLayout, generate
 		this.layout = this.generateStaticLayout();
 }
 
+/** Creates a static layout to use for reading/writing reference */
+
 VG.Render.Mesh.prototype.generateStaticLayout = function()
 {
-    /** Creates a static layout to use for reading/writing reference */
-
     var layout = {};
 
     for (var i = 0; i < this.vBuffers.length; i++)
@@ -436,13 +438,13 @@ VG.Render.Mesh.prototype.generateStaticLayout = function()
     return layout;
 }
 
+/** Sets a single vertex atrribute, see setVertex and setTriangle for a higher level interface 
+ *  @param {Array} index - An array of two indices (see/use getAtrrDef) [ bufferIndex, layoutIndex ]
+ *  @param {Number} vertexIndex - The vertex index 
+ *  @param {Array} values - An array of values equal to the attribute stride */
+
 VG.Render.Mesh.prototype.set = function(index, vertexIndex, values)
 {
-    /** Sets a single vertex atrribute, see setVertex and setTriangle for a higher level interface 
-     *  @param {Array} index - An array of two indices (see/use getAtrrDef) [ bufferIndex, layoutIndex ]
-     *  @param {Number} vertexIndex - The vertex index 
-     *  @param {Array} values - An array of values equal to the attribute stride */
-
     var b = this.vBuffers[index[0]];
     var attr = b.layout[index[1]];
     //var db=b.vb.getDataBuffer();
@@ -455,12 +457,12 @@ VG.Render.Mesh.prototype.set = function(index, vertexIndex, values)
     }
 }
 
+/** Sets a single vertex, see "set" for a lower level interface
+ *  @param {Number} vertexIndex - The vertex index 
+ *  @param {Object} vertex - An object with attr-values pair, ie: { position: [x, y, z, 1.0] } */
+
 VG.Render.Mesh.prototype.setVertex = function(vertexIndex, vertex)
 {
-    /** Sets a single vertex, see "set" for a lower level interface
-     *  @param {Number} vertexIndex - The vertex index 
-     *  @param {Object} vertex - An object with attr-values pair, ie: { position: [x, y, z, 1.0] } */
-
     for (var attr in vertex)
     {
         var attrIndex = this.layout[attr];
@@ -471,23 +473,23 @@ VG.Render.Mesh.prototype.setVertex = function(vertexIndex, vertex)
     }
 }
 
+/** Sets a triangle, same as setVertex but this take an array of 3 objects 
+ *  @param {Number} triangleIndex - The triangle index 
+ *  @param {Array} vertexArray - See setVertex for more details */
+
 VG.Render.Mesh.prototype.setTriangle = function(triangleIndex, vertexArray)
 {
-    /** Sets a triangle, same as setVertex but this take an array of 3 objects 
-     *  @param {Number} triangleIndex - The triangle index 
-     *  @param {Array} vertexArray - See setVertex for more details */
-
     for (var i = 0; i < 3; i++)
     {
         this.setVertex((triangleIndex * 3) + i, vertexArray[i]);
     }
 }
 
+/** Sets an array of triangles 
+ *  @param {Array} array - The array of triangles */
+
 VG.Render.Mesh.prototype.setTriangleArray = function(array)
 {
-    /** Sets an array of triangles 
-     *  @param {Array} array - The array of triangles */
-
     for (var attrName in array)
     {
         var index = this.layout[attrName];
@@ -512,13 +514,13 @@ VG.Render.Mesh.prototype.setTriangleArray = function(array)
     }
 }
 
+/** Gets a single vertex atrribute, see getVertex and getTriangle for a higher level interface 
+ *  @param {Array} index - An array of two indices (see/use getAtrrDef) [ bufferIndex, layoutIndex ]
+ *  @param {Number} vertexIndex - The vertex index 
+ *  @return {Array} */
+
 VG.Render.Mesh.prototype.get = function(index, vertexIndex)
 {
-    /** Gets a single vertex atrribute, see getVertex and getTriangle for a higher level interface 
-     *  @param {Array} index - An array of two indices (see/use getAtrrDef) [ bufferIndex, layoutIndex ]
-     *  @param {Number} vertexIndex - The vertex index 
-     *  @return {Array} */
-
     var b = this.vBuffers[index[0]];
     var attr = b.layout[index[1]];
 
@@ -534,12 +536,12 @@ VG.Render.Mesh.prototype.get = function(index, vertexIndex)
     return values;
 }
 
+/** Gets a single vertex, see "get" for a lower level interface
+ *  @param {Number} vertexIndex - The vertex index 
+ *  @return {Object} */
+
 VG.Render.Mesh.prototype.getVertex = function(vertexIndex)
 {
-    /** Gets a single vertex, see "get" for a lower level interface
-     *  @param {Number} vertexIndex - The vertex index 
-     *  @return {Object} */
-
     var vertex = {};
 
     for (var attr in this.layout)
@@ -552,9 +554,10 @@ VG.Render.Mesh.prototype.getVertex = function(vertexIndex)
     return vertex;
 }
 
+/** Applies a Matrix4 transform to position and normals (if defined) */
+
 VG.Render.Mesh.prototype.applyTransform = function(m)
 {
-    /** Applies a Matrix4 transform to position and normals (if defined) */
 
     for (var i = 0; i < this.vertexCount; i++)
     {
@@ -567,13 +570,14 @@ VG.Render.Mesh.prototype.applyTransform = function(m)
     }
 }
 
+/** draw mesh 
+ * @param {VG.Render.Pipeline} pipeline - rendering pipeline
+ * @param {VG.Render.Context} context - rendering context
+ * @param {Number} delta - rendering timestamp (seconds)
+ */
+
 VG.Render.Mesh.prototype.onDraw = function(pipeline, context, delta)
 {
-	/** draw mesh
-	* @param {VG.Render.Pipeline} pipeline - rendering pipeline
-	* @param {VG.Render.Context} context - rendering context
-	* @param {Number} delta - rendering timestamp (seconds)
-	*/
     if (!this.isValid())
 		return;
 
@@ -638,14 +642,14 @@ VG.Render.Mesh.prototype.onDraw = function(pipeline, context, delta)
 	vb.purgeAttribs();
 }
 
-// utility
+/** Makes a primitive box 
+ *  @param {Number} width - The width
+ *  @param {Number} height - The height
+ *  @param {Number} depth - The depth 
+ *  @returns {VG.Render.Mesh} */
+
 VG.Render.Mesh.makeBox = function(width, height, depth)
 {
-    /** Makes a primitive box 
-     *  @param {Number} width - The width
-     *  @param {Number} height - The height
-     *  @param {Number} depth - The depth
-     *  @returns {VG.Render.Mesh} */
     
     var mesh = new VG.Render.BoxMesh();
 	mesh.setGeometry(width, height, depth);
@@ -653,15 +657,16 @@ VG.Render.Mesh.makeBox = function(width, height, depth)
 
     return mesh;
 }
+
+/** Makes a primitive box
+ *  @param {Number} width - The width
+ *  @param {Number} height - The height
+ *  @param {Number} depth - The depth
+ *  @returns {VG.Render.Mesh} */
+
 VG.Render.Mesh.makeBoxIndexed = function(width, height, depth)
 {
-    /** Makes a primitive box
-     *  @param {Number} width - The width
-     *  @param {Number} height - The height
-     *  @param {Number} depth - The depth
-     *  @returns {VG.Render.Mesh} */
-
-    var mesh = new VG.Render.Mesh();
+   var mesh = new VG.Render.Mesh();
     mesh.vertexCount = 8;
     mesh.addVertexBuffer(VG.Type.Float,
         [
@@ -710,27 +715,28 @@ VG.Render.Mesh.makeBoxIndexed = function(width, height, depth)
     return mesh;
 }
 
+/** Makes a sphere
+ *  @param {Number} radius - The radius
+ *  @param {Number} segments - The segment count, the higher the smoothier
+ *  @returns {VG.Render.Mesh} */
+
 VG.Render.Mesh.makeSphere = function(radius, segments)
 {
-     /** Makes a sphere
-     *  @param {Number} radius - The radius
-     *  @param {Number} segments - The segment count, the higher the smoothier
-     *  @returns {VG.Render.Mesh} */
-
     var mesh = new VG.Render.SphereMesh( undefined, segments );
     mesh.update();
 
     return mesh;    
 }
 
-// Box Mesh
+/** Constructs a sphere
+ * @constructor     
+ * @param {VG.SceneNode} parent - The parent, can be null     
+ * @param {Number} segments - The segment count, the higher the smoother
+ * @augments VG.Render.Mesh
+ * @returns {VG.Render.Mesh} */
+
 VG.Render.SphereMesh = function(parent, segments)
 {
-     /** Constructs a sphere
-     *  @constructor     
-     *  @param {VG.SceneNode} parent - The parent, can be null     
-     *  @param {Number} segments - The segment count, the higher the smoother
-     *  @returns {VG.Render.Mesh} */
 
     VG.Render.Mesh.call(this, parent);
 
@@ -796,12 +802,12 @@ VG.Render.SphereMesh = function(parent, segments)
 
 VG.Render.SphereMesh.prototype = Object.create(VG.Render.Mesh.prototype);
 
+/** Sets the radius for the sphere
+ *  @param {Number} radius - The radius
+ */
+
 VG.Render.SphereMesh.prototype.setRadius = function(radius)
 {
-    /** Sets the radius for the sphere
-     *  @param {Number} radius - The radius
-     */
-
     // scale box
     var t = new VG.Math.Matrix4();
     t.setScale(radius, radius, radius);
@@ -810,13 +816,13 @@ VG.Render.SphereMesh.prototype.setRadius = function(radius)
     this.radius=radius;
 }
 
-// Box Mesh
+/** Triangle-based box mesh
+ * @constructor
+ * @augments VG.Render.Mesh
+ * @param {VG.SceneNode} parent - The parent, can be null */
+
 VG.Render.BoxMesh = function(parent)
 {
-    /** Triangle-based box mesh
-     *  @constructor
-     *  @param {VG.SceneNode} parent - The parent, can be null */
-
 	VG.Render.Mesh.call(this, parent);
 
 	// constants for 6 facets index
@@ -841,13 +847,14 @@ VG.Render.BoxMesh = function(parent)
 
 VG.Render.BoxMesh.prototype = Object.create(VG.Render.Mesh.prototype);
 
+/** Makes a primitive box (position, normal for every vertex)
+ *  @param {Number} width - The width
+ *  @param {Number} height - The height
+ *  @param {Number} depth - The depth
+ */
+
 VG.Render.BoxMesh.prototype.setGeometry = function(width, height, depth)
 {
-    /** Makes a primitive box (position, normal for every vertex)
-     *  @param {Number} width - The width
-     *  @param {Number} height - The height
-     *  @param {Number} depth - The depth
-	 */
     this.setTriangleArray(
         {
             position:
@@ -893,24 +900,4 @@ VG.Render.BoxMesh.prototype.setGeometry = function(width, height, depth)
     var t = new VG.Math.Matrix4();
     t.setScale(width / 2, height / 2, depth / 2);
     this.applyTransform(t);
-}
-
-VG.Render.BoxMesh.prototype.makeSubFacets = function()
-{
-	/** make 6 facets (left, right, bottom, top, back, front)
-	*/
-    this.iBuffer = new VG.GPUBuffer(VG.Type.Uint8, this.vertexCount, false, true);
-    this.iBuffer.create();
-    var db=this.iBuffer.getDataBuffer();
-	for (var idx = 0; idx < this.vertexCount; idx++)
-	{
-		//this.iBuffer.setBuffer(idx, idx);
-        db.set(idx, idx);
-	}
-	this.elements[this.Left] = {facet:"Left", offset:0, size:6};
-	this.elements[this.Right] = {facet:"Right", offset:6, size:6};
-	this.elements[this.Bottom] = {facet:"Bottom", offset:12, size:6};
-	this.elements[this.Top] = {facet:"Top", offset:18, size:6};
-	this.elements[this.Back] = {facet:"Back", offset:24, size:6};
-	this.elements[this.Front] = {facet:"Front", offset:30, size:6};
 }
