@@ -68,6 +68,10 @@ VG.UI.Workspace=function()
     this.toolbars=[];
     this.windows=[];
     this.widgets3d=[];
+
+    /** Set this member to an {@link VG.UI.StatusBar} object if your application should have a status bar at the bottom of the screen.
+     * @member {VG.UI.StatusBar}
+     */
     this.statusBar=null;
     this.layout=VG.UI.SplitLayout();
     this.layout.margin.set( 0, 0, 0, 0 );
@@ -1624,13 +1628,15 @@ VG.UI.Workspace.prototype.modelMenuActionRoleValidationCallback=function( menu )
     }
 };
 
+/**
+ * Registers a VG.Data.Collection with the specified roles to the Workspace.
+ * @param {VG.Data.Collection} dc - The data collection to register
+ * @param {VG.UI.DataCollectionRole} roles - Currently supported roles are VG.UI.DataCollectionRole.LoadSaveRole, the DC is used for Application Load / Save operations, and
+ * VG.UI.DataCollectionRole.UndoRedoRole, which adds automatic Undo / Redo functionality to the DC
+ */   
+
 VG.UI.Workspace.prototype.registerDataCollection=function( dataCollection, roles )
-{
-    /**Registers a VG.Data.Collection with the specified roles to the Workspace.
-     * @param {VG.Data.Collection} dc - The data collection to register
-     * @param {VG.UI.DataCollectionRole} roles - Currently supported roles are VG.UI.DataCollectionRole.LoadSaveRole, the DC is used for Application Load / Save operations, and
-     * VG.UI.DataCollectionRole.UndoRedoRole, which adds automatic Undo / Redo functionality to the DC
-     */    
+{ 
     if ( roles & VG.UI.DataCollectionRole.LoadSaveRole )
     {
         this.dataCollectionForLoadSave=dataCollection;

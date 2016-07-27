@@ -28,8 +28,21 @@
 
 VG.UI = {};
 
-VG.UI.HAlignment={ "Left" : 0, "Centered" : 1, "Right" : 2 };
-VG.UI.VAlignment={ "Top" : 0, "Centered" : 1, "Bottom" : 2 };
+/**
+ * Horizontal alignment options.
+ * @enum {number}
+ * @type {number}
+ */
+
+VG.UI.HAlignment={ /** Left aligned */ "Left" : 0, /** Centered */ "Centered" : 1, /** Right aligned */ "Right" : 2 };
+
+/**
+ * Vertical alignment options.
+ * @enum
+ * @type {number}
+ */
+
+VG.UI.VAlignment={ /** Top aligned */ "Top" : 0, /** Centered */ "Centered" : 1, /** Bottom aligned */ "Bottom" : 2 };
 
 VG.UI.DataCollectionRole={ "LoadSaveRole" : 1, "UndoRedoRole" : 2 };
 

@@ -22,9 +22,9 @@
  */
  
 /**Creates a new HtmlView widget that can render HTML source text. 
+ * @param {string} html - The html to display.
  * @constructor 
  */
-
 
 VG.UI.HtmlView=function( html )
 {
@@ -201,7 +201,7 @@ VG.UI.HtmlView=function( html )
     if ( arguments.length ) this._html=arguments[0];
     else
     /** The HTML source text.
-     * @member {string}
+     * @member {string} VG.HtmlView.html
      */
         this._html="";
 };

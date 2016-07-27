@@ -1175,7 +1175,14 @@ VG.UI.BaseText.prototype.gotoNextSearchTerm=function( forward )
     return false;
 };
 
-// ----------------------------------------------------------------- VG.UI.Label
+/**
+ * Creates a read-only text label widget.
+ * @param {string} text - The text of the label.
+ * @property {string} text - The text to display.
+ * @property {VG.UI.HAlignment} hAlignment - The horizontal alignment of the label inside the available widget space.
+ * @property {VG.UI.VAlignment} vAlignment - The vertical alignment of the label inside the available widget space.
+ * @constructor
+ */
 
 VG.UI.Label=function( text )
 {
@@ -1199,6 +1206,13 @@ VG.UI.Label=function( text )
 };
 
 VG.UI.Label.prototype=VG.UI.BaseText();
+
+/**
+ * Binds the widget to the data model. This widget has to be bound to a String value.
+ * @param {VG.Data.Collection} collection - The data collection to link this widget to.
+ * @param {string} path - The path inside the data collection to bind this widget to.
+ * @tutorial Data Model
+ */
 
 VG.UI.Label.prototype.bind=function( collection, path )
 {
@@ -1270,7 +1284,13 @@ VG.UI.Label.prototype.paintWidget=function( canvas )
     if ( this.disabled ) canvas.setAlpha( 1 );    
 };
 
-// ----------------------------------------------------------------- VG.UI.TextLineEdit
+/**
+ * Creates a an editable single-line text widget.
+ * @param {string} text - The text to edit.
+ * @property {string} text - The text to edit.
+ * @borrows VG.UI.ListWidget.bind as VG.UI.TextLineEdit.bind 
+ * @constructor
+ */
 
 VG.UI.TextLineEdit=function( text )
 {
@@ -1319,6 +1339,13 @@ VG.UI.TextLineEdit=function( text )
 };
 
 VG.UI.TextLineEdit.prototype=VG.UI.BaseText();
+
+/**
+ * Binds the widget to the data model. This widget has to be bound to a String value.
+ * @param {VG.Data.Collection} collection - The data collection to link this widget to.
+ * @param {string} path - The path inside the data collection to bind this widget to.
+ * @tutorial Data Model
+ */
 
 VG.UI.TextLineEdit.prototype.bind=function( collection, path )
 {
@@ -1465,7 +1492,14 @@ VG.UI.TextLineEdit.prototype.paintWidget=function( canvas )
     VG.UI.stylePool.current.drawTextLineEdit( this, canvas );  
 };
 
-// ----------------------------------------------------------------- VG.UI.TextEdit
+/**
+ * Creates a an editable multi-line text widget.
+ * @param {string} text - The text to edit.
+ * @property {string} text - The text to edit.
+ * @property {bool} readOnly - Indicates if this widget is read-only, default is false.
+ * @borrows VG.UI.ListWidget.bind as VG.UI.TextLineEdit.bind 
+ * @constructor
+ */
 
 VG.UI.TextEdit=function( text )
 {
@@ -1537,6 +1571,13 @@ VG.UI.TextEdit=function( text )
 };
 
 VG.UI.TextEdit.prototype=VG.UI.BaseText();
+
+/**
+ * Binds the widget to the data model. This widget has to be bound to a String value.
+ * @param {VG.Data.Collection} collection - The data collection to link this widget to.
+ * @param {string} path - The path inside the data collection to bind this widget to.
+ * @tutorial Data Model
+ */
 
 VG.UI.TextEdit.prototype.bind=function( collection, path )
 {
@@ -1692,7 +1733,14 @@ VG.UI.TextEdit.prototype.setHScrollbarDimensions=function( canvas )
     this.hScrollbar.setScrollBarContentSize( this.maxTextLineSize.width, this.contentRect.width );
 };
 
-// ----------------------------------------------------------------- VG.UI.CodeEdit
+/**
+ * Creates a an JavaScript code editor. Supports JavaScript syntax-highlighting.
+ * @param {string} text - The text to edit.
+ * @property {string} text - The text to edit.
+ * @property {bool} readOnly - Indicates if this widget is read-only, default is false.
+ * @borrows VG.UI.ListWidget.bind as VG.UI.TextLineEdit.bind 
+ * @constructor
+ */
 
 VG.UI.CodeEdit=function( text )
 {
@@ -1858,6 +1906,13 @@ VG.UI.CodeEdit=function( text )
 };
 
 VG.UI.CodeEdit.prototype=VG.UI.BaseText();
+
+/**
+ * Binds the widget to the data model. This widget has to be bound to a String value.
+ * @param {VG.Data.Collection} collection - The data collection to link this widget to.
+ * @param {string} path - The path inside the data collection to bind this widget to.
+ * @tutorial Data Model
+ */
 
 VG.UI.CodeEdit.prototype.bind=function( collection, path )
 {

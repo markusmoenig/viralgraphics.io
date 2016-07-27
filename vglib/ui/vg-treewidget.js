@@ -21,8 +21,6 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-// ----------------------------------------------------------------- VG.UI.TreeWidget
-
 VG.UI.TreeWidgetItem=function( item, rect )
 {    
     if ( !(this instanceof VG.UI.TreeWidgetItem) ) return new VG.UI.TreeWidgetItem( item, rect );
@@ -30,6 +28,45 @@ VG.UI.TreeWidgetItem=function( item, rect )
     this.item=item;
     this.rect=VG.Core.Rect( rect );
 };
+
+ /**
+ * Creates an VG.UI.TreeWidget. A tree widget displays an hierarchical tree of items.
+ *
+ * A list widget has to be bound to a path inside a {@link VG.Data.Collection}.
+ *
+ * @example
+ *
+ * var dc=VG.Data.Collection( "MainData" );
+ * dc.items=[];
+ *
+ * var treeWidget=VG.UI.TreeWidget();
+ *
+ * controller=treeWidget.bind( dc, "items" );
+ * controller.addObserver( "selectionChanged", function() {
+ *     var item=this.controller.selected;
+ *     VG.log( "Selected \"" + item.text + "\" at index " + this.controller.indexOf( item ) );
+ * }.bind( this ) );
+ *
+ * function folder( text, open, selectable ) {
+ *     this.text=text;
+ *     this.children=[];
+ *     this.open=open;
+ *     this.selectable=selectable;
+ * }
+ *
+ * function item( text, folder, open ) {
+ *     this.text=text;
+ * }
+ *
+ * controller.add( "", new folder( "Folder #1", true ) );
+ * controller.add( "0", new item( "First Item" ) );
+ * controller.add( "0", new folder( "Selectable Subfolder", false, true ) );
+ * controller.add( "0.1", new item( "Second Item" ) );
+ * controller.add( "", new item( "Third Item" ) );
+ *
+ * @borrows VG.UI.ListWidget.bind as VG.UI.TreeWidget.bind
+ * @constructor
+ */
 
 VG.UI.TreeWidget=function()
 {
@@ -56,6 +93,14 @@ VG.UI.TreeWidget=function()
 };
 
 VG.UI.TreeWidget.prototype=VG.UI.Widget();
+
+/**
+ * Binds the widget to the data model.
+ * @param {VG.Data.Collection} collection - The data collection to link this widget to.
+ * @param {string} path - The path inside the data collection to bind this widget to.
+ * @returns {VG.Controller.Tree} The tree controller created for this widget.
+ * @tutorial Data Model
+ */
 
 VG.UI.TreeWidget.prototype.bind=function( collection, path )
 {

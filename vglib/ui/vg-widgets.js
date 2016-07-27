@@ -452,6 +452,13 @@ VG.UI.Image.prototype.calcSize=function()
     return size;
 };
 
+/**
+ * Binds the widget to the data model. This widget has to be bound to a VG.Core.Image object (or null).
+ * @param {VG.Data.Collection} collection - The data collection to link this widget to.
+ * @param {string} path - The path inside the data collection to bind this widget to.
+ * @tutorial Data Model
+ */
+
 VG.UI.Image.prototype.bind=function( collection, path )
 {
     this.collection=collection;
@@ -517,7 +524,17 @@ VG.UI.Image.prototype.paintWidget=function( canvas )
     } else canvas.drawScaledImage( this.contentRect, image );
 };
 
-// ----------------------------------------------------------------- VG.UI.Button
+/** 
+ * Displays an clickable button widget. 
+ *
+ *
+ * @param {string} text - The text to display.
+ * @property {string} text - The text to display.
+ * @property {bool} checkable - Indicates if the button supports a checked state.
+ * @property {bool} checked - If the button is checkable, indicates if the button is currently checked.
+ * @property {callback} clicked - Set this property to a callback function which gets called when the users clicks (mouse-press and release) the button.
+ * @constructor 
+ */
 
 VG.UI.Button=function( text )
 {
@@ -866,7 +883,14 @@ VG.UI.ScrollBar.prototype.paintWidget=function( canvas, adjustAlpha )
     VG.UI.stylePool.current.drawScrollBar( this, canvas );
 };
 
-// ----------------------------------------------------------------- VG.UI.CheckBox
+/** 
+ * Displays a clickable check box widget. 
+ *
+ * @param {bool} checked - The initial checked state of the button.
+ * @property {bool} checked - The checked state of the button.
+ * @property {callback} clicked - Set this property to a callback function which gets called when the users clicks (mouse-press and release) the check box.
+ * @constructor 
+ */
 
 VG.UI.CheckBox=function( checked )
 {
@@ -882,6 +906,13 @@ VG.UI.CheckBox=function( checked )
 };
 
 VG.UI.CheckBox.prototype=VG.UI.Widget();
+
+/**
+ * Binds the widget to the data model. This widget has to be bound to a boolean Number value.
+ * @param {VG.Data.Collection} collection - The data collection to link this widget to.
+ * @param {string} path - The path inside the data collection to bind this widget to.
+ * @tutorial Data Model
+ */
 
 VG.UI.CheckBox.prototype.bind=function( collection, path )
 {
@@ -1148,7 +1179,13 @@ VG.UI.ShiftWidget.prototype.paintWidget=function( canvas )
     }
 };
 
-// ----------------------------------------------------------------- VG.UI.DropDownMenu
+/** 
+ * Displays a drop down menu widget, offering several selectable choices to the user.
+ *
+ * @param {string} Texts - Initial content of the widget.
+ * @property {callback} changed - Called when the current string item changes, parameters are: index, text, this.
+ * @constructor 
+ */
 
 VG.UI.DropDownMenu=function()
 {
@@ -1177,11 +1214,20 @@ VG.UI.DropDownMenu=function()
 
 VG.UI.DropDownMenu.prototype=VG.UI.Widget();
 
+/**
+ * Clears the content of the widget. 
+ */
+
 VG.UI.DropDownMenu.prototype.clear=function( text )
 {
     this.items=[];
     this.index=-1;
 };
+
+/**
+ * Returns the currently displayed text.
+ * @returns {string} The currently displayed text.
+ */
 
 VG.UI.DropDownMenu.prototype.text=function( text )
 {
@@ -1190,11 +1236,23 @@ VG.UI.DropDownMenu.prototype.text=function( text )
     return text;
 };
 
+/** 
+ * Adds a text to the drop down menu list.
+ *
+ * @param {string} Text - The text to add.
+ */
+
 VG.UI.DropDownMenu.prototype.addItem=function( text )
 {
     this.items.push( text );
     if ( this.index === -1 ) this.index=0;
 };
+
+/** 
+ * Adds all text arguments to the drop down menu list.
+ *
+ * @param {string} Texts - The list of text to add.
+ */
 
 VG.UI.DropDownMenu.prototype.addItems=function()
 {
@@ -1226,6 +1284,13 @@ VG.UI.DropDownMenu.prototype.calcSize=function( canvas )
 
     return size;
 };
+
+/**
+ * Binds the widget to the data model. This widget has to be bound to a String value.
+ * @param {VG.Data.Collection} collection - The data collection to link this widget to.
+ * @param {string} path - The path inside the data collection to bind this widget to.
+ * @tutorial Data Model
+ */
 
 VG.UI.DropDownMenu.prototype.bind=function( collection, path )
 {
@@ -1337,7 +1402,12 @@ VG.UI.DropDownMenu.prototype.paintWidget=function( canvas )
     else VG.UI.stylePool.current.drawDropDownMenu( this, canvas );   
 };
 
-// ----------------------------------------------------------------- VG.UI.Statusbar
+/** 
+ * Status bar widget. Create a status bar and set it to the {@link VG.UI.Workspace|workspace} via the {@link VG.UI.Workspace.statusBar} property.
+ *
+ * @property {VG.UI.Layout} layout - Modify this layout with the content you want to add to the status bar. By default this layout is empty.
+ * @constructor 
+ */
 
 VG.UI.StatusBar=function()
 {
@@ -1371,6 +1441,12 @@ VG.UI.StatusBar=function()
 };
 
 VG.UI.StatusBar.prototype=VG.UI.Widget();
+
+/**
+ * Displays a temporary message on the status bar, clearing all other content. The timeout indicates how long the message should be displayed.
+ * @param {string} message - The message to display.
+ * @param {number} timeout - The timeout in milliseconds.
+ */
 
 VG.UI.StatusBar.prototype.message=function( message, timeout )
 {
@@ -1412,6 +1488,15 @@ VG.UI.TabWidgetItem=function( text, object )
     this.rect=VG.Core.Rect();
 };
 
+/** 
+ * Creates a tab widget, the tabs are listed at the top of the widget. Each tab points to a layout or widget which will be displayed if the tab is selected.
+ *
+ * @param {string} text - The initial text of the tab.
+ * @param {object} object - The initial content object for the tab.
+ * @property {callback} changed - Callback will be called when the current tab changes, will suppy the content object of the current tab as parameter.
+ * @constructor 
+ */
+
 VG.UI.TabWidget=function( text )
 {
     if ( !(this instanceof VG.UI.TabWidget) ) return VG.UI.TabWidget.creator( arguments );
@@ -1435,6 +1520,13 @@ VG.UI.TabWidget=function( text )
 
 VG.UI.TabWidget.prototype=VG.UI.Widget();
 
+/** 
+ * Adds a new tab item.
+ *
+ * @param {string} text - The text of the tab.
+ * @param {object} object - The content object for the tab.
+ */
+
 VG.UI.TabWidget.prototype.addItem=function( text, object )
 {
     if ( !this.layout.current ) {
@@ -1447,6 +1539,13 @@ VG.UI.TabWidget.prototype.addItem=function( text, object )
 
     VG.update();
 };
+
+/** 
+ * Adds several new new tab item.
+ *
+ * @param {string} text - The text of the tab.
+ * @param {object} object - The content object for the tab.
+ */
 
 VG.UI.TabWidget.prototype.addItems=function()
 {
@@ -1637,7 +1736,21 @@ VG.UI.SnapperWidget.prototype.paintWidget=function( canvas )
     this.layout.layout( canvas );
 };
 
-// ----------------------------------------------------------------- VG.UI.Slider
+/** 
+ * Creates a slider widget.
+ *
+ * @param {number} min - The initial minimum value of the slider.
+ * @param {number} max - The initial maximum value of the slider.
+ * @param {number} step - The initial step size of the slider.
+ * @param {bool} editable - True if the current value should be editable.
+ * @param {number} precision - Indicates how many floating point values should be used for the slider.
+ * @property {number} min - The minimum value of the slider.
+ * @property {number} max - The maximum value of the slider.
+ * @property {number} step - The step size of the slider.
+ * @property {number} value - The current value of the slider.
+ * @property {callback} changed - Callback will be called when the current value changes, will suppy the current value as parameter.
+ * @constructor 
+ */
 
 VG.UI.Slider=function( min, max, step, editable, precision )
 {
@@ -1702,6 +1815,13 @@ Object.defineProperty( VG.UI.Slider.prototype, "toolTip", {
             this.edit.toolTip=value;    
     }    
 });
+
+/**
+ * Binds the widget to the data model. This widget has to be bound to a Number value.
+ * @param {VG.Data.Collection} collection - The data collection to link this widget to.
+ * @param {string} path - The path inside the data collection to bind this widget to.
+ * @tutorial Data Model
+ */
 
 VG.UI.Slider.prototype.bind=function( collection, path )
 {
@@ -1832,7 +1952,16 @@ VG.UI.Slider.prototype.paintWidget=function( canvas )
     VG.UI.stylePool.current.drawSlider( this, canvas );  
 };
 
-// ----------------------------------------------------------------- VG.UI.ColorWheel
+/**
+ * Creates a color wheel widget.
+ * @param {bool} expanding - True if the wheel should adjust to the size of the widget, false if the default widget size should be fixed (by default 80x80).
+ * @property {number} hue - The current hue value.
+ * @property {number} saturation - The current saturation value.
+ * @property {number} lightness - The current lightness value.
+ * @property {VG.Core.Color} color - The current RGB values.
+ * @property {callback} changed - The callback will be called with the color object when the color wheel changes.
+ * @constructor
+ */
 
 VG.UI.ColorWheel=function( expanding )
 {
@@ -3306,6 +3435,21 @@ VG.handleDragOver_DropArea=function( event )
     event.preventDefault();
     event.dataTransfer.dropEffect='copy';
 };
+
+/**
+ * Creates a drop area, i.e. an area where users can drop files from the Desktop to, like for example an image.
+ * @param {string} type - The file type name this drop area should support, like "Image", "Text", or "Binary".
+ * @param {callback} paintCallback - The optional paint callback (called with the {@link VG.Canvas|canvas} argument). By default the drop area is drawn with a border and a centered "Drop (Filetype) here" text.
+ * @param {callback} droppedCallback - The optional dropped callback when a file was dropped on the area, arguments are the name and data. If the type is an image also an {@link VG.Core.Image|image} object is passed.
+ * @property {callback} paintCallback - Same as the paintCallback parameter.
+ * @property {callback} droppedCallback - Same as the droppedCallback parameter.
+ * @example
+ * var imageDropWidget=VG.UI.DropArea( "Image", undefined, function( name, data, image ) {
+ *    VG.log( "Image", name, "is", image.width, "pixel wide and", image.height, "pixels high" );
+ *    this.image=image;
+ * }.bind( this ) );
+ * @constructor
+ */
 
 VG.UI.DropArea=function( typeName, paintCallback, droppedCallback )
 {

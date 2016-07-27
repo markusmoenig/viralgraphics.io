@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,13 +21,28 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * Contains everything font related.
+ * @namespace
+ */
+
 VG.Font = {};
+
+/**
+ * The global font manager which will be installed in VG.fontManager. </br>
+ * This class is scheduled for a major rewrite as fonts are currently based on the discontinued typeface library.
+ * @constructor
+ */
 
 VG.Font.Manager=function()
 {
     this.triFonts=[];
     this.addFonts();
 };
+
+/**
+ * Parses all fonts installed typeface and make them available to Visual Graphics.
+ */
 
 VG.Font.Manager.prototype.addFonts=function()
 {
@@ -65,6 +80,11 @@ VG.Font.Manager.prototype.addFonts=function()
     }
 };
 
+/**
+ * Returns the font of the given name.
+ * @returns {VG.Font.Font} The found font or undefined.
+ */
+
 VG.Font.Manager.prototype.getFont=function( name )
 {
     for (var i=0; i < this.triFonts.length; ++i )
@@ -76,6 +96,14 @@ VG.Font.Manager.prototype.getFont=function( name )
     }
     return null;
 };
+
+/**
+ * The main Visual Graphics font object for a given font.
+ * @param {string} name - The font to use.
+ * @param {number} size - The initial pixel size to use for this font.
+ * @param {number} curveDiv - Optional, the curve subdivion value to use for this font during triangulation. Visual Graphics uses a value of 3 by default.
+ * @constructor
+ */
 
 VG.Font.Font=function( name, size, curveDiv )
 {
@@ -121,13 +149,16 @@ VG.Font.Font.prototype.setFont=function( name )
     }
 };
 
+/**
+ * Changes the font size for this font.
+ * @param {number} size - The pixel size to use for this font.
+ */
+
 VG.Font.Font.prototype.setSize=function( size )
 {
     this.size=size;
     this.scale=this.size * this.triFont.pixelScale;    
 };
-
-// --------------------------------------------------------------------------- Triangulator
 
 
 VG.Font.Triangulator = {}; 
@@ -1049,7 +1080,7 @@ VG.Font.Triangulator.create3DText=function(font, text, S, T, bS, bT)
      *  @param {number} [0.1] T - The thickness 
      *  @param {number} [0] bS - The bevel segments 
      *  @param {number} [0.01] bT - The bevel thickness
-     *  @returns Object containing vertex position and normal arrays { v: [], n[] } */
+     *  @returns Object containing vertex position and normal arrays */
 
     if (!font || !font.face) throw "font is null or invalid";
 
@@ -1094,7 +1125,7 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
      *  @param {number} [0.1] T - The thickness 
      *  @param {number} [0] bS - The bevel segments 
      *  @param {number} [0.01] bT - The bevel thickness
-     *  @returns Object containing vertex position and normal arrays { v: [], n[] } */
+     *  @returns Object containing vertex position and normal arrays.*/
 
     if (!font || !font.face) throw "font is null or invalid";
 

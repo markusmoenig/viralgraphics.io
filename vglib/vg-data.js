@@ -21,6 +21,11 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * Contains classes related to the data model of Visual Graphics.
+ * @namespace
+ */
+
 VG.Data = {};
 
 VG.Data.Binding=function( object, path )
@@ -30,6 +35,11 @@ VG.Data.Binding=function( object, path )
     this.object=object;
     this.path=path;
 };
+
+/**
+ * The base class which handles value bindings between paths and their controllers.
+ * @constructor
+ */
 
 VG.Data.Base=function( name, extension )
 {
@@ -140,21 +150,22 @@ VG.Data.Base.prototype.dataForPath=function( path )
     return null;
 };
 
+/**
+ * Stores a given value for the given path and creates an undo step. Widgets like a Checkbox widget use this function to store
+ * user changes inside the model. However this function can also be used directly to store value changes.
+ * @param {string} path - The path of the value to store.
+ * @param {object} value - The data value to store inside the model.
+ * @param {bool} noUndo - Optional, if true blocks the creation of an undo step for the value change.
+ * @param {bool} forceStorage - Optional, if true forces storing of the value. Normally if the model value is the same as the new value
+ * @param {undoText} undoText - An optional custom text for this undo step.
+ * this function will not store it, however to make sure this value is always stored set forceStorage to true. This is useful for undo groups
+ * where the initial value may be the same as in the model but other value changes inside the group will change values.
+ * @returns {VG.Data.UndoItem} The undo item created for this data value step. To add further undo steps into this group just call addSubItem() on the
+ * undo item. 
+ */
+
 VG.Data.Base.prototype.storeDataForPath=function( path, value, noUndo, forceStorage, undoText )
 {
-    /**Stores a given value for the given path and creates an undo step. Widgets like a Checkbox widget use this function to store
-     * user changes inside the model. However this function can also be used directly to store value changes.
-     * @param {string} path - The path of the value to store.
-     * @param {object} value - The data value to store inside the model.
-     * @param {boolean} noUndo - Optional, if true blocks the creation of an undo step for the value change.
-     * @param {boolean} forceStorage - Optional, if true forces storing of the value. Normally if the model value is the same as the new value
-     * @param {undoText} undoText - An optional custom text for this undo step.
-     * this function will not store it, however to make sure this value is always stored set forceStorage to true. This is useful for undo groups
-     * where the initial value may be the same as in the model but other value changes inside the group will change values.
-     * @returns {VG.Data.UndoItem} The undo item created for this data value step. To add further undo steps into this group just call addSubItem() on the
-     * undo item. 
-     */
-
     var undo=undefined;
     if ( path.indexOf( '.' ) === -1 ) 
     {
@@ -237,7 +248,12 @@ VG.Data.Base.prototype.clearUndo=function( dontInvokeClearCallback )
         this.__vgUndo.clear( dontInvokeClearCallback );
 };
 
-// -------------
+/**
+ * Data collections are used for storing any kind of application data. They can be accessed with their paths and bound to controllers.
+ * @constructor
+ * @augments VG.Data.Base
+ * @tutorial Data Model
+ */
 
 VG.Data.Collection=function( name, extension )
 {

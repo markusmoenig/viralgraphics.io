@@ -21,13 +21,35 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-// ----------------------------------------------------------------- VG.UI.ListWidget
+/**
+ * Creates an VG.UI.ListWidget. A list widget displays a flat (not nested) list of items.
+ *
+ * A list widget has to be bound to a path inside a {@link VG.Data.Collection}.
+ *
+ * @example
+ * var dc=VG.Data.Collection( "MainData" );
+ * dc.items=[];
+ *
+ * var listWidget=VG.UI.ListWidget();
+ *
+ * var controller=listWidget.bind( dc, "items" );
+ * controller.addObserver( "selectionChanged", function() {
+ *     var item=this.controller.selected;
+ *     VG.log( "Selected \"" + item.text + "\" at index " + this.controller.indexOf( item ) );
+ * }.bind( this ) );
+ *
+ * function item( text ) {
+ *     this.text=text;
+ * }
+ *
+ * controller.add( new item( "First Item" ) );
+ * controller.add( new item( "Second Item" ) );
+ * controller.add( new item( "Third Item" ) ); 
+ * @constructor
+ */
 
 VG.UI.ListWidget=function()
-{
-    /** ListWidget
-    **/
-    
+{   
     if ( !(this instanceof VG.UI.ListWidget) ) return new VG.UI.ListWidget();
     
     VG.UI.Widget.call( this );
@@ -76,6 +98,14 @@ VG.UI.ListWidget=function()
 };
 
 VG.UI.ListWidget.prototype=VG.UI.Widget();
+
+/**
+ * Binds the widget to the data model.
+ * @param {VG.Data.Collection} collection - The data collection to link this widget to.
+ * @param {string} path - The path inside the data collection to bind this widget to.
+ * @returns {VG.Controller.Array} The array controller created for this widget. 
+ * @tutorial Data Model
+ */
 
 VG.UI.ListWidget.prototype.bind=function( collection, path )
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,6 +21,11 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * An undo item stores all data for one specific undo step inside an application. This class will be created by the data model of Visual Graphics.
+ * @constructor
+ */
+
 VG.Data.UndoItem=function( undoObject, undoText )
 {    
     if ( !(this instanceof VG.Data.UndoItem) ) return new VG.Data.UndoItem( undoObject, undoText );
@@ -30,6 +35,12 @@ VG.Data.UndoItem=function( undoObject, undoText )
     this.undoObject=undoObject;
     this.subItems=[];
 };
+
+/**
+ * Adds a sub item to this undo item.
+ * @param {string} path - The path of the sub item.
+ * @param {string} path - The data value of the sub item.
+ */
 
 VG.Data.UndoItem.prototype.addSubItem=function( path, value )
 {

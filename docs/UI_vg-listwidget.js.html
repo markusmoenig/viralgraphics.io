@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: UI/vg-listwidget.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: UI/vg-listwidget.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/*
+ * Copyright (c) 2014-2016 Markus Moenig &lt;markusm@visualgraphics.tv>
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+/**
+ * Creates an VG.UI.ListWidget. A list widget displays a flat (not nested) list of items.
+ *
+ * A list widget has to be bound to a path inside a {@link VG.Data.Collection}.
+ *
+ * @example
+ * var dc=VG.Data.Collection( "MainData" );
+ * dc.items=[];
+ *
+ * var listWidget=VG.UI.ListWidget();
+ *
+ * var controller=listWidget.bind( dc, "items" );
+ * controller.addObserver( "selectionChanged", function() {
+ *     var item=this.controller.selected;
+ *     VG.log( "Selected \"" + item.text + "\" at index " + this.controller.indexOf( item ) );
+ * }.bind( this ) );
+ *
+ * function item( text ) {
+ *     this.text=text;
+ * }
+ *
+ * controller.add( new item( "First Item" ) );
+ * controller.add( new item( "Second Item" ) );
+ * controller.add( new item( "Third Item" ) ); 
+ * @constructor
+ */
+
+VG.UI.ListWidget=function()
+{   
+    if ( !(this instanceof VG.UI.ListWidget) ) return new VG.UI.ListWidget();
+    
+    VG.UI.Widget.call( this );
+    this.name="ListWidget";
+
+    this.offset=0;
+
+    this.previousRect=VG.Core.Rect();
+
+    this.minimumSize.set( 100, 100 );
+    this.supportsFocus=true;
+
+    this.vScrollbar=0;
+    this.needsVScrollbar=false;
+    this.verified=false;
+    this._itemHeight=-1;
+
+    this.toolLayout=VG.UI.Layout();
+    this.layout=this.toolLayout;
+    this.toolLayout.margin.set( 1, 1, 1, 1 );
+
+    // --- Setup Default Context Menu
+
+    this.contextMenu=VG.UI.ContextMenu();
+
+    this.addMenuItem=this.contextMenu.addItem( "Add", null, function() { 
+        if ( this.controller &amp;&amp; this.controller.contentClassName ) this.controller.add(); 
+    }.bind( this ));
+
+    this.removeMenuItem=this.contextMenu.addItem( "Remove", null, function() {
+        if ( this.controller &amp;&amp; this.controller.canRemove() ) this.controller.remove( this.controller.selected ); 
+    }.bind( this ));
+
+    //this.contextMenu.addSeparator();
+
+    this.contextMenu.aboutToShow=function() {
+        // --- Disable / Enable the add and remove context menu items based on controller state
+        this.addMenuItem.disabled=true;
+        this.removeMenuItem.disabled=true;
+
+        if ( this.controller ) {
+            if ( this.controller.contentClassName ) this.addMenuItem.disabled=false;
+            if ( this.controller.canRemove() ) this.removeMenuItem.disabled=false;
+        }
+    }.bind( this );
+};
+
+VG.UI.ListWidget.prototype=VG.UI.Widget();
+
+/**
+ * Binds the widget to the data model.
+ * @param {VG.Data.Collection} collection - The data collection to link this widget to.
+ * @param {string} path - The path inside the data collection to bind this widget to.
+ * @returns {VG.Controller.Array} The array controller created for this widget. 
+ * @tutorial Data Model
+ */
+
+VG.UI.ListWidget.prototype.bind=function( collection, path )
+{
+    this.controller=collection.controllerForPath( path );
+    if ( !this.controller ) {
+        this.controller=VG.Controller.Array( collection, path );
+        collection.addControllerForPath( this.controller, path );
+    }
+
+    this.controller.addObserver( "changed", this.changed.bind( this ) );
+    this.controller.addObserver( "selectionChanged", this.selectionChanged.bind( this ) );
+
+    return this.controller;
+};
+
+Object.defineProperty( VG.UI.ListWidget.prototype, "itemHeight", 
+{
+    get: function() {
+        if ( this._itemHeight === -1 ) {
+            VG.context.workspace.canvas.pushFont( VG.UI.stylePool.current.skin.ListWidget.Font );
+            var fontHeight=VG.context.workspace.canvas.getLineHeight();
+            VG.context.workspace.canvas.popFont();
+            return fontHeight + 4;
+        } else return this._itemHeight;
+    },
+    set: function( itemHeight ) {
+        this._itemHeight=itemHeight;
+    }    
+});
+
+VG.UI.ListWidget.prototype.addToolWidget=function( widget )
+{
+    widget.supportsFocus=false;
+    this.toolLayout.addChild( widget );
+};
+
+VG.UI.ListWidget.prototype.removeToolWidget=function( widget )
+{
+    this.toolLayout.removeChild( widget );
+};
+
+VG.UI.ListWidget.prototype.focusIn=function()
+{
+};
+
+VG.UI.ListWidget.prototype.focusOut=function()
+{
+};
+
+VG.UI.ListWidget.prototype.keyDown=function( keyCode )
+{        
+    if ( !this.controller.selected ) return;
+
+    var index=this.controller.indexOf( this.controller.selected );
+    if ( index === -1 ) return;
+
+    if ( keyCode === VG.Events.KeyCodes.ArrowUp &amp;&amp; index > 0 )
+    {
+        this.controller.selected=this.controller.at( index - 1 );
+
+        if ( this.needsVScrollbar )
+        {
+            // --- Scroll one line up if necessary
+            var y=this.contentRect.y - this.offset + (index-1) * (this.itemHeight + this.spacing);
+
+            if ( y &lt; this.contentRect.y ) {
+                this.offset-=this.itemHeight + this.spacing;
+                this.vScrollbar.scrollTo( this.offset );                
+            }
+        }        
+    } else
+    if ( keyCode === VG.Events.KeyCodes.ArrowDown &amp;&amp; index &lt; this.controller.length-1 )
+    {
+        this.controller.selected=this.controller.at( index + 1 );
+
+        if ( this.needsVScrollbar )
+        {
+            // --- Scroll one line down if necessary
+            var y=this.contentRect.y - this.offset + (index+1) * (this.itemHeight + this.spacing);
+
+            if ( y + this.itemHeight > this.contentRect.bottom() ) {
+                this.offset+=this.itemHeight + this.spacing;
+                this.vScrollbar.scrollTo( this.offset );                
+            }
+        }
+    } 
+};
+
+VG.UI.ListWidget.prototype.mouseWheel=function( step )
+{
+    if ( !this.needsVScrollbar ) return;
+
+    if ( step > 0 ) {
+        this.offset-=this.itemHeight + this.spacing;
+        this.vScrollbar.scrollTo( this.offset );   
+    } else
+    {
+        this.offset+=this.itemHeight + this.spacing;
+        this.vScrollbar.scrollTo( this.offset );            
+    }
+};
+
+VG.UI.ListWidget.prototype.mouseMove=function( event )
+{
+};
+
+VG.UI.ListWidget.prototype.mouseDown=function( event )
+{
+    if ( this.needsVScrollbar &amp;&amp; this.vScrollbar &amp;&amp; this.vScrollbar.rect.contains( event.pos ) ) {
+        this.vScrollbar.mouseDown( event );
+        return;
+    }
+
+    if ( !this.rect.contains( event.pos ) ) return;
+
+    var selectedIndex=-1;
+    var y=this.contentRect.y - this.offset;
+    var item=undefined;
+
+    for ( var i=0; i &lt; this.controller.count(); ++i ) {
+        var item=this.controller.at( i ) ;
+
+        if ( y + this.itemHeight + this.spacing >= event.pos.y &amp;&amp; y &lt;= event.pos.y ) {
+            selectedIndex=i;
+            break;
+        } 
+        y+=this.itemHeight + this.spacing;
+    }
+
+    if ( selectedIndex >=0 &amp;&amp; selectedIndex &lt; this.controller.count() )
+        item=this.controller.at( selectedIndex );
+
+    if ( this.controller.multiSelection ) 
+    {
+        if ( event.keysDown.indexOf( VG.Events.KeyCodes.Shift ) >= 0 )
+        {
+            if ( !this.controller.isSelected( item ) ) this.controller.addToSelection( item );
+            else this.controller.removeFromSelection( item );
+        } else
+        if ( item )
+            this.controller.setSelected( item );
+    } else
+    if ( item )
+        this.controller.setSelected( item );
+};
+
+VG.UI.ListWidget.prototype.vHandleMoved=function( offsetInScrollbarSpace )
+{
+    this.offset=offsetInScrollbarSpace * this.vScrollbar.totalSize / this.vScrollbar.visibleSize;
+};
+
+VG.UI.ListWidget.prototype.verifyScrollbar=function( text )
+{
+    // --- Check if we have enough vertical space for all items
+
+    this.needsVScrollbar=false;
+
+    this.totalItemHeight=this.controller.count() * this.itemHeight + (this.controller.count()-1) * this.spacing;
+    this.heightPerItem=this.totalItemHeight / this.controller.count();
+    this.visibleItems=this.contentRect.height / this.heightPerItem;
+    this.lastTopItem=Math.ceil( this.controller.count() - this.visibleItems );
+
+    if ( this.totalItemHeight > this.contentRect.height )
+        this.needsVScrollbar=true;
+    else this.offset=0;
+
+    if ( this.needsVScrollbar &amp;&amp; !this.vScrollbar ) {
+        this.vScrollbar=VG.UI.ScrollBar( "ListWidget Scrollbar" );
+        this.vScrollbar.callbackObject=this;
+    }
+
+    this.verified=true;
+};
+
+VG.UI.ListWidget.prototype.changed=function()
+{
+    this.verified=false;    
+    VG.update();
+};
+
+VG.UI.ListWidget.prototype.selectionChanged=function()
+{
+    VG.update();
+};
+
+VG.UI.ListWidget.prototype.paintWidget=function( canvas )
+{
+    this.spacing=VG.UI.stylePool.current.skin.ListWidget.Spacing;
+
+    if ( !this.rect.equals( this.previousRect ) ) this.verified=false;    
+    VG.UI.stylePool.current.drawListWidget( this, canvas );
+    this.previousRect.set( this.rect );    
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="VG.Canvas.html">Canvas</a></li><li><a href="VG.Controller.Array.html">Array</a></li><li><a href="VG.Controller.Base.html">Base</a></li><li><a href="VG.Controller.Tree.html">Tree</a></li><li><a href="VG.Core.Color.html">Color</a></li><li><a href="VG.Core.Image.html">Image</a></li><li><a href="VG.Core.ImagePool.html">ImagePool</a></li><li><a href="VG.Core.Margin.html">Margin</a></li><li><a href="VG.Core.NormalizedColor.html">NormalizedColor</a></li><li><a href="VG.Core.Point.html">Point</a></li><li><a href="VG.Core.Rect.html">Rect</a></li><li><a href="VG.Core.Size.html">Size</a></li><li><a href="VG.Core.Timer.html">Timer</a></li><li><a href="VG.Core.TypedArray.html">TypedArray</a></li><li><a href="VG.Data.Base.html">Base</a></li><li><a href="VG.Data.Collection.html">Collection</a></li><li><a href="VG.Events.MouseDownEvent.html">MouseDownEvent</a></li><li><a href="VG.Events.MouseMoveEvent.html">MouseMoveEvent</a></li><li><a href="VG.Events.MouseUpEvent.html">MouseUpEvent</a></li><li><a href="VG.Math.Aabb.html">Aabb</a></li><li><a href="VG.Math.Matrix4.html">Matrix4</a></li><li><a href="VG.Math.Quat.html">Quat</a></li><li><a href="VG.Math.Vector2.html">Vector2</a></li><li><a href="VG.Math.Vector3.html">Vector3</a></li><li><a href="VG.Math.Vector4.html">Vector4</a></li><li><a href="VG.Render.BoxMesh.html">BoxMesh</a></li><li><a href="VG.Render.Camera.html">Camera</a></li><li><a href="VG.Render.Material.html">Material</a></li><li><a href="VG.Render.Mesh.html">Mesh</a></li><li><a href="VG.Render.MtlMaterial.html">MtlMaterial</a></li><li><a href="VG.Render.OrbitCamera.html">OrbitCamera</a></li><li><a href="VG.Render.SceneManager.html">SceneManager</a></li><li><a href="VG.Render.SceneNode.html">SceneNode</a></li><li><a href="VG.Render.SimpleMaterial.html">SimpleMaterial</a></li><li><a href="VG.Render.SphereMesh.html">SphereMesh</a></li><li><a href="VG.UI.Button.html">Button</a></li><li><a href="VG.UI.CheckBox.html">CheckBox</a></li><li><a href="VG.UI.CodeEdit.html">CodeEdit</a></li><li><a href="VG.UI.ColorWheel.html">ColorWheel</a></li><li><a href="VG.UI.Dialog.html">Dialog</a></li><li><a href="VG.UI.DockWidget.html">DockWidget</a></li><li><a href="VG.UI.DropArea.html">DropArea</a></li><li><a href="VG.UI.DropDownMenu.html">DropDownMenu</a></li><li><a href="VG.UI.HtmlView.html">HtmlView</a></li><li><a href="VG.UI.Image.html">Image</a></li><li><a href="VG.UI.Label.html">Label</a></li><li><a href="VG.UI.LabelLayout.html">LabelLayout</a></li><li><a href="VG.UI.Layout.html">Layout</a></li><li><a href="VG.UI.ListWidget.html">ListWidget</a></li><li><a href="VG.UI.RenderWidget.html">RenderWidget</a></li><li><a href="VG.UI.SectionBar.html">SectionBar</a></li><li><a href="VG.UI.SectionBarButton.html">SectionBarButton</a></li><li><a href="VG.UI.SectionBarSeparator.html">SectionBarSeparator</a></li><li><a href="VG.UI.SectionToolBar.html">SectionToolBar</a></li><li><a href="VG.UI.Slider.html">Slider</a></li><li><a href="VG.UI.SplitLayout.html">SplitLayout</a></li><li><a href="VG.UI.StackedLayout.html">StackedLayout</a></li><li><a href="VG.UI.StatusBar.html">StatusBar</a></li><li><a href="VG.UI.StatusDialog.html">StatusDialog</a></li><li><a href="VG.UI.TabWidget.html">TabWidget</a></li><li><a href="VG.UI.TextEdit.html">TextEdit</a></li><li><a href="VG.UI.TextLineEdit.html">TextLineEdit</a></li><li><a href="VG.UI.TreeWidget.html">TreeWidget</a></li><li><a href="VG.UI.Widget.html">Widget</a></li><li><a href="VG.UI.Window.html">Window</a></li><li><a href="VG.UI.Workspace.html">Workspace</a></li></ul><h3>Namespaces</h3><ul><li><a href="VG.html">VG</a></li><li><a href="VG.context.html">context</a></li><li><a href="VG.Controller.html">Controller</a></li><li><a href="VG.Core.html">Core</a></li><li><a href="VG.Data.html">Data</a></li><li><a href="VG.Events.html">Events</a></li><li><a href="VG.Import.html">Import</a></li><li><a href="VG.Math.html">Math</a></li><li><a href="VG.Render.html">Render</a></li><li><a href="VG.UI.html">UI</a></li></ul><h3>Tutorials</h3><ul><li><a href="tutorial-Data Model.html">Data Model</a></li><li><a href="tutorial-Layouts.html">Layouts</a></li><li><a href="tutorial-Widget Basics.html">Widget Basics</a></li><li><a href="tutorial-Workspace.html">Workspace</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Jul 27 2016 10:29:08 GMT+0700 (ICT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

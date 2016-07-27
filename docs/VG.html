@@ -70,7 +70,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="vg-defines.js.html">vg-defines.js</a>, <a href="vg-defines.js.html#line27">line 27</a>
+        <a href="vglib_vg-defines.js.html">vglib/vg-defines.js</a>, <a href="vglib_vg-defines.js.html#line27">line 27</a>
     </li></ul></dd>
     
 
@@ -114,7 +114,13 @@
             <dt><a href="VG.Core.html">Core</a></dt>
             <dd></dd>
         
+            <dt><a href="VG.Data.html">Data</a></dt>
+            <dd></dd>
+        
             <dt><a href="VG.Events.html">Events</a></dt>
+            <dd></dd>
+        
+            <dt><a href="VG.Font.html">Font</a></dt>
             <dd></dd>
         
             <dt><a href="VG.Import.html">Import</a></dt>
@@ -495,7 +501,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="vg-defines.js.html">vg-defines.js</a>, <a href="vg-defines.js.html#line35">line 35</a>
+        <a href="vglib_vg-defines.js.html">vglib/vg-defines.js</a>, <a href="vglib_vg-defines.js.html#line35">line 35</a>
     </li></ul></dd>
     
 
@@ -516,6 +522,347 @@
 
     
         <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id=".compressImage"><span class="type-signature">(static) </span>compressImage<span class="signature">(image, format)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Compresses an image to .PNG or .JPEG.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>image</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="VG.Core.Image.html">VG.Core.Image</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The image object to compress.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>format</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The image format to compress into, can be "PNG" or "JPEG". "PNG" is default.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="web_vg-system.js.html">web/vg-system.js</a>, <a href="web_vg-system.js.html#line257">line 257</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>var imageData=VG.compressImage( image, "PNG" );</code></pre>
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".decompressImageData"><span class="type-signature">(static) </span>decompressImageData<span class="signature">(data, image, finishedCallback)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Decompresses encoded image data.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The Base64 encoded data to decompress</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>image</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="VG.Core.Image.html">VG.Core.Image</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The image object to decompress into, can be empty.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>finishedCallback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">callback</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Will be called upon completion with the image object as its main parameter.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="web_vg-system.js.html">web/vg-system.js</a>, <a href="web_vg-system.js.html#line193">line 193</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>VG.decompressImageData( imageData, VG.Core.Image(), function( image ) {    VG.log( "Image decoded successfully." );});</code></pre>
+
+
 
         
             
@@ -573,7 +920,138 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="vg-defines.js.html">vg-defines.js</a>, <a href="vg-defines.js.html#line86">line 86</a>
+        <a href="vglib_vg-defines.js.html">vglib/vg-defines.js</a>, <a href="vglib_vg-defines.js.html#line86">line 86</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".gotoUrl"><span class="type-signature">(static) </span>gotoUrl<span class="signature">(url)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Opens the given Url in a new browser tab.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>url</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The url to open.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="web_vg-system.js.html">web/vg-system.js</a>, <a href="web_vg-system.js.html#line387">line 387</a>
     </li></ul></dd>
     
 
@@ -655,7 +1133,138 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="vg-defines.js.html">vg-defines.js</a>, <a href="vg-defines.js.html#line72">line 72</a>
+        <a href="vglib_vg-defines.js.html">vglib/vg-defines.js</a>, <a href="vglib_vg-defines.js.html#line72">line 72</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".setMouseCursor"><span class="type-signature">(static) </span>setMouseCursor<span class="signature">(cursor)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Sets the mouse cursor.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>cursor</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The name of the CSS value of the mouse cursor, like "default". For a list of possible values see https://developer.mozilla.org/en/docs/Web/CSS/cursor.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="web_vg-system.js.html">web/vg-system.js</a>, <a href="web_vg-system.js.html#line124">line 124</a>
     </li></ul></dd>
     
 
@@ -737,7 +1346,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="vg-defines.js.html">vg-defines.js</a>, <a href="vg-defines.js.html#line64">line 64</a>
+        <a href="vglib_vg-defines.js.html">vglib/vg-defines.js</a>, <a href="vglib_vg-defines.js.html#line64">line 64</a>
     </li></ul></dd>
     
 
@@ -779,13 +1388,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="VG.Canvas.html">Canvas</a></li><li><a href="VG.Controller.Array.html">Array</a></li><li><a href="VG.Controller.Base.html">Base</a></li><li><a href="VG.Controller.Tree.html">Tree</a></li><li><a href="VG.Core.Color.html">Color</a></li><li><a href="VG.Core.Image.html">Image</a></li><li><a href="VG.Core.ImagePool.html">ImagePool</a></li><li><a href="VG.Core.Margin.html">Margin</a></li><li><a href="VG.Core.NormalizedColor.html">NormalizedColor</a></li><li><a href="VG.Core.Point.html">Point</a></li><li><a href="VG.Core.Rect.html">Rect</a></li><li><a href="VG.Core.Size.html">Size</a></li><li><a href="VG.Core.Timer.html">Timer</a></li><li><a href="VG.Core.TypedArray.html">TypedArray</a></li><li><a href="VG.Events.MouseDownEvent.html">MouseDownEvent</a></li><li><a href="VG.Events.MouseMoveEvent.html">MouseMoveEvent</a></li><li><a href="VG.Events.MouseUpEvent.html">MouseUpEvent</a></li><li><a href="VG.Math.Aabb.html">Aabb</a></li><li><a href="VG.Math.Matrix4.html">Matrix4</a></li><li><a href="VG.Math.Quat.html">Quat</a></li><li><a href="VG.Math.Vector2.html">Vector2</a></li><li><a href="VG.Math.Vector3.html">Vector3</a></li><li><a href="VG.Math.Vector4.html">Vector4</a></li><li><a href="VG.Render.BoxMesh.html">BoxMesh</a></li><li><a href="VG.Render.Camera.html">Camera</a></li><li><a href="VG.Render.Material.html">Material</a></li><li><a href="VG.Render.Mesh.html">Mesh</a></li><li><a href="VG.Render.MtlMaterial.html">MtlMaterial</a></li><li><a href="VG.Render.OrbitCamera.html">OrbitCamera</a></li><li><a href="VG.Render.SceneManager.html">SceneManager</a></li><li><a href="VG.Render.SceneNode.html">SceneNode</a></li><li><a href="VG.Render.SimpleMaterial.html">SimpleMaterial</a></li><li><a href="VG.Render.SphereMesh.html">SphereMesh</a></li><li><a href="VG.UI.Dialog.html">Dialog</a></li><li><a href="VG.UI.DockWidget.html">DockWidget</a></li><li><a href="VG.UI.HtmlView.html">HtmlView</a></li><li><a href="VG.UI.Image.html">Image</a></li><li><a href="VG.UI.LabelLayout.html">LabelLayout</a></li><li><a href="VG.UI.Layout.html">Layout</a></li><li><a href="VG.UI.RenderWidget.html">RenderWidget</a></li><li><a href="VG.UI.SectionBar.html">SectionBar</a></li><li><a href="VG.UI.SectionBarButton.html">SectionBarButton</a></li><li><a href="VG.UI.SectionBarSeparator.html">SectionBarSeparator</a></li><li><a href="VG.UI.SectionToolBar.html">SectionToolBar</a></li><li><a href="VG.UI.SplitLayout.html">SplitLayout</a></li><li><a href="VG.UI.StackedLayout.html">StackedLayout</a></li><li><a href="VG.UI.StatusDialog.html">StatusDialog</a></li><li><a href="VG.UI.Widget.html">Widget</a></li><li><a href="VG.UI.Window.html">Window</a></li><li><a href="VG.UI.Workspace.html">Workspace</a></li></ul><h3>Namespaces</h3><ul><li><a href="VG.html">VG</a></li><li><a href="VG.context.html">context</a></li><li><a href="VG.Controller.html">Controller</a></li><li><a href="VG.Core.html">Core</a></li><li><a href="VG.Events.html">Events</a></li><li><a href="VG.Import.html">Import</a></li><li><a href="VG.Math.html">Math</a></li><li><a href="VG.Render.html">Render</a></li><li><a href="VG.UI.html">UI</a></li></ul><h3>Tutorials</h3><ul><li><a href="tutorial-Data Model.html">Data Model</a></li><li><a href="tutorial-Layouts.html">Layouts</a></li><li><a href="tutorial-Widget Basics.html">Widget Basics</a></li><li><a href="tutorial-Workspace.html">Workspace</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="VG.Canvas.html">Canvas</a></li><li><a href="VG.Controller.Array.html">Array</a></li><li><a href="VG.Controller.Base.html">Base</a></li><li><a href="VG.Controller.Tree.html">Tree</a></li><li><a href="VG.Core.Color.html">Color</a></li><li><a href="VG.Core.Image.html">Image</a></li><li><a href="VG.Core.ImagePool.html">ImagePool</a></li><li><a href="VG.Core.Margin.html">Margin</a></li><li><a href="VG.Core.NormalizedColor.html">NormalizedColor</a></li><li><a href="VG.Core.Point.html">Point</a></li><li><a href="VG.Core.Rect.html">Rect</a></li><li><a href="VG.Core.Size.html">Size</a></li><li><a href="VG.Core.Timer.html">Timer</a></li><li><a href="VG.Core.TypedArray.html">TypedArray</a></li><li><a href="VG.Data.Base.html">Base</a></li><li><a href="VG.Data.Collection.html">Collection</a></li><li><a href="VG.Events.MouseDownEvent.html">MouseDownEvent</a></li><li><a href="VG.Events.MouseMoveEvent.html">MouseMoveEvent</a></li><li><a href="VG.Events.MouseUpEvent.html">MouseUpEvent</a></li><li><a href="VG.Font.Font.html">Font</a></li><li><a href="VG.Font.Manager.html">Manager</a></li><li><a href="VG.Math.Aabb.html">Aabb</a></li><li><a href="VG.Math.Matrix4.html">Matrix4</a></li><li><a href="VG.Math.Quat.html">Quat</a></li><li><a href="VG.Math.Vector2.html">Vector2</a></li><li><a href="VG.Math.Vector3.html">Vector3</a></li><li><a href="VG.Math.Vector4.html">Vector4</a></li><li><a href="VG.Render.BoxMesh.html">BoxMesh</a></li><li><a href="VG.Render.Camera.html">Camera</a></li><li><a href="VG.Render.Material.html">Material</a></li><li><a href="VG.Render.Mesh.html">Mesh</a></li><li><a href="VG.Render.MtlMaterial.html">MtlMaterial</a></li><li><a href="VG.Render.OrbitCamera.html">OrbitCamera</a></li><li><a href="VG.Render.SceneManager.html">SceneManager</a></li><li><a href="VG.Render.SceneNode.html">SceneNode</a></li><li><a href="VG.Render.SimpleMaterial.html">SimpleMaterial</a></li><li><a href="VG.Render.SphereMesh.html">SphereMesh</a></li><li><a href="VG.UI.Button.html">Button</a></li><li><a href="VG.UI.CheckBox.html">CheckBox</a></li><li><a href="VG.UI.CodeEdit.html">CodeEdit</a></li><li><a href="VG.UI.ColorWheel.html">ColorWheel</a></li><li><a href="VG.UI.Dialog.html">Dialog</a></li><li><a href="VG.UI.DockWidget.html">DockWidget</a></li><li><a href="VG.UI.DropArea.html">DropArea</a></li><li><a href="VG.UI.DropDownMenu.html">DropDownMenu</a></li><li><a href="VG.UI.HtmlView.html">HtmlView</a></li><li><a href="VG.UI.Image.html">Image</a></li><li><a href="VG.UI.Label.html">Label</a></li><li><a href="VG.UI.LabelLayout.html">LabelLayout</a></li><li><a href="VG.UI.Layout.html">Layout</a></li><li><a href="VG.UI.ListWidget.html">ListWidget</a></li><li><a href="VG.UI.RenderWidget.html">RenderWidget</a></li><li><a href="VG.UI.SectionBar.html">SectionBar</a></li><li><a href="VG.UI.SectionBarButton.html">SectionBarButton</a></li><li><a href="VG.UI.SectionBarSeparator.html">SectionBarSeparator</a></li><li><a href="VG.UI.SectionToolBar.html">SectionToolBar</a></li><li><a href="VG.UI.Slider.html">Slider</a></li><li><a href="VG.UI.SplitLayout.html">SplitLayout</a></li><li><a href="VG.UI.StackedLayout.html">StackedLayout</a></li><li><a href="VG.UI.StatusBar.html">StatusBar</a></li><li><a href="VG.UI.StatusDialog.html">StatusDialog</a></li><li><a href="VG.UI.TabWidget.html">TabWidget</a></li><li><a href="VG.UI.TextEdit.html">TextEdit</a></li><li><a href="VG.UI.TextLineEdit.html">TextLineEdit</a></li><li><a href="VG.UI.TreeWidget.html">TreeWidget</a></li><li><a href="VG.UI.Widget.html">Widget</a></li><li><a href="VG.UI.Window.html">Window</a></li><li><a href="VG.UI.Workspace.html">Workspace</a></li></ul><h3>Namespaces</h3><ul><li><a href="VG.html">VG</a></li><li><a href="VG.context.html">context</a></li><li><a href="VG.Controller.html">Controller</a></li><li><a href="VG.Core.html">Core</a></li><li><a href="VG.Data.html">Data</a></li><li><a href="VG.Events.html">Events</a></li><li><a href="VG.Font.html">Font</a></li><li><a href="VG.Import.html">Import</a></li><li><a href="VG.Math.html">Math</a></li><li><a href="VG.Render.html">Render</a></li><li><a href="VG.UI.html">UI</a></li></ul><h3>Tutorials</h3><ul><li><a href="tutorial-Data Model.html">Data Model</a></li><li><a href="tutorial-Layouts.html">Layouts</a></li><li><a href="tutorial-Widget Basics.html">Widget Basics</a></li><li><a href="tutorial-Workspace.html">Workspace</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Jul 26 2016 11:47:28 GMT+0700 (ICT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Jul 27 2016 11:09:03 GMT+0700 (ICT)
 </footer>
 
 <script> prettyPrint(); </script>

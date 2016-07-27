@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -116,6 +116,11 @@ VG.setMouseCursorByID=function( id, cursorStyle )
     }
 };
 
+/**
+ * Sets the mouse cursor.
+ * @param {string} cursor - The name of the CSS value of the mouse cursor, like "default". For a list of possible values see https://developer.mozilla.org/en/docs/Web/CSS/cursor.
+ */
+
 VG.setMouseCursor=function( cursor )
 {
     VG.setMouseCursorByID( "webgl", cursor );
@@ -173,6 +178,18 @@ VG.remoteSaveFile=function( fileName, data, callback )
     VG.sendBackendRequest( string, JSON.stringify( parameters ), callback, "POST" );
 };
 
+/**
+ * Decompresses encoded image data.
+ * @param {string} data - The Base64 encoded data to decompress
+ * @param {VG.Core.Image} - The image object to decompress into, can be empty.
+ * @param {callback} finishedCallback - Will be called upon completion with the image object as its main parameter.
+ * @example
+ *
+ * VG.decompressImageData( imageData, VG.Core.Image(), function( image ) {
+ *     VG.log( "Image decoded successfully." );
+ * });
+ */
+
 VG.decompressImageData=function( data, image, finishedCallback, options )
 {        
     var im=new Image();
@@ -226,6 +243,16 @@ VG.decompressImageData=function( data, image, finishedCallback, options )
     }
     im.src=data;  
 };
+
+/**
+ * Compresses an image to .PNG or .JPEG.
+ * @param {VG.Core.Image} - The image object to compress.
+ * @param {string} format - The image format to compress into, can be "PNG" or "JPEG". "PNG" is default.
+ * @example
+ *
+ * var imageData=VG.compressImage( image, "PNG" );
+ *
+ */
 
 VG.compressImage=function( image, format )
 {
@@ -350,6 +377,12 @@ VG.clipboardPasteDataForType=function( type )
     if ( type === "Nodes" ) return VG.context.workspace.nodesClipboard;
     return null;
 };
+
+/**
+ * Opens the given Url in a new browser tab.
+ * @param {string} url - The url to open.
+ *
+ */
 
 VG.gotoUrl=function( link )
 {
