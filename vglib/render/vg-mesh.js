@@ -638,8 +638,6 @@ VG.Render.Mesh.prototype.onDraw = function(pipeline, context, delta)
         if ( material.applyData ) material.applyData();
 		vb.drawBuffer(VG.Renderer.Primitive.Triangles, 0, this.vertexCount);
 	}
-
-	vb.purgeAttribs();
 }
 
 /** Makes a primitive box 

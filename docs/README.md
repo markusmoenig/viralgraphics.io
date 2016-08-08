@@ -1,10 +1,8 @@
-_Warning, this documentation is not yet complete and considered work in progress._
-
 <h3>Namespaces</h3>
 
 All Visual Graphics functionality is implemented inside the {@link VG} namespace. This namespace contains a list of classes and sub-namespaces, here is a short overview of the most important namespaces and classes.
 
-* At the very core is the WebGL abstraction layer which consists of the following classes: ... . These classes draw all visual information inside an application to the screen.
+* At the very core is the WebGL abstraction layer which consists of the following classes: {@link VG.Shader}, {@link VG.GPUBuffer}, {@link VG.RenderTarget}, {@link VG.Texture}. These classes draw all visual information inside an application to the screen.
 * {@link VG.Core} consists of core classes which are used in the UI system of Visual Graphics, like classes for {@link VG.Core.Point|Points}, {@link VG.Core.Rect|Rectangles} and {@link VG.Core.Image|Images} and so forth.
 * {@link VG.UI} contains all Widget and Layout classes used by Visual Graphics, including the {@link VG.UI.Workspace|Workspace} class which manages the display space of an Visual Graphics application.
 * {@link VG.Render} contains all classes handling visual realtime objects, like {@link VG.Render.Mesh|meshes} and the render {@link VG.Render.Pipeline|pipeline}.

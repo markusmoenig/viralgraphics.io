@@ -327,8 +327,6 @@ VG.Canvas.prototype.flushTris=function()
     //buffer already binded at b.update(), force no bind
     b.drawBuffer(VG.Renderer.Primitive.Triangles, 0, this.triCount / 6);
 
-	b.purgeAttribs();
-
     this.triCount = 0;
 }
 
@@ -1016,8 +1014,6 @@ VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angl
         x+=g.width * font.scale;
     }
 
-	b.purgeAttribs();
-
     return x;
 };
 
@@ -1138,8 +1134,6 @@ VG.Canvas.prototype.drawSVG=function( svg, svgGroup, rect, col, angle, crX, crY)
 
     if (group.triSize > 0)
         b.drawBuffer(VG.Renderer.Primitive.Triangles, Math.round( group.triOffset/2 ), Math.round( group.triSize/2 ) );
-
-    b.purgeAttribs();
 };
 
 // --------------------------------------------- VG.Canvas.prototype.update

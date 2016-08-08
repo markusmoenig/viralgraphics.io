@@ -44,35 +44,31 @@ VG.Renderer = function()
 
     this.proj2d = new VG.Math.Matrix4();
 
-    this.shaderTex2d = new VG.Shader(
-        "#version 100\n\n" +
-        "attribute vec4 vPos;\n"+
-        "attribute vec2 vTexCoord;\n\n" +
-        "varying vec2 texCoord;\n\n" +
-
-        "void main() {\n" +
-        "   texCoord = vTexCoord;\n" +
-        "   texCoord.y = 1.0 - vTexCoord.y;\n" +
-        "   gl_Position = vPos;" +
-        "}",
-
-        "#version 100\n\n" +
-
-        "precision mediump float;\n\n" +
-
-        "uniform sampler2D tex;\n\n" +
-
-        "uniform float alpha;\n\n" +
-        "uniform bool premAlpha;\n\n" +
-
-        "varying vec2 texCoord;\n\n" +
-
-        "void main() {\n" +
-        "   vec4 color = texture2D(tex, texCoord);\n" +
-        //"   if ( premAlpha ) gl_FragColor = vec4( color.r * alpha, color.g * alpha, color.b * alpha, color.a * alpha ); else gl_FragColor = vec4(color.rgb, color.a * alpha);\n" +
-        "   if ( premAlpha ) gl_FragColor = vec4( clamp( color.r * alpha, 0.0, 1.0), clamp( color.g * alpha, 0.0, 1.0), clamp( color.b * alpha, 0.0, 1.0), clamp( color.a * alpha, 0.0, 1.0) ); else gl_FragColor = vec4(color.rgb, clamp( color.a * alpha, 0.0, 1.0) );\n" +
-
-        "}\n");
+    this.shaderTex2d = new VG.Shader([
+        "#version 100",
+        "attribute vec4 vPos;",
+        "attribute vec2 vTexCoord;",
+        "varying vec2 texCoord;",
+        "void main(){",
+        "   texCoord = vec2(vTexCoord.x, 1.0-vTexCoord.y);",
+        "   gl_Position = vPos;",
+        "}", ""
+    ].join('\n'), [
+        "#version 100",
+        "precision mediump float;",
+        "uniform sampler2D tex;",
+        "uniform float alpha;",
+        "uniform bool premAlpha;",
+        "varying vec2 texCoord;",
+        "void main(){",
+        "   vec4 color = texture2D(tex, texCoord);",
+        "   if(premAlpha){",
+        "       gl_FragColor = vec4(clamp( color.r * alpha, 0.0, 1.0), clamp( color.g * alpha, 0.0, 1.0), clamp( color.b * alpha, 0.0, 1.0), clamp( color.a * alpha, 0.0, 1.0) );",
+        "   }else{",
+        "       gl_FragColor = vec4(color.rgb, clamp( color.a * alpha, 0.0, 1.0) );",
+        "   }",
+        "}", ""
+    ].join('\n'));
 
     this.shaderTex2d.blendType = VG.Shader.Blend.Alpha;
     this.shaderTex2d.create();
@@ -226,8 +222,141 @@ VG.Renderer.prototype.invalidateAll = function()
 
 VG.Renderer.prototype.tick = function()
 {
-
 }
+
+/**
+ *
+ * @param {Object} options - Options
+ * @param {VG.Texture} options.texture - Texture to use
+ * @param {number} options.x - Center x
+ * @param {number} options.y - Center y
+ * @param {number} options.width - Quad width
+ * @param {number} options.height - Quad height
+ * @param {number} [options.angle=0] - Rotation in radian ccc.
+ * @param {number} [options.scale=1] - Scale
+ * @param {number} [options.alpha=1] - Alpha
+ * @param {VG.Core.Size} [options.viewportSize=undefined] - View port size
+ */
+VG.Renderer.prototype.drawQuadRotate = function(options){
+    "use strict";
+    var buffer,
+        shader,
+        db,
+        i,
+        x,
+        y,
+        dx,
+        dy,
+        angle,
+        scale;
+
+    var view = {
+        width: this.w,
+        height: this.h
+    };
+    if(options.viewportSize){
+        view.width = options.viewportSize.width;
+        view.height = options.viewportSize.height;
+    }
+    view.max = Math.max(view.width, view.height);
+    view.min = Math.min(view.width, view.height);
+    view.aspect = {
+        x: view.height/view.max,
+        y: view.width/view.max
+    };
+
+    // buffer init
+    VG.Renderer._gpuBuffer = VG.Renderer._gpuBuffer || {};
+    if(!VG.Renderer._gpuBuffer.drawQuadRotate){
+        buffer = VG.Renderer._gpuBuffer.drawQuadRotate
+            = new VG.GPUBuffer(VG.Type.Float, 4 * 8, true);
+        buffer.create();
+    }
+    buffer = VG.Renderer._gpuBuffer.drawQuadRotate;
+
+    // shader init
+    VG.Renderer._shader = VG.Renderer._shader || {};
+    if(!VG.Renderer._shader.drawQuadRotate){
+        shader = VG.Renderer._shader.drawQuadRotate
+            = new VG.Shader([
+            "#version 100",
+            "attribute vec2 a_center;",
+            "attribute vec2 a_offset;",
+            "attribute float a_angle;",
+            "attribute float a_scale;",
+            "attribute vec2 a_texCoord;",
+            "uniform vec2 u_aspect;",
+            "varying vec2 v_texCoord;",
+            "void main(){",
+            "   float c = cos(a_angle);",
+            "   float s = sin(a_angle);",
+            "   v_texCoord = vec2(a_texCoord.x, 1.0-a_texCoord.y);",
+            "   vec2 offset = a_offset * a_scale;",
+            "   gl_Position = vec4(a_center + vec2((offset.x*c - offset.y*s), (offset.x*s + offset.y*c))*u_aspect, 0.0, 1.0);",
+            "}", ""
+        ].join('\n'),[
+            "#version 100",
+            "precision mediump float;",
+            "uniform sampler2D tex;",
+            "uniform float alpha;",
+            "uniform bool premAlpha;",
+            "varying vec2 v_texCoord;",
+            "void main(){",
+            "   vec4 color = texture2D(tex, v_texCoord);",
+            "   if(premAlpha){",
+            "       gl_FragColor = vec4(clamp( color.r * alpha, 0.0, 1.0), clamp( color.g * alpha, 0.0, 1.0), clamp( color.b * alpha, 0.0, 1.0), clamp( color.a * alpha, 0.0, 1.0) );",
+            "   }else{",
+            "       gl_FragColor = vec4(color.rgb, clamp( color.a * alpha, 0.0, 1.0) );",
+            "   }",
+            "}", ""
+        ].join('\n'));
+        shader.blendType = VG.Shader.Blend.Alpha;
+        shader.create();
+    }
+    shader = VG.Renderer._shader.drawQuadRotate;
+    shader.bind();
+
+    // shader update
+    if(options.texture)
+        shader.setTexture("tex", options.texture, 0);
+
+    shader.setFloat("alpha", (typeof options.alpha === 'undefined') ? 1.0 : options.alpha);
+    shader.setFloat("u_aspect", [view.aspect.x, view.aspect.y]);
+
+    // buffer update
+    x = (options.x * 2.0 / view.width - 1);
+    y = options.y * 2.0 / view.height - 1;
+    dx = options.width / view.min;
+    dy = options.height / view.min;
+    angle = typeof options.angle === 'undefined' ? 0 : options.angle;
+    scale = typeof options.scale === 'undefined' ? 1.0 : options.scale;
+
+    db = buffer.getDataBuffer(); i = 0;
+
+    db.set(i++, x); db.set(i++, y); db.set(i++, 0.0); db.set(i++, 1.0);
+    db.set(i++, -dx); db.set(i++, -dy); db.set(i++, angle); db.set(i++, scale);
+
+    db.set(i++, x); db.set(i++, y); db.set(i++, 0.0); db.set(i++, 0.0);
+    db.set(i++, -dx); db.set(i++, dy); db.set(i++, angle); db.set(i++, scale);
+
+    db.set(i++, x); db.set(i++, y); db.set(i++, 1.0); db.set(i++, 1.0);
+    db.set(i++, dx); db.set(i++, -dy); db.set(i++, angle); db.set(i++, scale);
+
+    db.set(i++, x); db.set(i++, y); db.set(i++, 1.0); db.set(i++, 0.0);
+    db.set(i++, dx); db.set(i++, dy); db.set(i++, angle); db.set(i++, scale);
+
+    buffer.update();
+
+    // buffer draw
+    // todo: move it to shader creation, its possible if buffer.update() does not change gpu location
+    buffer.vertexAttrib(shader.getAttrib("a_center"), 2, false, 32, 0);
+    buffer.vertexAttrib(shader.getAttrib("a_texCoord"), 2, false, 32, 8);
+    buffer.vertexAttrib(shader.getAttrib("a_offset"), 2, false, 32, 16);
+    buffer.vertexAttrib(shader.getAttrib("a_angle"), 1, false, 32, 24);
+    buffer.vertexAttrib(shader.getAttrib("a_scale"), 1, false, 32, 28);
+
+    buffer.drawBuffer(VG.Renderer.Primitive.TriangleStrip, 0, 4);
+};
 
 VG.Renderer.prototype.drawQuad = function(texture, w, h, x, y, alpha, viewportSize)
 {
@@ -310,8 +439,6 @@ VG.Renderer.prototype.drawFrameQuad = function(aPos, aTex, nobind, quad)
     b.vertexAttrib(aTex, 2, false, 16, 4 * 2);
 
 	b.drawBuffer(VG.Renderer.Primitive.TriangleStrip, 0, 4);
-
-	b.purgeAttribs();
 }
 
 VG.Renderer.prototype.drawMesh = function(mesh, element, shader)
@@ -368,8 +495,6 @@ VG.Renderer.prototype.drawMesh = function(mesh, element, shader)
     {
 		vb.drawBuffer(VG.Renderer.Primitive.Triangles, eOffset, eSize);
     }
-
-	vb.purgeAttribs();
 }
 
 

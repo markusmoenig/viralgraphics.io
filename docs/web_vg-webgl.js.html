@@ -1,5 +1,33 @@
-/*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv> and Contributors
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: web/vg-webgl.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: web/vg-webgl.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/*
+ * Copyright (c) 2014-2016 Markus Moenig &lt;markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -69,7 +97,7 @@ var VG;
         gl = VG.gl = WebGL.gl = WebGLUtils.setupWebGL(WebGL.canvas);
         WebGL.samples = WebGL.gl.getParameter(WebGL.gl.SAMPLES);
         var maxTextureImageUnits = 8;
-        for (var i = 0; i < maxTextureImageUnits; i += 1) {
+        for (var i = 0; i &lt; maxTextureImageUnits; i += 1) {
             _state.WebGL.texture[i] = {};
         }
     };
@@ -92,9 +120,9 @@ var VG;
     };
 
     /**
-     * GPUBuffer encapsulates OpenGL VBO<br>
-     * Usage:<br>
-     *     <pre>
+     * GPUBuffer encapsulates OpenGL VBO&lt;br>
+     * Usage:&lt;br>
+     *     &lt;pre>
      * var g = new GPUBuffer(VG.Type.Float, 3*3).create();
      * ... fill with data ...
      * g.update(); // transfer data and optional alloc
@@ -106,7 +134,7 @@ var VG;
      * g.create()
      * ...
      * g.dispose()
-     * </pre>
+     * &lt;/pre>
      * @param {VG.Type} type - Type of buffer, i.e VG.Type.Float
      * @param {number} size - Size of buffer (#type)
      * @param {boolean} [dynamic=false] - Is dynamic buffer
@@ -136,7 +164,7 @@ var VG;
     };
 
     /**
-     * Get the stride in bytes.<br>
+     * Get the stride in bytes.&lt;br>
      * Stride in #bytes per element.
      * @returns {number} - Buffer stride.
      */
@@ -177,9 +205,9 @@ var VG;
         return this;
     };
     /**
-     * Update the buffer from RAM to GPU. <br>
-     * The updated data must be inside dataBuffer.data. <br>
-     * offset + count <= this.dataBuffer.data.length <br>
+     * Update the buffer from RAM to GPU. &lt;br>
+     * The updated data must be inside dataBuffer.data. &lt;br>
+     * offset + count &lt;= this.dataBuffer.data.length &lt;br>
      * @param {number} [offset=0] - Offset to update
      * @param {number} [count=data.size] - Count to update
      * @returns {VG.GPUBuffer} - this
@@ -188,14 +216,14 @@ var VG;
         if (this.id === 0)
             throw "GPUBuffer.update(), this.id == 0.";
         this.bind();
-        offset = offset === undefined || offset < 0 ? 0 : offset;
+        offset = offset === undefined || offset &lt; 0 ? 0 : offset;
         count = count === undefined ? this.dataBuffer.data.length : count;
         if (offset + count > this.dataBuffer.data.length) {
             throw "GPUBuffer.update(), offset + count (" + (offset + count)
             + ") > data.length (" + this.dataBuffer.data.length + ")";
         }
         if (this._state.bufferData) {
-            var data = offset === 0 && count === this.dataBuffer.data.length ?
+            var data = offset === 0 &amp;&amp; count === this.dataBuffer.data.length ?
                 this.dataBuffer.data : this.dataBuffer.data.subarray(offset, count);
             gl.bufferSubData(this.target, offset, data);
         }
@@ -273,7 +301,7 @@ var VG;
     };
 
     /**
-     * Construct & compile shader with given source.
+     * Construct &amp; compile shader with given source.
      * @param vSource {string} Vertex source
      * @param fSource {string} Fragment source
      * @constructor
@@ -696,9 +724,9 @@ var VG;
      */
     VG.Shader.arrayValueCheck = function (a, b, length) {
         // return false; // disabled, always return false.
-        if ( !a || !(a instanceof Array) || a.length < length)
+        if ( !a || !(a instanceof Array) || a.length &lt; length)
             return false;
-        for (var i = 0; i < length; i += 1)
+        for (var i = 0; i &lt; length; i += 1)
             if (a[i] !== b[i])
                 return false;
         return true;
@@ -780,7 +808,7 @@ var VG;
      * @returns {VG.Texture} - this
      */
     VG.Texture.prototype.bind = function () {
-        if (this.target === gl.TEXTURE_2D && this.images[0].needsUpdate) {
+        if (this.target === gl.TEXTURE_2D &amp;&amp; this.images[0].needsUpdate) {
             this.images[0].needsUpdate = false;
             this.update();
         }
@@ -840,7 +868,7 @@ var VG;
 
             if (this.images.length != 6) throw "unexpected number of faces";
 
-            for (var i = 0; i < this.images.length; i++) {
+            for (var i = 0; i &lt; this.images.length; i++) {
                 gl.texImage2D(faceOrder[i], 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, this.images[i].data);
             }
 
@@ -937,9 +965,9 @@ var VG;
     /**
      * Encapsulates an off-screen VBO.
      *
-     * @param width {number} Width of <tt>Rendertarget</tt>.
-     * @param height {number} Height of <tt>RT</tt>.
-     * @param isMain {boolean} Is this main <tt>RT</tt>.
+     * @param width {number} Width of &lt;tt>Rendertarget&lt;/tt>.
+     * @param height {number} Height of &lt;tt>RT&lt;/tt>.
+     * @param isMain {boolean} Is this main &lt;tt>RT&lt;/tt>.
      * @constructor
      */
     VG.RenderTarget = RenderTarget = function (width, height, isMain) {
@@ -955,13 +983,13 @@ var VG;
             this.width = width;
         if (height)
             this.height = height;
-        this.isMain = (isMain && true) || false;
+        this.isMain = (isMain &amp;&amp; true) || false;
         if (isMain)
             this.autoResize = true;
         VG.Renderer().addResource(this);
     };
     /**
-     * Create this <tt>RT</tt> in GPU with its texture and renderbuffer attachment.
+     * Create this &lt;tt>RT&lt;/tt> in GPU with its texture and renderbuffer attachment.
      * @returns {VG.RenderTarget}
      */
     VG.RenderTarget.prototype.create = function () {
@@ -1166,12 +1194,12 @@ var VG;
     };
 
     /**
-     * Scissor the next draw operation with <tt>rect</tt>.
+     * Scissor the next draw operation with &lt;tt>rect&lt;/tt>.
      * @param rect {VG.Core.Rect} Bounding rectangle.
      * @returns {VG.RenderTarget} - this
      */
     VG.RenderTarget.prototype.setScissor = function (rect) {
-        if (rect && rect.width > 0 && rect.height > 0 ) {
+        if (rect &amp;&amp; rect.width > 0 &amp;&amp; rect.height > 0 ) {
             if (_state.WebGL.enabled[gl.SCISSOR_TEST] !== true) {
                 gl.enable(gl.SCISSOR_TEST);
                 _state.WebGL.enabled[gl.SCISSOR_TEST] = true;
@@ -1200,7 +1228,7 @@ var VG;
                 gl.clearColor(color.r, color.g, color.b, color.a);
             clearBits |= gl.COLOR_BUFFER_BIT;
         }
-        if (depth !== undefined && depth !== false) {
+        if (depth !== undefined &amp;&amp; depth !== false) {
             if (depth)
                 gl.clearDepth(depth);
             clearBits |= gl.DEPTH_BUFFER_BIT;
@@ -1284,3 +1312,26 @@ var VG;
         DrawInverse: 3
     };
 })(VG || (VG = {}));
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="VG.Canvas.html">Canvas</a></li><li><a href="VG.Controller.Array.html">Array</a></li><li><a href="VG.Controller.Base.html">Base</a></li><li><a href="VG.Controller.Tree.html">Tree</a></li><li><a href="VG.Core.Color.html">Color</a></li><li><a href="VG.Core.Image.html">Image</a></li><li><a href="VG.Core.ImagePool.html">ImagePool</a></li><li><a href="VG.Core.Margin.html">Margin</a></li><li><a href="VG.Core.NormalizedColor.html">NormalizedColor</a></li><li><a href="VG.Core.Point.html">Point</a></li><li><a href="VG.Core.Rect.html">Rect</a></li><li><a href="VG.Core.Size.html">Size</a></li><li><a href="VG.Core.Timer.html">Timer</a></li><li><a href="VG.Core.TypedArray.html">TypedArray</a></li><li><a href="VG.Data.Base.html">Base</a></li><li><a href="VG.Data.Collection.html">Collection</a></li><li><a href="VG.Events.MouseDownEvent.html">MouseDownEvent</a></li><li><a href="VG.Events.MouseMoveEvent.html">MouseMoveEvent</a></li><li><a href="VG.Events.MouseUpEvent.html">MouseUpEvent</a></li><li><a href="VG.Font.Font.html">Font</a></li><li><a href="VG.Font.Manager.html">Manager</a></li><li><a href="VG.GPUBuffer.html">GPUBuffer</a></li><li><a href="VG.Math.Aabb.html">Aabb</a></li><li><a href="VG.Math.Matrix4.html">Matrix4</a></li><li><a href="VG.Math.Quat.html">Quat</a></li><li><a href="VG.Math.Vector2.html">Vector2</a></li><li><a href="VG.Math.Vector3.html">Vector3</a></li><li><a href="VG.Math.Vector4.html">Vector4</a></li><li><a href="VG.Render.BoxMesh.html">BoxMesh</a></li><li><a href="VG.Render.Camera.html">Camera</a></li><li><a href="VG.Render.Material.html">Material</a></li><li><a href="VG.Render.Mesh.html">Mesh</a></li><li><a href="VG.Render.MtlMaterial.html">MtlMaterial</a></li><li><a href="VG.Render.OrbitCamera.html">OrbitCamera</a></li><li><a href="VG.Render.SceneManager.html">SceneManager</a></li><li><a href="VG.Render.SceneNode.html">SceneNode</a></li><li><a href="VG.Render.SimpleMaterial.html">SimpleMaterial</a></li><li><a href="VG.Render.SphereMesh.html">SphereMesh</a></li><li><a href="VG.RenderTarget.html">RenderTarget</a></li><li><a href="VG.Shader.html">Shader</a></li><li><a href="VG.Texture.html">Texture</a></li><li><a href="VG.UI.Button.html">Button</a></li><li><a href="VG.UI.CheckBox.html">CheckBox</a></li><li><a href="VG.UI.CodeEdit.html">CodeEdit</a></li><li><a href="VG.UI.ColorWheel.html">ColorWheel</a></li><li><a href="VG.UI.Dialog.html">Dialog</a></li><li><a href="VG.UI.DockWidget.html">DockWidget</a></li><li><a href="VG.UI.DropArea.html">DropArea</a></li><li><a href="VG.UI.DropDownMenu.html">DropDownMenu</a></li><li><a href="VG.UI.HtmlView.html">HtmlView</a></li><li><a href="VG.UI.Image.html">Image</a></li><li><a href="VG.UI.Label.html">Label</a></li><li><a href="VG.UI.LabelLayout.html">LabelLayout</a></li><li><a href="VG.UI.Layout.html">Layout</a></li><li><a href="VG.UI.ListWidget.html">ListWidget</a></li><li><a href="VG.UI.RenderWidget.html">RenderWidget</a></li><li><a href="VG.UI.SectionBar.html">SectionBar</a></li><li><a href="VG.UI.SectionBarButton.html">SectionBarButton</a></li><li><a href="VG.UI.SectionBarSeparator.html">SectionBarSeparator</a></li><li><a href="VG.UI.SectionToolBar.html">SectionToolBar</a></li><li><a href="VG.UI.Slider.html">Slider</a></li><li><a href="VG.UI.SplitLayout.html">SplitLayout</a></li><li><a href="VG.UI.StackedLayout.html">StackedLayout</a></li><li><a href="VG.UI.StatusBar.html">StatusBar</a></li><li><a href="VG.UI.StatusDialog.html">StatusDialog</a></li><li><a href="VG.UI.TabWidget.html">TabWidget</a></li><li><a href="VG.UI.TextEdit.html">TextEdit</a></li><li><a href="VG.UI.TextLineEdit.html">TextLineEdit</a></li><li><a href="VG.UI.TreeWidget.html">TreeWidget</a></li><li><a href="VG.UI.Widget.html">Widget</a></li><li><a href="VG.UI.Window.html">Window</a></li><li><a href="VG.UI.Workspace.html">Workspace</a></li><li><a href="VG.WebGL.html">WebGL</a></li></ul><h3>Namespaces</h3><ul><li><a href="VG.html">VG</a></li><li><a href="VG.context.html">context</a></li><li><a href="VG.Controller.html">Controller</a></li><li><a href="VG.Core.html">Core</a></li><li><a href="VG.Data.html">Data</a></li><li><a href="VG.Events.html">Events</a></li><li><a href="VG.Font.html">Font</a></li><li><a href="VG.Import.html">Import</a></li><li><a href="VG.Math.html">Math</a></li><li><a href="VG.Render.html">Render</a></li><li><a href="VG.UI.html">UI</a></li></ul><h3>Tutorials</h3><ul><li><a href="tutorial-Data Model.html">Data Model</a></li><li><a href="tutorial-Layouts.html">Layouts</a></li><li><a href="tutorial-Widget Basics.html">Widget Basics</a></li><li><a href="tutorial-Workspace.html">Workspace</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Mon Aug 08 2016 10:37:49 GMT+0700 (ICT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
