@@ -19,7 +19,13 @@ Main Features:
 1. [PaintSupreme 3D](https://www.paintsupreme3d.com)
 2. [RaySupreme DF](https://www.raysupreme.com) (Under Development)
 
-## Developing for Visual Graphics
+## Status
+
+The current version is v0.4x with new features being implemented daily. Visual Graphics is already in a usable state, however APIs can change without notice and documentation is under development at the moment.
+
+For more information please visit the Visual Graphics Homepage at http://www.visualgraphics.tv or contact me at markusm@visualgraphics.tv.
+
+# Developing for Visual Graphics
 
 Makefiles of Visual Graphics applications (they end with .vg) can be compiled into project files (.vide) using a node.js based program called vgmake. vgmake also allows the creation and publishing of applications on the Web.
 
@@ -27,19 +33,10 @@ The documentation of Visual Graphics is currently the weak link and work in prog
 
 V-IDE, the Visual Graphics IDE, has not yet catched up with the latest developments and has temporarily been taken out of the distribution. You can use vgmake to fully replace V-IDE for now.
 
-## Status
-
-The current version is v0.4x with new features being implemented daily. Visual Graphics is already in a usable state, however APIs can change without notice and documentation is quite minimal at the moment.
-
-For more information please visit the Visual Graphics Homepage at http://www.visualgraphics.tv or contact me at markusm@visualgraphics.tv.
-
-# Developing for Visual Graphics
-
-These tools are located inside the nodejs folder.
-
 ## vgmake.js
 
-vgmake is an node.js based script to compile a Visual Graphics makefile (.vg) into .vide project which can than be executed via the supplied .html files and published on the Web.
+vgmake is an node.js based script to compile a Visual Graphics makefile (.vg) into .vide project which can than be executed via the supplied .html files and published on the Web. vgmake.js is located inside the nodejs folder.
+
 
 The syntax of vgmake is pretty easy, you just supply the path and name of the .vg file and it will compile it and save it as a .vide file in the same directory as the source .vg file, e.g. "node vgmake.js ../examples/cornellbox/cornellbox.vg". The .html file will read the .vide file and launch it via the supplied visualgraphics.js script.
 
