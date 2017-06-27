@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -32,7 +32,7 @@ if ( !VG )
  * @enum {number}
  */
 
-VG.HostProperty={ 
+VG.HostProperty={
 	"Platform" : 0,
 	"PlatformWeb" : 1,
 	"PlatformDesktop" : 2,
@@ -52,9 +52,9 @@ VG.HostProperty={
 
 VG.AnimationTick=1000.0 / 60.0;
 
-/** 
+/**
  * The context applications are running in. vgMain() of the application is running in this context.
- * @namespace 
+ * @namespace
  */
 
 VG.context={};
@@ -92,5 +92,5 @@ VG.error=function()
 	if ( typeof console == "object" ) console.log( string );
 	else if ( VG.print ) VG.print( string );
 
-	if ( VG.globalVIDEInstance ) VG.globalVIDEInstance.addToRuntimeLog( string );	
+	if ( VG.globalVIDEInstance ) VG.globalVIDEInstance.addToRuntimeLog( string );
 };

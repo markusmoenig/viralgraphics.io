@@ -2,7 +2,7 @@
 // --- Constructor for our Contact Items. Will be called for each Item to be added to the list.
 
 Contact=function()
-{    
+{
     this.company=false;
     this.salutation=0;
     this.companyName="";
@@ -60,23 +60,23 @@ function vgMain( workspace )
     this.contactsController.contentClassName="Contact";
     this.contactsController.addObserver( "selectionChanged", contactSelectionChanged );
 
-    this.addButton=VG.UI.ToolButton( "Add" );
+    this.addButton=VG.UI.ToolBarButton( "Add" );
     this.addButton.clicked=function() {
-        var item=this.contactsController.add();// new Contact() );
+        var item=this.contactsController.add( new Contact() );
         this.contactsController.selected=item;
 
         this.salutationEdit.setFocus();
         setToolbarMessage.call( this );
     }.bind( this );
 
-    this.removeButton=VG.UI.ToolButton( "Remove" );
+    this.removeButton=VG.UI.ToolBarButton( "Remove" );
     this.removeButton.disabled=true;
     this.removeButton.clicked=function() {
         this.contactsController.remove( this.contactsController.selected );
         setToolbarMessage.call( this );
     }.bind( this );
 
-    this.imageButton=VG.UI.ToolButton( "Image" );
+    this.imageButton=VG.UI.ToolBarButton( "Image" );
     this.imageButton.disabled=true;
     this.imageButton.clicked=function() {
         var fileDialog=VG.OpenFileDialog( VG.UI.FileDialog.Image, function( name, image ) {
@@ -84,7 +84,7 @@ function vgMain( workspace )
             this.imageView.image.needsUpdate=true;
             image=null;
         }.bind( this ) );
-    }.bind( this );    
+    }.bind( this );
 
     contactsWidget.addToolWidget( this.addButton );
     contactsWidget.addToolWidget( this.removeButton );
@@ -95,8 +95,8 @@ function vgMain( workspace )
     var contactsWidgetLayout=VG.UI.Layout( contactsWidget );
     contactsWidgetLayout.margin.clear();
 
-    dockWidget.addItem( contactsWidget );//contactsWidgetLayout );    
-     
+    dockWidget.addItem( contactsWidget );//contactsWidgetLayout );
+
     // --- ContactEditLayout
 
     this.contactEditLayout=VG.UI.LabelLayout();
@@ -110,7 +110,7 @@ function vgMain( workspace )
     this.companyCheckbox.bind( this.dc, "contacts.company" );
     this.companyCheckbox.changed=function() { companySwitch.call( this ); }.bind( this );
 
-    this.contactEditLayout.addChild( "Company:", this.companyCheckbox );    
+    this.contactEditLayout.addChild( "Company:", this.companyCheckbox );
 
     // --- Company Name
 
@@ -146,11 +146,11 @@ function vgMain( workspace )
     this.lastNameEdit.bind( this.dc, "contacts.lastName" );
     this.lastNameEdit.textChanged=function() { computeSelectedContactItemText.call( this ); }.bind( this );
 
-    this.contactEditLayout.addChild( "Last Name:", this.lastNameEdit );    
+    this.contactEditLayout.addChild( "Last Name:", this.lastNameEdit );
 
     // --- Year of Birth
 
-    this.birthYearSlider=VG.UI.Slider( 1900, new Date().getFullYear(), 1 );
+    this.birthYearSlider=VG.UI.Slider( { min : 1900, max : new Date().getFullYear(), step : 1 } );
     this.birthYearSlider.bind( this.dc, "contacts.birthYear" );
     //this.lastNameEdit.textChanged=function() { computeSelectedContactItemText.call( this ); };
 
@@ -161,7 +161,7 @@ function vgMain( workspace )
     this.addressEdit=VG.UI.TextEdit( "" );
     this.addressEdit.bind( this.dc, "contacts.address" );
     //this.addressEdit.maximumSize.height=200;
-    this.contactEditLayout.addChild( "Address:", this.addressEdit );    
+    this.contactEditLayout.addChild( "Address:", this.addressEdit );
 
     // --- Notes Edit
 
@@ -186,7 +186,7 @@ function vgMain( workspace )
     // --- Setting up the workspace
 
     workspace.addDockWidget( dockWidget, VG.UI.DockWidgetLocation.Left );
-    workspace.content=mainLayout;    
+    workspace.content=mainLayout;
 
     setToolbarMessage.call( this );
 }
@@ -207,14 +207,14 @@ function contactSelectionChanged()
     this.imageButton.disabled=!this.contactsController.canRemove();
     this.removeContactQMI.disabled=!this.contactsController.canRemove();
     this.selectImageQMI.disabled=!this.contactsController.canRemove();
-    this.contactEditLayout.disabled=!this.contactsController.canRemove();  
+    this.contactEditLayout.disabled=!this.contactsController.canRemove();
 
     this.imageEditLayout.disabled=!this.contactsController.canRemove();
 }
 
-// --- 
+// ---
 
-function computeSelectedContactItemText() 
+function computeSelectedContactItemText()
 {
     if ( !this.contactsController || !this.contactsController.selected ) return;
 
@@ -230,7 +230,7 @@ function computeSelectedContactItemText()
         } else {
             text=firstName + " " + lastName;
         }
-    } else 
+    } else
     {
         var name=this.companyNameEdit.text;
 
@@ -245,7 +245,7 @@ function computeSelectedContactItemText()
 
 function companySwitch()
 {
-    if ( this.companyNameEdit.visible !== this.companyCheckbox.checked ) 
+    if ( this.companyNameEdit.visible !== this.companyCheckbox.checked )
     {
         this.contactEditLayout.lockAnimationSourceData.call( this.contactEditLayout );
 

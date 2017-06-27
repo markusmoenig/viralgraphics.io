@@ -7,10 +7,12 @@ It combines the best of the HMTL5 2D canvas and WebGL in an easy to use API.
 
 Main Features:
 
-* A lightweight MVC system with integrated Undo / Redo and Load / Save capabilities.
+* A lightweight MVC system with integrated undo / redo and load / save capabilities.
 * Many different layouts and widgets.
-* WebGL abstraction classes.
+* Integrated backend for user management, application folders and more.
+* Compile and upload applications to the web using vgmake.js.
 * An integrated nodes system. The node application (source code in apps/nodes) can be viewed [here](https://visualgraphics.tv/apps/nodes)
+* WebGL abstraction classes.
 
 ## Applications using Visual Graphics
 

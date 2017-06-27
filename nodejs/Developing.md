@@ -1,7 +1,7 @@
 Using the Development Tools
 ===========================
 
-##vgmake.js
+## vgmake.js
 
 vgmake is an node.js based script to compile Visual Graphics applications into .vide project files which can than be executed via the supplied .html files and published on the Web.
 
@@ -9,7 +9,7 @@ The syntax of vgmake is pretty easy, you just supply the path and name of the .v
 
 Additionally you can supply parameters to vgmake to create and publish an application on the Web, this is done by supplying your www.visualgraphics.tv account username and password via the -u and -p parameters and by using adding additional -create and -update parameters. The syntax of .vg files is described below.
 
-##vgbuild.js
+## vgbuild.js
 
 This script builds vglib.min.js from the Visual Graphics sources and should only be used when you are actively developing Visual Graphics or need to insert debug info.
 
