@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -44,14 +44,14 @@
  *
  * controller.add( new item( "First Item" ) );
  * controller.add( new item( "Second Item" ) );
- * controller.add( new item( "Third Item" ) ); 
+ * controller.add( new item( "Third Item" ) );
  * @constructor
  */
 
 VG.UI.ListWidget=function()
-{   
+{
     if ( !(this instanceof VG.UI.ListWidget) ) return new VG.UI.ListWidget();
-    
+
     VG.UI.Widget.call( this );
     this.name="ListWidget";
 
@@ -75,12 +75,12 @@ VG.UI.ListWidget=function()
 
     this.contextMenu=VG.UI.ContextMenu();
 
-    this.addMenuItem=this.contextMenu.addItem( "Add", null, function() { 
-        if ( this.controller && this.controller.contentClassName ) this.controller.add(); 
+    this.addMenuItem=this.contextMenu.addItem( "Add", null, function() {
+        if ( this.controller && this.controller.contentClassName ) this.controller.add();
     }.bind( this ));
 
     this.removeMenuItem=this.contextMenu.addItem( "Remove", null, function() {
-        if ( this.controller && this.controller.canRemove() ) this.controller.remove( this.controller.selected ); 
+        if ( this.controller && this.controller.canRemove() ) this.controller.remove( this.controller.selected );
     }.bind( this ));
 
     //this.contextMenu.addSeparator();
@@ -103,7 +103,7 @@ VG.UI.ListWidget.prototype=VG.UI.Widget();
  * Binds the widget to the data model.
  * @param {VG.Data.Collection} collection - The data collection to link this widget to.
  * @param {string} path - The path inside the data collection to bind this widget to.
- * @returns {VG.Controller.Array} The array controller created for this widget. 
+ * @returns {VG.Controller.Array} The array controller created for this widget.
  * @tutorial Data Model
  */
 
@@ -121,7 +121,7 @@ VG.UI.ListWidget.prototype.bind=function( collection, path )
     return this.controller;
 };
 
-Object.defineProperty( VG.UI.ListWidget.prototype, "itemHeight", 
+Object.defineProperty( VG.UI.ListWidget.prototype, "itemHeight",
 {
     get: function() {
         if ( this._itemHeight === -1 ) {
@@ -133,7 +133,7 @@ Object.defineProperty( VG.UI.ListWidget.prototype, "itemHeight",
     },
     set: function( itemHeight ) {
         this._itemHeight=itemHeight;
-    }    
+    }
 });
 
 VG.UI.ListWidget.prototype.addToolWidget=function( widget )
@@ -156,7 +156,7 @@ VG.UI.ListWidget.prototype.focusOut=function()
 };
 
 VG.UI.ListWidget.prototype.keyDown=function( keyCode )
-{        
+{
     if ( !this.controller.selected ) return;
 
     var index=this.controller.indexOf( this.controller.selected );
@@ -169,13 +169,13 @@ VG.UI.ListWidget.prototype.keyDown=function( keyCode )
         if ( this.needsVScrollbar )
         {
             // --- Scroll one line up if necessary
-            var y=this.contentRect.y - this.offset + (index-1) * (this.itemHeight + this.spacing);
+            y=this.contentRect.y - this.offset + (index-1) * (this.itemHeight + this.spacing);
 
             if ( y < this.contentRect.y ) {
                 this.offset-=this.itemHeight + this.spacing;
-                this.vScrollbar.scrollTo( this.offset );                
+                this.vScrollbar.scrollTo( this.offset );
             }
-        }        
+        }
     } else
     if ( keyCode === VG.Events.KeyCodes.ArrowDown && index < this.controller.length-1 )
     {
@@ -184,14 +184,14 @@ VG.UI.ListWidget.prototype.keyDown=function( keyCode )
         if ( this.needsVScrollbar )
         {
             // --- Scroll one line down if necessary
-            var y=this.contentRect.y - this.offset + (index+1) * (this.itemHeight + this.spacing);
+            y=this.contentRect.y - this.offset + (index+1) * (this.itemHeight + this.spacing);
 
             if ( y + this.itemHeight > this.contentRect.bottom() ) {
                 this.offset+=this.itemHeight + this.spacing;
-                this.vScrollbar.scrollTo( this.offset );                
+                this.vScrollbar.scrollTo( this.offset );
             }
         }
-    } 
+    }
 };
 
 VG.UI.ListWidget.prototype.mouseWheel=function( step )
@@ -200,16 +200,20 @@ VG.UI.ListWidget.prototype.mouseWheel=function( step )
 
     if ( step > 0 ) {
         this.offset-=this.itemHeight + this.spacing;
-        this.vScrollbar.scrollTo( this.offset );   
+        this.vScrollbar.scrollTo( this.offset );
     } else
     {
         this.offset+=this.itemHeight + this.spacing;
-        this.vScrollbar.scrollTo( this.offset );            
+        this.vScrollbar.scrollTo( this.offset );
     }
 };
 
 VG.UI.ListWidget.prototype.mouseMove=function( event )
 {
+    if ( this.mouseIsDown && this.dragSourceId && this.possibleDnDSource )
+    {
+        VG.context.workspace.dragOperationStarted( this, this.dragSourceId, this.possibleDnDSource );
+    }
 };
 
 VG.UI.ListWidget.prototype.mouseDown=function( event )
@@ -223,33 +227,49 @@ VG.UI.ListWidget.prototype.mouseDown=function( event )
 
     var selectedIndex=-1;
     var y=this.contentRect.y - this.offset;
-    var item=undefined;
+    var item;
 
     for ( var i=0; i < this.controller.count(); ++i ) {
-        var item=this.controller.at( i ) ;
+        item=this.controller.at( i ) ;
+        if ( !item.visible ) continue;
 
         if ( y + this.itemHeight + this.spacing >= event.pos.y && y <= event.pos.y ) {
             selectedIndex=i;
             break;
-        } 
+        }
         y+=this.itemHeight + this.spacing;
     }
 
     if ( selectedIndex >=0 && selectedIndex < this.controller.count() )
         item=this.controller.at( selectedIndex );
 
-    if ( this.controller.multiSelection ) 
+    if ( this.controller.multiSelection )
     {
         if ( event.keysDown.indexOf( VG.Events.KeyCodes.Shift ) >= 0 )
         {
             if ( !this.controller.isSelected( item ) ) this.controller.addToSelection( item );
             else this.controller.removeFromSelection( item );
         } else
-        if ( item )
+        if ( item ) {
             this.controller.setSelected( item );
+            this.possibleDnDSource=item;
+        }
     } else
-    if ( item )
+    if ( item ) {
         this.controller.setSelected( item );
+        this.possibleDnDSource=item;
+    }
+
+    this.mouseIsDown=true;
+};
+
+VG.UI.ListWidget.prototype.mouseUp=function( event )
+{
+    this.possibleDnDSource=undefined;
+    VG.context.workspace.dndOperation=undefined;
+    VG.context.workspace.dndValidDragTarget=undefined;
+
+    this.mouseIsDown=false;
 };
 
 VG.UI.ListWidget.prototype.vHandleMoved=function( offsetInScrollbarSpace )
@@ -263,8 +283,14 @@ VG.UI.ListWidget.prototype.verifyScrollbar=function( text )
 
     this.needsVScrollbar=false;
 
-    this.totalItemHeight=this.controller.count() * this.itemHeight + (this.controller.count()-1) * this.spacing;
-    this.heightPerItem=this.totalItemHeight / this.controller.count();
+    this.visibleCount=0;
+    for ( var i=0; i < this.controller.count(); ++i ) {
+        var item=this.controller.at( i );
+        if ( item.visible ) this.visibleCount++;
+    }
+
+    this.totalItemHeight=this.visibleCount * this.itemHeight + (this.visibleCount-1) * this.spacing;
+    this.heightPerItem=this.totalItemHeight / this.visibleCount;
     this.visibleItems=this.contentRect.height / this.heightPerItem;
     this.lastTopItem=Math.ceil( this.controller.count() - this.visibleItems );
 
@@ -282,7 +308,7 @@ VG.UI.ListWidget.prototype.verifyScrollbar=function( text )
 
 VG.UI.ListWidget.prototype.changed=function()
 {
-    this.verified=false;    
+    this.verified=false;
     VG.update();
 };
 
@@ -295,7 +321,7 @@ VG.UI.ListWidget.prototype.paintWidget=function( canvas )
 {
     this.spacing=VG.UI.stylePool.current.skin.ListWidget.Spacing;
 
-    if ( !this.rect.equals( this.previousRect ) ) this.verified=false;    
+    if ( !this.rect.equals( this.previousRect ) ) this.verified=false;
     VG.UI.stylePool.current.drawListWidget( this, canvas );
-    this.previousRect.set( this.rect );    
+    this.previousRect.set( this.rect );
 };

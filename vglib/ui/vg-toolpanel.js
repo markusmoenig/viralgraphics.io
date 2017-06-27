@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -20,7 +20,7 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
- 
+
 // ----------------------------------------------------------------- VG.UI.ToolPanelSeparator
 
 VG.UI.ToolPanelSeparator=function()
@@ -46,7 +46,7 @@ VG.UI.ToolPanelSeparator.prototype.paintWidget=function( canvas )
 {
     var size=this.calcSize();
     this.contentRect.set( this.rect );
-    
+
     VG.context.style.drawToolPanelSeparator( canvas, this );
 };
 
@@ -56,13 +56,13 @@ VG.UI.ToolPanelButton=function( text )
 {
     if ( !(this instanceof VG.UI.ToolPanelButton) ) return new VG.UI.ToolPanelButton( text );
     this.text=arguments[0];
-    
+
     VG.UI.Widget.call( this );
     this.name="ToolPanelButton";
-    
+
     this.horizontalExpanding=false;
     this.verticalExpanding=false;
-    
+
     this.role=VG.UI.ActionItemRole.None;
     this.minimumSize.width=VG.context.style.skin.ToolPanelButtonMinimumWidth;
     this._icon=0;
@@ -79,14 +79,14 @@ Object.defineProperty( VG.UI.ToolPanelButton.prototype, "icon", {
     },
     set: function( icon ) {
         this._icon=icon;
-    }    
+    }
 });
 
 VG.UI.ToolPanelButton.prototype.bind=function( collection, path )
 {
     this.collection=collection;
     this.path=path;
-    collection.addValueBindingForPath( this, path ); 
+    collection.addValueBindingForPath( this, path );
 };
 
 VG.UI.ToolPanelButton.prototype.valueFromModel=function( value )
@@ -94,12 +94,12 @@ VG.UI.ToolPanelButton.prototype.valueFromModel=function( value )
     //console.log( "TextEdit.valueFromModel: " + value );
 
     if ( value === null ) this.checked=false;
-    else this.checked=value;  
+    else this.checked=value;
 
     if ( this.changed )
-        this.changed.call( VG.context, value );   
+        this.changed.call( VG.context, value );
 
-    VG.update();    
+    VG.update();
 };
 
 VG.UI.ToolPanelButton.prototype.calcSize=function()
@@ -125,13 +125,13 @@ VG.UI.ToolPanelButton.prototype.calcSize=function()
     } else {
         if ( VG.context.style.skin.ToolPanelButton.ScaleToParentHeight )
             size.set( 22 + 10, VG.context.style.skin.ToolPanel.Height );
-        else { 
+        else {
             if ( 22 + 10 >  VG.context.style.skin.ToolPanel.Height )
-                size.set( 22 + 10, VG.context.style.skin.ToolPanel.Height-4 );                
+                size.set( 22 + 10, VG.context.style.skin.ToolPanel.Height-4 );
 
-            else size.set( 22 + 10, 22 + 10 );                
+            else size.set( 22 + 10, 22 + 10 );
         }
-    }    
+    }
 
     if ( size.width < this.minimumSize.width )
         size.width=this.minimumSize.width;
@@ -149,12 +149,12 @@ VG.UI.ToolPanelButton.prototype.mouseUp=function( event )
 {
     if ( this.rect.contains( event.pos) )
     {
-        if ( this.checkable && this.mouseIsDown ) 
+        if ( this.checkable && this.mouseIsDown )
         {
             this.checked=!this.checked;
 
             if ( this.collection && this.path )
-                this.collection.storeDataForPath( this.path, this.checked );   
+                this.collection.storeDataForPath( this.path, this.checked );
 
             if ( this.changed ) this.changed( this.checked, this );
         }
@@ -166,8 +166,8 @@ VG.UI.ToolPanelButton.prototype.paintWidget=function( canvas )
 {
     var size=this.calcSize();
     this.contentRect.set( this.rect );
-    var size=size.add( -10, 0 );
-    
+    size=size.add( -10, 0 );
+
     VG.context.style.drawToolPanelButton( canvas, this );
 };
 
@@ -248,12 +248,12 @@ VG.UI.ToolPanelPopupButton.prototype.bind=function( collection, path )
 VG.UI.ToolPanelPopupButton.prototype.valueFromModel=function( value )
 {
     if ( value === null ) this.index=0;
-    else this.index=value; 
+    else this.index=value;
 };
 
 VG.UI.ToolPanelPopupButton.prototype.applyNewIndex=function( index )
 {
-    this.index=index;    
+    this.index=index;
     if ( this.collection && this.path )
         this.collection.storeDataForPath( this.path, this.index );
 
@@ -281,7 +281,7 @@ VG.UI.ToolPanelPopupButton.prototype.keyDown=function( keyCode )
                 this.applyNewIndex( this.index -1 );
                 VG.update();
             }
-        } else        
+        } else
         if ( keyCode == VG.Events.KeyCodes.ArrowDown )
         {
             if ( this.index < (this.items.length -1 )) {
@@ -325,15 +325,15 @@ VG.UI.ToolPanelPopupButton.prototype.mouseUp=function( event )
     if ( this.index !== this.oldIndex )
         this.applyNewIndex( this.index );
 
-    VG.update();    
+    VG.update();
 };
 
 VG.UI.ToolPanelPopupButton.prototype.paintWidget=function( canvas )
 {
     this.contentRect.set( this.rect );
 
-    if ( this.popup && canvas.delayedPaintWidgets.indexOf( this ) === -1 ) canvas.delayedPaintWidgets.push( this )
-    else VG.context.style.drawToolPanelPopupButton( canvas, this );    
+    if ( this.popup && canvas.delayedPaintWidgets.indexOf( this ) === -1 ) canvas.delayedPaintWidgets.push( this );
+    else VG.context.style.drawToolPanelPopupButton( canvas, this );
 };
 
 // ----------------------------------------------------------------- VG.UI.ToolPanel
@@ -348,7 +348,7 @@ VG.UI.ToolPanel=function()
     this.verticalExpanding=false;
 
     // ---
-    
+
     this.layout=VG.UI.Layout();
     //this.layout.margin.left=0;
     //this.layout.margin.right=0;
@@ -356,7 +356,7 @@ VG.UI.ToolPanel=function()
     this.layout.spacing=VG.context.style.skin.ToolPanel.Spacing;
 
     for( var i=0; i < arguments.length; ++i )
-        this.addItem( arguments[i] );    
+        this.addItem( arguments[i] );
 };
 
 VG.UI.ToolPanel.prototype=VG.UI.Widget();
@@ -378,7 +378,7 @@ VG.UI.ToolPanel.prototype.addItem=function( item )
 VG.UI.ToolPanel.prototype.addItems=function()
 {
     for( var i=0; i < arguments.length; ++i )
-        this.addItem( arguments[i] );    
+        this.addItem( arguments[i] );
 };
 
 VG.UI.ToolPanel.prototype.paintWidget=function( canvas )

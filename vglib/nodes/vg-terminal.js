@@ -1,21 +1,24 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
- * This file is part of Visual Graphics.
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * Visual Graphics is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
  *
- * Visual Graphics is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Visual Graphics.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 // ----------------------------------------------------------------- VG.Nodes.Terminal
@@ -24,9 +27,9 @@ VG.Nodes.Terminal=function( type, name, onCall, onConnect, onDisconnect )
 {
     /**
      * Creates a Terminal.<br>
-     * 
+     *
      * Terminals are either an input or an output of a VG.Nodes.Node. Terminals can be connected if their types match.
-     * 
+     *
      * @constructor
      * @param {VG.Nodes.Terminal.Type} type - The type of the Terminal. Terminals can be connected if they have the same type or if one of the Terminals has a type
      * of VG.Nodes.Terminal.Type.Universal.
@@ -52,11 +55,11 @@ VG.Nodes.Terminal=function( type, name, onCall, onConnect, onDisconnect )
     this.node=undefined;
 
     /**A list of other terminals this terminal is connected to.
-     * @member {array} */    
+     * @member {array} */
     this.connectedTo=[];
-}
+};
 
-VG.Nodes.Terminal.Type={ "Universal" : 0, "String" : 1, "Float" : 2, "Vector2" : 3, "Vector3" : 4, "Vector4" : 5, "Sample" : 6, "Texture" : 7, "Material" : 8,"Docs.Enum" : -1 };
+VG.Nodes.Terminal.Type={ "Universal" : 0, "String" : 1, "Float" : 2, "Vector2" : 3, "Vector3" : 4, "Vector4" : 5, "Sample" : 6, "Texture" : 7, "Material" : 8, "Map" : 9, "Function" : 10 };
 
 VG.Nodes.Terminal.prototype.connectTo=function( t, dontAddToLowLevelData )
 {
@@ -114,7 +117,7 @@ VG.Nodes.Terminal.prototype.disconnectFrom=function( t, dontRemoveFromLowLevelDa
         return -1;
     }
 
-    var index=getConnIndex( this.node.data.connections, this.name, t.node.data.id, t.name );
+    index=getConnIndex( this.node.data.connections, this.name, t.node.data.id, t.name );
     var connIndex=getConnIndex( t.node.data.connections, t.name, this.node.data.id, this.name );
 
     if ( index !== -1 ) this.node.data.connections.splice( index, 1 );
@@ -153,15 +156,51 @@ VG.Nodes.Terminal.prototype.isConnected=function()
     if ( this.connectedTo.length ) return true; else return false;
 };
 
+/** Disconnects all connected terminals.
+ * @param {bool} dontRemoveFromLowLevelData - True if the disconnection should not affect the low level data reprentation, i.e. is only an UI operation.
+ */
+
 VG.Nodes.Terminal.prototype.disconnectAll=function( dontRemoveFromLowLevelData )
 {
-    /**Disconnects all connected terminals.
-     * @param {bool} dontRemoveFromLowLevelData - True if the disconnection should not affect the low level data reprentation, i.e. is only an UI operation.
-     */
-
     for ( var c=0; c < this.connectedTo.length; ++c )
     {
         var ct=this.connectedTo[c];
         this.disconnectFrom( ct, dontRemoveFromLowLevelData );
-    }    
+    }
+};
+
+/**
+ * Returns the connected terminal at the given index.
+ * @returns True The connected terminal.
+ */
+
+VG.Nodes.Terminal.prototype.at=function( index )
+{
+    if ( index < this.connectedTo.length )
+        return this.connectedTo[index];
+};
+
+/**
+ * Returns the first connected terminal.
+ * @returns True The connected terminal.
+ */
+
+VG.Nodes.Terminal.prototype.first=function()
+{
+    if ( this.connectedTo.length )
+        return this.connectedTo[0];
+};
+
+VG.Nodes.Terminal.prototype.getValueType=function()
+{
+    let conn = this.first();
+    if ( !conn ) return;
+
+    if ( conn.type === VG.Nodes.Terminal.Type.Float ) return { type : VG.Nodes.Terminal.Type.Float, count : 1 };
+    else
+    if ( conn.type === VG.Nodes.Terminal.Type.Vector2 ) return { type : VG.Nodes.Terminal.Type.Vector2, count : 2 };
+    else
+    if ( conn.type === VG.Nodes.Terminal.Type.Vector3 ) return { type : VG.Nodes.Terminal.Type.Vector3, count : 3 };
+    else
+    if ( conn.type === VG.Nodes.Terminal.Type.Vector4 ) return { type : VG.Nodes.Terminal.Type.Vector4, count : 4 };
 };

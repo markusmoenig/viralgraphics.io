@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * (C) Copyright 2014-2017 Markus Moenig <markusm@visualgraphics.tv>.
  *
  * This file is part of Visual Graphics.
  *
@@ -20,32 +20,32 @@
 
 // ----------------------------------------------------------------- VG.Nodes.Graph
 
+/**
+ * Creates a VG.Node.Graph.<br>
+ *
+ * A node graph contains a list of nodes and provides convenient functions to load / save the graph.
+ *
+ * @constructor
+ */
+
 VG.Nodes.Graph=function()
 {
-    /**
-     * Creates a Node Graph.<br>
-     * 
-     * A node graph contains a list of nodes and provides convenient functions to load / save the graph.
-     * 
-     * @constructor
-    */
-
 	if ( !(this instanceof VG.Nodes.Graph ) ) return new VG.Nodes.Graph();
 
     /**The array of nodes (nodes are derived from VG.Nodes.Node) contained in this graph.
-     * @member {array} */  
+     * @member {array} */
 	this.nodes=new Map();
 
     this.idCounter=0;
-    this.runCounter=-1;
 };
+
+/**
+ * Adds the given node to this graph.
+ * @param {VG.Nodes.Node} node - The node to add.
+ */
 
 VG.Nodes.Graph.prototype.addNode=function( node, customSetup )
 {
-    /**Adds the given node to this graph.
-     * @param {VG.Nodes.Node} node - The node to add.
-     */
-
     node.graph=this;
 
     if ( !node.data && !customSetup )
@@ -59,29 +59,30 @@ VG.Nodes.Graph.prototype.addNode=function( node, customSetup )
         node.data.id=this.idCounter++;
         node.data.className=node.className;
         node.data.node=node;
-        node.data.name=node.name;        
+        node.data.name=node.name;
 
-        if ( node.createProperties ) 
+        if ( node.createProperties )
             node.createProperties( node.data );
     }
-    
+
     this.nodes.set( node.data.id, node );
 };
 
+/**
+ * Creates the node of the given class name and add it to this graph
+ * @param {string} className - The name of the class.
+ */
+
 VG.Nodes.Graph.prototype.createNode=function( className)
 {
-    /**Creates the node of the given class name and add it to this graph
-     * @param {string} className - The name of the class.
-     */
-
-    var node=new VG.Nodes[className];
+    var node=new VG.Nodes[className]();
 
     if ( node )
     {
         node.data={};
 
-        Object.defineProperty( node.data, "node", { 
-            enumerable: false, 
+        Object.defineProperty( node.data, "node", {
+            enumerable: false,
             writable: true
         });
 
@@ -90,7 +91,7 @@ VG.Nodes.Graph.prototype.createNode=function( className)
         node.data.node=node;
         node.data.name=node.name;
 
-        if ( node.createProperties ) 
+        if ( node.createProperties )
             node.createProperties( node.data );
 
         this.nodes.set( node.data.id, node );
@@ -102,58 +103,71 @@ VG.Nodes.Graph.prototype.createNode=function( className)
     return null;
 };
 
+/**
+ * Returns the node with the given id.
+ * @param {number} id - The id of the node to return.
+ * @returns The node associated with the given id.
+ */
+
 VG.Nodes.Graph.prototype.getNodeFromId=function( id )
 {
-    /**Returns the node with the given id.
-     * @param {number} id - The id of the node to return.
-     * @returns The node associated with the given id.
-     */
-
-    if ( id === -1 ) return this.previewNode;
-    else return this.nodes.get( id );
+    return this.nodes.get( id );
 };
+
+/**
+ * Finds the node of the given name.
+ * @param {string} name - The name of the node to return.
+ * @returns The node associated with the given name.
+ */
 
 VG.Nodes.Graph.prototype.findNode=function( name )
 {
-    for (var node of this.nodes.values() )    
+    for (var node of this.nodes.values() )
     {
         if ( node.data.name === name )
             return node;
     }
 };
 
-VG.Nodes.Graph.prototype.load=function( data, displaceImage )
+/**
+ * Finds the first node of the given class.
+ * @param {string} name - The class name of the node to return.
+ * @returns The node of the given class name
+ */
+
+VG.Nodes.Graph.prototype.findNodeClass=function( name )
 {
-    /**Loads the nodes of a compressed graph and returns the output terminal, i.e. the terminal which was connected to the preview node.
-     * @param {string} data - The compressed data to load. 
-     */
+    for (var node of this.nodes.values() )
+    {
+        if ( node.data.className === name )
+            return node;
+    }
+};
 
-    if ( this.previewNode )
-        this.previewNode.disconnectAll();
-    var string=VG.Utils.decompressFromBase64( data );
+/**
+ * Initializes the graph from the given node array.
+ */
 
-    var obj=JSON.parse( string );
-    var array=null;
-
-    if ( obj instanceof Array ) array=obj;
-    else if ( obj.nodes instanceof Array ) array=obj.nodes;
-
+VG.Nodes.Graph.prototype.loadNodesFromArray=function( array, displaceImage )
+{
     if ( !array ) { VG.error( "Graph::load() could not find array."); return; }
 
     // --- Load the Nodes
-    for ( var i=0; i < array.length; ++i )
-    {
-        var nodeData=array[i];
 
-        Object.defineProperty( nodeData, "node", { 
-            enumerable: false, 
+    var i, nodeData;
+    for ( i=0; i < array.length; ++i )
+    {
+        nodeData=array[i];
+
+        Object.defineProperty( nodeData, "node", {
+            enumerable: false,
             writable: true
         });
 
-        nodeData.node=new VG.Nodes[nodeData.className];
+        nodeData.node=new VG.Nodes[nodeData.className]();
         nodeData.node.data=nodeData;
 
-        if ( nodeData.node.createProperties )         
+        if ( nodeData.node.createProperties )
             nodeData.node.createProperties( nodeData );
 
         if ( displaceImage && nodeData.className === "NodeImage" ) {
@@ -172,22 +186,41 @@ VG.Nodes.Graph.prototype.load=function( data, displaceImage )
     this.outputTerminal=null;
 
     // --- Connect the Nodes
-    for( var i=0; i < array.length; ++i )
+    for( i=0; i < array.length; ++i )
     {
-        var nodeData=array[i];
+        nodeData=array[i];
         nodeData.node.readConnections( true );
     }
 
     return this.outputTerminal;
 };
 
+/**
+ * Loads the nodes of a compressed graph.
+ * @param {string} data - The compressed data to load.
+ */
+
+VG.Nodes.Graph.prototype.load=function( data, displaceImage )
+{
+    var string=VG.Utils.decompressFromBase64( data );
+
+    var obj=JSON.parse( string );
+    var array=null;
+
+    if ( obj instanceof Array ) array=obj;
+    else if ( obj.nodes instanceof Array ) array=obj.nodes;
+
+    return this.loadNodesFromArray( array, displaceImage );
+};
+
+/**
+ * Saves the node data of this graph. This is low level, in a GraphEdit environment this gets taken care of the node controller.
+ * @returns {string} data - The compressed data
+ **/
+
 VG.Nodes.Graph.prototype.save=function()
 {
-    /**Saves the node data of this graph. This is very low level, in a GraphEdit environment this gets taken care of the node controller.
-     * @returns {string} data - The compressed data
-     */
-
-     var arr=[];
+    var arr=[];
 
     this.nodes.forEach(function(n) {
         arr.push( n.data );
@@ -198,11 +231,13 @@ VG.Nodes.Graph.prototype.save=function()
     return data;
 };
 
+/**
+ * Called when the graph has changed and the graph has to be rerun.
+ **/
+
+
 VG.Nodes.Graph.prototype.update=function()
 {
-    /**Called when the graph has changed and the graph has to be rerun.
-     */
-
     if ( this.updateCallback )
         this.updateCallback();
 };
@@ -213,154 +248,143 @@ VG.Nodes.Graph.prototype.nodePropertyWillChange=function( param, data )
         this.nodePropertyWillChangeCallback( param, data );
 };
 
+/**
+ * Clears the graph.
+ **/
+
 VG.Nodes.Graph.prototype.clear=function( id )
 {
-    /**Clears the graph.
-     */
-
-    if ( this.previewNode )
-        this.previewNode.disconnectAll();
     this.nodes.clear();
     this.idCounter=0;
-    this.runCounter=-1;    
 };
 
-VG.Nodes.Graph.prototype.run=function( terminal, image, sizeVector )
+/**
+ *
+ */
+
+VG.Nodes.Graph.prototype.getMaterialNode=function()
 {
-    ++this.runCounter;
+    let node = this.findNodeClass( "NodeMaterial" );
+    return node;
+};
 
-    var rc=null;
+/**
+ * Utility function called from collectGlobals(). Builds the global code from the branch starting from this terminal.
+ * @param {VG.Nodes.Terminal} terminal - The terminal to start collection globals.
+ * @param {array} nodesProcessed - The array holding the already processed nodes.
+ * @param {string} globalCode - The already processed global code.
+ * @returns {string} The accumulated global code.
+ */
 
-    var ms=Date.now();
-
-    if ( terminal.type === VG.Nodes.Terminal.Type.Float )
-    {
-        rc=terminal.onCall();     
-    } else 
-    if ( terminal.type === VG.Nodes.Terminal.Type.String )
-    {
-        rc=terminal.onCall();
-    } else 
-    if ( terminal.type === VG.Nodes.Terminal.Type.Vector2 )
-    {
-        rc=terminal.onCall();
-    } else     
-    if ( terminal.type === VG.Nodes.Terminal.Type.Vector3 )
-    {
-        rc=terminal.onCall();
-    } else        
-    if ( terminal.type === VG.Nodes.Terminal.Type.Vector4 )
-    {
-        rc=terminal.onCall();
-    } else        
-    if ( terminal.type === VG.Nodes.Terminal.Type.Sample ) 
-    {
-        var vector=new VG.Math.Vector2();
-		var callbreak = false;
-
-        if ( sizeVector && sizeVector.x && sizeVector.y && ( sizeVector.x !== image.width || sizeVector.y !== image.height ) )
+VG.Nodes.Graph.prototype.collectTerminalBranch=function( terminal, nodesProcessed, globalCode )
+{
+    if ( terminal && terminal.isConnected() ) {
+        for ( let i = 0; i < terminal.connectedTo.length; ++i )
         {
-            var width, height;
+            let cTerminal = terminal.connectedTo[i];
 
-            var  aspectRatio=sizeVector.y / sizeVector.x;
-            if ( image.width * aspectRatio > image.height )
+            let n = cTerminal.node;
+
+            // --- Add the node if not yet processed
+            if ( !nodesProcessed.includes( n.className ) && !nodesProcessed.includes( n.token ) )
             {
-                width = image.height / aspectRatio < sizeVector.x ? image.height / aspectRatio : sizeVector.x;
-            } else
-            {
-                width = image.width < sizeVector.x ? image.width : sizeVector.x;
+                if ( n.getGlobalCode !== undefined )
+                    globalCode = n.getGlobalCode() + globalCode;
+
+                if ( !n.modifiesGlobal ) nodesProcessed.push( n.className );
+                else nodesProcessed.push( n.token );
             }
-            height = Math.floor( aspectRatio * image.width );
-              
-            width=Math.floor( width );
 
-            var wOffset=Math.floor( ( (image.width - width)/2 ) );
-            var hOffset=Math.floor( ( (image.height - height)/2 ) );
-
-            // --- Connected size input for preview, interpolate pixels for preview
-            var x_ratio = sizeVector.x / width;//image.width;
-            var y_ratio = sizeVector.y / height;//image.height; 
-
-            for ( var h=0; h < height; h++ ) 
+            // --- Parse the nodes inputs
+            for ( i = 0; i < n.inputs.length; ++i )
             {
-                for ( var w=0; w < width; w++ ) 
-                {
-                    vector.set( Math.floor(w*x_ratio), Math.floor(h*y_ratio) );
-                    rc=terminal.onCall( vector );
-					if (!rc)
-					{
-						callbreak = true;
-						break;
-					}
-                    image.setPixel( w + wOffset, h + hOffset, rc.x, rc.y, rc.z, rc.w );                    
-                }
-				if (callbreak)
-					break;
-            }
-        } else
-        {
-            // --- No connected size input for preview, just use preview dimensions
-            for( var h=0; h < image.height; ++h )
-            {
-                for( var w=0; w < image.width; ++w )
-                {
-                    vector.set( w/image.width, h/image.height );
-                    rc=terminal.onCall( vector );
-					if (!rc)
-					{
-						callbreak = true;
-						break;
-					}
-
-                    image.setPixel( w, h, rc.x, rc.y, rc.z, rc.w );
-                }
-				if (callbreak)
-					break;
+                let iTerminal = n.inputs[i];
+                globalCode = this.collectTerminalBranch( iTerminal, nodesProcessed, globalCode );
             }
         }
+    }
 
-        delete vector;
-		image.needsUpdate=true;
-        rc=image;
-    } else
-    if ( terminal.type === VG.Nodes.Terminal.Type.Texture ) 
+    return globalCode;
+};
+
+/**
+ * Builds the global code of the nodes starting from the given node.
+ * @param {VG.Nodes.Node} node - The node to build the global code from.
+ * @param {array} nodesProcessed - The already processed nodes (multiple graphs / materials etc)
+ * @returns The global code of the nodes in the chain.
+ */
+
+VG.Nodes.Graph.prototype.collectGlobals=function( node, nodesProcessed )
+{
+    let globalCode = "";
+
+    for ( i = 0; i < node.inputs.length; ++i )
     {
-		var renderer = VG.Renderer();
-		renderer.startPingPong(image.getRealWidth(), image.getRealHeight(), image.getWidth(), image.getHeight() );
-		rc = terminal.onCall(image.getWidth(), image.getHeight(), image);
-		if (rc)
-			renderer.endPingPong(rc);
-    } else
-    if ( terminal.type === VG.Nodes.Terminal.Type.Material ) 
-    {
-        rc=terminal.onCall();
-/*
-        var vector=new VG.Math.Vector3();
-        for( var h=0; h < image.height; ++h )
-        {
-            for( var w=0; w < image.width; ++w )
-            {
-                vector.set( w, h, 0 );
-                rc=terminal.onCall( vector );
-				if (!rc)
-				{
-					callbreak = true;
-					break;
-				}
-                image.setPixel( w, h, rc.color.r, rc.color.g, rc.color.b, rc.color.a );
-            }
-			if (callbreak)
-				break;
+        let terminal = node.inputs[i];
+        globalCode = this.collectTerminalBranch( terminal, nodesProcessed, globalCode );
+    }
+
+    return globalCode;
+};
+
+/**
+ * Compiles the graph as a material function.
+ * @returns {object} The return object. The success member indicates success, code will contain the compiled material and globalCode the global code necessary for the material.
+ */
+
+VG.Nodes.Graph.prototype.compileAsMaterial=function( { code = "", materialName = "material_1", generatePreview = function() {} } = {} )
+{
+    var rc={ success : false, error : "" };
+
+    // --- Get the global code and the material node
+
+    let materialNode;
+
+    // --- Locate the material node
+
+    this.nodes.forEach(function(n) {
+        if ( n.className === "NodeMaterial" )
+            materialNode=n;
+    } );
+
+    if ( !materialNode ) {
+        rc.globalCode = "";
+        rc.code = "\nvoid " + materialName + "( in vec3 pos, inout Material material, inout vec3 normal ) {}\n";
+        return rc;
+    }
+
+    let nodesProcessed=[];
+
+    rc.globalCode = this.collectGlobals( materialNode, nodesProcessed );
+
+    let options = {};
+    options.code = "";
+    options.globalCode = rc.globalCode;
+    options.materialName = materialName;
+    options.generatePreview = generatePreview;
+
+    let variables = {};
+
+    options.getVar=function( node, terminal, type ) {
+        let rc={};
+        rc.name = node.token + "_" + terminal;
+        if ( variables[rc.name] ) {
+            rc.exists = true;
+            rc.code = rc.name;
+        } else {
+            variables[rc.name] = true;
+            rc.code = type + " " + rc.name;
         }
-        delete vector;
-        image.needsUpdate=true;*/
-    }     
+        return rc;
+    }.bind( this );
 
-    ms=Date.now() - ms;
+    let outTerminal=materialNode.getOutput( "out" );
+    outTerminal.onCall( options );
 
-    var obj={ output: rc, time: ms };
+    // console.log( options.code );
 
-    if ( this.finishedCallback ) this.finishedCallback( obj );
+    rc.code = options.code;
+    rc.success = true;
 
-    return obj;
+    return rc;
 };

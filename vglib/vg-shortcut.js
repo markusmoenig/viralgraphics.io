@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -50,13 +50,13 @@ VG.Shortcut.Item.prototype.createText=function()
         this.text+="Cmd";
     else
     if ( this.modifier === VG.Events.KeyCodes.Ctrl )
-        this.text+="Ctrl";    
+        this.text+="Ctrl";
     else
     if ( this.modifier === VG.Events.KeyCodes.Alt )
-        this.text+="Alt";     
+        this.text+="Alt";
     else
     if ( this.modifier === VG.Events.KeyCodes.Shift )
-        this.text+="Shift";     
+        this.text+="Shift";
 
     if ( this.text.length ) this.text+="+";
     this.text+=this.key;
@@ -101,36 +101,34 @@ VG.Shortcut.Manager.prototype.createDefault=function( def )
             if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac && VG.context.workspace.platform === VG.HostProperty.PlatformDesktop ) {
                 item.key="S";
                 item.modifier=VG.Events.KeyCodes.AppleLeft;
-                item.modifierOptional=VG.Events.KeyCodes.Shift;                
+                item.modifierOptional=VG.Events.KeyCodes.Shift;
             }
         }
         break;
 
         case VG.Shortcut.Defaults.Undo:
         {
-            if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac && VG.context.workspace.platform === VG.HostProperty.PlatformWeb ) {
-                item.key="Z";
-                item.modifier=VG.Events.KeyCodes.Alt;
-            } else
-            if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac && VG.context.workspace.platform === VG.HostProperty.PlatformDesktop ) {
+            if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac  ) {
                 item.key="Z";
                 item.modifier=VG.Events.KeyCodes.AppleLeft;
-            }            
+            } else {
+                item.key="Z";
+                item.modifier=VG.Events.KeyCodes.Ctrl;
+            }
         }
         break;
 
         case VG.Shortcut.Defaults.Redo:
         {
-            if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac && VG.context.workspace.platform === VG.HostProperty.PlatformWeb ) {
-                item.key="Z";
-                item.modifier=VG.Events.KeyCodes.Alt;
-                item.modifierOptional=VG.Events.KeyCodes.Shift;
-            } else
-            if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac && VG.context.workspace.platform === VG.HostProperty.PlatformDesktop ) {
+            if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac ) {
                 item.key="Z";
                 item.modifier=VG.Events.KeyCodes.AppleLeft;
-                item.modifierOptional=VG.Events.KeyCodes.Shift;                                
-            }                
+                item.modifierOptional=VG.Events.KeyCodes.Shift;
+            } else {
+                item.key="Z";
+                item.modifier=VG.Events.KeyCodes.Ctrl;
+                item.modifierOptional=VG.Events.KeyCodes.Shift;
+            }
         }
         break;
 
@@ -159,28 +157,28 @@ VG.Shortcut.Manager.prototype.createDefault=function( def )
                 item.modifier=VG.Events.KeyCodes.AppleLeft;
             }
         }
-        break;        
+        break;
 
         case VG.Shortcut.Defaults.SelectAll:
         {
             item.key="A";
             item.modifier=VG.Events.KeyCodes.Alt;
         }
-        break;   
+        break;
 
         case VG.Shortcut.Defaults.InsertText:
         {
             item.key="I";
             item.modifier=VG.Events.KeyCodes.Alt;
         }
-        break;  
+        break;
 
         case VG.Shortcut.Defaults.InsertEncodedText:
         {
             item.key="E";
             item.modifier=VG.Events.KeyCodes.Alt;
         }
-        break;          
+        break;
     }
 
     item.createText();
@@ -199,6 +197,25 @@ VG.Shortcut.Manager.prototype.verifyMenubar=function( text, keysDown, menubar )
     return false;
 };
 
+VG.Shortcut.Manager.prototype.verifyToolBar=function( text, keysDown, toolbar )
+{
+    for( let m=0; m < toolbar.layout.children.length; ++m )
+    {
+        let object = toolbar.layout.children[m];
+
+        // if ( object.shortcut )
+            // console.log( text, keysDown, object.shortcut );
+
+        if ( object && object.shortcut && this.verifyShortcut( text, keysDown, object.shortcut ) )
+        {
+            if ( !object.disabled ) object.clicked();
+            return true;
+        }
+    }
+
+    return false;
+};
+
 VG.Shortcut.Manager.prototype.verifyMenu=function( text, keysDown, menu )
 {
     this.duplicateFromHost=false;
@@ -207,7 +224,7 @@ VG.Shortcut.Manager.prototype.verifyMenu=function( text, keysDown, menu )
     {
         var menuItem=menu.items[mi];
 
-        if ( menu.externalClickItem === menuItem )//&& ( Date.now() - menu.externalClickTime ) < 500 ) 
+        if ( menu.externalClickItem === menuItem )//&& ( Date.now() - menu.externalClickTime ) < 500 )
         {
             menu.externalClickItem=null;
             this.duplicateFromHost=true;
@@ -230,12 +247,12 @@ VG.Shortcut.Manager.prototype.verifyShortcut=function( text, keysDown, shortcut 
 {
     if ( text.toUpperCase() === shortcut.key && !shortcut.modifier ) return true;
 
-    if ( text.toUpperCase() === shortcut.key && keysDown.indexOf( shortcut.modifier ) !== -1 ) 
+    if ( text.toUpperCase() === shortcut.key && keysDown.indexOf( shortcut.modifier ) !== -1 )
     {
         if ( !shortcut.modifierOptional || ( shortcut.modifierOptional && keysDown.indexOf( shortcut.modifierOptional ) !== -1 ) )
         {
             // --- If Shift is pressed and no optional modifier selected ignore this event
-            //if ( !shortcut.modifierOptional && keysDown.indexOf( VG.Events.KeyCodes.Shift ) !== -1 ) return false;
+            if ( !shortcut.modifierOptional && keysDown.indexOf( VG.Events.KeyCodes.Shift ) !== -1 ) return false;
 
             return true;
         }

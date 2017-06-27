@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -46,7 +46,7 @@ VG.UI.TableWidgetSeparator.prototype.paintWidget=function( canvas )
 {
     var size=this.calcSize( canvas );
     this.contentRect.set( this.rect );
-    
+
     VG.UI.stylePool.current.drawTableWidgetSeparator( canvas, this );
 };
 
@@ -82,7 +82,7 @@ VG.UI.TableWidgetHeaderItem.prototype.calcSize=function( canvas )
     if ( size.height < canvas.style.skin.TableWidget.Header.MinHeight )
         size.height=canvas.style.skin.TableWidget.Header.MinHeight;
 
-    this.checkSizeDimensionsMinMax( size );    
+    this.checkSizeDimensionsMinMax( size );
 
     return size;
 };
@@ -111,7 +111,7 @@ VG.UI.TableWidgetHeaderItem.prototype.paintWidget=function( canvas )
 VG.UI.TableWidget=function()
 {
     if ( !(this instanceof VG.UI.TableWidget) ) return new VG.UI.TableWidget();
-    
+
     VG.UI.Widget.call( this );
     this.name="TableWidget";
 
@@ -149,12 +149,12 @@ VG.UI.TableWidget=function()
 
     this.contextMenu=VG.UI.ContextMenu();
 
-    this.addMenuItem=this.contextMenu.addItem( "Add", null, function() { 
-        if ( this.controller && this.controller.contentClassName ) this.controller.add(); 
+    this.addMenuItem=this.contextMenu.addItem( "Add", null, function() {
+        if ( this.controller && this.controller.contentClassName ) this.controller.add();
     }.bind( this ));
 
     this.removeMenuItem=this.contextMenu.addItem( "Remove", null, function() {
-        if ( this.controller && this.controller.canRemove() ) this.controller.remove( this.controller.selected ); 
+        if ( this.controller && this.controller.canRemove() ) this.controller.remove( this.controller.selected );
     }.bind( this ));
 };
 
@@ -168,7 +168,7 @@ VG.UI.TableWidget.prototype.bind=function( collection, path )
         collection.addControllerForPath( this.controller, path );
     } else this.controller=this.controller.object;
 
-    this.controller.addObserver( "changed", this.changed, this );    
+    this.controller.addObserver( "changed", this.changed, this );
     this.controller.addObserver( "selectionChanged", this.selectionChanged, this );
     this.controller.addObserver( "parentSelectionChanged", this.parentSelectionChanged.bind( this ), this );
 
@@ -215,8 +215,8 @@ VG.UI.TableWidget.prototype.changed=function( )
 {
     //console.log( "TableWidget.changed" );
     this.parentSelectionChanged();
-    this.verified=false;    
-    VG.update();    
+    this.verified=false;
+    VG.update();
 };
 
 VG.UI.TableWidget.prototype.selectionChanged=function( )
@@ -224,7 +224,7 @@ VG.UI.TableWidget.prototype.selectionChanged=function( )
     //console.log( "TableWidget.selectionChanged" );
     this.parentSelectionChanged();
 
-    VG.update();    
+    VG.update();
 };
 
 VG.UI.TableWidget.prototype.parentSelectionChanged=function( )
@@ -233,9 +233,10 @@ VG.UI.TableWidget.prototype.parentSelectionChanged=function( )
 
     // --- Remvove all previous value bindings for this path
 
-    for ( var i=0; i < this.columns.length; ++i )
+    var i, column;
+    for ( i=0; i < this.columns.length; ++i )
     {
-        var column=this.columns[i];           
+        column=this.columns[i];
         this.collection.removeAllValueBindingsForPath( this.controller.path + "." + column.binding );
     }
 
@@ -247,9 +248,9 @@ VG.UI.TableWidget.prototype.parentSelectionChanged=function( )
     {
         var item=this.controller.at( row );
 
-        for ( var i=0; i < this.columns.length; ++i )
+        for ( i=0; i < this.columns.length; ++i )
         {
-            var column=this.columns[i];
+            column=this.columns[i];
             var widget;
 
             if ( column.type === VG.UI.TableWidgetItemType.TextLineEdit ) {
@@ -268,12 +269,12 @@ VG.UI.TableWidget.prototype.parentSelectionChanged=function( )
                 ++popupButtonCounter;
 
                 if ( widget.items.length === 0 && column.popupItems ) {
-                    for( var i=0; i < column.popupItems.length; ++i ) {
+                    for( i=0; i < column.popupItems.length; ++i ) {
                         widget.addItem( column.popupItems[i] );
                     }
                 }
 
-                widget.index=item[column.binding];                
+                widget.index=item[column.binding];
             } else
             if ( column.type === VG.UI.TableWidgetItemType.Label ) {
                 if ( labelCounter < this.labels.length )
@@ -282,7 +283,7 @@ VG.UI.TableWidget.prototype.parentSelectionChanged=function( )
                 ++labelCounter;
 
                 widget.hAlignment=VG.UI.HAlignment.Left;
-                widget.text=item[column.binding];            
+                widget.text=item[column.binding];
             }
 
             widget.focusInCallback=this.childFocusedIn.bind( this );
@@ -290,11 +291,11 @@ VG.UI.TableWidget.prototype.parentSelectionChanged=function( )
 
             if ( item === this.controller.selected ) {
                 widget.bind( this.collection, this.controller.path + "." + column.binding );
-            }            
+            }
         }
     }
 
-    this.verified=false;    
+    this.verified=false;
 };
 
 VG.UI.TableWidget.prototype.addColumn=function( binding, text, type, expanding, minimumWidth )
@@ -303,6 +304,7 @@ VG.UI.TableWidget.prototype.addColumn=function( binding, text, type, expanding, 
         this.headerLayout.addChild( VG.UI.TableWidgetSeparator() );
 
     var label=VG.UI.TableWidgetHeaderItem( text );
+    var i;
 
     if ( expanding === undefined ) expanding=true;
     if ( minimumWidth ) label.minimumSize.width=minimumWidth;
@@ -316,7 +318,7 @@ VG.UI.TableWidget.prototype.addColumn=function( binding, text, type, expanding, 
     if ( type === VG.UI.TableWidgetItemType.TextLineEdit )
     {
         this.textLineEditModulo=0;
-        for( var i=0; i < this.columns.length; ++i ) 
+        for( i=0; i < this.columns.length; ++i )
         {
             if ( this.columns[i].type === VG.UI.TableWidgetItemType.TextLineEdit )
                 this.textLineEditModulo++;
@@ -325,7 +327,7 @@ VG.UI.TableWidget.prototype.addColumn=function( binding, text, type, expanding, 
     if ( type === VG.UI.TableWidgetItemType.PopupButton )
     {
         this.popupButtonModulo=0;
-        for( var i=0; i < this.columns.length; ++i ) 
+        for( i=0; i < this.columns.length; ++i )
         {
             if ( this.columns[i].type === VG.UI.TableWidgetItemType.PopupButton )
                 this.popupButtonModulo++;
@@ -334,12 +336,12 @@ VG.UI.TableWidget.prototype.addColumn=function( binding, text, type, expanding, 
     if ( type === VG.UI.TableWidgetItemType.Label )
     {
         this.labelModulo=0;
-        for( var i=0; i < this.columns.length; ++i ) 
+        for( i=0; i < this.columns.length; ++i )
         {
             if ( this.columns[i].type === VG.UI.TableWidgetItemType.Label )
                 this.labelModulo++;
         }
-    }    
+    }
 };
 
 VG.UI.TableWidget.prototype.setColumnPopupItems=function( colIndex )
@@ -378,7 +380,7 @@ VG.UI.TableWidget.prototype.focusOut=function()
 };
 
 VG.UI.TableWidget.prototype.keyDown=function( keyCode )
-{        
+{
     if ( !this.controller.selected ) return;
 
     var index=this.controller.indexOf( this.controller.selected );
@@ -396,12 +398,12 @@ VG.UI.TableWidget.prototype.keyDown=function( keyCode )
     {
         if ( Math.floor( this.offset + this.visibleItems ) <= index +1 ) {
             this.offset=index+2-Math.floor(this.visibleItems);
-            this.vScrollbar.scrollTo( this.offset * this.itemHeight + (this.offset-1) * this.spacing );            
+            this.vScrollbar.scrollTo( this.offset * this.itemHeight + (this.offset-1) * this.spacing );
         }
 
         this.controller.selected=this.controller.at( index + 1 );
-    } 
-}
+    }
+};
 
 VG.UI.TableWidget.prototype.mouseMove=function( event )
 {
@@ -422,7 +424,7 @@ VG.UI.TableWidget.prototype.mouseDown=function( event )
     if ( selected >=0 && selected < this.controller.length )
         item=this.controller.at( Math.floor( selected ) );
 
-    if ( this.controller.multiSelection ) 
+    if ( this.controller.multiSelection )
     {/*
         if ( ! (totalSelected) ) {
             item.selected=true;
@@ -445,7 +447,7 @@ VG.UI.TableWidget.prototype.mouseDown=function( event )
         if ( item !== -1 && !this.controller.isSelected( item ) ) {
             this.controller.selected=item;
         }
-    } 
+    }
 };
 
 VG.UI.TableWidget.prototype.vHandleMoved=function( offsetInScrollbarSpace )
@@ -486,8 +488,8 @@ VG.UI.TableWidget.prototype.verifyScrollbar=function( text )
         this.vScrollbar=VG.UI.ScrollBar( "TableWidget Scrollbar" );
         this.vScrollbar.callbackObject=this;
         //this.layout.addChild( this.vScrollbar );
-        this.childWidgets.push( this.vScrollbar )
-    }    
+        this.childWidgets.push( this.vScrollbar );
+    }
 
     this.verified=true;
 };
@@ -497,11 +499,11 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
     this.spacing=VG.context.workspace.canvas.style.skin.TableWidget.Item.Spacing;
     this.itemHeight=VG.context.workspace.canvas.style.skin.TableWidget.RowHeight;
 
-    var oldState=this.visualState;
-    if ( this.visualState !== VG.UI.Widget.VisualState.Focus ) 
+    var oldState=this.visualState, i, child;
+    if ( this.visualState !== VG.UI.Widget.VisualState.Focus )
     {
         // --- If one of the childs has focus, draw a focus ring too
-        for( var i=0; i < this.childWidgets.length; ++i ) {
+        for( i=0; i < this.childWidgets.length; ++i ) {
             if ( this.childWidgets[i].visualState === VG.UI.Widget.VisualState.Focus )
                 this.visualState=VG.UI.Widget.VisualState.Focus;
         }
@@ -525,8 +527,8 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
 
     canvas.pushFont( canvas.style.skin.TableWidget.Header.Font );
 
-    for( var i=0; i < this.headerLayout.children.length; ++i ) {
-        var child=this.headerLayout.children[i];
+    for( i=0; i < this.headerLayout.children.length; ++i ) {
+        child=this.headerLayout.children[i];
         child.disabled=this.disabled;
     }
 
@@ -550,15 +552,15 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
     {
         // --- Footer Layout
 
-        for( var i=0; i < this.footerLayout.children.length; ++i ) {
-            var child=this.footerLayout.children[i];
+        for( i=0; i < this.footerLayout.children.length; ++i ) {
+            child=this.footerLayout.children[i];
             this.childWidgets.push( child );
         }
 
-        this.footerLayout.rect.set( this.contentRect.x, this.contentRect.bottom() - canvas.style.skin.TableWidget.Footer.Height, 
+        this.footerLayout.rect.set( this.contentRect.x, this.contentRect.bottom() - canvas.style.skin.TableWidget.Footer.Height,
             this.contentRect.width, canvas.style.skin.TableWidget.Footer.Height );
         this.footerLayout.margin.set( canvas.style.skin.TableWidget.Footer.Margin );
-        this.footerLayout.layout( canvas );    
+        this.footerLayout.layout( canvas );
 
         canvas.style.drawTableWidgetFooterSeparator( canvas, this );
 
@@ -593,7 +595,7 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
 
         canvas.style.drawTableWidgetRowBackground( canvas, this, rect, this.headerLayout, item === this.controller.selected );
 
-        for ( var i=0; i < this.columns.length; ++i )
+        for ( i=0; i < this.columns.length; ++i )
         {
             var column=this.columns[i];
             var widget;
@@ -603,10 +605,10 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
             } else
             if ( column.type === VG.UI.TableWidgetItemType.PopupButton ) {
                 widget=this.popupButtons[popupButtonCounter++];
-            } else   
+            } else
             if ( column.type === VG.UI.TableWidgetItemType.Label ) {
                 widget=this.labels[labelCounter++];
-            }     
+            }
 
             if ( widget === undefined ) break;
 
@@ -629,26 +631,26 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
                 widget.rect.width-=2*canvas.style.skin.TableWidget.Item.XMargin;
 
                 if ( this.needsVScrollbar )
-                    widget.rect.width-=canvas.style.skin.ScrollBar.Size + 2;                
+                    widget.rect.width-=canvas.style.skin.ScrollBar.Size + 2;
             }
 
             widget.rect.round();
             widget.paintWidget( canvas );
             this.childWidgets.push( widget );
         }
-        
+
         // ---
 
         paintRect.y+=this.itemHeight + this.spacing;
-        this.visibleHeight+=this.itemHeight + this.spacing;                    
+        this.visibleHeight+=this.itemHeight + this.spacing;
 
         if ( paintRect.bottom() > this.contentRect.bottom() )
-            break;        
+            break;
     }
 
     // ---
 
-    canvas.popFont();        
+    canvas.popFont();
 
     if ( this.needsVScrollbar ) {
         this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() - canvas.style.skin.ScrollBar.Size - 2, this.contentRect.y, canvas.style.skin.ScrollBar.Size, this.contentRect.height );
@@ -659,7 +661,7 @@ VG.UI.TableWidget.prototype.paintWidget=function( canvas )
 
         this.vScrollbar.setScrollBarContentSize( this.totalItemHeight, this.visibleHeight );
         this.vScrollbar.paintWidget( canvas );
-    }    
+    }
 };
 
 VG.UI.TableWidget.prototype.childFocusedIn=function( widget )

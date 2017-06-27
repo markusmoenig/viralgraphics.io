@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -20,6 +20,7 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 // ----------------------------------------------------------------- VG.UI.MenuItem
 
 VG.UI.MenuItem=function( text, iconName, clicked, shortcut )
@@ -41,7 +42,7 @@ VG.UI.MenuItem=function( text, iconName, clicked, shortcut )
     this.id=-1;
 };
 
-Object.defineProperty( VG.UI.MenuItem.prototype, "disabled", 
+Object.defineProperty( VG.UI.MenuItem.prototype, "disabled",
 {
     get: function() {
         return this._disabled;
@@ -49,10 +50,10 @@ Object.defineProperty( VG.UI.MenuItem.prototype, "disabled",
     set: function( disabled ) {
         this._disabled=disabled;
         if ( VG.setNativeMenuItemState ) VG.setNativeMenuItemState( this.id, disabled, this._checked );
-    }    
+    }
 });
 
-Object.defineProperty( VG.UI.MenuItem.prototype, "checked", 
+Object.defineProperty( VG.UI.MenuItem.prototype, "checked",
 {
     get: function() {
         return this._checked;
@@ -60,7 +61,7 @@ Object.defineProperty( VG.UI.MenuItem.prototype, "checked",
     set: function( checked ) {
         this._checked=checked;
         if ( VG.setNativeMenuItemState ) VG.setNativeMenuItemState( this.id, this._disabled, checked );
-    }    
+    }
 });
 
 VG.UI.MenuItem.prototype.addExclusions=function()
@@ -122,7 +123,7 @@ VG.UI.MenuBar.prototype.activateMenu=function( menu )
     this.active=menu;
 
     if ( menu.aboutToShow ) menu.aboutToShow();
-    VG.update();    
+    VG.update();
 };
 
 VG.UI.MenuBar.prototype.mouseMove=function( event )
@@ -154,15 +155,15 @@ VG.UI.MenuBar.prototype.mouseDown=function( event )
                 this.activateMenu( item );
             }
         }
-    } else 
+    } else
     {
         this.active=null;
-        VG.context.workspace.mouseTrackerWidget=null;        
+        VG.context.workspace.mouseTrackerWidget=null;
     }
 };
 
 VG.UI.MenuBar.prototype.mouseUp=function( event )
-{  
+{
 };
 
 VG.UI.MenuBar.prototype.menuItemById=function( id )
@@ -305,7 +306,7 @@ VG.UI.Menu.prototype.insertSeparator=function( index )
 
 VG.UI.Menu.prototype.clickItem=function( item )
 {
-    if ( item.clicked ) item.clicked();            
+    if ( item.clicked ) item.clicked();
 
     // --- Apply checkable state ?
 
@@ -313,15 +314,15 @@ VG.UI.Menu.prototype.clickItem=function( item )
     {
         item.checked=true;
 
-        for ( var i=0; i < item.exclusions.length; ++i ) 
+        for ( var i=0; i < item.exclusions.length; ++i )
             item.exclusions[i].checked=false;
-    }    
+    }
 };
 
 VG.UI.Menu.prototype.calcSize=function( canvas )
 {
     var size=this.preferredSize;
-    
+
     var minWidth=80;
 
     VG.context.workspace.canvas.pushFont( VG.UI.stylePool.current.skin.Menu.Font );
@@ -347,7 +348,7 @@ VG.UI.Menu.prototype.mouseMove=function( event )
 {
     var selected;
 
-    if ( !this.contentRect.contains( event.pos ) ) 
+    if ( !this.contentRect.contains( event.pos ) )
     {
         selected=null;
         this.parent.mouseMove( event );
@@ -363,7 +364,7 @@ VG.UI.Menu.prototype.mouseMove=function( event )
                     selected=item;
                     break;
                 }
-            }    
+            }
         }
     }
 
@@ -371,11 +372,11 @@ VG.UI.Menu.prototype.mouseMove=function( event )
         this.selected=selected;
 
         // --- StatusTip
-        if ( VG.context.workspace.statusbar )
+        if ( VG.context.workspace.statusBar )
         {
-            if ( selected && selected.statusTip && !selected.disabled ) VG.context.workspace.statusbar.message( selected.statusTip, 4000 );
-            else VG.context.workspace.statusbar.message( "" );
-        } 
+            if ( selected && selected.statusTip && !selected.disabled ) VG.context.workspace.statusBar.message( selected.statusTip, 4000 );
+            else VG.context.workspace.statusBar.message( "" );
+        }
 
         VG.update();
     }
@@ -393,7 +394,7 @@ VG.UI.Menu.prototype.mouseUp=function( event )
     if ( this.selected && this.contentRect.contains( event.pos ) && this.visible && event.button === VG.Events.MouseButton.Left ) {
 
         if ( this.selected.clicked )
-            this.selected.clicked();            
+            this.selected.clicked();
 
         // --- Apply checkable state ?
 
@@ -401,7 +402,7 @@ VG.UI.Menu.prototype.mouseUp=function( event )
         {
             this.selected.checked=true;
 
-            for ( var i=0; i < this.selected.exclusions.length; ++i ) 
+            for ( var i=0; i < this.selected.exclusions.length; ++i )
                 this.selected.exclusions[i].checked=false;
         }
 
@@ -409,7 +410,7 @@ VG.UI.Menu.prototype.mouseUp=function( event )
 
         this.visible=false;
         this.parent.active=null;
-        VG.context.workspace.mouseTrackerWidget=null;          
+        VG.context.workspace.mouseTrackerWidget=null;
     } else
     if ( !this.parent.rect.contains( event.pos ) )
     {
@@ -417,14 +418,14 @@ VG.UI.Menu.prototype.mouseUp=function( event )
 
         this.visible=false;
         this.parent.active=null;
-        VG.context.workspace.mouseTrackerWidget=null;        
+        VG.context.workspace.mouseTrackerWidget=null;
     }
 };
 
 VG.UI.Menu.prototype.paintWidget=function( canvas )
 {
     if ( !this.visible ) return;
-    VG.UI.stylePool.current.drawMenu( this, canvas );    
+    VG.UI.stylePool.current.drawMenu( this, canvas );
 };
 
 // ----------------------------------------------------------------- VG.UI.ContextMenu
@@ -500,7 +501,7 @@ VG.UI.ContextMenu.prototype.keyDown=function( keyCode )
                 this.applyNewIndex( this.index -1 );
                 VG.update();
             }
-        } else        
+        } else
         if ( keyCode == VG.Events.KeyCodes.ArrowDown )
         {
             if ( this.index < (this.items.length -1 )) {
@@ -525,14 +526,22 @@ VG.UI.ContextMenu.prototype.mouseMove=function( event )
             if ( !item.isSeparator ) {
                 if ( item._rect.contains( event.pos ) ) {
                     selected=item;
+
                     break;
                 }
-            }    
+            }
         }
     }
 
     if ( selected !== this.selected ) {
         this.selected=selected;
+
+        // --- StatusTip
+        if ( VG.context.workspace.statusBar )
+        {
+            if ( selected && selected.statusTip && !selected.disabled ) VG.context.workspace.statusBar.message( selected.statusTip, 4000 );
+            else VG.context.workspace.statusBar.message( "" );
+        }
         VG.update();
     }
 };
@@ -550,7 +559,7 @@ VG.UI.ContextMenu.prototype.mouseUp=function( event )
     if ( this.selected && this.visible && event.button === VG.Events.MouseButton.Left ) {
 
         if ( this.selected.clicked )
-            this.selected.clicked();  
+            this.selected.clicked();
 
         // --- Apply checkable state ?
 
@@ -558,7 +567,7 @@ VG.UI.ContextMenu.prototype.mouseUp=function( event )
         {
             this.selected.checked=true;
 
-            for ( var i=0; i < this.selected.exclusions.length; ++i ) 
+            for ( var i=0; i < this.selected.exclusions.length; ++i )
                 this.selected.exclusions[i].checked=false;
         }
 
@@ -586,7 +595,7 @@ VG.UI.ContextMenu.prototype.activate=function( pos )
 VG.UI.ContextMenu.prototype.calcSize=function( canvas )
 {
     var size=this.preferredSize;
-    
+
     var minWidth=80;
 
     VG.context.workspace.canvas.pushFont( canvas.style.skin.ContextMenu.Font );

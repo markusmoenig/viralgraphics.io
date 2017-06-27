@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -23,7 +23,7 @@
 
 /**
  * Contains all UI related classes.
- * @namespace 
+ * @namespace
  */
 
 VG.UI = {};
@@ -51,15 +51,19 @@ VG.UI.DataCollectionRole={ "LoadSaveRole" : 1, "UndoRedoRole" : 2 };
  * inside the Visual Graphics model.
  * @enum
  */
-VG.UI.CallbackType={ /** @type {callback} Called when a New operation is triggered by the user. */ "New" : 0, 
-	/**  @type {callback} Called when an Undo/Redo operation is triggered by the user. A single argument is passed to the callback with the undo/redo path. Only needed if the app needs some special UI updates for certain paths. */"UndoRedo" : 1, 
-	/**  @type {callback} Called when the user selects open. This overrides the default Model behavior. Data to read into the app state is passed to the callback. */"Open" : 2, 
-	/**  @type {callback} Called when the user selects save. This overrides the default Model behavior. Data to save needs to be returned by this callback. */ "Save" : 3, 
-	/**  @type {callback} Called when the user logged state changes, i.e. logged in / logged out. Read out the arguments for details. */ "LoggedStateChanged" : 4 };
+VG.UI.CallbackType={ /** @type {callback} Called when a New operation is triggered by the user. */ "New" : 0,
+	/**  @type {callback} Called when an Undo/Redo operation is triggered by the user. A single argument is passed to the callback with the undo/redo path. Only needed if the app needs some special UI updates for certain paths. */"UndoRedo" : 1,
+	/**  @type {callback} Called when the user selects open. This overrides the default Model behavior. Data to read into the app state is passed to the callback. */"Open" : 2,
+	/**  @type {callback} Called when the user selects save. This overrides the default Model behavior. Data to save needs to be returned by this callback. */ "Save" : 3,
+	/**  @type {callback} Called when the user logged state changes, i.e. logged in / logged out. Read out the arguments for details. */ "LoggedStateChanged" : 4,
+	/**  @type {callback} Called before a new operation, gives the application to confirm cancel. The callback has a function pointer as argument which the app should call to confirm the new operation. */ "ConfirmNew" : 5,
+	/**  @type {callback} Called when the application gains or looses focus. The function parameter will be true if the app gains focus and false if the application looses focus. */ "FocusChanged" : 6,
+	/**  @type {callback} Called when a new window (not widget) is about to be displayed and allows for the given windows rectangle to be adjusted. */ "PlaceWindow" : 7
+	 };
 
 VG.UI.DockWidgetLocation={ "Left" : 0, "Right" : 1, "Floating" : 2 };
 
-VG.UI.ActionItemRole={ "None" : 0, "New" : 1, "Open" : 2, "Save" : 3, "SaveAs" : 4, "Undo" : 5, "Redo" : 6, "Open_Local" : 7, "Cut" : 8, "Copy" : 9, "Paste" : 10, "Delete" : 11, "SelectAll" : 12, 
+VG.UI.ActionItemRole={ "None" : 0, "New" : 1, "Open" : 2, "Save" : 3, "SaveAs" : 4, "Undo" : 5, "Redo" : 6, "Open_Local" : 7, "Cut" : 8, "Copy" : 9, "Paste" : 10, "Delete" : 11, "SelectAll" : 12,
 	"Login" : 13, "Signup" : 14, "UserTool" : 15, "QuickMenu" : 16, "SkinCycyle" : 17 };
 
 /** Maximum size for layours */
@@ -68,7 +72,7 @@ VG.UI.MaxLayoutSize=32768;
 
 VG.UI.TableWidgetItemType={ "Label" : 0, "TextLineEdit" : 1, "PopupButton" : 2 };
 
-VG.UI.FileDialog={ 
+VG.UI.FileDialog={
 	"Image" : 0,
 	"Text" : 1,
 	"Project" : 2,
@@ -83,10 +87,10 @@ VG.Styles.pool=[];
 // --------------------------------------------- VG.Core.StyleSkinPool
 
 VG.UI.StylePool=function()
-{  
+{
 	if ( !(this instanceof VG.UI.StylePool) ) return new VG.UI.StylePool();
     this.styles=[];
-}
+};
 
 // --- addStyle
 

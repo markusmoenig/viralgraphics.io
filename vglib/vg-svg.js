@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -42,12 +42,12 @@ VG.Core.SVG=function( name, data, options, dontAddToPool )
             group.name=node.attributes.id;
         currentGroup=group;
         groups.push( group );
-    };
+    }
 
     parser.onopentag = function (node) {
         //console.log( 'onopentag', node, groupDepth );
 
-        if ( node.name === "g" ) 
+        if ( node.name === "g" )
         {
             if ( groupDepth === 0 )
             {
@@ -67,11 +67,11 @@ VG.Core.SVG=function( name, data, options, dontAddToPool )
             if ( !currentGroup ) createGroup( node );
 
             currentGroup.polygonNodes.push( node );
-            currentGroup.hasContent=true;            
+            currentGroup.hasContent=true;
         } else
         if ( node.name === "rect" && currentGroup && currentGroup.hasContent )
         {
-            if ( !currentGroup ) createGroup( node );            
+            if ( !currentGroup ) createGroup( node );
             currentGroup.rectNodes.push( node );
         }  else
         if ( node.name === "rect" )
@@ -79,13 +79,19 @@ VG.Core.SVG=function( name, data, options, dontAddToPool )
             if ( !currentGroup ) createGroup( node );
 
             currentGroup.rectNodes.push( node );
-        } else    
+        } else
         if ( node.name === "ellipse" )
         {
             if ( !currentGroup ) createGroup( node );
-            
+
             currentGroup.ellipseNodes.push( node );
-        }         
+        } else
+        if ( node.name === "circle" )
+        {
+            if ( !currentGroup ) createGroup( node );
+
+            currentGroup.ellipseNodes.push( node );
+        }
     };
 
     parser.onclosetag = function (name) {
@@ -98,7 +104,7 @@ VG.Core.SVG=function( name, data, options, dontAddToPool )
 
     this.curveDiv=options && options.curveDiv ? options.curveDiv : 20;
     var createPolygons=true;
-    if ( options && options.noPolygons ) 
+    if ( options && options.noPolygons )
         createPolygons=false;
 
     if ( groups.length )
@@ -106,13 +112,13 @@ VG.Core.SVG=function( name, data, options, dontAddToPool )
 
     this.tris=[];
 
-    if ( createPolygons ) 
+    if ( createPolygons )
     {
-        for ( var i=0; i < this.groups.length; ++i ) 
+        for ( var i=0; i < this.groups.length; ++i )
             this.createPolygonsForGroup( this.groups[i] );
 
         if ( !dontAddToPool )
-            VG.context.svgPool.addSVG( this );        
+            VG.context.svgPool.addSVG( this );
     }
 };
 
@@ -126,7 +132,7 @@ VG.Core.SVG.prototype.getGroupByName=function( name )
 
     for ( var i=0; i < this.groups.length; ++ i)
     {
-        if ( this.groups[i].name === name ) 
+        if ( this.groups[i].name === name )
             return this.groups[i];
     }
 
@@ -144,53 +150,57 @@ VG.Core.SVG.prototype.createPolygonsForGroup=function( group )
     group.polygons=[];
     group.triOffset=this.tris.length;
 
-    for ( var i=0; i < group.pathNodes.length; ++i )
+    for ( i=0; i < group.pathNodes.length; ++i )
     {
-        var path=group.pathNodes[i];
-        var polys=[];
+        path=group.pathNodes[i];
+        polys=[];
 
         this.createPolygonsForPath( path.attributes.d, polys );
-        for ( var k=0; k < polys.length; ++k) group.polygons.push( polys[k] );
+        for ( k=0; k < polys.length; ++k) group.polygons.push( polys[k] );
 
         // ---
 
         this.triangulatePolygons( group, polys );
     }
 
-    for ( var i=0; i < group.polygonNodes.length; ++i )
+    for ( i=0; i < group.polygonNodes.length; ++i )
     {
-        var poly=group.polygonNodes[i];
-        var polys=[];
+        poly=group.polygonNodes[i];
+        polys=[];
 
         this.createPolygonsForPoly( poly.attributes.points, polys );
-        for ( var k=0; k < polys.length; ++k) group.polygons.push( polys[k] );
+        for ( k=0; k < polys.length; ++k) group.polygons.push( polys[k] );
 
-        this.triangulatePolygons( group, polys );        
-    }  
+        this.triangulatePolygons( group, polys );
+    }
 
-    for ( var i=0; i < group.rectNodes.length; ++i )
+    for ( i=0; i < group.rectNodes.length; ++i )
     {
-        var rect=group.rectNodes[i];
-        var polys=[];
+        rect=group.rectNodes[i];
+        polys=[];
 
-        this.createPolygonsForRect( Number(rect.attributes.x), Number(rect.attributes.y), Number(rect.attributes.width), 
+        this.createPolygonsForRect( Number(rect.attributes.x), Number(rect.attributes.y), Number(rect.attributes.width),
             Number(rect.attributes.height), polys );
 
-        this.triangulatePolygons( group, polys );        
-        for ( var k=0; k < polys.length; ++k) group.polygons.push( polys[k] );            
-    }    
+        this.triangulatePolygons( group, polys );
+        for ( k=0; k < polys.length; ++k) group.polygons.push( polys[k] );
+    }
 
-    for ( var i=0; i < group.ellipseNodes.length; ++i )
+    for ( i=0; i < group.ellipseNodes.length; ++i )
     {
-        var rect=group.ellipseNodes[i];
-        var polys=[];
+        rect=group.ellipseNodes[i];
+        polys=[];
 
-        this.createPolygonsForEllipse( Number(rect.attributes.cx), Number(rect.attributes.cy), Number(rect.attributes.rx), 
-            Number(rect.attributes.ry), polys );
+        if ( rect.attributes.r )
+            this.createPolygonsForEllipse( Number(rect.attributes.cx), Number(rect.attributes.cy), Number(rect.attributes.r),
+                Number(rect.attributes.r), polys );
+        else
+            this.createPolygonsForEllipse( Number(rect.attributes.cx), Number(rect.attributes.cy), Number(rect.attributes.rx),
+                Number(rect.attributes.ry), polys );
 
-        this.triangulatePolygons( group, polys );        
-        for ( var k=0; k < polys.length; ++k) group.polygons.push( polys[k] );            
-    }    
+        this.triangulatePolygons( group, polys );
+        for ( k=0; k < polys.length; ++k) group.polygons.push( polys[k] );
+    }
 
     this.createBoundingBoxForGroup( group );
     //this.normalizeGroupPolygons( group );
@@ -205,7 +215,7 @@ VG.Core.SVG.prototype.triangulatePolygons=function( group, polygons )
     var contourOrientation=false;
 
     if ( polygons.length )
-        contourOrientation=this.clockwise( polygons[0] )
+        contourOrientation=this.clockwise( polygons[0] );
 
     while ( i < polygons.length )
     {
@@ -216,7 +226,7 @@ VG.Core.SVG.prototype.triangulatePolygons=function( group, polygons )
             var holes=[];
             var contour=[];
 
-            for ( var o=0; o < polygon.length; ++o )
+            for ( o=0; o < polygon.length; ++o )
             {
                 contour.push( polygon[o].x, polygon[o].y );
             }
@@ -225,11 +235,12 @@ VG.Core.SVG.prototype.triangulatePolygons=function( group, polygons )
 
             for ( var j=i+1; j < polygons.length; ++j )
             {
-                if ( polygons[j].length && this.clockwise( polygons[j] ) === !contourOrientation )
+                var invContourOrientation=!contourOrientation;
+                if ( polygons[j].length && this.clockwise( polygons[j] ) === invContourOrientation )
                 {
                     holes.push( contour.length / 2 );
 
-                    for ( var o=0; o < polygons[j].length; ++o )
+                    for ( o=0; o < polygons[j].length; ++o )
                     {
                         var hpoly=polygons[j];
                         contour.push( hpoly[o].x, hpoly[o].y );
@@ -246,7 +257,7 @@ VG.Core.SVG.prototype.triangulatePolygons=function( group, polygons )
             }
         }
         ++i;
-    }    
+    }
 };
 
 VG.Core.SVG.prototype.normalizeGroupPolygons=function( group )
@@ -278,13 +289,13 @@ VG.Core.SVG.prototype.createBoundingBoxForGroup=function( group )
 
         for ( var pi=0; pi < poly.length; ++pi )
         {
-            var p=poly[pi]; 
+            var p=poly[pi];
 
             if ( p.x > bbox.maxX ) bbox.maxX=p.x;
             if ( p.y > bbox.maxY ) bbox.maxY=p.y;
 
             if ( p.x < bbox.minX ) bbox.minX=p.x;
-            if ( p.y < bbox.minY ) bbox.minY=p.y;  
+            if ( p.y < bbox.minY ) bbox.minY=p.y;
         }
     }
 
@@ -348,7 +359,7 @@ VG.Core.SVG.prototype.createPolygonsForPath=function( path, polygons )
 {
     var cmdArray=VG.Core.SVG.path_parser( path );
 
-    var points=[]
+    var points=[];
     var p={};
 
     var lCubicControlPoint={ x: -100000, y: -100000 };
@@ -361,13 +372,13 @@ VG.Core.SVG.prototype.createPolygonsForPath=function( path, polygons )
         switch( cmd[0] )
         {
             case 'Z' :
-            case 'z' :            
+            case 'z' :
             {
                 if ( polygons.indexOf( points ) === -1 && points.length )
                     polygons.push( points );
 
                 points=[];
-            };
+            }
             break;
 
             case 'M' :
@@ -375,262 +386,262 @@ VG.Core.SVG.prototype.createPolygonsForPath=function( path, polygons )
                 p.x=cmd[1]; p.y=cmd[2];
 
                 points.push( { x : p.x, y : p.y } );
-            };
+            }
             break;
 
             case 'm' :
             {
                 p.x+=cmd[1]; p.y+=cmd[2];
 
-                points.push( { x : p.x, y : p.y } );                   
-            };
+                points.push( { x : p.x, y : p.y } );
+            }
             break;
 
-            case 'L' :            
+            case 'L' :
             {
                 points.push( { x : cmd[1], y : cmd[2] } );
                 p.x=cmd[1]; p.y=cmd[2];
-            };
+            }
             break;
 
             case 'l' :
             {
                 points.push( { x : cmd[1] + p.x, y : cmd[2] + p.y } );
-                p.x+=cmd[1]; p.y+=cmd[2];                
-            };
-            break;      
+                p.x+=cmd[1]; p.y+=cmd[2];
+            }
+            break;
 
             case 'H' :
             {
                 points.push( { x : cmd[1], y : p.y } );
                 p.x=cmd[1];
-            };
-            break;  
+            }
+            break;
 
             case 'h' :
             {
                 points.push( { x : cmd[1] + p.x, y : p.y } );
                 p.x+=cmd[1];
-            };
+            }
             break;
 
             case 'V' :
             {
                 points.push( { x : p.x, y : cmd[1] } );
                 p.y=cmd[1];
-            };
-            break;   
+            }
+            break;
 
             case 'v' :
             {
                 points.push( { x :  p.x, y : cmd[1] + p.y } );
                 p.y+=cmd[1];
-            };
-            break;          
+            }
+            break;
 
             case 'C' :
             {
-                var cx1=cmd[1];
-                var cy1=cmd[2];
-                var cx2=cmd[3];
-                var cy2=cmd[4];
-                var dx=cmd[5];
-                var dy=cmd[6];
+                cx1=cmd[1];
+                cy1=cmd[2];
+                cx2=cmd[3];
+                cy2=cmd[4];
+                dx=cmd[5];
+                dy=cmd[6];
 
                 lCubicControlPoint.x=cx2;
                 lCubicControlPoint.y=cy2;
-       
-                var seg=this.curveDiv;
 
-                for (var j = 1, seg = seg; j <= seg; j++)
+                seg=this.curveDiv;
+
+                for (j = 1, seg = seg; j <= seg; j++)
                 {
-                    var t = j / seg;
-                    var tx = VG.Math.bezierCubic(t, p.x, cx1, cx2, dx );
-                    var ty = VG.Math.bezierCubic(t, p.y, cy1, cy2, dy );
+                    t = j / seg;
+                    tx = VG.Math.bezierCubic(t, p.x, cx1, cx2, dx );
+                    ty = VG.Math.bezierCubic(t, p.y, cy1, cy2, dy );
 
                     points.push( { x : tx, y : ty } );
                 }
 
                 p.x=dx; p.y=dy;
-            };
-            break; 
+            }
+            break;
 
             case 'c' :
-            {  
-                var cx1=cmd[1] + p.x;
-                var cy1=cmd[2] + p.y;
-                var cx2=cmd[3] + p.x;
-                var cy2=cmd[4] + p.y;
-                var dx=cmd[5] + p.x;
-                var dy=cmd[6] + p.y;
+            {
+                cx1=cmd[1] + p.x;
+                cy1=cmd[2] + p.y;
+                cx2=cmd[3] + p.x;
+                cy2=cmd[4] + p.y;
+                dx=cmd[5] + p.x;
+                dy=cmd[6] + p.y;
 
                 lCubicControlPoint.x=cx2;
-                lCubicControlPoint.y=cy2;                
-    
-                var seg=this.curveDiv;
+                lCubicControlPoint.y=cy2;
 
-                for (var j = 1, seg = seg; j <= seg; j++)
+                seg=this.curveDiv;
+
+                for (j = 1, seg = seg; j <= seg; j++)
                 {
-                    var t = j / seg;
-                    var tx = VG.Math.bezierCubic(t, p.x, cx1, cx2, dx );
-                    var ty = VG.Math.bezierCubic(t, p.y, cy1, cy2, dy );
+                    t = j / seg;
+                    tx = VG.Math.bezierCubic(t, p.x, cx1, cx2, dx );
+                    ty = VG.Math.bezierCubic(t, p.y, cy1, cy2, dy );
 
                     points.push( { x : tx, y : ty } );
                 }
                 p.x=dx; p.y=dy;
 
-            };
+            }
             break;
 
             case 'S' :
             {
-                var cx1=2 * p.x - lCubicControlPoint.x;
-                var cy1=2 * p.y - lCubicControlPoint.y;
-                var cx2=cmd[1];
-                var cy2=cmd[2];
-                var dx=cmd[3];
-                var dy=cmd[4];        
-       
-                var seg=this.curveDiv;
+                cx1=2 * p.x - lCubicControlPoint.x;
+                cy1=2 * p.y - lCubicControlPoint.y;
+                cx2=cmd[1];
+                cy2=cmd[2];
+                dx=cmd[3];
+                dy=cmd[4];
 
-                for (var j = 1, seg = seg; j <= seg; j++)
+                seg=this.curveDiv;
+
+                for (j = 1, seg = seg; j <= seg; j++)
                 {
-                    var t = j / seg;
-                    var tx = VG.Math.bezierCubic(t, p.x, cx1, cx2, dx );
-                    var ty = VG.Math.bezierCubic(t, p.y, cy1, cy2, dy );
+                    t = j / seg;
+                    tx = VG.Math.bezierCubic(t, p.x, cx1, cx2, dx );
+                    ty = VG.Math.bezierCubic(t, p.y, cy1, cy2, dy );
 
                     points.push( { x : tx, y : ty } );
                 }
 
                 p.x=dx; p.y=dy;
-            };
-            break; 
+            }
+            break;
 
             case 's' :
-            {  
-                var cx1=2 * p.x - lCubicControlPoint.x;
-                var cy1=2 * p.y - lCubicControlPoint.y;
-                var cx2=cmd[1] + p.x;
-                var cy2=cmd[2] + p.y;
-                var dx=cmd[3] + p.x;
-                var dy=cmd[4] + p.y;
-    
-                var seg=this.curveDiv;
+            {
+                cx1=2 * p.x - lCubicControlPoint.x;
+                cy1=2 * p.y - lCubicControlPoint.y;
+                cx2=cmd[1] + p.x;
+                cy2=cmd[2] + p.y;
+                dx=cmd[3] + p.x;
+                dy=cmd[4] + p.y;
 
-                for (var j = 1, seg = seg; j <= seg; j++)
+                seg=this.curveDiv;
+
+                for (j = 1; j <= seg; j++)
                 {
-                    var t = j / seg;
-                    var tx = VG.Math.bezierCubic(t, p.x, cx1, cx2, dx );
-                    var ty = VG.Math.bezierCubic(t, p.y, cy1, cy2, dy );
+                    t = j / seg;
+                    tx = VG.Math.bezierCubic(t, p.x, cx1, cx2, dx );
+                    ty = VG.Math.bezierCubic(t, p.y, cy1, cy2, dy );
 
                     points.push( { x : tx, y : ty } );
                 }
                 p.x=dx; p.y=dy;
 
-            };
+            }
             break;
 
             case 'Q' :
             {
-                var cx1=cmd[1];
-                var cy1=cmd[2];
-                var dx=cmd[3];
-                var dy=cmd[4];
+                cx1=cmd[1];
+                cy1=cmd[2];
+                dx=cmd[3];
+                dy=cmd[4];
 
                 lQuadraticControlPoint.x=cx1;
                 lQuadraticControlPoint.y=cy2;
-       
-                var seg=this.curveDiv;
 
-                for (var j = 1, seg = seg; j <= seg; j++)
+                seg=this.curveDiv;
+
+                for (j = 1, seg = seg; j <= seg; j++)
                 {
-                    var t = j / seg;
-                    var tx = VG.Math.bezier(t, p.x, cx1, dx );
-                    var ty = VG.Math.bezier(t, p.y, cy1, dy );
+                    t = j / seg;
+                    tx = VG.Math.bezier(t, p.x, cx1, dx );
+                    ty = VG.Math.bezier(t, p.y, cy1, dy );
 
                     points.push( { x : tx, y : ty } );
                 }
 
                 p.x=dx; p.y=dy;
-            };
-            break; 
+            }
+            break;
 
             case 'q' :
-            {  
-                var cx1=cmd[1] + p.x;
-                var cy1=cmd[2] + p.y;
-                var dx=cmd[3] + p.x;
-                var dy=cmd[4] + p.y;
+            {
+                cx1=cmd[1] + p.x;
+                cy1=cmd[2] + p.y;
+                dx=cmd[3] + p.x;
+                dy=cmd[4] + p.y;
 
                 lQuadraticControlPoint.x=cx2;
-                lQuadraticControlPoint.y=cy2;                
-    
-                var seg=this.curveDiv;
+                lQuadraticControlPoint.y=cy2;
 
-                for (var j = 1, seg = seg; j <= seg; j++)
+                seg=this.curveDiv;
+
+                for (j = 1, seg = seg; j <= seg; j++)
                 {
-                    var t = j / seg;
-                    var tx = VG.Math.bezier(t, p.x, cx1, dx );
-                    var ty = VG.Math.bezier(t, p.y, cy1, dy );
+                    t = j / seg;
+                    tx = VG.Math.bezier(t, p.x, cx1, dx );
+                    ty = VG.Math.bezier(t, p.y, cy1, dy );
 
                     points.push( { x : tx, y : ty } );
                 }
                 p.x=dx; p.y=dy;
 
-            };
-            break; 
+            }
+            break;
 
             case 'T' :
             {
-                var cx1=lQuadraticControlPoint.x;
-                var cy1=lQuadraticControlPoint.y;                
-                var dx=cmd[1];
-                var dy=cmd[2];
-       
-                var seg=this.curveDiv;
+                cx1=lQuadraticControlPoint.x;
+                cy1=lQuadraticControlPoint.y;
+                dx=cmd[1];
+                dy=cmd[2];
 
-                for (var j = 1, seg = seg; j <= seg; j++)
+                seg=this.curveDiv;
+
+                for (j = 1, seg = seg; j <= seg; j++)
                 {
-                    var t = j / seg;
-                    var tx = VG.Math.bezier(t, p.x, cx1, dx );
-                    var ty = VG.Math.bezier(t, p.y, cy1, dy );
+                    t = j / seg;
+                    tx = VG.Math.bezier(t, p.x, cx1, dx );
+                    ty = VG.Math.bezier(t, p.y, cy1, dy );
 
                     points.push( { x : tx, y : ty } );
                 }
 
                 p.x=dx; p.y=dy;
-            };
-            break; 
+            }
+            break;
 
             case 't' :
-            {  
-                var cx1=lQuadraticControlPoint.x;
-                var cy1=lQuadraticControlPoint.y;                       
-                var dx=cmd[1] + p.x;
-                var dy=cmd[2] + p.y;            
-    
+            {
+                cx1=lQuadraticControlPoint.x;
+                cy1=lQuadraticControlPoint.y;
+                dx=cmd[1] + p.x;
+                dy=cmd[2] + p.y;
+
                 if ( cx1 === -100000 ) cx1=p.x;
                 if ( cy1 === -100000 ) cy1=p.y;
 
-                var seg=this.curveDiv;
+                seg=this.curveDiv;
 
-                for (var j = 1, seg = seg; j <= seg; j++)
+                for (j = 1, seg = seg; j <= seg; j++)
                 {
-                    var t = j / seg;
-                    var tx = VG.Math.bezier(t, p.x, cx1, dx );
-                    var ty = VG.Math.bezier(t, p.y, cy1, dy );
+                    t = j / seg;
+                    tx = VG.Math.bezier(t, p.x, cx1, dx );
+                    ty = VG.Math.bezier(t, p.y, cy1, dy );
 
                     points.push( { x : tx, y : ty } );
                 }
                 p.x=dx; p.y=dy;
 
-            };
-            break;  
+            }
+            break;
 
             default:
-                VG.log( cmd[0] )
-            break;  
-        };
+                VG.log( cmd[0] );
+            break;
+        }
     }
 
     if ( polygons.indexOf( points ) === -1 && points.length )
@@ -648,10 +659,10 @@ VG.Core.SVG.prototype.clockwise=function(vs)
     {
         var sX = vs[i].x - vs[0].x;
         var sY = vs[i].y - vs[0].y;
-        var eX = vs[i + 1].x - vs[0].x; 
+        var eX = vs[i + 1].x - vs[0].x;
         var eY = vs[i + 1].y - vs[0].y;
 
-        area += (sX * -eY) - (eX * -sY);    
+        area += (sX * -eY) - (eX * -sY);
     }
 
     return  area < 0.0;
@@ -660,7 +671,7 @@ VG.Core.SVG.prototype.clockwise=function(vs)
 // --------------------------------------------- VG.Core.SVGPool
 
 VG.Core.SVGPool=function()
-{  
+{
     if ( !(this instanceof VG.Core.SVGPool) ) return new VG.Core.SVGPool();
 
     /** Creates an VG.Core.SVGPool class. The default SVG pool of every VG application is located at VG.context.svgPool. It is filled automatically
@@ -669,7 +680,7 @@ VG.Core.SVGPool=function()
      */
 
     this.svgs=[];
-}
+};
 
 // --- addSVG
 
@@ -690,14 +701,14 @@ VG.Core.SVGPool.prototype.getSVGByName=function( name )
      * @returns {VG.Core.SVG} or null if no svg with the given name was found.
      */
 
-    for( var i=0; i < this.svgs.length; ++i ) {
+    for( i=0; i < this.svgs.length; ++i ) {
         if ( this.svgs[i].name == name )
             return this.svgs[i];
     }
 
     name=VG.UI.stylePool.current.skin.prefix + name;
 
-    for( var i=0; i < this.svgs.length; ++i ) {
+    for( i=0; i < this.svgs.length; ++i ) {
         if ( this.svgs[i].name == name )
             return this.svgs[i];
     }
@@ -734,14 +745,14 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
 
-VG.Core.SVG.path_parser_length = {a: 7, c: 6, h: 1, l: 2, m: 2, q: 4, s: 4, t: 2, v: 1, z: 0}
+VG.Core.SVG.path_parser_length = {a: 7, c: 6, h: 1, l: 2, m: 2, q: 4, s: 4, t: 2, v: 1, z: 0};
 
 /**
  * segment pattern
  * @type {RegExp}
  */
 
-VG.Core.SVG.path_parser_segment = /([astvzqmhlc])([^astvzqmhlc]*)/ig
+VG.Core.SVG.path_parser_segment = /([astvzqmhlc])([^astvzqmhlc]*)/ig;
 
 /**
  * parse an svg path data string. Generates an Array
@@ -752,35 +763,35 @@ VG.Core.SVG.path_parser_segment = /([astvzqmhlc])([^astvzqmhlc]*)/ig
  * @return {Array}
  */
 
-VG.Core.SVG.path_parser=function( path ) 
+VG.Core.SVG.path_parser=function( path )
 {
-    var data = []
+    var data = [];
     path.replace(VG.Core.SVG.path_parser_segment, function(_, command, args){
-        var type = command.toLowerCase()
-        args = VG.Core.SVG.path_parser_parseValues(args)
+        var type = command.toLowerCase();
+        args = VG.Core.SVG.path_parser_parseValues(args);
 
         // overloaded moveTo
         if (type == 'm' && args.length > 2) {
-            data.push([command].concat(args.splice(0, 2)))
-            type = 'l'
-            command = command == 'm' ? 'l' : 'L'
+            data.push([command].concat(args.splice(0, 2)));
+            type = 'l';
+            command = command == 'm' ? 'l' : 'L';
         }
 
         while (true) {
             if (args.length == VG.Core.SVG.path_parser_length[type]) {
-                args.unshift(command)
-                return data.push(args)
+                args.unshift(command);
+                return data.push(args);
             }
             if (args.length < VG.Core.SVG.path_parser_length[type]) return data;//throw new Error('malformed path data')
-            data.push([command].concat(args.splice(0, VG.Core.SVG.path_parser_length[type])))
+            data.push([command].concat(args.splice(0, VG.Core.SVG.path_parser_length[type])));
         }
-    })
-    return data
-}
+    });
+    return data;
+};
 
 VG.Core.SVG.path_parser_parseValues=function(args){
-    args = args.match(/-?[.0-9]+(?:e[-+]?\d+)?/ig)
-    return args ? args.map(Number) : []
-}
+    args = args.match(/-?[.0-9]+(?:e[-+]?\d+)?/ig);
+    return args ? args.map(Number) : [];
+};
 
 // ----

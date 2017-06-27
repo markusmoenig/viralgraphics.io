@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -49,7 +49,7 @@ VG.UI.Workspace.prototype.showContactUsDialog=function( subjects )
     dialog.layout.margin.set( 30, 20, 30, 10 );
 
     dialog.addButton( "CLOSE", function() { dialog.close( dialog ); }.bind( this ) );
-    dialog.addButton( "SEND", function() { 
+    dialog.addButton( "SEND", function() {
 
         if ( nameEdit.text.length && emailEdit.text && messageEdit.text ) {
             VG.DB.sendEMailToAppAdmins( this.appId, nameEdit.text, emailEdit.text, subjectMenu.text(), messageEdit.text, function( success ) {
@@ -62,7 +62,7 @@ VG.UI.Workspace.prototype.showContactUsDialog=function( subjects )
 
     }.bind( this ) );
 
-    this.showWindow( dialog );            
+    this.showWindow( dialog );
 };
 
 // ----------------------------------------------------------------------------------- Login Dialog
@@ -88,10 +88,10 @@ VG.UI.Workspace.prototype.showLoginDialog=function()
         this.loginDialog.layout=layout;
 
         this.loginDialog.addButton( "CLOSE", function() { this.close( this ); }.bind( this.loginDialog ) );
-        this.loginDialog.addButton( "LOGIN", function() { 
+        this.loginDialog.addButton( "LOGIN", function() {
 
             VG.DB.userLogIn( this.login_userNameEdit.text, this.login_passwordEdit.text, function( success, userName, userId, isAdmin ) {
-                if ( success ) 
+                if ( success )
                 {
                     this.userName=userName;
                     this.userId=userId;
@@ -100,7 +100,7 @@ VG.UI.Workspace.prototype.showLoginDialog=function()
                     this.modelLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName, this.userId );
 
                     if ( this.callbackForLoggedStateChanged )
-                        this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName, this.userId );  
+                        this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName, this.userId );
 
                     this.loginDialog.close( this.loginDialog );
                 } else this.loginDialog.label.text="Login failed";
@@ -109,7 +109,7 @@ VG.UI.Workspace.prototype.showLoginDialog=function()
     }
 
     this.showWindow( this.loginDialog );
-    this.login_userNameEdit.setFocus();    
+    this.login_userNameEdit.setFocus();
 };
 
 // ----------------------------------------------------------------------------------- Signup Dialog
@@ -139,12 +139,14 @@ VG.UI.Workspace.prototype.showSignupDialog=function()
 
         var widget=VG.UI.Widget();
         widget.html=VG.UI.HtmlView();
+        widget.html.linkCallback=function( link ) { VG.gotoUrl( link ); };
         widget.html.elements.body.noframe=true;
         widget.html.elements.body.font=VG.Font.Font( "Open Sans Semibold", 14 );
         widget.html.elements.body.spacing=5;
         widget.html.elements.body.margin.set( 0, 0, 0, 0 );
         widget.html.elements.body.bgColor=VG.context.workspace.canvas.style.skin.Window.BackColor;
-        widget.html.html="<b>Sign up</b> to Visual Graphics and sign in to all the applications and games using the Visual Graphics Framework.";
+        widget.html.elements.a.font=widget.html.elements.body.font;
+        widget.html.html="<b>Sign up</b> to Visual Graphics and sign in to all the applications using the Visual Graphics Application Framework.<br><a href='http://www.braindistrict.com'>Powered by BrainDistrict GmbH.</a>";
         widget.paintWidget=function( canvas ) {
             var rect=VG.Core.Rect( this.rect.x + 20, this.rect.y, 93, 85 );
             var svgLogo=VG.Utils.getSVGByName( "vglogo.svg"  );
@@ -154,11 +156,12 @@ VG.UI.Workspace.prototype.showSignupDialog=function()
 
             rect.x+=rect.width + 25;
             rect.width=this.rect.width - ( 93 + 10 ) - 50;
-            rect.height+=5;
+            rect.height+=10;
             this.html.rect.set( rect );
             this.html.paintWidget( canvas );
 
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y + this.rect.height - 1, this.rect.width, 1 ), canvas.style.skin.TextEdit.BorderColor1 );
+            this.childWidgets = [ this.html ];
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y + this.rect.height - 1 + 3, this.rect.width, 1 ), canvas.style.skin.TextEdit.BorderColor1 );
         };
 
         var vlayout=VG.UI.Layout( widget, layout );
@@ -169,15 +172,15 @@ VG.UI.Workspace.prototype.showSignupDialog=function()
             var size=VG.Core.Size( 550, 250 );
             return size;
         }.bind( this );
-        vlayout.vertical=true;        
+        vlayout.vertical=true;
 
         this.signupDialog.layout=vlayout;
-        this.signupDialog.addButton( "CLOSE", function() { this.close( this ) }.bind( this.signupDialog ) );
+        this.signupDialog.addButton( "CLOSE", function() { this.close( this ); }.bind( this.signupDialog ) );
         this.signupDialog.addButton( "SIGNUP", function() { VG.context.workspace.showSignupDialog_signUp.call( VG.context.workspace ); } );
 
     }
 
-    this.showWindow( this.signupDialog );            
+    this.showWindow( this.signupDialog );
     this.signup_userNameEdit.setFocus();
 };
 
@@ -197,14 +200,18 @@ VG.UI.Workspace.prototype.showSignupDialog_finished=function( responseText )
     if ( response.status === "ok" && response.user.username && response.user.username.length )
     {
         if ( this.callbackForLoggedStateChanged )
-            this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName );           
+            this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName );
 
-        this.signupDialog.close( this.signupDialog );        
+        this.signupDialog.close( this.signupDialog );
+    } else
+    if ( response.status === "error" && response.message )
+    {
+        this.signupDialog.label.text=response.message;
     } else {
-        this.signupDialog.label.text="Signup Failed";        
+        this.signupDialog.label.text="Signup Failed";
     }
 
-    VG.update();  
+    VG.update();
 };
 
 // ----------------------------------------------------------------------------------- User Settings Dialog
@@ -229,7 +236,7 @@ VG.UI.Workspace.prototype.showUserSettingsDialog=function()
 
         this.userSettingsDialog.layout=layout;
         this.userSettingsDialog.addButton( "Close", function() { this.close( this ); }.bind( this.userSettingsDialog ) );
-        this.userSettingsDialog.addButton( "Change", function() { 
+        this.userSettingsDialog.addButton( "Change", function() {
             if ( this.userSettings_passwordEdit1.text.length > 0 && this.userSettings_passwordEdit1.text == this.userSettings_passwordEdit2.text ) {
                 VG.DB.userChangePassword( this.userSettings_passwordEdit1.text, function( success ) {
                     if ( success ) this.userSettingsDialog.close( this.userSettingsDialog );
@@ -243,7 +250,7 @@ VG.UI.Workspace.prototype.showUserSettingsDialog=function()
     this.userSettings_passwordEdit2.text="";
     this.userSettingsDialog.label.text="";
 
-    this.showWindow( this.userSettingsDialog );            
+    this.showWindow( this.userSettingsDialog );
 };
 
 // ----------------------------------------------------------------------------------- VG.RemoteOpenProject
@@ -261,6 +268,9 @@ VG.RemoteOpenProject=function( workspace, dataReadCallback )
 
     VG.UI.Dialog.call( this, "Open Project" );
 
+    this.buttonLayout.margin.top /= 4;
+    this.buttonLayout.margin.spacing /= 4;
+
     // --- Local Layout
 
     var dropArea=VG.UI.DropArea( "Project", function( canvas ) {
@@ -276,17 +286,17 @@ VG.RemoteOpenProject=function( workspace, dataReadCallback )
         // --- Close
 
         if ( VG.context.workspace.platform === VG.HostProperty.PlatformWeb )
-            VG.dropZone.style.display="none"; 
+            VG.dropZone.style.display="none";
 
-        this.close( this );         
+        this.close( this );
     }.bind( this ) );
 
     var localLayout=VG.UI.Layout( dropArea );
 
     // --- Login first Layout
 
-    var loginLabel=VG.UI.Label();
-    loginLabel.text="You have to Login first to be able to use Cloud Storage.";
+    var loginLabel = VG.UI.Label();
+    loginLabel.text = `You have to login first to be able to use the ${VG.context.workspace.appName} Cloud.`;
 
     var loginLayout=VG.UI.LabelLayout( "", loginLabel );
 
@@ -298,11 +308,14 @@ VG.RemoteOpenProject=function( workspace, dataReadCallback )
     var dc=VG.Data.Collection( "File List" );
     dc.fileList=[];
 
-    var listWidget=new VG.UI.ListWidget();
-    listWidget.itemHeight=68;
+    var treeWidget=new VG.UI.TreeWidget();
+    treeWidget.addColumn( { name : "Name", itemName : "text", width : 60 } );
+    treeWidget.addColumn( { name : "Type", itemName : "type", width : 20 } );
+    treeWidget.addColumn( { name : "Size", itemName : "size", width : 20 } );
+    // treeWidget.itemHeight=68;
 
-    var openButton=VG.UI.Button( "Open" );
-    openButton.toolTip="Opens the Project from the Visual Graphics Cloud.";
+    var openButton=VG.UI.Button( "OPEN" );
+    openButton.toolTip=`Open the Project from the ${VG.context.workspace.appName} Cloud.`;
     openButton.clicked=function() {
 
         VG.remoteOpenFile( controller.selected.name, function ( responseText ) {
@@ -314,17 +327,17 @@ VG.RemoteOpenProject=function( workspace, dataReadCallback )
             // --- Close
 
             if ( VG.context.workspace.platform === VG.HostProperty.PlatformWeb )
-                VG.dropZone.style.display="none"; 
+                VG.dropZone.style.display="none";
 
             this.close( this );
         }.bind( this ) );
 
         this.label.text="Opening...";
     }.bind( this );
-    listWidget.addToolWidget( openButton );
+    treeWidget.addToolWidget( openButton );
 
-    var deleteButton=VG.UI.Button( "Delete" );
-    deleteButton.toolTip="Deletes the selected Project from the Visual Graphics Cloud.";    
+    var deleteButton=VG.UI.Button( "DELETE" );
+    deleteButton.toolTip=`Delete the selected Project from the ${VG.context.workspace.appName} Cloud.`;
     deleteButton.disabled=true;
     deleteButton.clicked=function() {
 
@@ -343,43 +356,16 @@ VG.RemoteOpenProject=function( workspace, dataReadCallback )
             else this.label.text="Error during deletion!";
 
             getFileList();
-        }.bind( this ), "DELETE" );   
+        }.bind( this ), "DELETE" );
 
         this.label.text="Deleting...";
 
     }.bind( this );
-    listWidget.addToolWidget( deleteButton );    
+    treeWidget.addToolWidget( deleteButton );
 
     // ---
 
-    var itemRect=VG.Core.Rect(), itemRect1=VG.Core.Rect();
-    listWidget.paintItemCallback=function( canvas, item, paintRect, selected ) {
-
-        // --- Preview
-
-        // 61, 61
-
-        itemRect.copy( paintRect );
-        itemRect.x=paintRect.x + 20;
-        itemRect.y=paintRect.y + 4;
-        itemRect.width=61;
-        itemRect.height=61;
-
-        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, itemRect, VG.UI.stylePool.current.skin.ListWidget.ItemCustomContentBorderColor );
-        itemRect.shrink( 1, 1, itemRect );    
-        
-        canvas.pushClipRect( itemRect );
-
-        if ( workspace.projectIcon )
-            canvas.drawImage( itemRect, workspace.projectIcon );
-        canvas.popClipRect();
-
-        itemRect.x+=itemRect.width + 20;
-        itemRect.width=paintRect.width - 61 - 20 - 20 - 20;
-        canvas.drawTextRect( item.text + ", " + item.size, itemRect, VG.UI.stylePool.current.skin.ListWidget.TextColor, 0, 1 );
-    }.bind( this );
-
-    var controller=listWidget.bind( dc, "fileList" );
+    var controller=treeWidget.bind( dc, "fileList" );
 
     controller.addObserver( "changed", function() {
         deleteButton.disabled=controller.length > 0 ? false : true;
@@ -387,10 +373,10 @@ VG.RemoteOpenProject=function( workspace, dataReadCallback )
 
     controller.addObserver( "selectionChanged", function() {
         deleteButton.disabled=!controller.selected;
-    }.bind( this ) );    
+    }.bind( this ) );
 
     function getFileList() {
-        if ( workspace.userName )    
+        if ( workspace.userName )
         {
             dc.fileList=[];
 
@@ -404,18 +390,21 @@ VG.RemoteOpenProject=function( workspace, dataReadCallback )
                 for ( var i =0; i < response.files.length; ++i )
                 {
                     var item=response.files[i];
-            
-                    var fileItem=new VG.RemoteProjectItem();
-                    fileItem.text=VG.Utils.fileNameFromPath( item.name, true );
-                    fileItem.size=VG.Utils.bytesToSize(item.size);
-                    fileItem.name=item.name;
-                    fileItem.serverId=item._id;
-                    controller.add( fileItem );
+
+                    if ( item.user === VG.context.workspace.userId ) {
+                        var fileItem=new VG.RemoteProjectItem();
+                        fileItem.text=VG.Utils.fileNameFromPath( item.name, true );
+                        fileItem.size=VG.Utils.bytesToSize(item.size);
+                        fileItem.name=item.name;
+                        fileItem.serverId=item._id;
+                        fileItem.type=VG.context.workspace.projectShortName ? VG.context.workspace.projectShortName : "";
+                        controller.add( "", fileItem );
+                    }
                 }
 
                 if ( controller.length ) controller.selected=controller.at( 0 );
                 //this.label.text="";
-            }.bind( this ), "GET" );   
+            }.bind( this ), "GET" );
         }
     }
 
@@ -425,7 +414,8 @@ VG.RemoteOpenProject=function( workspace, dataReadCallback )
 
     var labelLayout=VG.UI.LabelLayout();
 
-    var openFromMenu=VG.UI.DropDownMenu( "Computer", "Visual Graphics Cloud" );
+    var openFromMenu=VG.UI.DropDownMenu( "Computer", `${VG.context.workspace.appName} Cloud` );
+    openFromMenu.menuIsUp=true;
     openFromMenu.changed=function( index ) {
         if ( index === 0 ) {
             stackedLayout.current=localLayout;
@@ -434,11 +424,11 @@ VG.RemoteOpenProject=function( workspace, dataReadCallback )
         if  ( index === 1 ) {
 
             if ( VG.context.workspace.platform === VG.HostProperty.PlatformWeb )
-                VG.dropZone.style.display="none"; 
+                VG.dropZone.style.display="none";
 
             if ( !workspace.userName )
                 stackedLayout.current=loginLayout;
-            else stackedLayout.current=listWidget;
+            else stackedLayout.current=treeWidget;
         }
     }.bind( this );
 
@@ -447,7 +437,8 @@ VG.RemoteOpenProject=function( workspace, dataReadCallback )
     // ---
 
     var stackedLayout=VG.UI.StackedLayout();
-    stackedLayout.current=localLayout;
+    stackedLayout.current= VG.context.workspace.userId ? treeWidget : localLayout;
+    openFromMenu.index = VG.context.workspace.userId ? 1 : 0;
 
     this.layout=VG.UI.Layout( labelLayout, stackedLayout );
     this.layout.vertical=true;
@@ -459,15 +450,15 @@ VG.RemoteOpenProject=function( workspace, dataReadCallback )
 
     // ---
 
-    this.addButton( "Close", function() { 
+    this.addButton( "CLOSE", function() {
 
         if ( VG.context.workspace.platform === VG.HostProperty.PlatformWeb )
-            VG.dropZone.style.display="none"; 
+            VG.dropZone.style.display="none";
 
-        this.close( this ); 
-    }.bind( this ) );  
+        this.close( this );
+    }.bind( this ) );
 };
-  
+
 VG.RemoteOpenProject.prototype=VG.UI.Dialog();
 
 // ----------------------------------------------------------------------------------- VG.RemoteSaveProject
@@ -478,6 +469,9 @@ VG.RemoteSaveProject=function( workspace, dataWriteCallback )
 
     VG.UI.Dialog.call( this, "Save Project" );
 
+    this.buttonLayout.margin.top /= 4;
+    this.buttonLayout.margin.spacing /= 4;
+
     //this.layout=VG.UI.LabelLayout();
 
     // --- Download Layout
@@ -485,12 +479,12 @@ VG.RemoteSaveProject=function( workspace, dataWriteCallback )
     var downloadLabel=VG.UI.Label();
     downloadLabel.text="The Projectfile will be downloaded to the \"Downloads\" folder of your Computer.";
 
-    var downloadButton=VG.UI.Button( "Download" );
+    var downloadButton=VG.UI.Button( "DOWNLOAD" );
     downloadButton.clicked=function() {
 
         var fileName = nameEdit.text;
         if ( workspace.projectExtension )fileName+=workspace.projectExtension;
-        
+
         dataWriteCallback( { "filePath" : fileName, "download" : true } );
 
         this.label.text="\"" + fileName + "\" download request send successfully.";
@@ -503,7 +497,7 @@ VG.RemoteSaveProject=function( workspace, dataWriteCallback )
     // --- Login first Layout
 
     var loginLabel=VG.UI.Label();
-    loginLabel.text="You have to Login first to be able to use Cloud Storage.";
+    loginLabel.text = `You have to login first to be able to use the ${VG.context.workspace.appName} Cloud.`;
 
     var loginLayout=VG.UI.LabelLayout( "", loginLabel );
 
@@ -515,11 +509,14 @@ VG.RemoteSaveProject=function( workspace, dataWriteCallback )
     var dc=VG.Data.Collection( "File List" );
     dc.fileList=[];
 
-    var listWidget=new VG.UI.ListWidget();
-    listWidget.itemHeight=68;
+    var treeWidget=new VG.UI.TreeWidget();
+    treeWidget.addColumn( { name : "Name", itemName : "text", width : 60 } );
+    treeWidget.addColumn( { name : "Type", itemName : "type", width : 20 } );
+    treeWidget.addColumn( { name : "Size", itemName : "size", width : 20 } );
+    // treeWidget.itemHeight=68;
 
-    var saveButton=VG.UI.Button( "Save" );
-    saveButton.toolTip="Saves the Project to the Visual Graphics Cloud.";
+    var saveButton=VG.UI.Button( "SAVE" );
+    saveButton.toolTip=`Save the Project to the ${VG.context.workspace.appName} Cloud.`;
     saveButton.clicked=function() {
 
         var fileName = nameEdit.text;
@@ -533,15 +530,15 @@ VG.RemoteSaveProject=function( workspace, dataWriteCallback )
             else this.label.text="Error during saving!";
 
             getFileList();
-        }.bind( this ) ); 
+        }.bind( this ) );
 
         this.label.text="Saving...";
 
     }.bind( this );
-    listWidget.addToolWidget( saveButton );
+    treeWidget.addToolWidget( saveButton );
 
-    var deleteButton=VG.UI.Button( "Delete" );
-    deleteButton.toolTip="Deletes the selected Project from the Visual Graphics Cloud.";    
+    var deleteButton=VG.UI.Button( "DELETE" );
+    deleteButton.toolTip=`Delete the selected Project from the ${VG.context.workspace.appName} Cloud.`;
     deleteButton.disabled=true;
     deleteButton.clicked=function() {
 
@@ -560,43 +557,16 @@ VG.RemoteSaveProject=function( workspace, dataWriteCallback )
             else this.label.text="Error during deletion!";
 
             getFileList();
-        }.bind( this ), "DELETE" );   
+        }.bind( this ), "DELETE" );
 
         this.label.text="Deleting...";
 
     }.bind( this );
-    listWidget.addToolWidget( deleteButton );    
+    treeWidget.addToolWidget( deleteButton );
 
     // ---
 
-    var itemRect=VG.Core.Rect(), itemRect1=VG.Core.Rect();
-    listWidget.paintItemCallback=function( canvas, item, paintRect, selected ) {
-
-        // --- Preview
-
-        // 61, 61
-
-        itemRect.copy( paintRect );
-        itemRect.x=paintRect.x + 20;
-        itemRect.y=paintRect.y + 4;
-        itemRect.width=61;
-        itemRect.height=61;
-
-        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, itemRect, VG.UI.stylePool.current.skin.ListWidget.ItemCustomContentBorderColor );
-        itemRect.shrink( 1, 1, itemRect );    
-        
-        canvas.pushClipRect( itemRect );
-
-        if ( workspace.projectIcon )
-            canvas.drawImage( itemRect, workspace.projectIcon );
-        canvas.popClipRect();
-
-        itemRect.x+=itemRect.width + 20;
-        itemRect.width=paintRect.width - 61 - 20 - 20 - 20;
-        canvas.drawTextRect( item.text + ", " + item.size, itemRect, VG.UI.stylePool.current.skin.ListWidget.TextColor, 0, 1 );
-    }.bind( this );
-
-    var controller=listWidget.bind( dc, "fileList" );
+    var controller=treeWidget.bind( dc, "fileList" );
 
     controller.addObserver( "changed", function() {
         deleteButton.disabled=controller.length > 0 ? false : true;
@@ -604,10 +574,13 @@ VG.RemoteSaveProject=function( workspace, dataWriteCallback )
 
     controller.addObserver( "selectionChanged", function() {
         deleteButton.disabled=!controller.selected;
-    }.bind( this ) );    
+
+        if ( controller.selected )
+            nameEdit.text = controller.selected.text;
+    }.bind( this ) );
 
     function getFileList() {
-        if ( workspace.userName )    
+        if ( workspace.userName )
         {
             dc.fileList=[];
 
@@ -621,17 +594,20 @@ VG.RemoteSaveProject=function( workspace, dataWriteCallback )
                 for ( var i =0; i < response.files.length; ++i )
                 {
                     var item=response.files[i];
-            
-                    var fileItem=new VG.RemoteProjectItem();
-                    fileItem.text=VG.Utils.fileNameFromPath( item.name, true );
-                    fileItem.size=VG.Utils.bytesToSize(item.size);
-                    fileItem.serverId=item._id;
-                    controller.add( fileItem );
+
+                    if ( item.user === VG.context.workspace.userId ) {
+                        var fileItem=new VG.RemoteProjectItem();
+                        fileItem.text=VG.Utils.fileNameFromPath( item.name, true );
+                        fileItem.size=VG.Utils.bytesToSize(item.size);
+                        fileItem.type=VG.context.workspace.projectShortName ? VG.context.workspace.projectShortName : "";
+                        fileItem.serverId=item._id;
+                        controller.add( "", fileItem );
+                    }
                 }
 
-                if ( controller.length ) controller.selected=controller.at( 0 );
+                // if ( controller.length ) controller.selected=controller.at( 0 );
                 //this.label.text="";
-            }.bind( this ), "GET" );   
+            }.bind( this ), "GET" );
         }
     }
 
@@ -643,19 +619,19 @@ VG.RemoteSaveProject=function( workspace, dataWriteCallback )
     nameEdit.text=workspace.projectName;
 
     var extensionLabel=VG.UI.Label();
-    extensionLabel.text="An extension of \'" + workspace.projectExtension + "\' will be automatically added."
+    extensionLabel.text="An extension of \'" + workspace.projectExtension + "\' will be automatically added.";
 
     var labelLayout=VG.UI.LabelLayout( "Project Name", nameEdit );
     if ( workspace.projectExtension ) labelLayout.addChild( "", extensionLabel );
 
-    var saveToMenu=VG.UI.DropDownMenu( "Download", "Visual Graphics Cloud" );
+    var saveToMenu=VG.UI.DropDownMenu( "Download", `${VG.context.workspace.appName} Cloud` );
     saveToMenu.changed=function( index ) {
         if ( index === 0 ) stackedLayout.current=downloadLayout;
         else
         if  ( index === 1 ) {
             if ( !workspace.userName )
                 stackedLayout.current=loginLayout;
-            else stackedLayout.current=listWidget;
+            else stackedLayout.current=treeWidget;
         }
     }.bind( this );
 
@@ -664,7 +640,8 @@ VG.RemoteSaveProject=function( workspace, dataWriteCallback )
     // ---
 
     var stackedLayout=VG.UI.StackedLayout();
-    stackedLayout.current=downloadLayout;
+    stackedLayout.current= VG.context.workspace.userId ? treeWidget : downloadLayout;
+    saveToMenu.index = VG.context.workspace.userId ? 1 : 0;
 
     //labelLayout.addChild( "", stackedLayout );
 
@@ -682,7 +659,7 @@ VG.RemoteSaveProject=function( workspace, dataWriteCallback )
 
     // ---
 
-    this.addButton( "Close", function() { this.close( this ); }.bind( this ) );  
+    this.addButton( "CLOSE", function() { this.close( this ); }.bind( this ) );
 };
-  
+
 VG.RemoteSaveProject.prototype=VG.UI.Dialog();

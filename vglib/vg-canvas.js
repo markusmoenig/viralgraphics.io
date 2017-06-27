@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv> and Contributors
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -23,14 +23,14 @@
 
 /**
  * Creates an VG.Canvas object.<br>
- * 
+ *
  * VG.Canvas implements the basic drawing operations for Widgets inside an VG.UI.Workspace. Use it to draw 2D shapes, images and text. It implements these
  * functions based on the OpenGL ES 2 wrapper integrated into Visual Graphics.<br>
  *
  * The VG.Canvas for a given Workspace is passed to the calcSize() and paintWidget() calls of every Widget. If you ever need to access the VG.Canvas outside
  * these functions you can find references at both VG.context.canvas and VG.context.workspace.
  *
- * @constructor 
+ * @constructor
  */
 
 VG.Canvas=function()
@@ -47,7 +47,7 @@ VG.Canvas=function()
 
     this.renderer = VG.Renderer();
 
-    var VSHADER_SOURCE = 
+    var VSHADER_SOURCE =
         '#version 100\n\n' +
         'attribute vec4 drawPosition;\n' +
         'attribute vec4 drawColor;\n' +
@@ -58,7 +58,7 @@ VG.Canvas=function()
         '  v_Color = drawColor;\n' +
         '}\n';
 
-    var FSHADER_SOURCE = 
+    var FSHADER_SOURCE =
         '#version 100\n\n' +
         'precision mediump float;\n' +
         'varying vec4 v_Color;\n' +
@@ -72,12 +72,12 @@ VG.Canvas=function()
     this.primShader.blendType = VG.Shader.Blend.Alpha;
     this.primShader.create();
 
-    this.triBuffer=new VG.GPUBuffer(VG.Type.Float, (6 * 3) * 256 * 4, true);
+    this.triBuffer=new VG.GPUBuffer(VG.Type.Float, (6 * 3) * 256 * 8, true);
     this.triBufferDB = this.triBuffer.getDataBuffer();
     this.triBuffer.create();
     this.triCount=0;
 
-    
+
     this.fonts=[];
     this.fonts.push( VG.UI.stylePool.current.skin.Widget.Font );
     this.fontIndex=0;
@@ -107,7 +107,7 @@ VG.Canvas=function()
 
     ].join('\n');
 
-    var FONT_FSHADER_SOURCE = [ 
+    var FONT_FSHADER_SOURCE = [
         '#version 100',
 
         'precision mediump float;',
@@ -141,8 +141,9 @@ VG.Canvas=function()
 
     //render target
     this.rt = VG.Renderer().mainRT;
-
     this.clipRects=[];
+
+    this.customProjectionMatrix = new VG.Math.Matrix4();
 };
 
 /**
@@ -150,9 +151,28 @@ VG.Canvas=function()
  * @enum {Number}
  */
 
-VG.Canvas.Shape2D={ "Rectangle" : 0, "VerticalGradient" : 1, "HorizontalGradient" : 2, "RectangleOutline" : 3,  "RectangleOutlineMin1px" : 4,  "RectangleOutlineMin2px" : 5,  
-                    "RoundedRectangleOutline1px" : 6, "RoundedRectangle2px" : 7, "RectangleCorners" : 8, 
-                    "FlippedTriangle" : 9, "ArrowLeft" : 10, "ArrowRight" : 11, "Circle": 12, "CircleOutline": 13, "ArrowRightGradient": 14, "DropShadow_NoTop7px" : 15 };
+VG.Canvas.Shape2D={ "Rectangle" : 0, "VerticalGradient" : 1, "HorizontalGradient" : 2, "RectangleOutline" : 3,  "RectangleOutlineMin1px" : 4,  "RectangleOutlineMin2px" : 5,
+                    "RoundedRectangleOutline1px" : 6, "RoundedRectangle2px" : 7, "RectangleCorners" : 8,
+                    "FlippedTriangle" : 9, "ArrowLeft" : 10, "ArrowRight" : 11, "Circle": 12, "CircleOutline": 13, "ArrowRightGradient": 14, "DropShadow_NoTop7px" : 15,
+                    "CircleGL" : 16, "RectangleGL" : 17 };
+
+/**
+ * Sets an {@link VG.RenderTarget} to the canvas. All drawing operations will be applied to the given render target. Call setTarget again with undefined to clear the render target.
+ * @param {VG.RenderTarget} rt - RenderTarget to draw to.
+ */
+
+VG.Canvas.prototype.setTarget=function( rt )
+{
+    this.flush();
+    if ( rt ) {
+        this.customProjM = this.customProjectionMatrix;
+        this.customProjM.setOrtho( 0, rt.width, 0, rt.height, 1, 0 );
+        this.customTarget = rt;
+    } else {
+        this.customProjM = undefined;
+        this.customTarget = undefined;
+    }
+};
 
 /**
  * Pushes the given VG.Font.Font to the canvas. It will be used until a popFont() call takes it off the top of the font stack. Every pushFont() call needs to have a matching popFont()
@@ -183,7 +203,7 @@ VG.Canvas.prototype.popFont=function( font )
 
 VG.Canvas.prototype.setAlpha=function( alpha )
 {
-    this.flush();    
+    this.flush();
     this.alpha = alpha;
 };
 
@@ -196,9 +216,9 @@ VG.Canvas.prototype.pushClipRect=function( rect )
 {
     this.flush();
 
-    if ( rect ) 
+    if ( rect )
     {
-        if ( this.clipRects.length ) 
+        if ( this.clipRects.length )
         {
             var lastRect=this.clipRects[this.clipRects.length-1];
             var intersectRect = lastRect.intersect( rect );
@@ -210,7 +230,7 @@ VG.Canvas.prototype.pushClipRect=function( rect )
                 return;
             } else {
                 this.clipRects.push( intersectRect );
-                this.rt.setScissor( intersectRect );   
+                this.rt.setScissor( intersectRect );
             }
 
         } else {
@@ -239,11 +259,11 @@ VG.Canvas.prototype.popClipRect=function()
 
 /**
  * Flushes all triangle caches. Called by {@link VG.UI.Workspace} at the end of a redraw operation to make sure all triangles are painted.
- */  
+ */
 
 VG.Canvas.prototype.flush=function()
-{  
-    if (this.triCount) this.flushTris();    
+{
+    if (this.triCount) this.flushTris();
 };
 
 /**
@@ -260,9 +280,36 @@ VG.Canvas.prototype.flush=function()
  */
 
 VG.Canvas.prototype.addTriangle2D=function( x1, y1, x2, y2, x3, y3, col1, col2, col3 )
-{ 
+{
     var db = this.triBufferDB;
+    var data=db.data;
 
+
+    data[this.triCount++] = x1;
+    data[this.triCount++] = y1;
+
+    data[this.triCount++] = col1.r;
+    data[this.triCount++] = col1.g;
+    data[this.triCount++] = col1.b;
+    data[this.triCount++] = col1.a;
+
+    data[this.triCount++] = x2;
+    data[this.triCount++] = y2;
+
+    data[this.triCount++] = col2.r;
+    data[this.triCount++] = col2.g;
+    data[this.triCount++] = col2.b;
+    data[this.triCount++] = col2.a;
+
+    data[this.triCount++] = x3;
+    data[this.triCount++] = y3;
+
+    data[this.triCount++] = col3.r;
+    data[this.triCount++] = col3.g;
+    data[this.triCount++] = col3.b;
+    data[this.triCount++] = col3.a;
+
+/*
     db.set(this.triCount++, x1);
     db.set(this.triCount++, y1);
 
@@ -285,11 +332,11 @@ VG.Canvas.prototype.addTriangle2D=function( x1, y1, x2, y2, x3, y3, col1, col2, 
     db.set(this.triCount++, col3.r);
     db.set(this.triCount++, col3.g);
     db.set(this.triCount++, col3.b);
-    db.set(this.triCount++, col3.a);
+    db.set(this.triCount++, col3.a);*/
 
     if (this.triCount >= db.getSize())
         this.flushTris();
-}
+};
 
 /**
  * Draws a 2D rectangle using the specified coordinates and VG.Core.Color.
@@ -310,7 +357,7 @@ VG.Canvas.prototype.flushTris=function()
 {
     var b = this.triBuffer;
     var shader = this.primShader;
-    
+
     shader.bind();
 
     //this also binds the buffer
@@ -322,13 +369,20 @@ VG.Canvas.prototype.flushTris=function()
     b.vertexAttrib(shader.getAttrib("drawColor"), 4, false, stride * 6, stride * 2);
 
     shader.setFloat("uniformAlpha", this.alpha);
-    shader.setMatrix("pM", VG.Renderer().proj2d.elements);
 
-    //buffer already binded at b.update(), force no bind
-    b.drawBuffer(VG.Renderer.Primitive.Triangles, 0, this.triCount / 6);
+    if ( this.customTarget ) {
+        shader.setMatrix( "pM", this.customProjM.elements );
+        this.customTarget.bind();
+        this.customTarget.setViewportEx( 0, 0, this.customTarget.width, this.customTarget.height );
+        b.drawBuffer(VG.Renderer.Primitive.Triangles, 0, this.triCount / 6);
+        this.customTarget.unbind();
+    } else {
+        shader.setMatrix( "pM", VG.Renderer().proj2d.elements );
+        b.drawBuffer(VG.Renderer.Primitive.Triangles, 0, this.triCount / 6);
+    }
 
     this.triCount = 0;
-}
+};
 
 /**
  * Draws a 2D Shape using the specified rectangle and colors.
@@ -337,28 +391,29 @@ VG.Canvas.prototype.flushTris=function()
  * @param {VG.Core.Color} col1 - The main color of the shape
  * @param {VG.Core.Color} col2 - The optional 2nd color of the shape. Usage depends on shape type.
  * @param {VG.Core.Color} col3 - The optional 3rd color of the shape. Usage depends on shape type.
- */ 
+ */
 
 VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
 {
     switch( shape )
     {
         case VG.Canvas.Shape2D.Rectangle:
+        case VG.Canvas.Shape2D.RectangleGL:
             //this.addTriangle2D( rect.x, rect.bottom(), rect.right(), rect.bottom(), rect.x, rect.y, col1, col1, col1 );
-            //this.addTriangle2D( rect.x, rect.y, rect.right(), rect.y, rect.right(), rect.bottom(), col1, col1, col1 );        
+            //this.addTriangle2D( rect.x, rect.y, rect.right(), rect.y, rect.right(), rect.bottom(), col1, col1, col1 );
 
             this.addSolidRectangle2D( rect.x, rect.y, rect.right(), rect.bottom(), col1 );
         break;
 
         case VG.Canvas.Shape2D.VerticalGradient:
             this.addTriangle2D( rect.x, rect.bottom(), rect.right(), rect.bottom(), rect.x, rect.y, col2, col2, col1 );
-            this.addTriangle2D( rect.x, rect.y, rect.right(), rect.y, rect.right(), rect.bottom(), col1, col1, col2 );     
-        break;   
+            this.addTriangle2D( rect.x, rect.y, rect.right(), rect.y, rect.right(), rect.bottom(), col1, col1, col2 );
+        break;
 
         case VG.Canvas.Shape2D.HorizontalGradient:
             this.addTriangle2D( rect.x, rect.bottom(), rect.right(), rect.bottom(), rect.x, rect.y, col1, col2, col1 );
-            this.addTriangle2D( rect.x, rect.y, rect.right(), rect.y, rect.right(), rect.bottom(), col1, col2, col2 );     
-        break;           
+            this.addTriangle2D( rect.x, rect.y, rect.right(), rect.y, rect.right(), rect.bottom(), col1, col2, col2 );
+        break;
 
         case VG.Canvas.Shape2D.RectangleOutline:
             // --- Top
@@ -380,7 +435,7 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
             this.addSolidRectangle2D( rect.x, rect.y+1, rect.x+1, rect.bottom()-1, col1 );
             // --- Right
             this.addSolidRectangle2D( rect.right()-1, rect.y+1, rect.right(), rect.bottom()-1, col1 );
-        break;        
+        break;
 
         case VG.Canvas.Shape2D.RectangleOutlineMin2px:
             // --- Top
@@ -391,7 +446,7 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
             this.addSolidRectangle2D( rect.x, rect.y+2, rect.x+1, rect.bottom()-2, col1 );
             // --- Right
             this.addSolidRectangle2D( rect.right()-1, rect.y+2, rect.right(), rect.bottom()-2, col1 );
-        break;         
+        break;
 
         case VG.Canvas.Shape2D.RoundedRectangleOutline1px:
             // --- Top
@@ -407,12 +462,12 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
 
             var pixelColor=VG.Core.Color( col1 );
             pixelColor.a=0.3;
-            
+
             this.addSolidRectangle2D( rect.x, rect.y, rect.x+1, rect.y+1, pixelColor );
             this.addSolidRectangle2D( rect.right()-1, rect.y, rect.right(), rect.y+1, pixelColor );
             this.addSolidRectangle2D( rect.x, rect.bottom()-1, rect.x+1, rect.bottom(), pixelColor );
             this.addSolidRectangle2D( rect.right()-1, rect.bottom()-1, rect.right(), rect.bottom(), pixelColor );
-        break;     
+        break;
 
         case VG.Canvas.Shape2D.RoundedRectangle2px:
             // --- Top
@@ -424,7 +479,7 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
 
             // --- Set the 2x2 anti aliasing pixels in each corner
 
-            var pixelColor=VG.Core.Color( col1 );
+            pixelColor=VG.Core.Color( col1 );
 
             // --- Top Left
             pixelColor.a=0.1 * col1.a;
@@ -449,7 +504,7 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
             this.addSolidRectangle2D( rect.x+1, rect.bottom()-1, rect.x+2, rect.bottom(), pixelColor );
             this.addSolidRectangle2D( rect.x, rect.bottom()-2, rect.x+1, rect.bottom()-1, pixelColor );
             pixelColor.a=1.0 * col1.a;
-            this.addSolidRectangle2D( rect.x+1, rect.bottom()-2, rect.x+2, rect.bottom()-1, pixelColor );            
+            this.addSolidRectangle2D( rect.x+1, rect.bottom()-2, rect.x+2, rect.bottom()-1, pixelColor );
             // --- Bottom Right
             pixelColor.a=0.1 * col1.a;
             this.addSolidRectangle2D( rect.right()-1, rect.bottom()-1, rect.right(), rect.bottom(), pixelColor );
@@ -457,8 +512,8 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
             this.addSolidRectangle2D( rect.right()-2, rect.bottom()-1, rect.right()-1, rect.bottom(), pixelColor );
             this.addSolidRectangle2D( rect.right()-1, rect.bottom()-2, rect.right(), rect.bottom()-1, pixelColor );
             pixelColor.a=1.0 * col1.a;
-            this.addSolidRectangle2D( rect.right()-2, rect.bottom()-2, rect.right()-1, rect.bottom()-1, pixelColor );    
-        break;  
+            this.addSolidRectangle2D( rect.right()-2, rect.bottom()-2, rect.right()-1, rect.bottom()-1, pixelColor );
+        break;
 
         case VG.Canvas.Shape2D.RectangleCorners:
             // --- Top Left
@@ -469,11 +524,11 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
             this.addSolidRectangle2D( rect.right()-1, rect.y, rect.right(), rect.y+1, col1 );
             // --- Bottom Right
             this.addSolidRectangle2D( rect.right()-1, rect.bottom()-1, rect.right(), rect.bottom(), col1 );
-        break;  
+        break;
 
         case VG.Canvas.Shape2D.FlippedTriangle:
             this.addTriangle2D( rect.x, rect.y, rect.right(), rect.y, rect.x + rect.width/2, rect.bottom(), col1, col1, col1 );
-        break;  
+        break;
 
         case VG.Canvas.Shape2D.ArrowRightGradient:
             this.addTriangle2D( rect.x, rect.y, rect.right(), rect.y + rect.height/2, rect.x, rect.bottom(), col1, col2, col3 );
@@ -481,7 +536,7 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
 
         case VG.Canvas.Shape2D.ArrowLeft:
             this.addTriangle2D( rect.x, rect.y+rect.height/2, rect.right(), rect.y, rect.right(), rect.bottom(), col1, col1, col1 );
-        break;   
+        break;
 
         case VG.Canvas.Shape2D.ArrowRight:
             this.addTriangle2D( rect.x, rect.y, rect.right(), rect.y + rect.height/2, rect.x, rect.bottom(), col1, col1, col1 );
@@ -489,25 +544,24 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
 
         case VG.Canvas.Shape2D.CircleHue:
         case VG.Canvas.Shape2D.Circle:
-            var rW = rect.width / 2;
-            var rH =  rect.height / 2;
+        case VG.Canvas.Shape2D.CircleGL:
+            rW = rect.width / 2;
+            rH =  rect.height / 2;
 
-            var step = Math.floor(VG.Math.clamp(rW * rH, 8, 64));
-            
-            var theta = 0.0;
-            var pX = rect.x + rect.width / 2;
-            var pY = rect.y + rect.height / 2;
-            var inc = (Math.PI * 2.0) / step;
+            step = Math.floor(VG.Math.clamp(rW * rH, 8, 64));
+
+            theta = 0.0;
+            pX = rect.x + rect.width / 2;
+            pY = rect.y + rect.height / 2;
+            inc = (Math.PI * 2.0) / step;
 
             if (!col3) col3 = col1;
             if (!col2) col2 = col1;
- 
-            var x1, y1, x2, y2;
 
             for (var i = 1; i <= step; i++)
             {
                 x1 = pX + rW * Math.cos(inc * (i - 1));
-                y1 = pY - rH * Math.sin(inc * (i - 1));    
+                y1 = pY - rH * Math.sin(inc * (i - 1));
 
                 x2 = pX + rW * Math.cos(inc * i);
                 y2 = pY - rH * Math.sin(inc * i);
@@ -526,29 +580,26 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
                 this.addTriangle2D(x1, y1, x2, y2, pX, pY, col1, col2, col3);
             }
 
-            return;
-        break; 
+        break;
 
         case VG.Canvas.Shape2D.CircleOutline:
-            var rW = rect.width / 2;
-            var rH =  rect.height / 2;
+            rW = rect.width / 2;
+            rH =  rect.height / 2;
 
-            var step = Math.floor(VG.Math.clamp(rW * rH, 8, 64));
-            
-            var theta = 0.0;
-            var pX = rect.x + rect.width / 2;
-            var pY = rect.y + rect.height / 2;
-            var inc = (Math.PI * 2.0) / step;
+            step = Math.floor(VG.Math.clamp(rW * rH, 8, 64));
+
+            theta = 0.0;
+            pX = rect.x + rect.width / 2;
+            pY = rect.y + rect.height / 2;
+            inc = (Math.PI * 2.0) / step;
 
             if (!col3) col3 = col1;
             if (!col2) col2 = col1;
- 
-            var x1, y1, x2, y2;
 
-            for (var i = 1; i <= step; i++)
+            for (i = 1; i <= step; i++)
             {
                 x1 = pX + rW * Math.cos(inc * (i - 1));
-                y1 = pY - rH * Math.sin(inc * (i - 1));    
+                y1 = pY - rH * Math.sin(inc * (i - 1));
 
                 x2 = pX + rW * Math.cos(inc * i);
                 y2 = pY - rH * Math.sin(inc * i);
@@ -556,14 +607,13 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
                 this.drawLine(x1, y1, x2, y2, 1, col1 );
             }
 
-            return;
-        break;   
+        break;
 
         case VG.Canvas.Shape2D.DropShadow_NoTop7px:
 
             col1.a=102.0 / 255.0;
-            var startColor=col1; 
-            var midColor=VG.Core.Color( startColor ); 
+            var startColor=col1;
+            var midColor=VG.Core.Color( startColor );
             midColor.a=36.0 / 255.0;
             var endColor=VG.Core.Color( 0, 0, 0, 0 );
 
@@ -588,11 +638,11 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
                 this.addTriangle2D( rect.right()-1, rect.bottom(), rect.right()-cp, rect.bottom(), rect.right()-cp, rect.bottom()+7, midColor, startColor, endColor );
                 this.addTriangle2D( rect.right()-cp, rect.bottom()+7, rect.right(), rect.bottom()+7, rect.right()-1, rect.bottom(), endColor, endColor, midColor );
 
-                this.addTriangle2D( rect.right()+7, rect.bottom()-cp, rect.right(), rect.bottom()-cp, rect.right()-1, rect.bottom(), endColor, startColor, midColor );                
-                this.addTriangle2D( rect.right()-1, rect.bottom(), rect.right()+7, rect.bottom(), rect.right()+7, rect.bottom()-cp, midColor, endColor, endColor );                
+                this.addTriangle2D( rect.right()+7, rect.bottom()-cp, rect.right(), rect.bottom()-cp, rect.right()-1, rect.bottom(), endColor, startColor, midColor );
+                this.addTriangle2D( rect.right()-1, rect.bottom(), rect.right()+7, rect.bottom(), rect.right()+7, rect.bottom()-cp, midColor, endColor, endColor );
             }
 
-        break;        
+        break;
     }
 };
 
@@ -614,8 +664,8 @@ VG.Canvas.prototype.drawLine=function(x1, y1, x2, y2, t, color)
 
     var p1 = this.cacheV2C;
     p1.set(x2, y2);
-   
-    //direction 
+
+    //direction
     var vD = this.cacheV2A;
     vD.copy(p1);
     vD.sub(p0);
@@ -627,16 +677,16 @@ VG.Canvas.prototype.drawLine=function(x1, y1, x2, y2, t, color)
     pD.setPerpendicular();
     pD.normalize();
 
-    this.addTriangle2D(p0.x + pD.x * hT, p0.y + pD.y * hT, p1.x + pD.x * hT, p1.y + pD.y * hT, 
+    this.addTriangle2D(p0.x + pD.x * hT, p0.y + pD.y * hT, p1.x + pD.x * hT, p1.y + pD.y * hT,
                        p1.x + pD.x * -hT, p1.y + pD.y * -hT, color, color, color);
 
-    this.addTriangle2D(p0.x + pD.x * hT, p0.y + pD.y * hT, p1.x + pD.x * -hT, p1.y + pD.y * -hT, 
+    this.addTriangle2D(p0.x + pD.x * hT, p0.y + pD.y * hT, p1.x + pD.x * -hT, p1.y + pD.y * -hT,
                        p0.x + pD.x * -hT, p0.y + pD.y * -hT, color, color, color);
-}
+};
 
 VG.Canvas.prototype.drawCurve=function(x1, y1, x2, y2, x3, y3, x4, y4, thick, seg, color)
 {
-    /** Draws a cubic bezier line 
+    /** Draws a cubic bezier line
      *  @param {Number} x1 - The p1 x coordinate
      *  @param {Number} y1 - The p1 y coordinate
      *  @param {Number} x2 - The p2 x coordinate
@@ -650,16 +700,16 @@ VG.Canvas.prototype.drawCurve=function(x1, y1, x2, y2, x3, y3, x4, y4, thick, se
      *  @param {Number} color - The line color */
 
     var oldX=x1, oldY=y1;
-    for (var j = 1, seg = seg; j <= seg; j++)
+    for (var j = 1; j <= seg; j++)
     {
         var t = j / seg;
         var tx = VG.Math.bezierCubic(t, x1, x2, x3, x4);
         var ty = VG.Math.bezierCubic(t, y1, y2, y3, y4);
 
         this.drawLine( oldX, oldY, tx, ty, thick, color);
-        oldX=tx; oldY=ty;     
+        oldX=tx; oldY=ty;
     }
-}
+};
 
 /**
  * Draws an image at the specified position, optionaly scales it to the given size.
@@ -671,15 +721,15 @@ VG.Canvas.prototype.drawCurve=function(x1, y1, x2, y2, x3, y3, x4, y4, thick, se
 VG.Canvas.prototype.drawImage=function( pt, image, size )
 {
     this.flush();
-	
+
 	var tex = this.renderer.getTexture(image);
 
     var width=tex.getRealWidth();
 	var height=tex.getRealHeight();
 
-    if ( size ) 
+    if ( size )
     {
-        width=size.width + (image.getRealWidth() - image.getWidth()) * size.width / image.getWidth(); 
+        width=size.width + (image.getRealWidth() - image.getWidth()) * size.width / image.getWidth();
         height=size.height + (image.getRealHeight() - image.getHeight()) * size.height / image.getHeight();
     }
 
@@ -691,10 +741,10 @@ VG.Canvas.prototype.drawImage=function( pt, image, size )
  * Downscales an image into the specified rectangle. During downscaling the aspect ratio of the image is honored and the image is centered inside the rectangle.
  * @param {VG.Core.Rect} rect - The rectangle to draw into
  * @param {VG.Core.Image} image - The image to draw
- */  
+ */
 
 VG.Canvas.prototype.drawScaledImage=function( rect, image )
-{    
+{
     // --- Get new Width and Height based on Aspect Ratio
     var aspectRatio=image.height / image.width;
 
@@ -707,8 +757,12 @@ VG.Canvas.prototype.drawScaledImage=function( rect, image )
     }
     newHeight=aspectRatio*newWidth;
 
-    var xOffset=(rect.width - newWidth)/2;
-    var yOffset=(rect.height - newHeight)/2;    
+    var xOffset=Math.round( (rect.width - newWidth)/2 );
+    var yOffset=Math.round( (rect.height - newHeight)/2 );
+
+    newWidth = Math.round( newWidth );
+    newHeight = Math.round( newHeight );
+
     this.drawImage( VG.Core.Point( rect.x + xOffset, rect.y + yOffset ), image, VG.Core.Size( newWidth, newHeight ) );
 };
 
@@ -721,10 +775,10 @@ VG.Canvas.prototype.drawScaledImage=function( rect, image )
  * @param {bool} vertical - True if the image should be tiled vertically.
  * @param {number} horOffset - Optional, the horizontal offset can be adjusted with this value, for example a value of -10 would adjust the image 10 pixels to the left on each iteration.
  * @param {number} verOffset - Optional, adjust the vertical offset.
- */ 
+ */
 
 VG.Canvas.prototype.drawTiledImage=function( fillRect, image, horizontal, vertical, horOffset, verOffset )
-{    
+{
     if ( !image.isValid() ) return;
     var rect=VG.Core.Rect( fillRect.x, fillRect.y, image.width, image.height );
     this.pushClipRect( fillRect );
@@ -753,7 +807,7 @@ VG.Canvas.prototype.drawTiledImage=function( fillRect, image, horizontal, vertic
  * @param {string} text - The text to analyze for size using the current canvas font.
  * @param {VG.Core.Size} size - The size object to use, optional.
  * @returns {VG.Core.Size}
- */ 
+ */
 
 VG.Canvas.prototype.getTextSize=function( text, size )
 {
@@ -776,7 +830,7 @@ VG.Canvas.prototype.getTextSize=function( text, size )
     size.height=Math.ceil( baseLine );
 
     return size;
-}
+};
 
 // --------------------------------------------- VG.Canvas.prototype.wordWrap
 
@@ -799,6 +853,7 @@ VG.Canvas.prototype.wordWrap=function( text, start, width, textLines, dontAppend
     while(text)
     {
         var g = VG.Font.Triangulator.getGlyph( font.triFont, text[i] );
+        var snipLocation;
         lineWidth+=g.width * font.scale;
 
         if(lineWidth >= width)
@@ -812,13 +867,13 @@ VG.Canvas.prototype.wordWrap=function( text, start, width, textLines, dontAppend
 
             if(text[i] === " ")
             {
-                var snipLocation = i+1 < text.length ? i+1 : i; 
+                snipLocation = i+1 < text.length ? i+1 : i;
                 if( snipLocation === i )
                     textLines.push(text.substring( 0 ) );
                 else
                     textLines.push( text.substring ( 0, snipLocation ) );
 
-                text=text.substring(snipLocation)
+                text=text.substring(snipLocation);
                 i=0;
                 lineWidth = 0;
             }
@@ -840,10 +895,10 @@ VG.Canvas.prototype.wordWrap=function( text, start, width, textLines, dontAppend
                 if(i != j && j === -1)
                 {
                     // Clearly this word doesnt fit in one line.
-                    var snipLocation = i-1 > 0 ? i-1 : i;
+                    snipLocation = i-1 > 0 ? i-1 : i;
                     if ( dontAppendBreakSymbol ) textLines.push( text.substring ( 0, snipLocation) );
                     else textLines.push( text.substring ( 0, snipLocation) + "-" );
-                    text=text.substring( snipLocation )
+                    text=text.substring( snipLocation );
                     lineWidth = 0;
                     i = 0;
                     continue;
@@ -863,19 +918,19 @@ VG.Canvas.prototype.wordWrap=function( text, start, width, textLines, dontAppend
     textLines.push( text.substring ( 0 ));
 
     return { nextStart: lineWidth, forceStartNewLine: !oneWordFit };
-}
+};
 
 
 /**
  * Returns the height of one line of text using the current canvas font.
  * @returns {number}
- */ 
+ */
 
 VG.Canvas.prototype.getLineHeight=function()
 {
     var font=this.fonts[this.fontIndex];
     return font.triFont.height * font.scale;
-}
+};
 
 /**
  * Draws one line of text using the current canvas font aligned inside the given rectangle. Optionally rotates the font.
@@ -884,13 +939,13 @@ VG.Canvas.prototype.getLineHeight=function()
  * @returns {VG.Core.Color} col - The color to use for the text drawing
  * @returns {number} halign - The horizontal alignment method: 0 is left, 1 centered and 2 is right. TODO: Move into enum
  * @returns {number} valign - The vertical alignment method: 0 is top (plus font descender), 1 centered, 2 is bottom and 3 is top without descender. TODO: Move into enum
- */ 
+ */
 
 VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angle, crX, crY)
-{ 
+{
     var font=this.fonts[this.fontIndex];
 
-    var b=font.triFont.buffer;
+    var b=font.triFont.buffer, i;
 
     //create the gpu buffer if not present
     if (!b)
@@ -898,12 +953,12 @@ VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angl
         var v = font.triFont.tris;
 
         //Static gpu buffer
-        var b = new VG.GPUBuffer(VG.Type.Float, 2 * v.length, false);
+        b = new VG.GPUBuffer(VG.Type.Float, 2 * v.length, false);
 
         var j = 0;
         var db=b.getDataBuffer();
 
-        for (var i = 0; i < v.length; i++)
+        for (i = 0; i < v.length; i++)
         {
             db.set(j++, v[i].x);
             db.set(j++, v[i].y);
@@ -916,7 +971,7 @@ VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angl
 
         font.triFont.buffer = b;
 
-        /* makes sure that there's no rederences left on the triangle array as 
+        /* makes sure that there's no rederences left on the triangle array as
          *  the buffer has a copy already, from this point on it's not needed */
 
         delete font.triFont.tris;
@@ -950,14 +1005,14 @@ VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angl
     } else
     if ( xalign === 2 ) {
         startX=rect.x + rect.width - textSize.width;
-    }   
+    }
 
     if ( yalign === 1 ) {
         y=rect.y + (rect.height - font.triFont.height * font.scale) / 2 - font.triFont.descender * font.scale;
     } else
     if ( yalign === 2 ) {
         y=rect.y + rect.height - textSize.height;
-    } else 
+    } else
     if ( yalign === 3 ) {
         y=rect.y;
     }
@@ -984,19 +1039,25 @@ VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angl
 
     tM.setIdentity();
 
-    this.fontShader.setMatrix("pM", VG.Renderer().proj2d.elements);
+    if ( !this.customTarget )
+        this.fontShader.setMatrix( "pM", VG.Renderer().proj2d.elements );
+    else {
+        this.fontShader.setMatrix( "pM", this.customProjM.elements );
+        this.customTarget.bind();
+        this.customTarget.setViewportEx( 0, 0, this.customTarget.width, this.customTarget.height );
+    }
 
-    for (var i = 0; i < text.length; i++)
+    for (i = 0; i < text.length; i++)
     {
         var g = VG.Font.Triangulator.getGlyph( font.triFont, text[i] );
 
         var drawX=Math.round( startX + x );
 
-        if ( angle == 0.0 && ( x + g.width * font.scale ) > rect.width ) return;
+        if ( angle === 0.0 && ( x + g.width * font.scale ) > rect.width ) return;
 
         tM.setIdentity();
-        
-        if (angle != 0.0)
+
+        if (angle !== 0.0)
         {
             tM.translate(crX, crY, 0);
             tM.rotate(-angle, 0, 0, 1);
@@ -1005,14 +1066,17 @@ VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angl
 
         tM.translate(drawX, y, 0);
         tM.scale(font.scale, font.scale, font.scale);
-        
+
         this.fontShader.setMatrix("tM", tM.elements);
- 
+
         if (g.size > 0)
             b.drawBuffer(VG.Renderer.Primitive.Triangles, g.offset, g.size);
 
         x+=g.width * font.scale;
     }
+
+    if ( this.customTarget )
+        this.customTarget.unbind();
 
     return x;
 };
@@ -1020,14 +1084,14 @@ VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angl
 // --------------------------------------------- VG.Canvas.prototype.drawSVG
 
 VG.Canvas.prototype.drawSVG=function( svg, svgGroup, rect, col, angle, crX, crY)
-{    
+{
     /**Draws one line of text using the current canvas font aligned inside the given rectangle. Optionally rotates the font.
      * @returns {string} text - The text to draw.
      * @returns {VG.Core.Rect} rect - The rectangle to align the text into
      * @returns {VG.Core.Color} col - The color to use for the text drawing
      * @returns {number} halign - The horizontal alignment method: 0 is left, 1 centered and 2 is right. TODO: Move into enum
      * @returns {number} valign - The vertical alignment method: 0 is top (plus font descender), 1 centered, 2 is bottom and 3 is top without descender. TODO: Move into enum
-     */ 
+     */
 
     var b=svg.buffer;
 
@@ -1037,7 +1101,7 @@ VG.Canvas.prototype.drawSVG=function( svg, svgGroup, rect, col, angle, crX, crY)
         var v = svg.tris;
 
         //Static gpu buffer
-        var b = new VG.GPUBuffer(VG.Type.Float, v.length, true);
+        b = new VG.GPUBuffer(VG.Type.Float, v.length, true);
 
         var j = 0;
         var db=b.getDataBuffer();
@@ -1051,7 +1115,7 @@ VG.Canvas.prototype.drawSVG=function( svg, svgGroup, rect, col, angle, crX, crY)
 
         svg.buffer = b;
 
-        /* makes sure that there's no rederences left on the triangle array as 
+        /* makes sure that there's no rederences left on the triangle array as
          *  the buffer has a copy already, from this point on it's not needed */
 
 
@@ -1061,7 +1125,7 @@ VG.Canvas.prototype.drawSVG=function( svg, svgGroup, rect, col, angle, crX, crY)
 
 
     if ( !svgGroup ) group=svg.groups[0];
-    else group=svgGroup;    
+    else group=svgGroup;
 
     //if angle not defined assume no rotation
     if (!angle) {
@@ -1088,7 +1152,7 @@ VG.Canvas.prototype.drawSVG=function( svg, svgGroup, rect, col, angle, crX, crY)
 
         posX+=(group.width*scaleX - newWidth)/2 - group.bbox.minX * scale;
         posY+=(group.height*scaleY - newHeight)/2 - group.bbox.minY * scale;
-    } else 
+    } else
     if ( rect.width && rect.height ) {
         posX+=(rect.width - group.width)/2 - group.bbox.minX;
         posY+=(rect.height - group.height)/2 - group.bbox.minY;
@@ -1119,7 +1183,7 @@ VG.Canvas.prototype.drawSVG=function( svg, svgGroup, rect, col, angle, crX, crY)
 
     tM.setIdentity();
 
-    if (angle != 0.0)
+    if (angle !== 0.0)
     {
         tM.translate(crX, crY, 0);
         tM.rotate(-angle, 0, 0, 1);
@@ -1140,5 +1204,5 @@ VG.Canvas.prototype.drawSVG=function( svg, svgGroup, rect, col, angle, crX, crY)
 
 VG.Canvas.prototype.update=function()
 {
-    VG.update();    
-}
+    VG.update();
+};

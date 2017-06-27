@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -38,7 +38,7 @@ VG.UI.VisualGraphicsStyle=function()
 VG.UI.VisualGraphicsStyle.prototype.addSkin=function( skin )
 {
     this.skins.push( skin );
-    
+
     if ( !this.skin )
         this.skin=skin;
 
@@ -64,7 +64,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawButton=function( widget, canvas )
             canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.Button.FocusBorderCheckedColor2 );
         else canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.Button.FocusBorderColor2 );
 
-        widget.contentRect.shrink( 1, 1, widget.contentRect );        
+        widget.contentRect.shrink( 1, 1, widget.contentRect );
     } else
     {
         widget.contentRect.shrink( 1, 1, widget.contentRect );
@@ -74,7 +74,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawButton=function( widget, canvas )
 
     // --- Content
 
-    if ( widget.hasHoverState && widget.checked || widget.mouseIsDown ) {    
+    if ( widget.hasHoverState && widget.checked || widget.mouseIsDown ) {
         canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, widget.contentRect, this.skin.Button.CheckedBackGradColor1, this.skin.Button.CheckedBackGradColor2 );
     } else
     if ( widget.hasHoverState ) {
@@ -86,7 +86,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawButton=function( widget, canvas )
     else canvas.pushFont( this.skin.Button.SmallFont );
 
     canvas.drawTextRect( widget.text, widget.contentRect, this.skin.Button.TextColor );
-    canvas.popFont();   
+    canvas.popFont();
 
     if ( widget.disabled ) canvas.setAlpha( 1 );
 };
@@ -95,7 +95,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawButton=function( widget, canvas )
 
 VG.UI.VisualGraphicsStyle.prototype.drawButtonGroup=function( widget, canvas )
 {
-    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );    
+    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
 
     this.rect1.copy( widget.rect );
 
@@ -111,6 +111,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawButtonGroup=function( widget, canvas )
         if ( !widget.__vgInsideToolBar ) this.rect1.height+=4;
 
         if ( item.icon ) this.rect1.width+=5 + item.icon.width;
+        else if ( item.svgName ) this.rect1.width+=15;
 
         this.rect1.y=widget.rect.y + ( widget.rect.height - this.rect1.height ) / 2;
 
@@ -123,19 +124,19 @@ VG.UI.VisualGraphicsStyle.prototype.drawButtonGroup=function( widget, canvas )
         if ( widget.hoverButton === item ) {
             borderColor=this.skin.ButtonGroup.HoverBorderColor;
             backColor=this.skin.ButtonGroup.HoverBackColor;
-            if ( item.statusTip ) widget.statusTip=item.statusTip;   
+            if ( item.statusTip ) widget.statusTip=item.statusTip;
         } else {
             borderColor=this.skin.ButtonGroup.NormalBorderColor;
             backColor=this.skin.ButtonGroup.NormalBackColor;
         }
 
-        if ( widget.hasHoverState && item.rect.contains( VG.context.workspace.mousePos) )
+        if ( !VG.context.workspace.mouseTrackerWidget && widget.hasHoverState && item.rect.contains( VG.context.workspace.mousePos) )
         {
             borderColor=this.skin.ButtonGroup.HoverBorderColor;
-            backColor=this.skin.ButtonGroup.HoverBackColor;              
-            if ( item.statusTip ) widget.statusTip=item.statusTip;   
+            backColor=this.skin.ButtonGroup.HoverBackColor;
+            if ( item.statusTip ) widget.statusTip=item.statusTip;
         }
-    
+
         // ---
 
         if ( i === 0 )
@@ -159,7 +160,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawButtonGroup=function( widget, canvas )
             this.rect2.y+=1; this.rect2.height-=2;
             canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, backColor );
         } else
-        if ( i === widget.items.length - 1 )        
+        if ( i === widget.items.length - 1 )
         {
             this.rect2.copy( this.rect1 );
 
@@ -198,16 +199,30 @@ VG.UI.VisualGraphicsStyle.prototype.drawButtonGroup=function( widget, canvas )
 
         this.rect2.copy( this.rect1 );
 
+        var iconAdder=0;
+
         if ( item.icon ) {
             this.rect2.x+=5;
             this.rect2.y=widget.rect.y + (widget.rect.height - item.icon.height)/2;
             canvas.drawImage( this.rect2, item.icon );
+        } else if ( item.svgName )
+        {
+            var svg=VG.Utils.getSVGByName( item.svgName );
+
+            iconAdder=10;
+            this.rect2.x+=5;
+            this.rect2.y=widget.rect.y + (widget.rect.height - 15)/2;
+            this.rect2.width=15;
+            this.rect2.height=15;
+
+            svgGroup=svg.getGroupByName( item.svgGroupName );
+            canvas.drawSVG( svg, svgGroup, this.rect2, this.skin.Widget.TextColor );
         }
 
         this.rect2.copy( this.rect1 );
 
-        this.rect2.x+=7;
-        this.rect2.width-=14;
+        this.rect2.x+=7 + iconAdder;
+        this.rect2.width-=14 + iconAdder;
 
         canvas.drawTextRect( item.text, this.rect2, this.skin.ButtonGroup.TextColor, 1, 1 );
 
@@ -240,7 +255,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawCheckBox=function( widget, canvas )
     if ( image )
         canvas.drawImage( VG.Core.Point( widget.rect.x + (widget.rect.width-image.width)/2, widget.rect.y + (widget.rect.height-image.height)/2), image );
 
-    if ( widget.disabled ) canvas.setAlpha( 1 );    
+    if ( widget.disabled ) canvas.setAlpha( 1 );
 };
 
 // --- ContextMenu
@@ -251,10 +266,10 @@ VG.UI.VisualGraphicsStyle.prototype.drawContextMenu=function( widget, canvas )
 
     widget.rect.shrink( 1, 1, widget.contentRect );
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, widget.rect, this.skin.ContextMenu.BorderColor ); 
-    
+    canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, widget.rect, this.skin.ContextMenu.BorderColor );
+
     widget.rect.shrink( 1, 1, this.rect1 );
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ContextMenu.BackColor ); 
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ContextMenu.BackColor );
 
     var itemHeight=canvas.getLineHeight() + 4;
 
@@ -270,10 +285,10 @@ VG.UI.VisualGraphicsStyle.prototype.drawContextMenu=function( widget, canvas )
             this.rect1.round();
 
             if ( item.disabled ) {
-                canvas.drawTextRect( item.text, this.rect1.add( 10, 0, -10, 0, this.rect2 ), this.skin.ContextMenu.DisabledTextColor, 0, 1 );                
+                canvas.drawTextRect( item.text, this.rect1.add( 10, 0, -10, 0, this.rect2 ), this.skin.ContextMenu.DisabledTextColor, 0, 1 );
             } else
             if ( item === widget.selected )  {
-                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ContextMenu.HighlightedBackColor ); 
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ContextMenu.HighlightedBackColor );
                 canvas.drawTextRect( item.text, this.rect1.add( 10, 0, -10, 0, this.rect2 ), this.skin.ContextMenu.HighlightedTextColor, 0, 1 );
             } else {
                 canvas.drawTextRect( item.text, this.rect1.add( 10, 0, -10, 0, this.rect2 ), this.skin.ContextMenu.TextColor, 0, 1 );
@@ -285,9 +300,9 @@ VG.UI.VisualGraphicsStyle.prototype.drawContextMenu=function( widget, canvas )
                 imageName+=".png";
 
                 var image=VG.context.imagePool.getImageByName( imageName );
-                if ( image ) {    
+                if ( image ) {
                     canvas.drawImage( VG.Core.Point( this.rect1.right() - image.width - 10, this.rect1.y + (this.rect1.height-image.height)/2), image );
-                }                
+                }
             }
 
             if ( item.shortcut ) {
@@ -297,19 +312,19 @@ VG.UI.VisualGraphicsStyle.prototype.drawContextMenu=function( widget, canvas )
                 var shortCutSize=canvas.getTextSize( item.shortcut.text );
                 this.rect3.set( this.rect1.right() - shortCutSize.width - 10, this.rect1.y, shortCutSize.width, this.rect1.height );
                 canvas.drawTextRect( item.shortcut.text, this.rect3, textColor, 0, 1 );
-            }                
+            }
 
             item._rect.set( this.rect1 );
-            y+=itemHeight;            
+            y+=itemHeight;
         } else {
             this.rect1.set( rect.x, y, rect.width, 1 );
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ContextMenu.SeparatorColor ); 
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ContextMenu.SeparatorColor );
 
             y++;
-        }      
+        }
     }
 
-    canvas.popFont();  
+    canvas.popFont();
 };
 
 // --- DecoratedToolBar
@@ -319,7 +334,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedToolBar=function( widget, canva
     // --- Background
     this.rect1.copy( widget.rect ); this.rect1.height=1;
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedToolBar.TopBorderColor );
-    //this.rect1.y+=1;    
+    //this.rect1.y+=1;
     //canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedToolBar.TopBorderColor2 );
     this.rect1.y+=widget.rect.height-1;
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedToolBar.BottomBorderColor );
@@ -335,7 +350,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedToolBar=function( widget, canva
 
     // --- Logo
     var logoName="vglogo_text.svg";
-    //if ( this.workRect1.width < 400 ) logoName="vg_logo.svg" 
+    //if ( this.workRect1.width < 400 ) logoName="vg_logo.svg"
 
     this.rect1.copy( widget.rect );
 
@@ -351,7 +366,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedToolBar=function( widget, canva
     }
 
     widget.contentRect.x+=265;//300;
-    widget.contentRect.width-=265;//300;    
+    widget.contentRect.width-=265;//300;
 };
 
 // --- DecoratedToolSeparator
@@ -373,9 +388,10 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedQuickMenu=function( widget, can
 
     function drawSubMenu( rect, menu, style, rect1 )
     {
+        var i, item;
         rect.height=0;
-        for ( var i=0; i < menu.items.length; ++i ) {
-            var item=menu.items[i];
+        for ( i=0; i < menu.items.length; ++i ) {
+            item=menu.items[i];
             if ( item.text && item.text.length ) rect.height+=style.skin.DecoratedQuickMenu.Items.Size.height;
             else rect.height+=0;
         }
@@ -391,9 +407,9 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedQuickMenu=function( widget, can
 
         rect.height=style.skin.DecoratedQuickMenu.Items.Size.height;
 
-        for ( var i=0; i < menu.items.length; ++i )
+        for ( i=0; i < menu.items.length; ++i )
         {
-            var item=menu.items[i];
+            item=menu.items[i];
 
             rect1.copy( rect );
             item.rect.copy( rect );
@@ -412,7 +428,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedQuickMenu=function( widget, can
             if ( item.text && item.text.length )
             {
                 if ( !item.disabled ) canvas.drawTextRect( item.text, rect1, style.skin.DecoratedQuickMenu.Items.TextColor, 0, 1 );
-                else canvas.drawTextRect( item.text, rect1, style.skin.DecoratedQuickMenu.Items.DisabledTextColor, 0, 1 );                    
+                else canvas.drawTextRect( item.text, rect1, style.skin.DecoratedQuickMenu.Items.DisabledTextColor, 0, 1 );
                 rect.y+=style.skin.DecoratedQuickMenu.Items.Size.height-1;
             } else {
                 // --- Separator
@@ -422,7 +438,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedQuickMenu=function( widget, can
 
                 rect.y+=-1;
             }
-        }        
+        }
     }
 
     // ---
@@ -432,9 +448,10 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedQuickMenu=function( widget, can
     // --- Calc Height
 
     var contentHeight=this.skin.DecoratedQuickMenu.ContentMargin.top + this.skin.DecoratedQuickMenu.ContentMargin.bottom;
-        
-    for ( var i=0; i < widget.items.length; ++i ) {
-        var item=widget.items[i];
+    var i, item;
+
+    for ( i=0; i < widget.items.length; ++i ) {
+        item=widget.items[i];
         if ( item.text && item.text.length ) contentHeight+=this.skin.DecoratedQuickMenu.Items.Size.height;
         else contentHeight+=0;
     }
@@ -449,15 +466,29 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedQuickMenu=function( widget, can
         this.rect2.y+=10;
         this.rect2.height=this.skin.DecoratedToolBar.Height - widget.rect.y + VG.context.workspace.decoratedToolBar.rect.y - 10;
 
-        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, this.rect2, this.skin.DecoratedQuickMenu.BorderColor );        
+        if ( canvas.twoD )
+            canvas.clearGLRect( this.rect2 );
+
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, this.rect2, this.skin.DecoratedQuickMenu.BorderColor );
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2.add( 1, 1, -2, 0, this.rect2), this.skin.DecoratedQuickMenu.BackgroundColor );
     }
 
-    if ( widget.svgName )
+    if ( widget.iconName )
     {
         this.rect1.copy( widget.contentRect );
         this.rect1.shrink( 20, 20, this.rect1 );
 
+        // --- Icon
+        if ( !widget.icon ) widget.icon=VG.context.imagePool.getImageByName( widget.iconName );
+        if ( widget.icon && widget.icon.isValid() )
+        {
+            let x=Math.round( widget.contentRect.x + (widget.contentRect.width - widget.icon.width)/2 );
+            let y=Math.round( widget.contentRect.y + (widget.contentRect.height - widget.icon.height)/2);
+
+            canvas.drawImage( { x : x, y : y }, widget.icon );
+        }
+
+/*
         var svg=VG.Utils.getSVGByName( widget.svgName );
         if ( svg )
         {
@@ -467,8 +498,8 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedQuickMenu=function( widget, can
                 canvas.drawSVG( svg, svgGroup, this.rect1, this.skin.DecoratedQuickMenu.HoverColor );
             else
                 canvas.drawSVG( svg, svgGroup, this.rect1, this.skin.DecoratedQuickMenu.Color );
-        }
-    }   
+        }*/
+    }
 
     if ( widget.open )
     {
@@ -483,6 +514,10 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedQuickMenu=function( widget, can
         widget.popupRect.copy( this.rect2 );
 
         this.rect1.copy( this.rect2 );
+
+        if ( canvas.twoD )
+            canvas.clearGLRect( this.rect2 );
+
         this.rect1.width=1;
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedQuickMenu.BorderColor );
         this.rect1.x+=this.rect2.width-1;
@@ -494,13 +529,13 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedQuickMenu=function( widget, can
         this.rect1.copy( this.rect2 );
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2.add( 1, 1, -2, -2 ), this.skin.DecoratedQuickMenu.BackgroundColor );
 
-        this.rect1.add( this.skin.DecoratedQuickMenu.ContentMargin.left, this.skin.DecoratedQuickMenu.ContentMargin.top, 
+        this.rect1.add( this.skin.DecoratedQuickMenu.ContentMargin.left, this.skin.DecoratedQuickMenu.ContentMargin.top,
             -2 * this.skin.DecoratedQuickMenu.ContentMargin.right, 0, this.rect1 );
         this.rect1.height=this.skin.DecoratedQuickMenu.Items.Size.height;
 
-        for ( var i=0; i < widget.items.length; ++i )
+        for ( i=0; i < widget.items.length; ++i )
         {
-            var item=widget.items[i];
+            item=widget.items[i];
 
             this.rect2.copy( this.rect1 );
             item.rect.copy( this.rect1 );
@@ -513,7 +548,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedQuickMenu=function( widget, can
                 this.rect2.shrink( 1, 1, this.rect2 );
                 canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect2, this.skin.DecoratedQuickMenu.Items.BackGradSelectionColor1, this.skin.DecoratedQuickMenu.Items.BackGradSelectionColor2 );
 
-                this.rect2.copy( this.rect1 );                
+                this.rect2.copy( this.rect1 );
             }
 
             this.rect2.x+=70; this.rect2.width=this.skin.DecoratedQuickMenu.Items.Size.width - 70;
@@ -521,7 +556,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedQuickMenu=function( widget, can
             if ( item.text && item.text.length )
             {
                 if ( !item.disabled ) canvas.drawTextRect( item.text, this.rect2, this.skin.DecoratedQuickMenu.Items.TextColor, 0, 1 );
-                else canvas.drawTextRect( item.text, this.rect2, this.skin.DecoratedQuickMenu.Items.DisabledTextColor, 0, 1 );                    
+                else canvas.drawTextRect( item.text, this.rect2, this.skin.DecoratedQuickMenu.Items.DisabledTextColor, 0, 1 );
                 this.rect1.y+=this.skin.DecoratedQuickMenu.Items.Size.height-1;
             } else {
                 // --- Separator
@@ -543,7 +578,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedQuickMenu=function( widget, can
         canvas.popFont();
     }
 
-    if ( widget.disabled ) canvas.setAlpha( 1 );    
+    if ( widget.disabled ) canvas.setAlpha( 1 );
 };
 
 // --- DockWidget
@@ -579,13 +614,13 @@ VG.UI.VisualGraphicsStyle.prototype.drawDockWidget=function( widget, canvas )
         this.rect2.set( this.rect1 );
 
         if ( widget.rightIndicator ) {
-            this.rect2.x+=this.rect2.width - 14; this.rect2.width=image.width; 
+            this.rect2.x+=this.rect2.width - 14; this.rect2.width=image.width;
         } else {
-            this.rect2.x+=6; this.rect2.width=image.width; 
+            this.rect2.x+=6; this.rect2.width=image.width;
         }
 
-        this.rect2.y+=(this.rect2.height-image.height)/2; this.rect2.height=image.height; 
-        canvas.drawImage( this.rect2, image );        
+        this.rect2.y+=(this.rect2.height-image.height)/2; this.rect2.height=image.height;
+        canvas.drawImage( this.rect2, image );
     }
 
     // ---
@@ -609,7 +644,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDropDownMenu=function( widget, canvas )
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleCorners, widget.contentRect, this.skin.DropDownMenu.FocusBorderColor );
 
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.DropDownMenu.BorderColor );
-        widget.contentRect.shrink( 1, 1, widget.contentRect );        
+        widget.contentRect.shrink( 1, 1, widget.contentRect );
     } else
     {
         widget.contentRect.shrink( 1, 1, widget.contentRect );
@@ -620,7 +655,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDropDownMenu=function( widget, canvas )
 
     // --- Background
 
-    if ( widget.popup || widget.mouseIsDown ) {    
+    if ( widget.popup || widget.mouseIsDown ) {
         canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, widget.contentRect, this.skin.DropDownMenu.BackGradColor2, this.skin.DropDownMenu.BackGradColor1 );
     } else
     if ( widget.hasHoverState ) {
@@ -648,10 +683,10 @@ VG.UI.VisualGraphicsStyle.prototype.drawDropDownMenu=function( widget, canvas )
     canvas.pushFont( this.skin.DropDownMenu.Font );
 
     this.rect1.copy( widget.rect );
-    if ( widget.popup ) 
+    if ( widget.popup )
     {
         var itemHeight=canvas.getLineHeight() + 2;
-        var popupHeight=widget.items.length * itemHeight + widget.items.length + 1; 
+        var popupHeight=widget.items.length * itemHeight + widget.items.length + 1;
         this.rect2.set( this.rect1.x, this.rect1.bottom(), this.rect1.width, popupHeight );
 
         // --- Check if Menu is beneath or above the button depending on workspace height
@@ -661,9 +696,12 @@ VG.UI.VisualGraphicsStyle.prototype.drawDropDownMenu=function( widget, canvas )
             widget.menuDown=false;
 
         if ( widget.menuDown ) this.rect2.set( this.rect1.x, this.rect1.bottom(), this.rect1.width, popupHeight );
-        else this.rect2.set( this.rect1.x, this.rect1.y - popupHeight, this.rect1.width, popupHeight );       
+        else this.rect2.set( this.rect1.x, this.rect1.y - popupHeight, this.rect1.width, popupHeight );
 
         // ---
+
+        if ( canvas.twoD )
+            canvas.clearGLRect( this.rect2 );
 
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, this.skin.DropDownMenu.ItemBorderColor );
         widget.popupRect.copy( this.rect2 );
@@ -685,7 +723,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDropDownMenu=function( widget, canvas )
                 canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DropDownMenu.ItemSelectedBackColor );
 
                 this.rect1.shrink( 7, 0, this.rect1 );
-                canvas.drawTextRect( widget.items[i], this.rect1, this.skin.DropDownMenu.ItemSelectedTextColor, 0, 1 );                
+                canvas.drawTextRect( widget.items[i], this.rect1, this.skin.DropDownMenu.ItemSelectedTextColor, 0, 1 );
             } else {
                 canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DropDownMenu.ItemBackColor );
 
@@ -709,7 +747,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDropDownMenu=function( widget, canvas )
 
     canvas.popFont();
 
-    if ( widget.disabled ) canvas.setAlpha( 1 );    
+    if ( widget.disabled ) canvas.setAlpha( 1 );
 };
 
 // --- Frame
@@ -717,10 +755,10 @@ VG.UI.VisualGraphicsStyle.prototype.drawDropDownMenu=function( widget, canvas )
 VG.UI.VisualGraphicsStyle.prototype.drawFrame=function( widget, canvas )
 {
     widget.contentRect.set( widget.rect );
-    
-    if ( widget.frameType === VG.UI.Frame.Type.Box ) 
-    {    
-        var color
+
+    if ( widget.frameType === VG.UI.Frame.Type.Box )
+    {
+        var color;
 
         if ( widget.hasFocusState ) color=this.skin.Widget.FocusColor;
         else color=this.skin.TextEdit.BorderColor1;
@@ -728,6 +766,155 @@ VG.UI.VisualGraphicsStyle.prototype.drawFrame=function( widget, canvas )
 
         widget.contentRect.shrink( 1, 1, this.contentRect );
     }
+};
+
+// --- IconWidget
+
+VG.UI.VisualGraphicsStyle.prototype.drawIconWidget=function( widget, canvas )
+{
+    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
+    widget.contentRect.set( widget.rect );
+
+    // --- Border
+
+    if ( widget.hasFocusState ) {
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin2px, widget.contentRect, this.skin.IconWidget.FocusBorderColor );
+        widget.contentRect.shrink( 1, 1, widget.contentRect );
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleCorners, widget.contentRect, this.skin.IconWidget.FocusBorderColor );
+
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.IconWidget.BorderColor );
+        widget.contentRect.shrink( 1, 1, widget.contentRect );
+    } else
+    {
+        widget.contentRect.shrink( 1, 1, widget.contentRect );
+        if ( widget.hasHoverState ) canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.IconWidget.HoverBorderColor );
+        else canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.IconWidget.BorderColor );
+        widget.contentRect.shrink( 1, 1, widget.contentRect );
+    }
+
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.IconWidget.BackColor );
+
+    // ---
+
+    if ( !widget.controller ) { if ( widget.disabled ) canvas.setAlpha( 1 ); return; }
+
+    if ( widget.toolLayout.length > 0 ) widget.contentRect.height-=this.skin.IconWidget.ToolLayoutHeight;
+
+    widget.contentRect.x+=this.skin.IconWidget.Margin.left;
+    widget.contentRect.y+=this.skin.IconWidget.Margin.top;
+    widget.contentRect.width-=2*this.skin.IconWidget.Margin.right;
+    widget.contentRect.height-=2*this.skin.IconWidget.Margin.bottom;
+
+    canvas.pushClipRect( widget.contentRect );
+
+    if ( !widget.verified || canvas.hasBeenResized )
+        widget.verifyScrollbar();
+
+    // ---
+
+    this.rect2.copy( widget.contentRect );
+    var paintRect=this.rect2;
+    paintRect.width=widget._itemSize.width;
+
+    canvas.pushFont( this.skin.IconWidget.Font );
+
+    paintRect.y=widget.contentRect.y - widget.offset;
+
+    for ( var r=0; r < widget.rows; ++r )
+    {
+        var x=paintRect.x;
+
+        for ( var i=0; i < widget.itemsPerRow; ++i )
+        {
+            var itemIndex=widget.itemsPerRow * r + i;
+            if ( itemIndex >= widget.controller.count() ) break;
+
+            var item=widget.controller.at( itemIndex );
+            if ( !item.visible ) continue;
+
+            var isSelected=widget.controller.isSelected( item );
+
+            // ---
+
+            if ( paintRect.y + widget._itemSize.height >= widget.contentRect.y )
+            {
+                this.rect1.copy( paintRect );
+                this.rect1.height=91;
+
+                if ( !isSelected ) {
+                    // canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect1, this.skin.IconWidget.ItemBackColor );
+                    // canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1.shrink( 15, 15, this.rect1 ), this.skin.IconWidget.ItemBackColor );
+                    // this.rect1.shrink( 1, 1, this.rect1 );
+
+                    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.IconWidget.ItemBackColor );
+                    // canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1.shrink( 15, 15, this.rect1 ), this.skin.IconWidget.ItemBackColor );
+                    this.rect1.shrink( 10 + 8, 10 + 8, this.rect1 );
+                } else {
+                    // canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect1, this.skin.IconWidget.ItemSelectedBorderColor );
+                    //canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect1.shrink( 15, 15, this.rect1 ), this.skin.IconWidget.ItemSelectedBackColor );
+                    // canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1.shrink( 1, 1, this.rect1 ), this.skin.IconWidget.ItemSelectedBackColor );
+
+
+                    canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect1, this.skin.IconWidget.ItemSelectedBorderColor );
+                    //canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect1.shrink( 15, 15, this.rect1 ), this.skin.IconWidget.ItemSelectedBackColor );
+                    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1.shrink( 1, 1, this.rect1 ), this.skin.IconWidget.ItemSelectedBackColor );
+                    this.rect1.shrink( 9 + 8, 9 + 8, this.rect1 );
+                }
+
+                if ( widget.paintItemCallback )
+                    widget.paintItemCallback( canvas, item, this.rect1, isSelected );
+
+                this.rect1.copy( paintRect ); this.rect1.y+=97; //this.rect1.height;
+                canvas.drawTextRect( item.text, this.rect1, this.skin.IconWidget.TextColor, 1, 0 );
+            }
+            paintRect.x+=widget._itemSize.width + widget.spacing.width;
+        }
+
+        paintRect.x=x;
+        paintRect.y+=widget._itemSize.height +  widget.spacing.height;
+        if ( paintRect.y > widget.contentRect.bottom() ) break;
+    }
+
+    canvas.popFont();
+
+    if ( widget.needsVScrollbar ) {
+        widget.vScrollbar.rect=VG.Core.Rect( widget.contentRect.right() - this.skin.ScrollBar.Size,
+            widget.contentRect.y, this.skin.ScrollBar.Size, widget.contentRect.height );
+
+        // this.totalItemHeight == Total height of all Items in the list widget including spacing
+        // visibleHeight == Total height of all currently visible items
+        // this.contentRect.height == Height of the available area for the list items
+
+        widget.vScrollbar.setScrollBarContentSize( widget.totalItemHeight, widget.contentRect.height );
+        widget.vScrollbar.paintWidget( canvas );
+    }
+
+    canvas.popClipRect();
+
+    // --- Draw Tools
+
+    if ( widget.toolLayout.length > 0 ) {
+        this.rect1.copy( widget.rect ); this.rect1.shrink( 2, 2, this.rect1 );
+        this.rect1.y+=this.rect1.height - this.skin.IconWidget.ToolLayoutHeight;
+        this.rect2.copy( this.rect1 );
+        this.rect1.height=1;//this.skin.IconWidget.ToolLayoutHeight;
+
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.IconWidget.ToolTopBorderColor );
+
+        this.rect1.y+=1; this.rect1.height=this.skin.IconWidget.ToolLayoutHeight-2;
+        canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect1, this.skin.IconWidget.ToolBackGradColor1, this.skin.IconWidget.ToolBackGradColor2 );
+
+        this.rect1.y+=this.rect1.height; this.rect1.height=1;
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.IconWidget.ToolBottomBorderColor );
+
+        this.rect2.height=this.skin.IconWidget.ToolLayoutHeight;
+        this.rect2.shrink( 1, 1, this.rect2 );
+        widget.toolLayout.rect.copy( this.rect2 );
+
+        widget.toolLayout.layout( canvas );
+    }
+
+    if ( widget.disabled ) canvas.setAlpha( 1 );
 };
 
 // --- ListWidget
@@ -745,7 +932,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawListWidget=function( widget, canvas )
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleCorners, widget.contentRect, this.skin.ListWidget.FocusBorderColor );
 
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.ListWidget.BorderColor );
-        widget.contentRect.shrink( 1, 1, widget.contentRect );        
+        widget.contentRect.shrink( 1, 1, widget.contentRect );
     } else
     {
         widget.contentRect.shrink( 1, 1, widget.contentRect );
@@ -754,7 +941,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawListWidget=function( widget, canvas )
         widget.contentRect.shrink( 1, 1, widget.contentRect );
     }
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.ListWidget.BackColor );    
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.ListWidget.BackColor );
 
     // ---
 
@@ -762,10 +949,10 @@ VG.UI.VisualGraphicsStyle.prototype.drawListWidget=function( widget, canvas )
 
     if ( widget.toolLayout.length > 0 ) widget.contentRect.height-=this.skin.ListWidget.ToolLayoutHeight;
 
-    widget.contentRect.x+=this.skin.ListWidget.Margin.left; 
+    widget.contentRect.x+=this.skin.ListWidget.Margin.left;
     widget.contentRect.y+=this.skin.ListWidget.Margin.top;
-    widget.contentRect.width-=2*this.skin.ListWidget.Margin.right; 
-    widget.contentRect.height-=2*this.skin.ListWidget.Margin.bottom; 
+    widget.contentRect.width-=2*this.skin.ListWidget.Margin.right;
+    widget.contentRect.height-=2*this.skin.ListWidget.Margin.bottom;
 
     canvas.pushClipRect( widget.contentRect );
 
@@ -786,7 +973,9 @@ VG.UI.VisualGraphicsStyle.prototype.drawListWidget=function( widget, canvas )
 
     widget.childWidgets=[];
     for ( var i=0; i < widget.controller.count(); ++i ) {
-        var item=widget.controller.at( i ) ;
+        var item=widget.controller.at( i );
+        if ( !item.visible ) continue;
+
         var isSelected=widget.controller.isSelected( item );
 
         // --- Insert Potential Child Widgets of Items
@@ -799,7 +988,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawListWidget=function( widget, canvas )
 
         // ---
 
-        if ( paintRect.y + widget.itemHeight >= widget.contentRect.y ) 
+        if ( paintRect.y + widget.itemHeight >= widget.contentRect.y )
         {
             this.rect1.copy( paintRect );
             if ( !isSelected ) {
@@ -817,10 +1006,10 @@ VG.UI.VisualGraphicsStyle.prototype.drawListWidget=function( widget, canvas )
         }
 
         paintRect.y+=widget.itemHeight + widget.spacing;
-        if ( paintRect.y > widget.contentRect.bottom() ) break;        
+        if ( paintRect.y > widget.contentRect.bottom() ) break;
     }
 
-    canvas.popFont();        
+    canvas.popFont();
 
     if ( widget.needsVScrollbar ) {
         widget.vScrollbar.rect=VG.Core.Rect( widget.contentRect.right() - this.skin.ScrollBar.Size,
@@ -832,7 +1021,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawListWidget=function( widget, canvas )
 
         widget.vScrollbar.setScrollBarContentSize( widget.totalItemHeight, widget.contentRect.height );
         widget.vScrollbar.paintWidget( canvas );
-    }    
+    }
 
     canvas.popClipRect();
 
@@ -841,7 +1030,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawListWidget=function( widget, canvas )
     if ( widget.toolLayout.length > 0 ) {
         this.rect1.copy( widget.rect ); this.rect1.shrink( 2, 2, this.rect1 );
         this.rect1.y+=this.rect1.height - this.skin.ListWidget.ToolLayoutHeight;
-        this.rect2.copy( this.rect1 );    
+        this.rect2.copy( this.rect1 );
         this.rect1.height=1;//this.skin.ListWidget.ToolLayoutHeight;
 
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ListWidget.ToolTopBorderColor );
@@ -873,9 +1062,9 @@ VG.UI.VisualGraphicsStyle.prototype.drawMenu=function( widget, canvas )
 
     widget.contentRect.setSize( widget.calcSize( canvas ) );
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, widget.contentRect, this.skin.Menu.BorderColor ); 
+    canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, widget.contentRect, this.skin.Menu.BorderColor );
     widget.contentRect.shrink( 1, 1, widget.contentRect );
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.Menu.BackColor ); 
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.Menu.BackColor );
 
     var itemHeight=canvas.getLineHeight() + 7;
 
@@ -890,11 +1079,11 @@ VG.UI.VisualGraphicsStyle.prototype.drawMenu=function( widget, canvas )
             var itemRect=VG.Core.Rect( rect.x, y, rect.width, itemHeight ).round();
 
             if ( item.disabled ) {
-                canvas.drawTextRect( item.text, itemRect.add( 10, 0, -10, 0, this.rect2), this.skin.Menu.DisabledTextColor, 0, 1 );                
+                canvas.drawTextRect( item.text, itemRect.add( 10, 0, -10, 0, this.rect2), this.skin.Menu.DisabledTextColor, 0, 1 );
             } else
             if ( item === widget.selected )  {
-                canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, itemRect, this.skin.Menu.HighlightedBorderColor ); 
-                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect.shrink(1, 1, this.rect2), this.skin.Menu.HighlightedBackColor ); 
+                canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, itemRect, this.skin.Menu.HighlightedBorderColor );
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect.shrink(1, 1, this.rect2), this.skin.Menu.HighlightedBackColor );
                 canvas.drawTextRect( item.text, itemRect.add( 10, 0, -10, 0, this.rect2 ), this.skin.Menu.HighlightedTextColor, 0, 1 );
             } else {
                 canvas.drawTextRect( item.text, itemRect.add( 10, 0, -10, 0, this.rect2), this.skin.Menu.TextColor, 0, 1 );
@@ -916,19 +1105,19 @@ VG.UI.VisualGraphicsStyle.prototype.drawMenu=function( widget, canvas )
                 var textColor=this.skin.Menu.TextColor;
                 if ( item.disabled ) textColor=this.skin.Menu.DisabledTextColor;
                 var shortCutSize=canvas.getTextSize( item.shortcut.text );
-                canvas.drawTextRect( item.shortcut.text, VG.Core.Rect( itemRect.right() - shortCutSize.width - 10, itemRect.y, shortCutSize.width, itemRect.height ), textColor, 0, 1 );                             
+                canvas.drawTextRect( item.shortcut.text, VG.Core.Rect( itemRect.right() - shortCutSize.width - 10, itemRect.y, shortCutSize.width, itemRect.height ), textColor, 0, 1 );
 
                 canvas.popFont();
-            }          
+            }
 
             item._rect=itemRect;
             y+=itemHeight;
         } else {
             var sepRect=VG.Core.Rect( rect.x+1, y, rect.width-2, 1 ).round();
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, sepRect, this.skin.Menu.SeparatorColor ); 
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, sepRect, this.skin.Menu.SeparatorColor );
 
             y++;
-        }      
+        }
     }
 
     this.itemHeight=itemHeight;
@@ -939,16 +1128,16 @@ VG.UI.VisualGraphicsStyle.prototype.drawMenu=function( widget, canvas )
 // --- MenuBar
 
 VG.UI.VisualGraphicsStyle.prototype.drawMenuBar=function( widget, canvas )
-{    
+{
     widget.contentRect.set( widget.rect );
 
     widget.contentRect.height=1;
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.MenuBar.TopBorderColor );
     widget.contentRect.y+=widget.rect.height-1;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.MenuBar.BottomBorderColor );  
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.MenuBar.BottomBorderColor );
 
     widget.rect.shrink( 0, 1, widget.contentRect );
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.MenuBar.BackColor );  
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.MenuBar.BackColor );
 
     canvas.pushFont( this.skin.MenuBar.Font );
 
@@ -963,7 +1152,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawMenuBar=function( widget, canvas )
         rect.width=canvas.getTextSize( item.text, size ).width + 2 * 12;
 
         if ( item === widget.active ) {
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect, this.skin.MenuBar.SelectedBackColor );              
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect, this.skin.MenuBar.SelectedBackColor );
             canvas.drawTextRect( item.text, rect, this.skin.MenuBar.SelectedTextColor, 1, 1 );
         } else {
             canvas.drawTextRect( item.text, rect, this.skin.MenuBar.TextColor, 1, 1 );
@@ -983,31 +1172,38 @@ VG.UI.VisualGraphicsStyle.prototype.drawScrollBar=function( widget, canvas )
 {
     if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.ScrollBar.BackColor );
+    if ( VG.context.twoDOnTop ) {
+        canvas.ctx.clearRect( widget.contentRect.x, widget.contentRect.y, widget.contentRect.width, widget.contentRect.height );
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleGL, widget.contentRect, this.skin.ScrollBar.BackColor );
+    } else {
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.ScrollBar.BackColor );
+    }
 
-    if ( widget.direction === VG.UI.ScrollBar.Direction.Vertical ) 
+    if ( widget.direction === VG.UI.ScrollBar.Direction.Vertical )
     {
+        if ( widget.contentRect.height <= 10 ) return;
+
         // --- Vertical
 
         this.rect1.copy( widget.rect ); this.rect1.width=1;
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ScrollBar.BorderColor );
 
-        var seg1ImageName="scrollbar_vtop";
-        var seg2ImageName="scrollbar_vmiddle";
-        var seg3ImageName="scrollbar_vbottom";
-        
+        seg1ImageName="scrollbar_vtop";
+        seg2ImageName="scrollbar_vmiddle";
+        seg3ImageName="scrollbar_vbottom";
+
         if (  VG.context.workspace.mouseTrackerWidget === widget ) {
             seg1ImageName+="_selected"; seg2ImageName+="_selected"; seg3ImageName+="_selected";
         } else
-        if ( widget.handleRect.contains( VG.context.workspace.mousePos ) ) {
-            seg1ImageName+="_hover"; seg2ImageName+="_hover"; seg3ImageName+="_hover";            
+        if ( !VG.context.workspace.mouseTrackerWidget && widget.handleRect.contains( VG.context.workspace.mousePos ) ) {
+            seg1ImageName+="_hover"; seg2ImageName+="_hover"; seg3ImageName+="_hover";
         }
 
         if ( !this.skin.ScrollBar[seg1ImageName] )
             this.skin.ScrollBar[seg1ImageName]=VG.context.imagePool.getImageByName( seg1ImageName + ".png" );
-        if ( !this.skin.ScrollBar[seg2ImageName] )        
+        if ( !this.skin.ScrollBar[seg2ImageName] )
             this.skin.ScrollBar[seg2ImageName]=VG.context.imagePool.getImageByName( seg2ImageName + ".png" );
-        if ( !this.skin.ScrollBar[seg3ImageName] )        
+        if ( !this.skin.ScrollBar[seg3ImageName] )
             this.skin.ScrollBar[seg3ImageName]=VG.context.imagePool.getImageByName( seg3ImageName + ".png" );
 
         // ---
@@ -1020,34 +1216,36 @@ VG.UI.VisualGraphicsStyle.prototype.drawScrollBar=function( widget, canvas )
 
             this.rect2.y+=5; this.rect2.height-=10;
             if ( this.skin.ScrollBar[seg2ImageName] ) canvas.drawTiledImage( this.rect2, this.skin.ScrollBar[seg2ImageName], false, true );
-            
+
             this.rect2.y+=this.rect2.height; this.rect2.height=5;
             if ( this.skin.ScrollBar[seg3ImageName] ) canvas.drawImage( this.rect2, this.skin.ScrollBar[seg3ImageName] );
         } else if ( this.skin.ScrollBar[seg2ImageName] ) canvas.drawTiledImage( this.rect2, this.skin.ScrollBar[seg2ImageName], false, true );
     } else
-    if ( widget.direction === VG.UI.ScrollBar.Direction.Horizontal ) 
+    if ( widget.direction === VG.UI.ScrollBar.Direction.Horizontal )
     {
+        if ( widget.contentRect.width <= 10 ) return;
+
         // --- Horizontal
 
         this.rect1.copy( widget.rect ); this.rect1.height=1;
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ScrollBar.BorderColor );
 
-        var seg1ImageName="scrollbar_hleft";
-        var seg2ImageName="scrollbar_hmiddle";
-        var seg3ImageName="scrollbar_hright";
-        
+        seg1ImageName="scrollbar_hleft";
+        seg2ImageName="scrollbar_hmiddle";
+        seg3ImageName="scrollbar_hright";
+
         if (  VG.context.workspace.mouseTrackerWidget === widget ) {
             seg1ImageName+="_selected"; seg2ImageName+="_selected"; seg3ImageName+="_selected";
         } else
-        if ( widget.handleRect.contains( VG.context.workspace.mousePos ) ) {
-            seg1ImageName+="_hover"; seg2ImageName+="_hover"; seg3ImageName+="_hover";            
+        if ( !VG.context.workspace.mouseTrackerWidget && widget.handleRect.contains( VG.context.workspace.mousePos ) ) {
+            seg1ImageName+="_hover"; seg2ImageName+="_hover"; seg3ImageName+="_hover";
         }
 
         if ( !this.skin.ScrollBar[seg1ImageName] )
             this.skin.ScrollBar[seg1ImageName]=VG.context.imagePool.getImageByName( seg1ImageName + ".png" );
-        if ( !this.skin.ScrollBar[seg2ImageName] )        
+        if ( !this.skin.ScrollBar[seg2ImageName] )
             this.skin.ScrollBar[seg2ImageName]=VG.context.imagePool.getImageByName( seg2ImageName + ".png" );
-        if ( !this.skin.ScrollBar[seg3ImageName] )        
+        if ( !this.skin.ScrollBar[seg3ImageName] )
             this.skin.ScrollBar[seg3ImageName]=VG.context.imagePool.getImageByName( seg3ImageName + ".png" );
 
         // ---
@@ -1056,16 +1254,16 @@ VG.UI.VisualGraphicsStyle.prototype.drawScrollBar=function( widget, canvas )
         this.rect2.y+=2; this.rect2.height-=3;
 
         if ( this.rect2.width >= 10 ) {
-            
+
             if ( this.skin.ScrollBar[seg1ImageName] ) canvas.drawImage( this.rect2, this.skin.ScrollBar[seg1ImageName] );
 
             this.rect2.x+=5; this.rect2.width-=10;
             if ( this.skin.ScrollBar[seg2ImageName] ) canvas.drawTiledImage( this.rect2, this.skin.ScrollBar[seg2ImageName], true, false );
-            
+
             this.rect2.x+=this.rect2.width; this.rect2.width=5;
             if ( this.skin.ScrollBar[seg3ImageName] ) canvas.drawImage( this.rect2, this.skin.ScrollBar[seg3ImageName] );
         } else if ( this.skin.ScrollBar[seg2ImageName] ) canvas.drawTiledImage( this.rect2, this.skin.ScrollBar[seg2ImageName], true, false );
-    }    
+    }
 
     if ( widget.disabled ) canvas.setAlpha( 1 );
 };
@@ -1074,7 +1272,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawScrollBar=function( widget, canvas )
 
 VG.UI.VisualGraphicsStyle.prototype.drawSectionBar=function( widget, canvas )
 {
-    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );    
+    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
     widget.contentRect.set( widget.rect );
 
     // --- Draw Header
@@ -1100,28 +1298,28 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionBar=function( widget, canvas )
         this.rect2.set( this.rect1 );
 
         if ( widget.rightIndicator ) {
-            this.rect2.x+=this.rect2.width - 7 - image.width; this.rect2.width=image.width; 
+            this.rect2.x+=this.rect2.width - 7 - image.width; this.rect2.width=image.width;
         } else {
-            this.rect2.x+=6; this.rect2.width=image.width; 
+            this.rect2.x+=6; this.rect2.width=image.width;
         }
 
-        this.rect2.y+=(this.rect2.height-image.height)/2; this.rect2.height=image.height; 
-        canvas.drawImage( this.rect2, image );        
+        this.rect2.y+=(this.rect2.height-image.height)/2; this.rect2.height=image.height;
+        canvas.drawImage( this.rect2, image );
     }
 
     // ---
 
     this.rect1.set( widget.contentRect ); this.rect1.width=1;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SectionBar.BackColor );    
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SectionBar.BackColor );
     this.rect1.x+=1; this.rect1.width=1;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SectionBar.BorderColor );    
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SectionBar.BorderColor );
     this.rect1.x+=1; this.rect1.width=1;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SectionBar.BackColor );    
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SectionBar.BackColor );
 
     widget.contentRect.add( 3, this.skin.SectionBar.HeaderHeight, -3, -this.skin.SectionBar.HeaderHeight, widget.contentRect );
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.SectionBar.BackColor );
 
-    if ( widget.disabled ) canvas.setAlpha( 1 );    
+    if ( widget.disabled ) canvas.setAlpha( 1 );
 };
 
 // --- SectionBarButton
@@ -1135,13 +1333,14 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionBarButton=function( widget, canva
 
     this.rect1.copy( widget.rect );
 
-    if ( widget.stripWidget.activeButton === widget ) 
+    if ( widget.stripWidget.activeButton === widget )
     {
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin2px, this.rect1, this.skin.SectionBarButton.SelectedBorderColor );
         this.rect1.shrink( 1, 1, this.rect1 );
 
         this.rect2.copy( this.rect1 );
         this.rect2.height/=2;
+        this.rect2.height = Math.round( this.rect2.height );
         canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect2, this.skin.SectionBarButton.SelectedBackGradColor1, this.skin.SectionBarButton.SelectedBackGradColor2 );
         this.rect2.y+=this.rect2.height;
         canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect2, this.skin.SectionBarButton.SelectedBackGradColor2, this.skin.SectionBarButton.SelectedBackGradColor1 );
@@ -1156,13 +1355,14 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionBarButton=function( widget, canva
         } else
             canvas.drawTextRect( widget.text, this.rect1, this.skin.SectionBarButton.SelectedTextColor, 1, 1 );
     } else
-    if ( widget.rect.contains( VG.context.workspace.mousePos ) )
+    if ( !VG.context.workspace.mouseTrackerWidget && widget.rect.contains( VG.context.workspace.mousePos ) )
     {
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin2px, this.rect1, this.skin.SectionBarButton.HoverBorderColor );
         this.rect1.shrink( 1, 1, this.rect1 );
 
         this.rect2.copy( this.rect1 );
         this.rect2.height/=2;
+        this.rect2.height = Math.round( this.rect2.height );
         canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect2, this.skin.SectionBarButton.HoverBackGradColor1, this.skin.SectionBarButton.HoverBackGradColor2 );
         this.rect2.y+=this.rect2.height;
         canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect2, this.skin.SectionBarButton.HoverBackGradColor2, this.skin.SectionBarButton.HoverBackGradColor1 );
@@ -1182,6 +1382,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionBarButton=function( widget, canva
 
         this.rect2.copy( this.rect1 );
         this.rect2.height/=2;
+        this.rect2.height = Math.round( this.rect2.height );
         canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect2, this.skin.SectionBarButton.BackGradColor1, this.skin.SectionBarButton.BackGradColor2 );
         this.rect2.y+=this.rect2.height;
         canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect2, this.skin.SectionBarButton.BackGradColor2, this.skin.SectionBarButton.BackGradColor1 );
@@ -1198,7 +1399,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionBarButton=function( widget, canva
     }
 
     canvas.popFont();
-    if ( widget.disabled ) canvas.setAlpha( 1 );    
+    if ( widget.disabled ) canvas.setAlpha( 1 );
 };
 
 // --- SectionBarSwitch
@@ -1212,16 +1413,16 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionBarSwitch=function( widget, canva
     function drawButton( rect, selected, text )
     {
         var borderColor=style.skin.SectionToolBarButton.BorderColor;
-        var backColor=undefined;
+        var backColor;
 
         if ( selected ) {
             borderColor=style.skin.SectionToolBarButton.BorderSelectedColor;
             backColor=style.skin.SectionToolBarButton.BackSelectedColor;
         }
         else
-        if ( rect.contains( VG.context.workspace.mousePos ) ) {
+        if ( !VG.context.workspace.mouseTrackerWidget && rect.contains( VG.context.workspace.mousePos ) ) {
             borderColor=style.skin.SectionToolBarButton.BorderHoverColor;
-            backColor=style.skin.SectionToolBarButton.BackHoverColor;        
+            backColor=style.skin.SectionToolBarButton.BackHoverColor;
         }
 
         if ( backColor ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect, backColor );
@@ -1230,7 +1431,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionBarSwitch=function( widget, canva
         canvas.pushFont( style.skin.SectionBarSwitch.Font );
         canvas.drawTextRect( text, rect, style.skin.SectionBarSwitch.TextColor, 1, 1 );
         canvas.popFont();
-    };
+    }
 
     var width=32;
 
@@ -1247,14 +1448,14 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionBarSwitch=function( widget, canva
 
     drawButton( this.rect1, !widget.left, widget.text2 );
 
-    if ( widget.disabled ) canvas.setAlpha( 1 );      
+    if ( widget.disabled ) canvas.setAlpha( 1 );
 };
 
 // --- SectionToolBar
 
 VG.UI.VisualGraphicsStyle.prototype.drawSectionToolBar=function( widget, canvas )
 {
-    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );    
+    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.rect, this.skin.SectionToolBar.BorderColor1 );
     widget.contentRect.set( widget.rect );
     widget.contentRect.add( 0, 0, -4, 0, widget.contentRect );
@@ -1273,13 +1474,13 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionToolBar=function( widget, canvas 
         that.rect2.y+=1;
         that.rect2.height=19;
 
-        canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, that.rect2, that.skin.SectionToolBar.HeaderGradColor1, 
+        canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, that.rect2, that.skin.SectionToolBar.HeaderGradColor1,
             that.skin.SectionToolBar.HeaderGradColor2 );
-        canvas.pushFont( that.skin.SectionToolBar.HeaderFont );        
+        canvas.pushFont( that.skin.SectionToolBar.HeaderFont );
         canvas.drawTextRect( layout.text, that.rect2, that.skin.SectionToolBar.HeaderTextColor, 1, 1 );
         canvas.popFont();
 
-        that.rect2.y+=19;        
+        that.rect2.y+=19;
         that.rect2.height=1;
 
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, that.rect2, that.skin.SectionToolBar.HeaderBottomBorderColor1 );
@@ -1287,7 +1488,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionToolBar=function( widget, canvas 
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, that.rect2, that.skin.SectionToolBar.HeaderBottomBorderColor2 );
 
         rect.y+=24; rect.height-=24;
-    };
+    }
 
     // ---
 
@@ -1314,7 +1515,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionToolBar=function( widget, canvas 
         yOffset+=24 + layoutHeight;
     }
 
-    if ( widget.disabled ) canvas.setAlpha( 1 );    
+    if ( widget.disabled ) canvas.setAlpha( 1 );
 };
 
 // --- SectionBarButton
@@ -1327,34 +1528,59 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionToolBarButton=function( widget, c
     this.rect1.copy( widget.rect );
 
     var borderColor=this.skin.SectionToolBarButton.BorderColor;
-    var backColor=undefined;
+    var backColor;
 
     if ( widget.sectionBarWidget.activeButton === widget ) {
         borderColor=this.skin.SectionToolBarButton.BorderSelectedColor;
         backColor=this.skin.SectionToolBarButton.BackSelectedColor;
     }
     else
-    if ( widget.rect.contains( VG.context.workspace.mousePos ) ) {
-        borderColor=this.skin.SectionToolBarButton.BorderHoverColor;
-        backColor=this.skin.SectionToolBarButton.BackHoverColor;        
+    if ( !VG.context.workspace.mouseTrackerWidget && widget.rect.contains( VG.context.workspace.mousePos ) )
+    {
+        if ( !widget.disabled ) {
+            borderColor=this.skin.SectionToolBarButton.BorderHoverColor;
+            backColor=this.skin.SectionToolBarButton.BackHoverColor;
+        }
     }
 
     if ( backColor ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, backColor );
     canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect1, borderColor );
 
-    var imageName=widget.iconName;
-    var image=VG.context.imagePool.getImageByName( imageName );
+    if ( widget.image )
+    {
+        let image = widget.image;
+        if ( image && image.isValid() ) {
 
-    if ( image && image.isValid() ) {
+            this.rect2.copy( this.rect1 );
 
-        this.rect2.copy( this.rect1 );
+            this.rect2.x+=(this.rect2.width - image.width)/2;
+            this.rect2.y+=(this.rect2.height - image.height)/2;
+            canvas.drawImage( this.rect2, image );
+        }
+    } else
+    if ( widget.iconName )
+    {
+        var imageName=widget.iconName;
+        var image=VG.context.imagePool.getImageByName( imageName );
 
-        this.rect2.x+=(this.rect2.width - image.width)/2;
-        this.rect2.y+=(this.rect2.height - image.height)/2;
-        canvas.drawImage( this.rect2, image );
+        if ( image && image.isValid() ) {
+
+            this.rect2.copy( this.rect1 );
+
+            this.rect2.x+=(this.rect2.width - image.width)/2;
+            this.rect2.y+=(this.rect2.height - image.height)/2;
+            canvas.drawImage( this.rect2, image );
+        }
+    } else
+    if ( widget.svgName )
+    {
+        var svg=VG.Utils.getSVGByName( widget.svgName );
+
+        this.rect1.shrink( 8, 8, this.rect1 ); // 2, 2
+        svgGroup=svg.getGroupByName( widget.svgGroupName );
+        canvas.drawSVG( svg, svgGroup, this.rect1, this.skin.Widget.TextColor );
     }
-
-    if ( widget.disabled ) canvas.setAlpha( 1 );    
+    if ( widget.disabled ) canvas.setAlpha( 1 );
 };
 
 // --- ShiftWidget
@@ -1365,7 +1591,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawShiftWidget=function( widget, canvas )
     widget.contentRect.set( widget.rect );
     widget.contentRect.height=widget.itemHeight;
 
-    if ( !widget.popup ) 
+    if ( !widget.popup )
     {
         // --- Background
 
@@ -1421,14 +1647,14 @@ VG.UI.VisualGraphicsStyle.prototype.drawShiftWidget=function( widget, canvas )
 
         // --- Text
 
-        canvas.pushFont( this.skin.SnapperWidgetItem.Font );    
+        canvas.pushFont( this.skin.SnapperWidgetItem.Font );
 
         if ( widget.index !== -1 )
             canvas.drawTextRect( widget.childs[widget.index].text, this.rect1, this.skin.SnapperWidgetItem.TextColor, 1, 1 );
 
         canvas.popFont();
     } else
-    if ( widget.popup ) 
+    if ( widget.popup )
     {
         this.rect1.set( widget.contentRect );
 
@@ -1438,11 +1664,11 @@ VG.UI.VisualGraphicsStyle.prototype.drawShiftWidget=function( widget, canvas )
         widget.itemsUp=widget.index;
         if ( widget.itemsUp > widget.maxUp ) widget.itemsUp=widget.maxUp;
 
-        canvas.pushFont( this.skin.SnapperWidgetItem.Font );    
+        canvas.pushFont( this.skin.SnapperWidgetItem.Font );
 
         // --- Draw Down
 
-        var popupHeight=(widget.itemsDown+1+widget.itemsUp) * widget.itemHeight + widget.childs.length; 
+        var popupHeight=(widget.itemsDown+1+widget.itemsUp) * widget.itemHeight + widget.childs.length;
         this.rect2.set( this.rect1.x, this.rect1.y - widget.itemsUp * widget.itemHeight, this.rect1.width, popupHeight );
 
         // ---
@@ -1455,10 +1681,10 @@ VG.UI.VisualGraphicsStyle.prototype.drawShiftWidget=function( widget, canvas )
         this.rect2.height=widget.itemHeight;
 
         // --- Draw Down
-        var y=this.rect2.y + widget.itemsUp * widget.itemHeight;
-        for( var i=0; i <= widget.itemsDown; ++i )
+        y=this.rect2.y + widget.itemsUp * widget.itemHeight;
+        for( i=0; i <= widget.itemsDown; ++i )
         {
-            var itemIndex=widget.index + i;
+            itemIndex=widget.index + i;
             itemIndex=itemIndex % widget.childs.length;
 
             this.rect1.set( this.rect2 );
@@ -1467,7 +1693,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawShiftWidget=function( widget, canvas )
             if ( itemIndex === widget.highlightedIndex )
             {
                 canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DropDownMenu.ItemSelectedBackColor );
-                canvas.drawTextRect( widget.childs[itemIndex].text, this.rect1, this.skin.DropDownMenu.ItemSelectedTextColor, 1, 1 );                
+                canvas.drawTextRect( widget.childs[itemIndex].text, this.rect1, this.skin.DropDownMenu.ItemSelectedTextColor, 1, 1 );
             } else {
                 canvas.drawTextRect( widget.childs[itemIndex].text, this.rect1, this.skin.Window.HeaderTextColor, 1, 1 );
             }
@@ -1476,10 +1702,10 @@ VG.UI.VisualGraphicsStyle.prototype.drawShiftWidget=function( widget, canvas )
         }
 
         // --- Draw Up
-        var y=this.rect2.y;
-        for( var i=0; i < widget.itemsUp; ++i )
+        y=this.rect2.y;
+        for( i=0; i < widget.itemsUp; ++i )
         {
-            var itemIndex=widget.index - widget.itemsUp + i;
+            itemIndex=widget.index - widget.itemsUp + i;
 
             this.rect1.set( this.rect2 );
             this.rect1.y=y;
@@ -1487,20 +1713,19 @@ VG.UI.VisualGraphicsStyle.prototype.drawShiftWidget=function( widget, canvas )
             if ( itemIndex === widget.highlightedIndex )
             {
                 canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DropDownMenu.ItemSelectedBackColor );
-                canvas.drawTextRect(  widget.childs[itemIndex].text, this.rect1, this.skin.DropDownMenu.ItemSelectedTextColor, 1, 1 );                
+                canvas.drawTextRect(  widget.childs[itemIndex].text, this.rect1, this.skin.DropDownMenu.ItemSelectedTextColor, 1, 1 );
             } else {
                 canvas.drawTextRect( widget.childs[itemIndex].text, this.rect1, this.skin.Window.HeaderTextColor, 1, 1 );
             }
 
             y+=widget.itemHeight;
-        }        
+        }
 
         canvas.popFont();
     }
 
-    if ( widget.disabled ) canvas.setAlpha( 1 );    
+    if ( widget.disabled ) canvas.setAlpha( 1 );
 };
-
 
 // --- Slider
 
@@ -1508,7 +1733,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawSlider=function( widget, canvas )
 {
     if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
     widget.sliderRect.set( widget.contentRect );
-    
+
     var leftSpace=Math.ceil( this.skin.Slider.HandleSize / 2 );
     widget.sliderRect.x+=leftSpace;
     widget.sliderRect.width-=leftSpace;
@@ -1549,7 +1774,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawSlider=function( widget, canvas )
     widget.sliderRect.x-=1; widget.sliderRect.width+=2; widget.sliderRect.y+=1;
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.sliderRect, colorObject.Color2 );
     widget.sliderRect.x+=1; widget.sliderRect.width-=1; widget.sliderRect.y+=1;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.sliderRect, colorObject.Color3 );    
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.sliderRect, colorObject.Color3 );
     widget.sliderRect.width-=1; widget.sliderRect.y+=1;
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.sliderRect, colorObject.Color4 );
     widget.sliderRect.x-=1; widget.sliderRect.width+=2;
@@ -1569,10 +1794,10 @@ VG.UI.VisualGraphicsStyle.prototype.drawSlider=function( widget, canvas )
     {
         // --- Normal Mode
 
-        var distance=widget.max - widget.min;
-        var perPixel=widget.sliderRect.width / distance;
-        var valueOffset=widget.value - widget.min;
-        
+        distance=widget.max - widget.min;
+        perPixel=widget.sliderRect.width / distance;
+        valueOffset=widget.value - widget.min;
+
         offset=valueOffset * perPixel;
     } else
     {
@@ -1581,18 +1806,18 @@ VG.UI.VisualGraphicsStyle.prototype.drawSlider=function( widget, canvas )
         if ( widget.value <= widget.halfWidthValue )
         {
 
-            var distance=widget.halfWidthValue - widget.min;
-            var perPixel=widget.sliderRect.width / 2 / distance;
-            var valueOffset=widget.value - widget.min;
-        
+            distance=widget.halfWidthValue - widget.min;
+            perPixel=widget.sliderRect.width / 2 / distance;
+            valueOffset=widget.value - widget.min;
+
             offset=valueOffset * perPixel;
         } else
         {
-            var distance=widget.max - widget.halfWidthValue;
-            var perPixel=widget.sliderRect.width / 2 / distance;
-            var valueOffset=widget.value - widget.halfWidthValue;
-        
-            offset=widget.sliderRect.width / 2 + valueOffset * perPixel;            
+            distance=widget.max - widget.halfWidthValue;
+            perPixel=widget.sliderRect.width / 2 / distance;
+            valueOffset=widget.value - widget.halfWidthValue;
+
+            offset=widget.sliderRect.width / 2 + valueOffset * perPixel;
         }
     }
 
@@ -1608,7 +1833,130 @@ VG.UI.VisualGraphicsStyle.prototype.drawSlider=function( widget, canvas )
 
     var image=VG.context.imagePool.getImageByName( imageName );
 
-    if ( image ) canvas.drawImage( widget.sliderHandleRect.pos(), image );
+    if ( image ) canvas.drawImage( widget.sliderHandleRect, image );
+    if ( widget.disabled ) canvas.setAlpha( 1 );
+};
+
+// --- Round Slider
+
+VG.UI.VisualGraphicsStyle.prototype.drawRoundSlider=function( widget, canvas )
+{
+    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
+    widget.sliderRect.set( widget.contentRect );
+
+    var skin=this.skin.RoundSlider;
+
+    var leftSpace=Math.ceil( skin.HandleSize / 2 );
+    widget.sliderRect.x+=leftSpace;
+    widget.sliderRect.width-=leftSpace;
+    widget.sliderRect.y=Math.floor( widget.sliderRect.y + (widget.sliderRect.height - skin.BarHeight)/2 );
+    widget.sliderRect.height=1;
+
+    var textColor=this.skin.Widget.TextColor;
+
+    var valueText;
+    var valueTextSize;
+
+    if ( !widget.noValue )
+    {
+        if ( ( widget.step % 1 ) === 0 ) valueText=widget.value.toString();
+        else valueText=widget.value.toFixed( 2 );
+
+
+        if ( !widget.editable )
+            valueTextSize=canvas.getTextSize( valueText );
+        else {
+
+            canvas.pushFont( widget.edit.font );
+            valueTextSize=canvas.getTextSize( widget.edit.maxString );
+            canvas.popFont();
+
+            valueTextSize.width+=16;
+            if ( widget.min < 0 ) valueTextSize.width+=6;
+
+            if ( widget.edit.minimumSize.width > valueTextSize.width ) valueTextSize.width=widget.edit.minimumSize.width;
+        }
+
+        valueTextSize.width+=10;
+        widget.sliderRect.width-=valueTextSize.width;
+    }
+
+    if ( !widget.noValue )
+    {
+        if ( !widget.editable )
+            canvas.drawTextRect( valueText, VG.Core.Rect( widget.sliderRect.right(), widget.contentRect.y, valueTextSize.width, widget.contentRect.height ), textColor, 2, 1 );
+        else {
+            widget.edit.rect.set( widget.sliderRect.right()+10, widget.contentRect.y, valueTextSize.width-10, widget.contentRect.height );
+            widget.edit.paintWidget( canvas );
+        }
+    }
+
+    // --- Draw the handle
+
+    var offset;
+
+    if ( !widget.halfWidthValue )
+    {
+        // --- Normal Mode
+
+        distance=widget.max - widget.min;
+        perPixel=widget.sliderRect.width / distance;
+        valueOffset=widget.value - widget.min;
+
+        offset=valueOffset * perPixel;
+    } else
+    {
+        // --- A value is predefined at the middle of the slider
+
+        if ( widget.value <= widget.halfWidthValue )
+        {
+
+            distance=widget.halfWidthValue - widget.min;
+            perPixel=widget.sliderRect.width / 2 / distance;
+            valueOffset=widget.value - widget.min;
+
+            offset=valueOffset * perPixel;
+        } else
+        {
+            distance=widget.max - widget.halfWidthValue;
+            perPixel=widget.sliderRect.width / 2 / distance;
+            valueOffset=widget.value - widget.halfWidthValue;
+
+            offset=widget.sliderRect.width / 2 + valueOffset * perPixel;
+        }
+    }
+
+    var leftColors=skin.LeftTrackColors, rightColors=skin.RightTrackColors;
+    // if ( widget.hasHoverState || widget.hasFocusState ) colorObject=this.skin.Slider.FocusHoverBarColors;
+
+    this.rect1.copy( widget.sliderRect );
+    this.rect1.x+=1; this.rect1.width=offset; this.rect1.y+=1;
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, leftColors.Color1 );
+    this.rect1.x+=offset; this.rect1.width=widget.sliderRect.width - offset - 2;
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, rightColors.Color1 );
+
+    this.rect1.x=widget.sliderRect.x; this.rect1.width=offset; this.rect1.y+=1; this.rect1.height=2;
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, leftColors.Color3 );
+    this.rect1.x+=offset; this.rect1.width=widget.sliderRect.width - offset;
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, rightColors.Color3 );
+
+    this.rect1.x=widget.sliderRect.x + 1; this.rect1.width=offset; this.rect1.height=1;
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, leftColors.Color2 );
+    this.rect1.x+=offset; this.rect1.width=widget.sliderRect.width - offset - 2;
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, rightColors.Color2 );
+
+    widget.sliderHandleRect.x=widget.sliderRect.x + offset - leftSpace;
+    widget.sliderHandleRect.y=widget.contentRect.y + (widget.contentRect.height - skin.HandleSize)/2;
+    widget.sliderHandleRect.width=skin.HandleSize;
+    widget.sliderHandleRect.height=skin.HandleSize;
+
+    if ( widget.hasFocusState )
+        canvas.draw2DShape( VG.Canvas.Shape2D.Circle, widget.sliderHandleRect, skin.SelectedOuterKnobColor );
+    else canvas.draw2DShape( VG.Canvas.Shape2D.Circle, widget.sliderHandleRect, skin.OuterKnobColor );
+
+    widget.sliderHandleRect.shrink( 2, 2, this.rect1 );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Circle, this.rect1, skin.KnobColor );
+
     if ( widget.disabled ) canvas.setAlpha( 1 );
 };
 
@@ -1684,7 +2032,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawSnapperWidgetItem=function( widget, canv
     this.rect1.x+=30; this.rect1.width-=30;
     this.rect1.height-=2;
 
-    canvas.pushFont( this.skin.SnapperWidgetItem.Font );    
+    canvas.pushFont( this.skin.SnapperWidgetItem.Font );
     canvas.drawTextRect( widget.text, this.rect1, this.skin.SnapperWidgetItem.TextColor, 0, 1 );
     canvas.popFont();
 };
@@ -1696,7 +2044,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawSplitHandle=function( canvas, layout, po
     itemRect[layout.primaryCoord]=pos + childRect[layout.primarySize];
     itemRect[layout.secondaryCoord]=layout.margin[layout.secondaryLesserMargin] + layout.rect[layout.secondaryCoord];
     itemRect[layout.primarySize]=this.skin.SplitLayout.Size;
-    itemRect[layout.secondarySize]=layout.rect[layout.secondarySize] - layout.margin[layout.secondaryLesserMargin] - layout.margin[layout.secondaryGreaterMargin]  
+    itemRect[layout.secondarySize]=layout.rect[layout.secondarySize] - layout.margin[layout.secondaryLesserMargin] - layout.margin[layout.secondaryGreaterMargin];
 
     this.rect1.copy( itemRect );
 
@@ -1704,12 +2052,12 @@ VG.UI.VisualGraphicsStyle.prototype.drawSplitHandle=function( canvas, layout, po
 
     if ( dragging ) {
         backColor=this.skin.SplitLayout.DragBackColor; borderColor=this.skin.SplitLayout.DragBorderColor;
-    } else 
+    } else
     if ( hover ) {
-        backColor=this.skin.SplitLayout.HoverBackColor; borderColor=this.skin.SplitLayout.HoverBorderColor;        
+        backColor=this.skin.SplitLayout.HoverBackColor; borderColor=this.skin.SplitLayout.HoverBorderColor;
     } else {
-        backColor=this.skin.SplitLayout.BackColor; borderColor=this.skin.SplitLayout.BorderColor;        
-    }    
+        backColor=this.skin.SplitLayout.BackColor; borderColor=this.skin.SplitLayout.BorderColor;
+    }
 
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, backColor );
 
@@ -1726,8 +2074,8 @@ VG.UI.VisualGraphicsStyle.prototype.drawSplitHandle=function( canvas, layout, po
         this.rect1.width=1;
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, borderColor );
         this.rect1.x=rightLine;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, borderColor );        
-    }   
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, borderColor );
+    }
 };
 
 // --- StatusBar
@@ -1744,73 +2092,140 @@ VG.UI.VisualGraphicsStyle.prototype.drawStatusBar=function( widget, canvas )
 
 VG.UI.VisualGraphicsStyle.prototype.drawTabWidgetHeader=function( widget, canvas )
 {
-    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );    
+    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
 
     this.rect1.copy( widget.rect );
 
-    // --- Left Border
-
-    this.rect1.width=1;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TabWidgetHeader.LeftBorderColor );
-
-    // --- Universal Bottom Border
-
-    this.rect1.width=widget.rect.width;
-    this.rect1.y+=this.skin.TabWidgetHeader.Height - 5; this.rect1.height=1;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TabWidgetHeader.TabBorderColor );
-    this.rect1.y+=1;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TabWidgetHeader.BottomBorderColor1 );
-    this.rect1.y+=1; this.rect1.height=3;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TabWidgetHeader.BottomBorderColor2 );
-
-    // --- Tabs
-
-    this.rect2.copy( widget.rect );
-    this.rect2.x+=1; this.rect2.height=28;
-
-    canvas.pushFont( this.skin.TabWidgetHeader.Font );
-
-    for ( var i=0; i < widget.items.length; ++i )
+    if ( widget.small )
     {
-        var item=widget.items[i];
-        this.rect2.width=canvas.getTextSize( item.text, this.rect4 ).width + 70;
-        item.rect.copy( this.rect2 );
+        // --- Left Border
 
-        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, this.rect2, this.skin.TabWidgetHeader.TabBorderColor );
+        var skin=this.skin.TabWidgetSmallHeader;
 
-        this.rect3.copy( this.rect2 );
-        this.rect3.shrink( 1, 1, this.rect3 );
+        this.rect1.width=1;
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, skin.LeftBorderColor );
 
-        if ( item.object === widget.layout.current )
+        // --- Universal Bottom Border
+
+        this.rect1.width=widget.rect.width;
+        this.rect1.y+=skin.Height+2; this.rect1.height=1;
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, skin.TabBorderColor );
+
+        // --- Tabs
+
+        this.rect2.copy( widget.rect );
+        this.rect2.x+=1; this.rect2.height=23;
+        this.rect2.y+=2;
+
+        canvas.pushFont( skin.Font );
+
+        for ( var i=0; i < widget.items.length; ++i )
         {
-            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleCorners, this.rect3, this.skin.TabWidgetHeader.SelectedEdgeBorderColor );
-            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect3, this.skin.TabWidgetHeader.SelectedTopBorderColor );
+            var item=widget.items[i];
+            this.rect2.width=canvas.getTextSize( item.text, this.rect4 ).width + 30;
+            item.rect.copy( this.rect2 );
 
-            this.rect3.y+=1;
-            canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect3, this.skin.TabWidgetHeader.SelectedSideBorderColor1, this.skin.TabWidgetHeader.SelectedSideBorderColor2 );
-            this.rect3.height+=3;
-            this.rect3.y-=1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, this.rect2, skin.TabBorderColor );
 
+            this.rect3.copy( this.rect2 );
             this.rect3.shrink( 1, 1, this.rect3 );
-            canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect3, this.skin.TabWidgetHeader.SelectedBackGradientColor1, this.skin.TabWidgetHeader.SelectedBackGradientColor2 );
-        } else
-        if ( this.rect2.contains( VG.context.workspace.mousePos ) ) {
-            canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect3, this.skin.TabWidgetHeader.HoverBackGradientColor1, this.skin.TabWidgetHeader.HoverBackGradientColor2 );            
-        } else {
-            canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect3, this.skin.TabWidgetHeader.BackGradientColor1, this.skin.TabWidgetHeader.BackGradientColor2 );            
-        }        
 
-        canvas.drawTextRect( item.text, this.rect2, this.skin.TabWidgetHeader.TextColor, 1, 1 );
+            if ( item.object === widget.layout.current )
+            {
+                canvas.draw2DShape( VG.Canvas.Shape2D.RectangleCorners, this.rect3, skin.SelectedEdgeBorderColor );
+                canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect3, skin.SelectedTopBorderColor );
 
-        this.rect2.x+=this.rect2.width + 4;
+                this.rect3.y+=1;
+                canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect3, skin.SelectedSideBorderColor1, skin.SelectedSideBorderColor2 );
+                this.rect3.height+=2;
+                this.rect3.y-=1;
+
+                this.rect3.shrink( 1, 1, this.rect3 );
+                canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect3, skin.SelectedBackGradientColor1, skin.SelectedBackGradientColor2 );
+            } else
+            if ( !VG.context.workspace.mouseTrackerWidget && this.rect2.contains( VG.context.workspace.mousePos ) ) {
+                canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect3, skin.HoverBackGradientColor1, skin.HoverBackGradientColor2 );
+            } else {
+                canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect3, skin.BackGradientColor1, skin.BackGradientColor2 );
+            }
+
+            canvas.drawTextRect( item.text, this.rect2, skin.TextColor, 1, 1 );
+
+            this.rect2.x+=this.rect2.width + 2;
+        }
+
+        canvas.popFont();
+
+        // ---
+
+        widget.contentRect.set( widget.rect );
+        widget.contentRect.add( 0, skin.Height+2, 0, -skin.Height-2, widget.contentRect );
+    } else
+    {
+        // --- Left Border
+
+        this.rect1.width=1;
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TabWidgetHeader.LeftBorderColor );
+
+        // --- Universal Bottom Border
+
+        this.rect1.width=widget.rect.width;
+        this.rect1.y+=this.skin.TabWidgetHeader.Height - 5; this.rect1.height=1;
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TabWidgetHeader.TabBorderColor );
+        this.rect1.y+=1;
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TabWidgetHeader.BottomBorderColor1 );
+        this.rect1.y+=1; this.rect1.height=3;
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TabWidgetHeader.BottomBorderColor2 );
+
+        // --- Tabs
+
+        this.rect2.copy( widget.rect );
+        this.rect2.x+=1; this.rect2.height=28;
+
+        canvas.pushFont( this.skin.TabWidgetHeader.Font );
+
+        for ( let i=0; i < widget.items.length; ++i )
+        {
+            let item=widget.items[i];
+            this.rect2.width=canvas.getTextSize( item.text, this.rect4 ).width + 70;
+            item.rect.copy( this.rect2 );
+
+            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, this.rect2, this.skin.TabWidgetHeader.TabBorderColor );
+
+            this.rect3.copy( this.rect2 );
+            this.rect3.shrink( 1, 1, this.rect3 );
+
+            if ( item.object === widget.layout.current )
+            {
+                canvas.draw2DShape( VG.Canvas.Shape2D.RectangleCorners, this.rect3, this.skin.TabWidgetHeader.SelectedEdgeBorderColor );
+                canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect3, this.skin.TabWidgetHeader.SelectedTopBorderColor );
+
+                this.rect3.y+=1;
+                canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect3, this.skin.TabWidgetHeader.SelectedSideBorderColor1, this.skin.TabWidgetHeader.SelectedSideBorderColor2 );
+                this.rect3.height+=3;
+                this.rect3.y-=1;
+
+                this.rect3.shrink( 1, 1, this.rect3 );
+                canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect3, this.skin.TabWidgetHeader.SelectedBackGradientColor1, this.skin.TabWidgetHeader.SelectedBackGradientColor2 );
+            } else
+            if ( !VG.context.workspace.mouseTrackerWidget && this.rect2.contains( VG.context.workspace.mousePos ) ) {
+                canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect3, this.skin.TabWidgetHeader.HoverBackGradientColor1, this.skin.TabWidgetHeader.HoverBackGradientColor2 );
+            } else {
+                canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect3, this.skin.TabWidgetHeader.BackGradientColor1, this.skin.TabWidgetHeader.BackGradientColor2 );
+            }
+
+            canvas.drawTextRect( item.text, this.rect2, this.skin.TabWidgetHeader.TextColor, 1, 1 );
+
+            this.rect2.x+=this.rect2.width + 4;
+        }
+
+        canvas.popFont();
+
+        // ---
+
+        widget.contentRect.set( widget.rect );
+        widget.contentRect.add( 0, this.skin.TabWidgetHeader.Height, 0, -this.skin.TabWidgetHeader.Height, widget.contentRect );
     }
-
-    canvas.popFont();
-
-    // ---
-
-    widget.contentRect.set( widget.rect );
-    widget.contentRect.add( 0, this.skin.TabWidgetHeader.Height, 0, -this.skin.TabWidgetHeader.Height, widget.contentRect );
 
     if ( widget.disabled ) canvas.setAlpha( 1 );
 };
@@ -1819,13 +2234,13 @@ VG.UI.VisualGraphicsStyle.prototype.drawTabWidgetHeader=function( widget, canvas
 
 VG.UI.VisualGraphicsStyle.prototype.drawTextEdit=function( widget, canvas )
 {
-    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );    
+    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
     widget.contentRect.set( widget.rect );
-    
+
     if ( widget.dragging && widget.selectionIsValid )
         widget.autoScroll();
 
-    if ( !widget.rect.equals( widget.previousRect ) ) widget.verified=false;        
+    if ( !widget.rect.equals( widget.previousRect ) ) widget.verified=false;
 
     widget.contentRect.set( widget.rect );
     if ( widget.hasFocusState ) {
@@ -1842,7 +2257,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTextEdit=function( widget, canvas )
 
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.TextEdit.FocusBorderColor3 );
 
-        widget.contentRect.shrink( 2, 2, widget.contentRect );       
+        widget.contentRect.shrink( 2, 2, widget.contentRect );
     } else
     {
         widget.contentRect.shrink( 3, 3, this.rect1 );
@@ -1853,7 +2268,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTextEdit=function( widget, canvas )
         widget.contentRect.shrink( 1, 1, widget.contentRect );
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, widget.contentRect, this.skin.TextEdit.BorderColor2 );
 
-        widget.contentRect.shrink( 1, 1, widget.contentRect );       
+        widget.contentRect.shrink( 1, 1, widget.contentRect );
     }
 
     if ( !widget.textLines ) return;
@@ -1921,7 +2336,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTextEdit=function( widget, canvas )
     canvas.popFont();
     canvas.popClipRect();
 
-    if ( widget.disabled ) canvas.setAlpha( 1 );    
+    if ( widget.disabled ) canvas.setAlpha( 1 );
 };
 
 // --- TextLineEdit
@@ -1952,7 +2367,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTextLineEdit=function( widget, canvas )
         this.rect1.width=1;
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TextLineEdit.FocusBorderColor3 );
 
-        widget.contentRect.shrink( 1, 1, widget.contentRect );       
+        widget.contentRect.shrink( 1, 1, widget.contentRect );
     } else
     {
         widget.contentRect.shrink( 3, 3, this.rect1 );
@@ -1966,10 +2381,10 @@ VG.UI.VisualGraphicsStyle.prototype.drawTextLineEdit=function( widget, canvas )
         widget.contentRect.shrink( 1, 1, widget.contentRect );
 
         //if ( widget.customBorderColor ) canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, widget.contentRect, widget.customBorderColor );
-        //else 
+        //else
             canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, widget.contentRect, this.skin.TextLineEdit.BorderColor2 );
 
-        widget.contentRect.shrink( 1, 1, widget.contentRect );       
+        widget.contentRect.shrink( 1, 1, widget.contentRect );
     }
 
     // ---
@@ -1984,7 +2399,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTextLineEdit=function( widget, canvas )
     if ( !widget.textLines || ( widget.textArray && !widget.textArray[0].length ) && !widget.hasFocusState )
     {
         if ( widget.defaultText ) {
-            canvas.drawTextRect( widget.defaultText, widget.contentRect, this.skin.TextLineEdit.DefaultTextColor, 0, 1 );   
+            canvas.drawTextRect( widget.defaultText, widget.contentRect, this.skin.TextLineEdit.DefaultTextColor, 0, 1 );
         }
         canvas.popFont();
         if ( widget.disabled ) canvas.setAlpha( 1 );
@@ -2020,7 +2435,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTextLineEdit=function( widget, canvas )
 
         if ( !widget.password )
             canvas.drawTextRect( text, widget.contentRect, textColor, 0, 1 );
-        else 
+        else
         {
             canvas.pushClipRect( widget.contentRect );
 
@@ -2035,11 +2450,11 @@ VG.UI.VisualGraphicsStyle.prototype.drawTextLineEdit=function( widget, canvas )
                 rect.x+=circleSize + 2;
             }
 
-            canvas.popClipRect();            
+            canvas.popClipRect();
         }
     }
-    
-    widget.blink( canvas, widget.contentRect.y+1, widget.contentRect.height-2 ); 
+
+    widget.blink( canvas, widget.contentRect.y+1, widget.contentRect.height-2 );
     canvas.popFont();
     if ( widget.disabled ) canvas.setAlpha( 1 );
 };
@@ -2058,7 +2473,105 @@ VG.UI.VisualGraphicsStyle.prototype.drawTitleBar=function( canvas, rect, title )
     this.rect4.x+=4;
     canvas.pushFont( this.skin.TitleBar.Font );
     canvas.drawTextRect( title, this.rect4, this.skin.TitleBar.TextColor, 0, 1 );
-    canvas.popFont();    
+    canvas.popFont();
+};
+
+// --- TitleBar
+
+VG.UI.VisualGraphicsStyle.prototype.drawToolSettings = function( widget, canvas )
+{
+    if ( canvas.twoD )
+        canvas.clearGLRect( widget.contentRect );
+
+    if ( widget.hasHoverState ) {
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.ToolSettings.HoverBorderColor );
+        widget.contentRect.shrink( 1, 1, widget.contentRect );
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.ToolSettings.HoverBackColor );
+    } else if ( widget.open ) {
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.ToolSettings.OpenBorderColor );
+        widget.contentRect.shrink( 1, 1, widget.contentRect );
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.ToolSettings.OpenBackColor );
+    } else {
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.ToolSettings.BorderColor );
+        widget.contentRect.shrink( 1, 1, widget.contentRect );
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.ToolSettings.BackColor );
+    }
+
+    if ( widget.label ) {
+        widget.label.rect.copy( widget.rect );
+        widget.label.paintWidget( canvas );
+    }
+
+    if ( widget.open )
+    {
+        this.rect1.x = widget.rect.x;
+        this.rect1.y = widget.parent.rect.bottom();
+        this.rect1.width = widget.options.width || 435;
+        this.rect1.height = widget.options.height || 512;
+
+        if ( this.rect1.bottom() > VG.context.workspace.rect.height )
+            this.rect1.height = VG.context.workspace.rect.height - this.rect1.y - 20;
+
+        if ( widget.options.left || this.rect1.right() > VG.context.workspace.rect.width )
+            this.rect1.x -= this.rect1.width - widget.rect.width;
+
+        widget.popupRect.copy( this.rect1 );
+        widget.widget.rect.copy( this.rect1 );
+
+        if ( canvas.twoD )
+            canvas.clearGLRect( this.rect1 );
+
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, this.rect1, this.skin.ToolSettings.ContentBorderColor );
+        this.rect1.shrink( 1, 1, this.rect1 );
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ToolSettings.ContentBackColor );
+        this.rect1.shrink( 1, 1, this.rect1 );
+
+        if ( widget.options.text ) {
+            this.rect2.copy( this.rect1 );
+            this.rect2.y += 23;
+            this.rect2.x = this.rect1.x + 6;
+
+            canvas.pushFont( this.skin.ToolSettings.HeaderFont );
+            canvas.drawTextRect( widget.options.text, this.rect2, this.skin.Widget.TextColor, 0, 0 );
+            canvas.popFont();
+        }
+
+        // --- Close Button
+
+        this.rect2.x=this.rect1.right() - 10 - 37;
+        this.rect2.y=this.rect1.y + 10;
+        this.rect2.width=this.rect2.height=37;
+
+        widget.closeButtonRect.copy( this.rect2 );
+
+        if ( this.rect2.contains( VG.context.workspace.mousePos ) ) {
+            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect2, this.skin.ToolSettings.HoverBorderColor );
+            this.rect2.shrink( 1, 1, this.rect2 );
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, this.skin.ToolSettings.HoverBackColor );
+        } else {
+            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect2, this.skin.ToolSettings.BorderColor );
+            this.rect2.shrink( 1, 1, this.rect2 );
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, this.skin.ToolSettings.BackColor );
+        }
+
+        var svg=VG.Utils.getSVGByName( "glyphs.svg" );
+        if ( svg ) {
+            this.rect2.shrink( 7, 7, this.rect2 );
+
+            svgGroup=svg.getGroupByName( "Close" );
+            canvas.drawSVG( svg, svgGroup, this.rect2, this.skin.Widget.TextColor );
+        }
+
+        // ---
+
+        this.rect1.y+=46;
+        this.rect1.height-=46;
+
+        if ( widget.widget.layout ) {
+            widget.widget.layout.rect.copy( this.rect1 );
+            widget.widget.layout.layout( canvas );
+        }
+    }
 };
 
 // --- ToolBar
@@ -2074,6 +2587,68 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolBar=function( widget, canvas )
     widget.contentRect.shrink( 0, 1, widget.contentRect );
     //canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, widget.contentRect, this.skin.ToolBar.BackGradColor1, this.skin.ToolBar.BackGradColor2 );
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.ToolBar.BackGradColor );
+};
+
+// --- ToolBarButton
+
+VG.UI.VisualGraphicsStyle.prototype.drawToolBarButton=function( widget, canvas )
+{
+    if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
+    widget.contentRect.copy( widget.rect );
+
+    // --- Border / Background
+
+    if ( widget.mouseIsDown && !widget.disabled || widget.checked ) {
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.ToolBarButton.ClickedBorderColor );
+        widget.contentRect.shrink( 1, 1, widget.contentRect);
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.ToolBarButton.ClickedBackColor );
+    } else
+    if ( widget.hasHoverState ) {
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.ToolBarButton.HoverBorderColor );
+        widget.contentRect.shrink( 1, 1, widget.contentRect);
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.ToolBarButton.HoverBackColor );
+    } else {
+        if ( widget.parent && !widget.parent.decorated )
+        {
+            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.ToolBarButton.BorderColor );
+            widget.contentRect.shrink( 1, 1, widget.contentRect);
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.ToolBarButton.BackColor );
+        }
+    }
+
+    canvas.pushClipRect( widget.contentRect );
+
+    if ( widget.svgName || widget.svg ) {
+        // --- SVG
+        if ( !widget.svg )
+            widget.svg=VG.Utils.getSVGByName( widget.svgName );
+        if ( widget.svg )
+        {
+            svgGroup=widget.svg.getGroupByName( widget.svgGroupName );
+            widget.rect.shrink( 3, 3, this.rect4 );
+            canvas.drawSVG( widget.svg, svgGroup, this.rect4, this.skin.ToolBarButton.TextColor );
+        }
+    } else
+    if ( widget.icon || widget.iconName ) {
+        // --- Icon
+        if ( !widget.icon ) widget.icon=VG.context.imagePool.getImageByName( widget.iconName );
+        if ( widget.icon && widget.icon.isValid() )
+        {
+            let x=Math.round( widget.contentRect.x + (widget.contentRect.width - widget.icon.width)/2 );
+            let y=Math.round( widget.contentRect.y + (widget.contentRect.height - widget.icon.height)/2);
+
+            canvas.drawImage( { x : x, y : y }, widget.icon );
+        }
+    }  else {
+        // --- Text
+        canvas.pushFont( this.skin.ToolBarButton.Font );
+        canvas.drawTextRect( widget.text, widget.contentRect, this.skin.ToolBarButton.TextColor, 1, 1 );
+        canvas.popFont();
+    }
+
+    canvas.popClipRect();
+
+    if ( widget.disabled ) canvas.setAlpha( 1 );
 };
 
 // --- ToolButton
@@ -2101,41 +2676,37 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolButton=function( widget, canvas )
             widget.contentRect.shrink( 1, 1, widget.contentRect);
             canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.ToolButton.BackColor );
         }
-    }    
+    }
 
     canvas.pushClipRect( widget.contentRect );
 
-    if ( widget.svgName ) {
+    if ( widget.svgName || widget.svg ) {
         // --- SVG
-        var svg=VG.Utils.getSVGByName( widget.svgName );
-        if ( svg )
+        if ( !widget.svg ) widget.svg=VG.Utils.getSVGByName( widget.svgName );
+        if ( widget.svg )
         {
-            svgGroup=svg.getGroupByName( widget.svgGroupName );
-            widget.rect.shrink( 3, 3, this.rect4 );
-            canvas.drawSVG( svg, svgGroup, this.rect4, this.skin.ToolButton.TextColor );
+            svgGroup=widget.svg.getGroupByName( widget.svgGroupName );
+            widget.rect.shrink( this.skin.ToolButton.Margin.width, this.skin.ToolButton.Margin.height, this.rect4 );
+            canvas.drawSVG( widget.svg, svgGroup, this.rect4, this.skin.ToolButton.Color );
         }
     } else
     if ( widget.icon || widget.iconName ) {
         // --- Icon
         if ( !widget.icon ) widget.icon=VG.context.imagePool.getImageByName( widget.iconName );
-        if ( widget.icon && widget.icon.isValid() ) 
+        if ( widget.icon && widget.icon.isValid() )
         {
-            var x=widget.contentRect.x + (widget.contentRect.width - widget.icon.width)/2;
-            var y=widget.contentRect.y + (widget.contentRect.height - widget.icon.height)/2;
+            var x=Math.round( widget.contentRect.x + (widget.contentRect.width - widget.icon.width)/2 );
+            var y=Math.round( widget.contentRect.y + (widget.contentRect.height - widget.icon.height)/2 );
 
             canvas.drawImage( VG.Core.Point( x, y ), widget.icon );
-        } 
-    }  else {
-        // --- Text
-        canvas.pushFont( this.skin.ToolButton.Font );
-        canvas.drawTextRect( widget.text, widget.contentRect, this.skin.ToolButton.TextColor, 1, 1 );
-        canvas.popFont();
+        }
     }
 
     canvas.popClipRect();
 
     if ( widget.disabled ) canvas.setAlpha( 1 );
 };
+
 
 // --- ToolSeparator
 
@@ -2169,23 +2740,23 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
 
             // --- Draw all childs
 
-            for ( var i=0; i < item.children.length; ++i ) 
+            for ( var i=0; i < item.children.length; ++i )
             {
                 var child=item.children[i];
 
                 ++widget._itemsCount;
 
-                if ( 1 )//paintRect.y + this.itemHeight < ( this.rect.y+this.rect.height-2 ) ) 
-                {                
+                if ( 1 )//paintRect.y + this.itemHeight < ( this.rect.y+this.rect.height-2 ) )
+                {
                     if ( 1 )//this._itemsCount >= this.offset )
-                    {                
+                    {
                         widget.items.push( VG.UI.TreeWidgetItem( child, paintRect ) );
-                        drawItem( style, child, widget.controller.isSelected( child ), paintRect, selBackgroundRect );  
+                        drawItem( style, child, widget.controller.isSelected( child ), paintRect, selBackgroundRect );
 
-                        paintRect.y+=itemHeight + widget.spacing;    
+                        paintRect.y+=itemHeight + widget.spacing;
                     }
 
-                    if ( child.children && child.open ) 
+                    if ( child.children && child.open )
                         drawItemChildren( style, paintRect, child, selBackgroundRect );
                 }
             }
@@ -2193,7 +2764,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
             paintRect.x=oldXOffset;
             paintRect.width=oldWidth;
         }
-    };
+    }
 
     // ---  drawItem
 
@@ -2218,7 +2789,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
 
                 style.rect4.x=rect.x + 9; style.rect4.width=2;
                 style.rect4.y=rect.y + Math.floor( (itemHeight-10)/2); style.rect4.height=10;
-                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect4, style.skin.TreeWidget.ChildControlColor );                
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect4, style.skin.TreeWidget.ChildControlColor );
             }
         } else {
             if ( indentTop ) style.rect3.add( style.skin.TreeWidget.ChildIndent, 0, -style.skin.TreeWidget.ChildIndent, 0, style.rect3 );
@@ -2242,17 +2813,55 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
 
         if ( widget.paintItemCallback ) {
             widget.paintItemCallback( canvas, item, style.rect3, isSelected );
-        } else {
+        } else
+        {
+            if ( !widget.columns.length ) {
+                style.rect3.x+=7; style.rect3.width-=7;
+                canvas.drawTextRect( item.text, style.rect3, style.skin.TreeWidget.TextColor, 0, 1 );
+            } else
+            {
+                let offset = 0;
+                for ( let i = 0; i < widget.columns.length; ++i )
+                {
+                    let column = widget.columns[i];
 
-            style.rect3.x+=7; style.rect3.width-=7;            
-            canvas.drawTextRect( item.text, style.rect3, style.skin.TreeWidget.TextColor, 0, 1 );  
+                    if ( offset > rect.width )
+                        break;
+
+                    let width = Math.floor( rect.width *  column.width / 100 );
+
+                    if ( offset + width > rect.width )
+                        width -= (offset + width) - rect.width;
+
+                    style.rect3.x = rect.x + offset + 7;
+                    style.rect3.width = width - 7;
+
+                    canvas.drawTextRect( item[column.itemName], style.rect3, style.skin.TreeWidget.TextColor, i === 0 ? 0 : 1, 1 );
+                    offset += width;
+                }
+            }
         }
-    };
+    }
 
     // ---
 
     if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
     widget.contentRect.set( widget.rect );
+
+    // --- Header
+
+    let headerHeight = this.skin.TreeWidget.Header.Height;
+    if ( widget.columns.length ) {
+
+        this.rect3.copy( widget.rect );
+        this.rect3.height = headerHeight;
+
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect3, this.skin.TreeWidget.Header.BorderColor );
+        canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect3.shrink(1,1), this.skin.TreeWidget.Header.BackColor1, this.skin.TreeWidget.Header.BackColor2 );
+
+        widget.contentRect.y += headerHeight;
+        widget.contentRect.height -= headerHeight;
+    }
 
     // --- Border
 
@@ -2262,7 +2871,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleCorners, widget.contentRect, this.skin.TreeWidget.FocusBorderColor );
 
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.TreeWidget.BorderColor );
-        widget.contentRect.shrink( 1, 1, widget.contentRect );        
+        widget.contentRect.shrink( 1, 1, widget.contentRect );
     } else
     {
         widget.contentRect.shrink( 1, 1, widget.contentRect );
@@ -2271,20 +2880,21 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
         widget.contentRect.shrink( 1, 1, widget.contentRect );
     }
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.TreeWidget.BackColor );    
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.TreeWidget.BackColor );
 
     // ---
 
-    if ( !widget.controller || !widget.controller.length ) return;
+    // if ( !widget.controller || !widget.controller.length ) return;
+    if ( !widget.controller ) return;
 
     if ( widget.toolLayout.length > 0 ) widget.contentRect.height-=this.skin.ListWidget.ToolLayoutHeight;
 
     canvas.pushClipRect( widget.contentRect );
 
-    widget.contentRect.x+=this.skin.ListWidget.Margin.left; 
+    widget.contentRect.x+=this.skin.ListWidget.Margin.left;
     widget.contentRect.y+=this.skin.ListWidget.Margin.top;
-    widget.contentRect.width-=2*this.skin.ListWidget.Margin.right; 
-    widget.contentRect.height-=2*this.skin.ListWidget.Margin.bottom; 
+    widget.contentRect.width-=2*this.skin.ListWidget.Margin.right;
+    widget.contentRect.height-=2*this.skin.ListWidget.Margin.bottom;
 
     if ( !widget.verified || canvas.hasBeenResized )
         widget.verifyScrollbar();
@@ -2296,7 +2906,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
     widget.items=null;
     widget.items=[];
     widget._itemsCount=-1;
-    
+
     var selBackgroundRect=this.rect1; this.rect1.copy( widget.contentRect );
     if ( widget.needsVScrollbar ) selBackgroundRect.width-=this.skin.ScrollBar.Size;
 
@@ -2314,33 +2924,54 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
 
     var indentTop=false;
 
-    for ( var i=0; i < widget.controller.length; ++i ) 
+    for ( var i=0; i < widget.controller.length; ++i )
     {
         // --- Iterate and Draw the Top Level Items
 
-        var item=widget.controller.at( i );
+        item=widget.controller.at( i );
         if ( item.children ) { indentTop=true; break; }
     }
 
     canvas.pushFont( this.skin.TreeWidget.Font );
 
-    // --- 
+    // --- Calc Column Dimensions
 
-    for ( var i=0; i < widget.controller.length; ++i ) 
+    let offset = 0;
+    for ( let i = 0; i < widget.columns.length; ++i )
+    {
+        let column = widget.columns[i];
+
+        if ( offset > paintRect.width )
+            break;
+
+        let width = Math.floor( paintRect.width *  column.width / 100 );
+
+        if ( offset + width > paintRect.width )
+            width -= (offset + width) - paintRect.width;
+
+        column.pixelOffset = offset;
+        column.pixelWidth = width;
+
+        offset += width;
+    }
+
+    // ---
+
+    for ( i=0; i < widget.controller.length; ++i )
     {
         // --- Iterate and Draw the Top Level Items
-    
-        var item=widget.controller.at( i ) ;
+
+        item=widget.controller.at( i ) ;
         ++widget._itemsCount;
 
-        if ( 1 )//paintRect.y + this.itemHeight <= this.contentRect.bottom() ) 
+        if ( 1 )//paintRect.y + this.itemHeight <= this.contentRect.bottom() )
         {
             if ( 1 )//this._itemsCount >= this.offset )
             {
                 widget.items.push( VG.UI.TreeWidgetItem( item, paintRect ) );
                 drawItem( this, item, widget.controller.isSelected( item ), paintRect, selBackgroundRect, indentTop );
 
-                paintRect.y+=itemHeight + widget.spacing;    
+                paintRect.y+=itemHeight + widget.spacing;
             }
 
             if ( item.children && item.open ) drawItemChildren( this, paintRect, item, selBackgroundRect );
@@ -2349,6 +2980,50 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
             paintRect.width=oldWidth;
         } else break;
     }
+
+    canvas.popClipRect();
+
+    // --- Columns Separator
+
+    offset = 0;
+    for ( let i = 0; i < widget.columns.length; ++i )
+    {
+        let column = widget.columns[i];
+
+        if ( offset > paintRect.width )
+            break;
+
+        let width = column.pixelWidth;
+
+        this.rect3.x = paintRect.x + offset;
+        this.rect3.y = widget.rect.y;
+        this.rect3.width = width;
+        this.rect3.height = headerHeight;
+
+        if ( !column.hAlign ) {
+            this.rect3.x += 7;
+            this.rect3.width -= 7;
+        }
+
+        canvas.drawTextRect( column.name, this.rect3, this.skin.TreeWidget.Header.TextColor, column.hAlign, 1 );
+
+        if ( i > 0 ) {
+            this.rect3.x = paintRect.x + offset;
+            this.rect3.y = widget.contentRect.y;
+            this.rect3.width = 1;
+            this.rect3.height = widget.contentRect.height;
+
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect3, this.skin.TreeWidget.Header.BorderColor );
+
+            this.rect3.y = widget.rect.y;
+            this.rect3.height = headerHeight;
+
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect3, this.skin.TreeWidget.Header.BorderColor );
+        }
+        offset += width;
+    }
+
+    canvas.popFont();
 
     if ( widget.needsVScrollbar ) {
         widget.vScrollbar.rect=VG.Core.Rect( widget.rect.right() - this.skin.ScrollBar.Size - 3, widget.contentRect.y, this.skin.ScrollBar.Size, widget.contentRect.height );
@@ -2359,17 +3034,14 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
 
         widget.vScrollbar.setScrollBarContentSize( widget.totalItemHeight, widget.contentRect.height );
         widget.vScrollbar.paintWidget( canvas );
-    }    
-
-    canvas.popFont();
-    canvas.popClipRect();
+    }
 
     // --- Draw Tools
 
     if ( widget.toolLayout.length > 0 ) {
         this.rect1.copy( widget.rect ); this.rect1.shrink( 2, 2, this.rect1 );
         this.rect1.y+=this.rect1.height - this.skin.ListWidget.ToolLayoutHeight;
-        this.rect2.copy( this.rect1 );    
+        this.rect2.copy( this.rect1 );
         this.rect1.height=1;//this.skin.ListWidget.ToolLayoutHeight;
 
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ListWidget.ToolTopBorderColor );
@@ -2388,7 +3060,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
     }
 
     if ( widget.disabled ) canvas.setAlpha( 1 );
-}
+};
 
 // --- drawWindow
 
@@ -2422,7 +3094,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawWindow=function( widget, canvas )
 
     // --- Close Button
 
-    if ( widget.supportsClose ) 
+    if ( widget.supportsClose )
     {
         this.rect2.x+=this.rect2.width-21; this.rect2.y+=4;
         this.rect2.width=16; this.rect2.height=16;
@@ -2444,6 +3116,64 @@ VG.UI.VisualGraphicsStyle.prototype.drawWindow=function( widget, canvas )
     // ---
 
     widget.contentRect.set( widget.rect.x+2, widget.rect.y + this.skin.Window.HeaderHeight + 2, widget.rect.width-2, widget.rect.height - this.skin.Window.HeaderHeight );
+};
+
+VG.UI.VisualGraphicsStyle.prototype.drawRoundedWindow=function( widget, canvas )
+{
+    let rect=widget.rect;
+
+    canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, rect, this.skin.RoundedWindow.BorderColor1 );
+    canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, rect.shrink( 1, 1 ), this.skin.RoundedWindow.BorderColor2 );
+
+    // ctx.fillStyle = this.skin.RoundedWindow.BackColor.toCanvasStyle();
+    this.rect1.set( rect.x + 1, rect.y + this.skin.RoundedWindow.HeaderHeight, rect.width - 2, rect.height - this.skin.RoundedWindow.HeaderHeight - this.skin.RoundedWindow.FooterHeight );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.RoundedWindow.BackColor );
+
+    canvas.pushFont( this.skin.Window.HeaderFont );
+    this.rect1.set( rect.x + 12, rect.y + 1, rect.width - 2, this.skin.RoundedWindow.HeaderHeight );
+    canvas.drawTextRect( widget.text, this.rect1, this.skin.Window.HeaderTextColor, 0, 1 );
+    canvas.popFont();
+
+    // --- Header Separator
+    this.rect1.set( rect.x + 1, rect.y + this.skin.RoundedWindow.HeaderHeight, rect.width - 2, 1 );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.RoundedWindow.SepColor2 );
+
+    this.rect1.set( rect.x + 1, rect.y + this.skin.RoundedWindow.HeaderHeight + 1, rect.width - 2, 1 );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.RoundedWindow.SepColor1 );
+
+    // --- Footer Separator
+    this.rect1.set( rect.x + 1, rect.y + rect.height - this.skin.RoundedWindow.FooterHeight - 1, rect.width - 2, 1 );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.RoundedWindow.SepColor2 );
+
+    this.rect1.set( rect.x + 1, rect.y + rect.height - this.skin.RoundedWindow.FooterHeight, rect.width - 2, 1 );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.RoundedWindow.SepColor1 );
+
+    // --- Close Button
+
+    if ( widget.supportsClose ) {
+        // --- Close Button
+
+        this.rect2.x=widget.rect.right() - 10 - 10;
+        this.rect2.y=widget.rect.y + 6;
+        this.rect2.width=this.rect2.height=11;
+
+        widget.closeRect.copy( this.rect2 );
+
+        var svg=VG.Utils.getSVGByName( "glyphs.svg" );
+        if ( svg ) {
+            svgGroup=svg.getGroupByName( "Close" );
+
+            let color = this.skin.Widget.TextColor;
+            if ( this.rect2.contains( VG.context.workspace.mousePos ) )
+                color = this.skin.ToolSettings.HoverBackColor;
+
+            canvas.drawSVG( svg, svgGroup, this.rect2, color );
+        }
+    }
+
+    // ---
+
+    widget.contentRect.set( widget.rect.x+2, widget.rect.y + this.skin.RoundedWindow.HeaderHeight + 2, widget.rect.width-2, widget.rect.height - this.skin.RoundedWindow.FooterHeight );
 };
 
 // ----------------------------- TEMPORARY, HAS TO BE REMOVED
@@ -2493,22 +3223,22 @@ VG.UI.VisualGraphicsStyle.prototype.drawTableWidgetHeaderBackground=function( ca
     this.rect1.x+=1; this.rect1.y+=1;
     this.rect1.width-=2; this.rect1.height-=2;
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect1, this.skin.TableWidget.Header.GradientColor1, this.skin.TableWidget.Header.GradientColor2 );    
+    canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect1, this.skin.TableWidget.Header.GradientColor1, this.skin.TableWidget.Header.GradientColor2 );
 };
 
 VG.UI.VisualGraphicsStyle.prototype.drawTableWidgetSeparator=function( canvas, separator )
 {
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( separator.contentRect.x, separator.contentRect.y, 1, separator.contentRect.height ), 
-        this.skin.TableWidget.Header.SeparatorColor );    
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( separator.contentRect.x, separator.contentRect.y, 1, separator.contentRect.height ),
+        this.skin.TableWidget.Header.SeparatorColor );
 };
 
 VG.UI.VisualGraphicsStyle.prototype.drawTableWidgetHeaderSeparator=function( canvas, widget )
-{    
+{
 };
 
 VG.UI.VisualGraphicsStyle.prototype.drawTableWidgetFooterSeparator=function( canvas, widget )
 {
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( widget.footerLayout.rect.x, widget.footerLayout.rect.y - this.skin.TableWidget.Footer.SeparatorHeight/2, 
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( widget.footerLayout.rect.x, widget.footerLayout.rect.y - this.skin.TableWidget.Footer.SeparatorHeight/2,
         widget.footerLayout.rect.width, 1 ), this.skin.TableWidget.Header.SeparatorColor );
 };
 

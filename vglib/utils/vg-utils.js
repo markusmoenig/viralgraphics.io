@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,34 +21,34 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-VG.Utils.typedArrayToEMS=function( jsArray ) 
+VG.Utils.typedArrayToEMS=function( jsArray )
 {
     var numBytes= jsArray.length * jsArray.BYTES_PER_ELEMENT;
-        
+
     // malloc enough space for the data
     var ptr= Module._malloc(numBytes);
 
     // get a bytes-wise view on the newly allocated buffer
     var heapBytes= new Uint8Array(Module.HEAPU8.buffer, ptr, numBytes);
-        
+
     // copy data into heapBytes
     heapBytes.set(new Uint8Array(jsArray.buffer));
-        
+
     return { offset : heapBytes.byteOffset, length : jsArray.length };
     // call the c function which should modify the vals
     // my_emscripten_func(heapBytes.byteOffset, jsArray.length);
-        
+
     // print out the results of the c function
     // var heapFloats= new Float32Array(heapBytes.buffer, heapBytes.byteOffset, floatData.length);
     // for (i= 0; i < heapFloats.length; i++) {
         // console.log(i + ": " + heapFloats[i]);
     // }
-        
-    // free the heap buffer
-    // Module._free(heapBytes.byteOffset);    
-}
 
-VG.Utils.loadAppImage=function( imageName ) 
+    // free the heap buffer
+    // Module._free(heapBytes.byteOffset);
+};
+
+VG.Utils.loadAppImage=function( imageName )
 {
     VG.sendBackendRequest( "/images/" + VG.AppSettings.name + "/" + imageName, {}, function( response ) {
 
@@ -58,39 +58,39 @@ VG.Utils.loadAppImage=function( imageName )
         image.name=data.name;
 
         VG.decompressImageData( data.content, image );
-        VG.Core.imagePool.addImage( image );    
+        VG.Core.imagePool.addImage( image );
         VG.update();
 
     }.bind( this ), "GET" );
-}
+};
 
 VG.Utils.bytesToSize = function(bytes) {
    var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-   if (bytes == 0) return '0 Byte';
+   if (bytes === 0) return '0 Byte';
    var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
    return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
 };
 
 VG.Utils.numberWithCommas = function(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
+};
 
 VG.Utils.getImageByName=function( name )
 {
-    for( var i=0; i < VG.context.imagePool.images.length; ++i ) {
+    for( i=0; i < VG.context.imagePool.images.length; ++i ) {
         if ( VG.context.imagePool.images[i].name === name )
             return VG.context.imagePool.images[i];
     }
 
     var prefixName=VG.UI.stylePool.current.skin.prefix + name;
-    for( var i=0; i < VG.context.imagePool.images.length; ++i ) {
+    for( i=0; i < VG.context.imagePool.images.length; ++i ) {
         if ( VG.context.imagePool.images[i].name === prefixName )
             return VG.context.imagePool.images[i];
     }
 
     if ( VG.UI.stylePool.current.skin.fallbackPrefix ) {
         prefixName=VG.UI.stylePool.current.skin.fallbackPrefix + name;
-        for( var i=0; i < VG.context.imagePool.images.length; ++i ) {
+        for( i=0; i < VG.context.imagePool.images.length; ++i ) {
             if ( VG.context.imagePool.images[i].name == prefixName )
                 return VG.context.imagePool.images[i];
         }
@@ -103,20 +103,20 @@ VG.Utils.getSVGByName=function( name )
 {
     if ( !VG.Core.SVG ) return null;
 
-    for( var i=0; i < VG.context.svgPool.svgs.length; ++i ) {
+    for( i=0; i < VG.context.svgPool.svgs.length; ++i ) {
         if ( VG.context.svgPool.svgs[i].name === name )
             return VG.context.svgPool.svgs[i];
     }
 
     var prefixName=VG.UI.stylePool.current.skin.prefix + name;
-    for( var i=0; i < VG.context.svgPool.svgs.length; ++i ) {
+    for( i=0; i < VG.context.svgPool.svgs.length; ++i ) {
         if ( VG.context.svgPool.svgs[i].name === prefixName )
             return VG.context.svgPool.svgs[i];
     }
 
     if ( VG.UI.stylePool.current.skin.fallbackPrefix ) {
         prefixName=VG.UI.stylePool.current.skin.fallbackPrefix + name;
-        for( var i=0; i < VG.context.svgPool.svgs.length; ++i ) {
+        for( i=0; i < VG.context.svgPool.svgs.length; ++i ) {
             if ( VG.context.svgPool.svgs[i].name == prefixName )
                 return VG.context.svgPool.svgs[i];
         }
@@ -228,11 +228,11 @@ VG.Utils.addDefaultViewMenu=function( menubar )
 {
     var viewMenu=menubar.addMenu( "View" );
 
-    for( var i=0; i < VG.UI.stylePool.styles.length; ++i ) 
+    for( var i=0; i < VG.UI.stylePool.styles.length; ++i )
     {
         var style=VG.UI.stylePool.styles[i];
 
-        for( var s=0; s < style.skins.length; ++s ) 
+        for( var s=0; s < style.skins.length; ++s )
         {
             var skin=style.skins[s];
 
@@ -260,17 +260,17 @@ VG.Utils.addDefaultViewMenu=function( menubar )
 
 VG.Utils.addDefaultQuickViewMenu=function()
 {
-    var viewItem=VG.context.workspace.addQuickMenuItem( "SKINS" );    
+    var viewItem=VG.context.workspace.addQuickMenuItem( "SKINS" );
+    viewItem.statusTip = "Change the application skin (skins change the colors and style of the user interface).";
 
     var style=VG.UI.stylePool.current;
 
-    for( var s=0; s < style.skins.length; ++s ) 
+    for( var s=0; s < style.skins.length; ++s )
     {
         var skin=style.skins[s];
 
         var skinItem=viewItem.addItem( skin.name.toUpperCase(), function() {
             VG.context.workspace.switchToStyle( this.style, this.skin );
-            VG.log( "switched to", this.style.name );
         } );
 
         if ( style === VG.UI.stylePool.current && skin === VG.UI.stylePool.current.skin )
@@ -299,12 +299,12 @@ VG.Utils.ensureRedrawWithinMs=function( ms )
     var redrawList=VG.context.workspace.redrawList;
     var time=Date.now();
 
-    for( var i=0; i < redrawList.length; ++i ) 
-    {            
+    for( var i=0; i < redrawList.length; ++i )
+    {
         if ( ( redrawList[i] + 1000.0/60.0 ) >= time && redrawList[i] < ( time + ms ) )
             return;
     }
-    redrawList.push( time + ms - 1000.0/60.0 );    
+    redrawList.push( time + ms - 1000.0/60.0 );
 };
 
 VG.Utils.fileNameFromPath=function( path, noSuffix )
@@ -317,13 +317,24 @@ VG.Utils.fileNameFromPath=function( path, noSuffix )
     return rc;
 };
 
+VG.Utils.suffixFromPath=function( path )
+{
+    var rc=path.replace(/^.*(\\|\/|\:)/, '' );
+
+    if ( rc.indexOf( '.' ) !== -1 )
+        rc=rc.split( '.' )[1];
+    else rc="";
+
+    return rc.toUpperCase();
+};
+
 VG.Utils.stripFileNameFromPath=function(path) {
   var dirPart;
   path.replace(/^(.*(\\|\/|\:))?([^/]*)$/, function(_, dir, file) {
     dirPart = dir;
   });
   return dirPart;
-}
+};
 
 VG.Utils.createMaterial=function( className )
 {
@@ -342,11 +353,9 @@ VG.Utils.materialOutputFromGraph=function( graphData )
     if ( terminal ) {
         var vector=new VG.Math.Vector3();
         mtl=terminal.onCall( vector );
-        delete vector;
-    }    
+    }
 
     graph.clear();
-    delete graph;
 
     return mtl;
 };
@@ -354,6 +363,89 @@ VG.Utils.materialOutputFromGraph=function( graphData )
 VG.Utils.addSingleShotCallback=function( func )
 {
     VG.context.workspace.singleShotCallbacks.push( func );
+};
+
+VG.Utils.canvasToImage=function( ctx )
+{
+    var width=ctx.canvas.width, height=ctx.canvas.height;
+
+    var image = VG.Core.Image( { width : width, height : height, forcePowerOfTwo : false } );
+    var imageData = image.data;
+    var pixelData = ctx.getImageData( 0, 0, width, height );
+    var data = pixelData.data;
+
+    for ( var h=0; h < height; ++h )
+    {
+        var sourceOffset = h * pixelData.width * 4;
+        var destOffset = h * image.modulo;
+
+        for ( var w=0; w < width; ++w ) {
+            imageData[destOffset++] = data[sourceOffset++];
+            imageData[destOffset++] = data[sourceOffset++];
+            imageData[destOffset++] = data[sourceOffset++];
+            imageData[destOffset++] = data[sourceOffset++];
+        }
+    }
+
+    return image;
+};
+
+/**
+ * Converts the given {VG.Core.Image} to an HTML5 image usable in the 2D Canvas.
+ * @param {VG.Core.Image} image - The image to convert
+ * @returns An HTML5 image
+ */
+
+VG.Utils.imageToHTML5Image=function( image )
+{
+    let textureCanvas=document.getElementById( 'textureCanvas' );
+    let ctx=textureCanvas.getContext('2d');
+
+    ctx.canvas.width=image.width;
+    ctx.canvas.height=image.height;
+
+    ctx.putImageData( new ImageData( new Uint8ClampedArray( image.data ), image.width, image.height ), 0, 0);
+
+    let imageEl = new Image();
+    imageEl.src = textureCanvas.toDataURL();
+    return imageEl;
+};
+
+/**
+ * Converts an {VG.RenderTarget} to an HTML5 image usable in the 2D canvas.
+ * @param {VG.RenderTarget} renderTarget - The renderTarget to convert
+ * @returns An HTML5 image
+ */
+
+VG.Utils.renderTargetToHTML5Image=function( renderTarget )
+{
+    let image = VG.Utils.renderTargetToImage( renderTarget, undefined, true );
+    return VG.Utils.imageToHTML5Image( image );
+};
+
+VG.Utils.svgToImage=function( { data, width, height, callback } = {} )
+{
+    var DOMURL = window.URL || window.webkitURL || window;
+
+    var img = new Image();
+    var svg = new Blob( [data], {type: 'image/svg+xml'});
+    var url = DOMURL.createObjectURL(svg);
+
+    img.onload = function () {
+
+        let textureCanvas=document.getElementById( 'textureCanvas' );
+        let ctx=textureCanvas.getContext('2d');
+
+        ctx.canvas.width=width;
+        ctx.canvas.height=height;
+
+        ctx.drawImage( img, 0, 0 );
+        DOMURL.revokeObjectURL(url);
+
+        callback( VG.Utils.canvasToImage( ctx ) );
+    };
+
+    img.src = url;
 };
 
 VG.Utils.renderTargetToImage=function( renderTarget, image, wait )
@@ -364,7 +456,7 @@ VG.Utils.renderTargetToImage=function( renderTarget, image, wait )
     var frameW = renderTarget.getRealWidth();
     var frameH = renderTarget.getRealHeight();
 
-    if ( !image ) 
+    if ( !image )
         image = new VG.Core.Image( width, height );
 
     renderTarget.bind();
@@ -375,65 +467,24 @@ VG.Utils.renderTargetToImage=function( renderTarget, image, wait )
         renderTarget.checkStatusComplete();
 
     return image;
-}
-
-VG.Utils.textureToImage=function( texture, image )
-{
-    /** Creates an VG.Core.Image for a given texture or rendertarget.
-      * @param {VG.Texture|VG.RenderTarget} The texture or rendertarget to copy.
-      * @param {VG.Core.Image} Optional, if you want to use an existing VG.Core.Image as the target, you can pass it here, otherwise a new one will be created.
-      * @returns {VG.Core.Image}
-      */
-
-    var renderTarget=new VG.RenderTarget();
-
-	var frameW = texture.getRealWidth();
-	var frameH = texture.getRealHeight();
-
-	renderTarget.resetSize(frameW, frameH);
-	renderTarget.setViewportEx(0, 0, frameW, frameH);
-    renderTarget.imageWidth=texture.getWidth();
-    renderTarget.imageHeight=texture.getHeight();
-
-    VG.context.workspace.canvas.flush();
-
-    renderTarget.bind();
-    renderTarget.clear( true );
-    
-    VG.Renderer().drawQuad(texture, frameW, frameH, 0, 0, 1.0, VG.Core.Size(frameW, frameH));
-
-	// read to image.
-	var width = renderTarget.getWidth();
-	var height = renderTarget.getHeight();
-
-    var dataSize=width * height * 4;
-    var data=new Uint8Array( dataSize );
-    renderTarget.fillPixelBuffer( undefined, data );
-
-    if (!image)
-        image = VG.Core.Image(width, height);
-
-    if ( renderTarget.checkStatusComplete() ) {
-
-	   var ip = 0;
-	   for (var y = height-1; y >= 0; y--)
-	   {
-            for (var x = 0; x < width; x++)
-            {
-                image.setPixelRGBA(x, y, data[ip++], data[ip++], data[ip++], data[ip++] );
-            }
-		}
-	}
-
-    delete data;
-    data=null;
-
-	//
-    renderTarget.unbind();	
-	renderTarget.dispose();
-
-    return image;
 };
+
+/**
+ * Creates a 4 digit token consisting of alphanumeric characters.
+ * @returns {string} The created token.
+ */
+
+VG.Utils.createToken = function()
+{
+   let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+   let token = [], rnd = Math.random, r;
+
+   for (let i = 0; i < 4; i++) {
+        r = 0 | rnd()*chars.length;
+        token[i] = chars[r];
+   }
+   this.token = token.join('');
+}
 
 // --- Great and fast Polygon Triangulation, https://github.com/mapbox/earcut
 
@@ -457,62 +508,52 @@ THIS SOFTWARE.
 
 // create a circular doubly linked list from polygon points in the specified winding order
 function linkedList(data, start, end, dim, clockwise) {
-    var sum = 0,
-        i, j, last;
+    var i, last;
 
-    // calculate original winding order of a polygon ring
-    for (i = start, j = end - dim; i < end; i += dim) {
-        sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
-        j = i;
+    if (clockwise === (signedArea(data, start, end, dim) > 0)) {
+        for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last);
+    } else {
+        for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
     }
 
-    // link points into circular doubly-linked list in the specified winding order
-    if (clockwise === (sum > 0)) {
-        for (i = start; i < end; i += dim) last = insertNode(i, last);
-    } else {
-        for (i = end - dim; i >= start; i -= dim) last = insertNode(i, last);
+    if (last && equals(last, last.next)) {
+        removeNode(last);
+        last = last.next;
     }
 
     return last;
 }
 
 // eliminate colinear or duplicate points
-function filterPoints(data, start, end) {
+function filterPoints(start, end) {
+    if (!start) return start;
     if (!end) end = start;
 
-    var node = start,
+    var p = start,
         again;
     do {
         again = false;
 
-        if (!node.steiner && (equals(data, node.i, node.next.i) || orient(data, node.prev.i, node.i, node.next.i) === 0)) {
-
-            // remove node
-            node.prev.next = node.next;
-            node.next.prev = node.prev;
-
-            if (node.prevZ) node.prevZ.nextZ = node.nextZ;
-            if (node.nextZ) node.nextZ.prevZ = node.prevZ;
-
-            node = end = node.prev;
-
-            if (node === node.next) return null;
+        if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
+            removeNode(p);
+            p = end = p.prev;
+            if (p === p.next) return null;
             again = true;
 
         } else {
-            node = node.next;
+            p = p.next;
         }
-    } while (again || node !== end);
+    } while (again || p !== end);
 
     return end;
 }
 
 // main ear slicing loop which triangulates a polygon (given as a linked list)
-function earcutLinked(data, ear, triangles, dim, minX, minY, size, pass) {
+function earcutLinked(ear, triangles, dim, minX, minY, size, pass) {
     if (!ear) return;
 
     // interlink polygon nodes in z-order
-    if (!pass && minX !== undefined) indexCurve(data, ear, minX, minY, size);
+    if (!pass && size) indexCurve(ear, minX, minY, size);
 
     var stop = ear,
         prev, next;
@@ -522,18 +563,13 @@ function earcutLinked(data, ear, triangles, dim, minX, minY, size, pass) {
         prev = ear.prev;
         next = ear.next;
 
-        if (isEar(data, ear, minX, minY, size)) {
+        if (size ? isEarHashed(ear, minX, minY, size) : isEar(ear)) {
             // cut off the triangle
             triangles.push(prev.i / dim);
             triangles.push(ear.i / dim);
             triangles.push(next.i / dim);
 
-            // remove ear node
-            next.prev = prev;
-            prev.next = next;
-
-            if (ear.prevZ) ear.prevZ.nextZ = ear.nextZ;
-            if (ear.nextZ) ear.nextZ.prevZ = ear.prevZ;
+            removeNode(ear);
 
             // skipping the next vertice leads to less sliver triangles
             ear = next.next;
@@ -548,16 +584,16 @@ function earcutLinked(data, ear, triangles, dim, minX, minY, size, pass) {
         if (ear === stop) {
             // try filtering points and slicing again
             if (!pass) {
-                earcutLinked(data, filterPoints(data, ear), triangles, dim, minX, minY, size, 1);
+                earcutLinked(filterPoints(ear), triangles, dim, minX, minY, size, 1);
 
             // if this didn't work, try curing all small self-intersections locally
             } else if (pass === 1) {
-                ear = cureLocalIntersections(data, ear, triangles, dim);
-                earcutLinked(data, ear, triangles, dim, minX, minY, size, 2);
+                ear = cureLocalIntersections(ear, triangles, dim);
+                earcutLinked(ear, triangles, dim, minX, minY, size, 2);
 
             // as a last resort, try splitting the remaining polygon into two
             } else if (pass === 2) {
-                splitEarcut(data, ear, triangles, dim, minX, minY, size);
+                splitEarcut(ear, triangles, dim, minX, minY, size);
             }
 
             break;
@@ -566,163 +602,108 @@ function earcutLinked(data, ear, triangles, dim, minX, minY, size, pass) {
 }
 
 // check whether a polygon node forms a valid ear with adjacent nodes
-function isEar(data, ear, minX, minY, size) {
+function isEar(ear) {
+    var a = ear.prev,
+        b = ear,
+        c = ear.next;
 
-    var a = ear.prev.i,
-        b = ear.i,
-        c = ear.next.i,
+    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
 
-        ax = data[a], ay = data[a + 1],
-        bx = data[b], by = data[b + 1],
-        cx = data[c], cy = data[c + 1],
+    // now make sure we don't have other points inside the potential ear
+    var p = ear.next.next;
 
-        abd = ax * by - ay * bx,
-        acd = ax * cy - ay * cx,
-        cbd = cx * by - cy * bx,
-        A = abd - acd - cbd;
+    while (p !== ear.prev) {
+        if (pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+            area(p.prev, p, p.next) >= 0) return false;
+        p = p.next;
+    }
 
-    if (A <= 0) return false; // reflex, can't be an ear
+    return true;
+}
 
-    // now make sure we don't have other points inside the potential ear;
-    // the code below is a bit verbose and repetitive but this is done for performance
+function isEarHashed(ear, minX, minY, size) {
+    var a = ear.prev,
+        b = ear,
+        c = ear.next;
 
-    var cay = cy - ay,
-        acx = ax - cx,
-        aby = ay - by,
-        bax = bx - ax,
-        i, px, py, s, t, k, node;
+    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
 
-    // if we use z-order curve hashing, iterate through the curve
-    if (minX !== undefined) {
+    // triangle bbox; min & max are calculated like this for speed
+    var minTX = a.x < b.x ? (a.x < c.x ? a.x : c.x) : (b.x < c.x ? b.x : c.x),
+        minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),
+        maxTX = a.x > b.x ? (a.x > c.x ? a.x : c.x) : (b.x > c.x ? b.x : c.x),
+        maxTY = a.y > b.y ? (a.y > c.y ? a.y : c.y) : (b.y > c.y ? b.y : c.y);
 
-        // triangle bbox; min & max are calculated like this for speed
-        var minTX = ax < bx ? (ax < cx ? ax : cx) : (bx < cx ? bx : cx),
-            minTY = ay < by ? (ay < cy ? ay : cy) : (by < cy ? by : cy),
-            maxTX = ax > bx ? (ax > cx ? ax : cx) : (bx > cx ? bx : cx),
-            maxTY = ay > by ? (ay > cy ? ay : cy) : (by > cy ? by : cy),
+    // z-order range for the current triangle bbox;
+    var minZ = zOrder(minTX, minTY, minX, minY, size),
+        maxZ = zOrder(maxTX, maxTY, minX, minY, size);
 
-            // z-order range for the current triangle bbox;
-            minZ = zOrder(minTX, minTY, minX, minY, size),
-            maxZ = zOrder(maxTX, maxTY, minX, minY, size);
+    // first look for points inside the triangle in increasing z-order
+    var p = ear.nextZ;
 
-        // first look for points inside the triangle in increasing z-order
-        node = ear.nextZ;
+    while (p && p.z <= maxZ) {
+        if (p !== ear.prev && p !== ear.next &&
+            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+            area(p.prev, p, p.next) >= 0) return false;
+        p = p.nextZ;
+    }
 
-        while (node && node.z <= maxZ) {
-            i = node.i;
-            node = node.nextZ;
-            if (i === a || i === c) continue;
+    // then look for points in decreasing z-order
+    p = ear.prevZ;
 
-            px = data[i];
-            py = data[i + 1];
-
-            s = cay * px + acx * py - acd;
-            if (s >= 0) {
-                t = aby * px + bax * py + abd;
-                if (t >= 0) {
-                    k = A - s - t;
-                    if ((k >= 0) && ((s && t) || (s && k) || (t && k))) return false;
-                }
-            }
-        }
-
-        // then look for points in decreasing z-order
-        node = ear.prevZ;
-
-        while (node && node.z >= minZ) {
-            i = node.i;
-            node = node.prevZ;
-            if (i === a || i === c) continue;
-
-            px = data[i];
-            py = data[i + 1];
-
-            s = cay * px + acx * py - acd;
-            if (s >= 0) {
-                t = aby * px + bax * py + abd;
-                if (t >= 0) {
-                    k = A - s - t;
-                    if ((k >= 0) && ((s && t) || (s && k) || (t && k))) return false;
-                }
-            }
-        }
-
-    // if we don't use z-order curve hash, simply iterate through all other points
-    } else {
-        node = ear.next.next;
-
-        while (node !== ear.prev) {
-            i = node.i;
-            node = node.next;
-
-            px = data[i];
-            py = data[i + 1];
-
-            s = cay * px + acx * py - acd;
-            if (s >= 0) {
-                t = aby * px + bax * py + abd;
-                if (t >= 0) {
-                    k = A - s - t;
-                    if ((k >= 0) && ((s && t) || (s && k) || (t && k))) return false;
-                }
-            }
-        }
+    while (p && p.z >= minZ) {
+        if (p !== ear.prev && p !== ear.next &&
+            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+            area(p.prev, p, p.next) >= 0) return false;
+        p = p.prevZ;
     }
 
     return true;
 }
 
 // go through all polygon nodes and cure small local self-intersections
-function cureLocalIntersections(data, start, triangles, dim) {
-    var node = start;
+function cureLocalIntersections(start, triangles, dim) {
+    var p = start;
     do {
-        var a = node.prev,
-            b = node.next.next;
+        var a = p.prev,
+            b = p.next.next;
 
-        // a self-intersection where edge (v[i-1],v[i]) intersects (v[i+1],v[i+2])
-        if (a.i !== b.i && intersects(data, a.i, node.i, node.next.i, b.i) &&
-                locallyInside(data, a, b) && locallyInside(data, b, a)) {
+        if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
 
             triangles.push(a.i / dim);
-            triangles.push(node.i / dim);
+            triangles.push(p.i / dim);
             triangles.push(b.i / dim);
 
             // remove two nodes involved
-            a.next = b;
-            b.prev = a;
+            removeNode(p);
+            removeNode(p.next);
 
-            var az = node.prevZ,
-                bz = node.nextZ && node.nextZ.nextZ;
-
-            if (az) az.nextZ = bz;
-            if (bz) bz.prevZ = az;
-
-            node = start = b;
+            p = start = b;
         }
-        node = node.next;
-    } while (node !== start);
+        p = p.next;
+    } while (p !== start);
 
-    return node;
+    return p;
 }
 
 // try splitting polygon into two and triangulate them independently
-function splitEarcut(data, start, triangles, dim, minX, minY, size) {
+function splitEarcut(start, triangles, dim, minX, minY, size) {
     // look for a valid diagonal that divides the polygon into two
     var a = start;
     do {
         var b = a.next.next;
         while (b !== a.prev) {
-            if (a.i !== b.i && isValidDiagonal(data, a, b)) {
+            if (a.i !== b.i && isValidDiagonal(a, b)) {
                 // split the polygon in two by the diagonal
                 var c = splitPolygon(a, b);
 
                 // filter colinear points around the cuts
-                a = filterPoints(data, a, a.next);
-                c = filterPoints(data, c, c.next);
+                a = filterPoints(a, a.next);
+                c = filterPoints(c, c.next);
 
                 // run earcut on each half
-                earcutLinked(data, a, triangles, dim, minX, minY, size);
-                earcutLinked(data, c, triangles, dim, minX, minY, size);
+                earcutLinked(a, triangles, dim, minX, minY, size);
+                earcutLinked(c, triangles, dim, minX, minY, size);
                 return;
             }
             b = b.next;
@@ -741,121 +722,106 @@ function eliminateHoles(data, holeIndices, outerNode, dim) {
         end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
         list = linkedList(data, start, end, dim, false);
         if (list === list.next) list.steiner = true;
-        list = filterPoints(data, list);
-        if (list) queue.push(getLeftmost(data, list));
+        queue.push(getLeftmost(list));
     }
 
-    queue.sort(function (a, b) {
-        return data[a.i] - data[b.i];
-    });
+    queue.sort(compareX);
 
     // process holes from left to right
     for (i = 0; i < queue.length; i++) {
-        eliminateHole(data, queue[i], outerNode);
-        outerNode = filterPoints(data, outerNode, outerNode.next);
+        eliminateHole(queue[i], outerNode);
+        outerNode = filterPoints(outerNode, outerNode.next);
     }
 
     return outerNode;
 }
 
+function compareX(a, b) {
+    return a.x - b.x;
+}
+
 // find a bridge between vertices that connects hole with an outer ring and and link it
-function eliminateHole(data, holeNode, outerNode) {
-    outerNode = findHoleBridge(data, holeNode, outerNode);
+function eliminateHole(hole, outerNode) {
+    outerNode = findHoleBridge(hole, outerNode);
     if (outerNode) {
-        var b = splitPolygon(outerNode, holeNode);
-        filterPoints(data, b, b.next);
+        var b = splitPolygon(outerNode, hole);
+        filterPoints(b, b.next);
     }
 }
 
 // David Eberly's algorithm for finding a bridge between hole and outer polygon
-function findHoleBridge(data, holeNode, outerNode) {
-    var node = outerNode,
-        i = holeNode.i,
-        px = data[i],
-        py = data[i + 1],
-        qMax = -Infinity,
-        mNode, a, b;
+function findHoleBridge(hole, outerNode) {
+    var p = outerNode,
+        hx = hole.x,
+        hy = hole.y,
+        qx = -Infinity,
+        m;
 
     // find a segment intersected by a ray from the hole's leftmost point to the left;
     // segment's endpoint with lesser x will be potential connection point
     do {
-        a = node.i;
-        b = node.next.i;
-
-        if (py <= data[a + 1] && py >= data[b + 1]) {
-            var qx = data[a] + (py - data[a + 1]) * (data[b] - data[a]) / (data[b + 1] - data[a + 1]);
-            if (qx <= px && qx > qMax) {
-                qMax = qx;
-                mNode = data[a] < data[b] ? node : node.next;
+        if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
+            var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
+            if (x <= hx && x > qx) {
+                qx = x;
+                if (x === hx) {
+                    if (hy === p.y) return p;
+                    if (hy === p.next.y) return p.next;
+                }
+                m = p.x < p.next.x ? p : p.next;
             }
         }
-        node = node.next;
-    } while (node !== outerNode);
+        p = p.next;
+    } while (p !== outerNode);
 
-    if (!mNode) return null;
+    if (!m) return null;
 
-    // look for points strictly inside the triangle of hole point, segment intersection and endpoint;
+    if (hx === qx) return m.prev; // hole touches outer segment; pick lower endpoint
+
+    // look for points inside the triangle of hole point, segment intersection and endpoint;
     // if there are no points found, we have a valid connection;
     // otherwise choose the point of the minimum angle with the ray as connection point
 
-    var bx = data[mNode.i],
-        by = data[mNode.i + 1],
-        pbd = px * by - py * bx,
-        pcd = px * py - py * qMax,
-        cpy = py - py,
-        pcx = px - qMax,
-        pby = py - by,
-        bpx = bx - px,
-        A = pbd - pcd - (qMax * by - py * bx),
-        sign = A <= 0 ? -1 : 1,
-        stop = mNode,
+    var stop = m,
+        mx = m.x,
+        my = m.y,
         tanMin = Infinity,
-        mx, my, amx, s, t, tan;
+        tan;
 
-    node = mNode.next;
+    p = m.next;
 
-    while (node !== stop) {
+    while (p !== stop) {
+        if (hx >= p.x && p.x >= mx && hx !== p.x &&
+                pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
 
-        mx = data[node.i];
-        my = data[node.i + 1];
-        amx = px - mx;
+            tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
 
-        if (amx >= 0 && mx >= bx) {
-            s = (cpy * mx + pcx * my - pcd) * sign;
-            if (s >= 0) {
-                t = (pby * mx + bpx * my + pbd) * sign;
-
-                if (t >= 0 && A * sign - s - t >= 0) {
-                    tan = Math.abs(py - my) / amx; // tangential
-                    if (tan < tanMin && locallyInside(data, node, holeNode)) {
-                        mNode = node;
-                        tanMin = tan;
-                    }
-                }
+            if ((tan < tanMin || (tan === tanMin && p.x > m.x)) && locallyInside(p, hole)) {
+                m = p;
+                tanMin = tan;
             }
         }
 
-        node = node.next;
+        p = p.next;
     }
 
-    return mNode;
+    return m;
 }
 
 // interlink polygon nodes in z-order
-function indexCurve(data, start, minX, minY, size) {
-    var node = start;
-
+function indexCurve(start, minX, minY, size) {
+    var p = start;
     do {
-        if (node.z === null) node.z = zOrder(data[node.i], data[node.i + 1], minX, minY, size);
-        node.prevZ = node.prev;
-        node.nextZ = node.next;
-        node = node.next;
-    } while (node !== start);
+        if (p.z === null) p.z = zOrder(p.x, p.y, minX, minY, size);
+        p.prevZ = p.prev;
+        p.nextZ = p.next;
+        p = p.next;
+    } while (p !== start);
 
-    node.prevZ.nextZ = null;
-    node.prevZ = null;
+    p.prevZ.nextZ = null;
+    p.prevZ = null;
 
-    sortLinked(node);
+    sortLinked(p);
 }
 
 // Simon Tatham's linked list merge sort algorithm
@@ -922,14 +888,15 @@ function sortLinked(list) {
 
 // z-order of a point given coords and size of the data bounding box
 function zOrder(x, y, minX, minY, size) {
-    // coords are transformed into (0..1000) integer range
-    x = 1000 * (x - minX) / size;
+    // coords are transformed into non-negative 15-bit integer range
+    x = 32767 * (x - minX) / size;
+    y = 32767 * (y - minY) / size;
+
     x = (x | (x << 8)) & 0x00FF00FF;
     x = (x | (x << 4)) & 0x0F0F0F0F;
     x = (x | (x << 2)) & 0x33333333;
     x = (x | (x << 1)) & 0x55555555;
 
-    y = 1000 * (y - minY) / size;
     y = (y | (y << 8)) & 0x00FF00FF;
     y = (y | (y << 4)) & 0x0F0F0F0F;
     y = (y | (y << 2)) & 0x33333333;
@@ -939,81 +906,79 @@ function zOrder(x, y, minX, minY, size) {
 }
 
 // find the leftmost node of a polygon ring
-function getLeftmost(data, start) {
-    var node = start,
+function getLeftmost(start) {
+    var p = start,
         leftmost = start;
     do {
-        if (data[node.i] < data[leftmost.i]) leftmost = node;
-        node = node.next;
-    } while (node !== start);
+        if (p.x < leftmost.x) leftmost = p;
+        p = p.next;
+    } while (p !== start);
 
     return leftmost;
 }
 
-// check if a diagonal between two polygon nodes is valid (lies in polygon interior)
-function isValidDiagonal(data, a, b) {
-    return a.next.i !== b.i && a.prev.i !== b.i &&
-           !intersectsPolygon(data, a, a.i, b.i) &&
-           locallyInside(data, a, b) && locallyInside(data, b, a) &&
-           middleInside(data, a, a.i, b.i);
+// check if a point lies within a convex triangle
+function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
+    return (cx - px) * (ay - py) - (ax - px) * (cy - py) >= 0 &&
+           (ax - px) * (by - py) - (bx - px) * (ay - py) >= 0 &&
+           (bx - px) * (cy - py) - (cx - px) * (by - py) >= 0;
 }
 
-// winding order of triangle formed by 3 given points
-function orient(data, p, q, r) {
-    var o = (data[q + 1] - data[p + 1]) * (data[r] - data[q]) - (data[q] - data[p]) * (data[r + 1] - data[q + 1]);
-    return o > 0 ? 1 :
-           o < 0 ? -1 : 0;
+// check if a diagonal between two polygon nodes is valid (lies in polygon interior)
+function isValidDiagonal(a, b) {
+    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) &&
+           locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b);
+}
+
+// signed area of a triangle
+function area(p, q, r) {
+    return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
 }
 
 // check if two points are equal
-function equals(data, p1, p2) {
-    return data[p1] === data[p2] && data[p1 + 1] === data[p2 + 1];
+function equals(p1, p2) {
+    return p1.x === p2.x && p1.y === p2.y;
 }
 
 // check if two segments intersect
-function intersects(data, p1, q1, p2, q2) {
-    return orient(data, p1, q1, p2) !== orient(data, p1, q1, q2) &&
-           orient(data, p2, q2, p1) !== orient(data, p2, q2, q1);
+function intersects(p1, q1, p2, q2) {
+    if ((equals(p1, q1) && equals(p2, q2)) ||
+        (equals(p1, q2) && equals(p2, q1))) return true;
+    return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 &&
+           area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
 }
 
 // check if a polygon diagonal intersects any polygon segments
-function intersectsPolygon(data, start, a, b) {
-    var node = start;
+function intersectsPolygon(a, b) {
+    var p = a;
     do {
-        var p1 = node.i,
-            p2 = node.next.i;
-
-        if (p1 !== a && p2 !== a && p1 !== b && p2 !== b && intersects(data, p1, p2, a, b)) return true;
-
-        node = node.next;
-    } while (node !== start);
+        if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
+                intersects(p, p.next, a, b)) return true;
+        p = p.next;
+    } while (p !== a);
 
     return false;
 }
 
 // check if a polygon diagonal is locally inside the polygon
-function locallyInside(data, a, b) {
-    return orient(data, a.prev.i, a.i, a.next.i) === -1 ?
-        orient(data, a.i, b.i, a.next.i) !== -1 && orient(data, a.i, a.prev.i, b.i) !== -1 :
-        orient(data, a.i, b.i, a.prev.i) === -1 || orient(data, a.i, a.next.i, b.i) === -1;
+function locallyInside(a, b) {
+    return area(a.prev, a, a.next) < 0 ?
+        area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
+        area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
 }
 
 // check if the middle point of a polygon diagonal is inside the polygon
-function middleInside(data, start, a, b) {
-    var node = start,
+function middleInside(a, b) {
+    var p = a,
         inside = false,
-        px = (data[a] + data[b]) / 2,
-        py = (data[a + 1] + data[b + 1]) / 2;
+        px = (a.x + b.x) / 2,
+        py = (a.y + b.y) / 2;
     do {
-        var p1 = node.i,
-            p2 = node.next.i;
-
-        if (((data[p1 + 1] > py) !== (data[p2 + 1] > py)) &&
-            (px < (data[p2] - data[p1]) * (py - data[p1 + 1]) / (data[p2 + 1] - data[p1 + 1]) + data[p1]))
-                inside = !inside;
-
-        node = node.next;
-    } while (node !== start);
+        if (((p.y > py) !== (p.next.y > py)) && p.next.y !== p.y &&
+                (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
+            inside = !inside;
+        p = p.next;
+    } while (p !== a);
 
     return inside;
 }
@@ -1021,8 +986,8 @@ function middleInside(data, start, a, b) {
 // link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
 // if one belongs to the outer ring and another to a hole, it merges it into a single ring
 function splitPolygon(a, b) {
-    var a2 = new Node(a.i),
-        b2 = new Node(b.i),
+    var a2 = new Node(a.i, a.x, a.y),
+        b2 = new Node(b.i, b.x, b.y),
         an = a.next,
         bp = b.prev;
 
@@ -1042,25 +1007,37 @@ function splitPolygon(a, b) {
 }
 
 // create a node and optionally link it with previous one (in a circular doubly linked list)
-function insertNode(i, last) {
-    var node = new Node(i);
+function insertNode(i, x, y, last) {
+    var p = new Node(i, x, y);
 
     if (!last) {
-        node.prev = node;
-        node.next = node;
+        p.prev = p;
+        p.next = p;
 
     } else {
-        node.next = last.next;
-        node.prev = last;
-        last.next.prev = node;
-        last.next = node;
+        p.next = last.next;
+        p.prev = last;
+        last.next.prev = p;
+        last.next = p;
     }
-    return node;
+    return p;
 }
 
-function Node(i) {
-    // vertex coordinates
+function removeNode(p) {
+    p.next.prev = p.prev;
+    p.prev.next = p.next;
+
+    if (p.prevZ) p.prevZ.nextZ = p.nextZ;
+    if (p.nextZ) p.nextZ.prevZ = p.prevZ;
+}
+
+function Node(i, x, y) {
+    // vertice index in coordinates array
     this.i = i;
+
+    // vertex coordinates
+    this.x = x;
+    this.y = y;
 
     // previous and next vertice nodes in a polygon ring
     this.prev = null;
@@ -1077,12 +1054,38 @@ function Node(i) {
     this.steiner = false;
 }
 
+function signedArea(data, start, end, dim) {
+    var sum = 0;
+    for (var i = start, j = end - dim; i < end; i += dim) {
+        sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
+        j = i;
+    }
+    return sum;
+}
+
+// turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
+VG.Utils.earcut.flatten = function (data) {
+    var dim = data[0][0].length,
+        result = {vertices: [], holes: [], dimensions: dim},
+        holeIndex = 0;
+
+    for (var i = 0; i < data.length; i++) {
+        for (var j = 0; j < data[i].length; j++) {
+            for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
+        }
+        if (i > 0) {
+            holeIndex += data[i - 1].length;
+            result.holes.push(holeIndex);
+        }
+    }
+    return result;
+};
 
     dim = dim || 2;
 
     var hasHoles = holeIndices && holeIndices.length,
         outerLen = hasHoles ? holeIndices[0] * dim : data.length,
-        outerNode = filterPoints(data, linkedList(data, 0, outerLen, dim, true)),
+        outerNode = linkedList(data, 0, outerLen, dim, true),
         triangles = [];
 
     if (!outerNode) return triangles;
@@ -1109,7 +1112,7 @@ function Node(i) {
         size = Math.max(maxX - minX, maxY - minY);
     }
 
-    earcutLinked(data, outerNode, triangles, dim, minX, minY, size);
+    earcutLinked(outerNode, triangles, dim, minX, minY, size);
 
     return triangles;
-}
+};

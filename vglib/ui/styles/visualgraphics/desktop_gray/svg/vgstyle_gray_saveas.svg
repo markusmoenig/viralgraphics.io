@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 15.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="24px" height="24px" viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve">
+<g>
+	<g>
+		<polygon fill="#DFDFDF" points="12.962,7.986 16.946,7.986 11.946,2.986 6.946,7.986 10.962,7.986 10.962,13.256 12.962,13.256 		
+			"/>
+		<polygon fill="#DFDFDF" points="17.946,12.965 15.946,12.965 15.946,18.965 7.946,18.965 7.946,12.965 5.946,12.965 5.946,20.965 
+			6.931,20.965 7.946,20.965 15.946,20.965 16.946,20.965 17.946,20.965 		"/>
+		<g opacity="0.1">
+			<path d="M11.946,2.986l5,5h-3.984v5.271h-2V7.986H6.946L11.946,2.986 M11.946,1.572l-0.707,0.707l-5,5L4.532,8.986h2.414h3.016
+				v4.271v1h1h2h1v-1V8.986h2.984h2.414l-1.707-1.707l-5-5L11.946,1.572L11.946,1.572z"/>
+		</g>
+		<g opacity="0.1">
+			<path d="M17.946,12.965v8h-1h-1h-8H6.931H5.946v-8h2v6h8v-6H17.946 M18.946,11.965h-1h-2h-1v1v5h-6v-5v-1h-1h-2h-1v1v8v1h1h0.984
+				h1.016h8h1h1h1v-1v-8V11.965L18.946,11.965z"/>
+		</g>
+	</g>
+	<rect x="14.903" y="3" fill="#DFDFDF" width="7" height="1"/>
+	<rect x="17.942" fill="#DFDFDF" width="1" height="7"/>
+</g>
+</svg>

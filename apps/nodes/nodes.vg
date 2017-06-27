@@ -1,0 +1,23 @@
+
+name = Nodes
+version = 0.01
+url = nodes
+author = BrainDistrict GmbH
+title = Nodes
+
+# Sources
+
+sources = main.js
+sources = dockwidgets/projectdockwidget.js, backgroundrender.js
+
+# Common
+
+sources = ../../common/ui/communitylistwidget.js, ../../common/ui/dialogs.js, ../../common/ui/nodemateriallistwidget.js
+sources = ../../common/debug/file.js
+
+# Google Analytics and Cosmetics
+
+defaultSkin = Dark Gray
+#googleAnalytics=utils/ga.js
+webBorderColor = #747474
+#webIcon=images/favicon.b64

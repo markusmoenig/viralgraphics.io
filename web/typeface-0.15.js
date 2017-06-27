@@ -2,7 +2,7 @@
 
 typeface.js, version 0.15 | typefacejs.neocracy.org
 
-Copyright (c) 2008 - 2009, David Chester davidchester@gmx.net 
+Copyright (c) 2008 - 2009, David Chester davidchester@gmx.net
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
@@ -36,7 +36,7 @@ var _typeface_js = {
 	loadFace: function(typefaceData) {
 
 		var familyName = typefaceData.familyName.toLowerCase();
-		
+
 		if (!this.faces[familyName]) {
 			this.faces[familyName] = {};
 		}
@@ -53,22 +53,22 @@ var _typeface_js = {
 	},
 
 	log: function(message) {
-		
+
 		if (this.quiet) {
 			return;
 		}
-		
+
 		message = "typeface.js: " + message;
-		
+
 		if (this.customLogFn) {
 			this.customLogFn(message);
 
 		} else if (window.console && window.console.log) {
 			window.console.log(message);
 		}
-		
+
 	},
-	
+
 	pixelsFromPoints: function(face, style, points, dimension) {
 		var pixels = points * parseInt(style.fontSize) * 72 / (face.resolution * 100);
 		if (dimension == 'horizontal' && style.fontStretchPercent) {
@@ -104,12 +104,12 @@ var _typeface_js = {
 		'ultra-expanded': 1.45,
 		'default': 1
 	},
-	
+
 	fallbackCharacter: '.',
 
 	configure: function(args) {
 		var configurableOptionNames = [ 'customLogFn',  'customClassNameRegex', 'customTypefaceElementsList', 'quiet', 'verbose', 'disableSelection' ];
-		
+
 		for (var i = 0; i < configurableOptionNames.length; i++) {
 			var optionName = configurableOptionNames[i];
 			if (args[optionName]) {
@@ -130,7 +130,7 @@ var _typeface_js = {
 		var extentX = 0;
 		var extentY = 0;
 		var horizontalAdvance;
-	
+
 		var textLength = text.length;
 		for (var i = 0; i < textLength; i++) {
 			var glyph = face.glyphs[text.charAt(i)] ? face.glyphs[text.charAt(i)] : face.glyphs[this.fallbackCharacter];
@@ -142,11 +142,11 @@ var _typeface_js = {
 
 			horizontalAdvance += glyph.ha + letterSpacingAdjustment;
 		}
-		return { 
-			x: extentX, 
+		return {
+			x: extentX,
 			y: extentY,
 			ha: horizontalAdvance
-			
+
 		};
 	},
 
@@ -161,11 +161,11 @@ var _typeface_js = {
 			return matches[1];
 
 		} else {
-			// thanks to Dean Edwards for this very sneaky way to get IE to convert 
+			// thanks to Dean Edwards for this very sneaky way to get IE to convert
 			// relative values to pixel values
-			
+
 			var pixelAmount;
-			
+
 			var leftInlineStyle = element.style.left;
 			var leftRuntimeStyle = element.runtimeStyle.left;
 
@@ -178,22 +178,22 @@ var _typeface_js = {
 			}
 
 			pixelAmount = element.style.pixelLeft;
-		
+
 			element.style.left = leftInlineStyle;
 			element.runtimeStyle.left = leftRuntimeStyle;
-			
+
 			return pixelAmount || defaultValue;
 		}
 	},
 
 	capitalizeText: function(text) {
-		return text.replace(/(^|\s)[a-z]/g, function(match) { return match.toUpperCase() } ); 
+		return text.replace(/(^|\s)[a-z]/g, function(match) { return match.toUpperCase() } );
 	},
 
 	getElementStyle: function(e) {
 		if (window.getComputedStyle) {
 			return window.getComputedStyle(e, '');
-		
+
 		} else if (e.currentStyle) {
 			return e.currentStyle;
 		}
@@ -220,9 +220,9 @@ var _typeface_js = {
 			}
 		}
 
-		var style = { 
-			color: browserStyle.color, 
-			fontFamily: browserStyle.fontFamily.split(/\s*,\s*/)[0].replace(/(^"|^'|'$|"$)/g, '').toLowerCase(), 
+		var style = {
+			color: browserStyle.color,
+			fontFamily: browserStyle.fontFamily.split(/\s*,\s*/)[0].replace(/(^"|^'|'$|"$)/g, '').toLowerCase(),
 			fontSize: this.pixelsFromCssAmount(browserStyle.fontSize, 12, e.parentNode),
 			fontWeight: this.cssFontWeightMap[browserStyle.fontWeight],
 			fontStyle: browserStyle.fontStyle ? browserStyle.fontStyle : 'normal',
@@ -235,38 +235,38 @@ var _typeface_js = {
 
 		var face;
 		if (
-			this.faces[style.fontFamily]  
+			this.faces[style.fontFamily]
 			&& this.faces[style.fontFamily][style.fontWeight]
 		) {
 			face = this.faces[style.fontFamily][style.fontWeight][style.fontStyle];
 		}
 
 		var text = e.nodeValue;
-		
+
 		if (
-			e.previousSibling 
-			&& e.previousSibling.nodeType == 1 
-			&& e.previousSibling.tagName != 'BR' 
+			e.previousSibling
+			&& e.previousSibling.nodeType == 1
+			&& e.previousSibling.tagName != 'BR'
 			&& this.getElementStyle(e.previousSibling).display.match(/inline/)
 		) {
 			text = text.replace(/^\s+/, ' ');
 		} else {
 			text = text.replace(/^\s+/, '');
 		}
-		
+
 		if (
-			e.nextSibling 
-			&& e.nextSibling.nodeType == 1 
-			&& e.nextSibling.tagName != 'BR' 
+			e.nextSibling
+			&& e.nextSibling.nodeType == 1
+			&& e.nextSibling.tagName != 'BR'
 			&& this.getElementStyle(e.nextSibling).display.match(/inline/)
 		) {
 			text = text.replace(/\s+$/, ' ');
 		} else {
 			text = text.replace(/\s+$/, '');
 		}
-		
+
 		text = text.replace(/\s+/g, ' ');
-	
+
 		if (style.textTransform && style.textTransform != 'none') {
 			switch (style.textTransform) {
 				case 'capitalize':
@@ -287,26 +287,26 @@ var _typeface_js = {
 			if (text.length > excerptLength) {
 				textExcerpt += '...';
 			}
-		
+
 			var fontDescription = style.fontFamily;
 			if (style.fontWeight != 'normal') fontDescription += ' ' + style.fontWeight;
 			if (style.fontStyle != 'normal') fontDescription += ' ' + style.fontStyle;
-		
+
 			this.log("couldn't find typeface font: " + fontDescription + ' for text "' + textExcerpt + '"');
 			return;
 		}
-	
+
 		var words = text.split(/\b(?=\w)/);
 
 		var containerSpan = document.createElement('span');
 		containerSpan.className = 'typeface-js-vector-container';
-		
+
 		var wordsLength = words.length;
 		for (var i = 0; i < wordsLength; i++) {
 			var word = words[i];
-			
+
 			var vector = this.renderWord(face, style, word);
-			
+
 			if (vector) {
 				containerSpan.appendChild(vector.element);
 
@@ -335,13 +335,13 @@ var _typeface_js = {
 		return containerSpan;
 	},
 
-	renderDocument: function(callback) { 
-		
+	renderDocument: function(callback) {
+
 		if (!callback)
 			callback = function(e) { e.style.visibility = 'visible' };
 
 		var elements = document.getElementsByTagName('*');
-		
+
 		var elementsLength = elements.length;
 		for (var i = 0; i < elements.length; i++) {
 			if (elements[i].className.match(/(^|\s)typeface-js(\s|$)/) || elements[i].tagName.match(/^(H1|H2|H3|H4|H5|H6)$/)) {
@@ -377,9 +377,9 @@ var _typeface_js = {
 			}
 
 			var renderedText = this.getRenderedText(e);
-			
+
 			if (
-				parentNode.tagName == 'A' 
+				parentNode.tagName == 'A'
 				&& this.vectorBackend == 'vml'
 				&& this.getElementStyle(parentNode).display == 'inline'
 			) {
@@ -392,7 +392,7 @@ var _typeface_js = {
 				parentNode.style.display = 'inline-block';
 			}
 
-			if (renderedText) {	
+			if (renderedText) {
 				if (parentNode.replaceChild) {
 					parentNode.replaceChild(renderedText, e);
 				} else {
@@ -405,14 +405,14 @@ var _typeface_js = {
 
 				var childNodesLength = renderedText.childNodes.length
 				for (var i; i < childNodesLength; i++) {
-					
+
 					// do our best to line up selectable text with rendered text
 
 					var e = renderedText.childNodes[i];
 					if (e.hasChildNodes() && !e.targetWidth) {
 						e = e.childNodes[0];
 					}
-					
+
 					if (e && e.targetWidth) {
 						var letterSpacingCount = e.innerHTML.length;
 						var wordSpaceDelta = e.targetWidth - e.offsetWidth;
@@ -440,7 +440,7 @@ var _typeface_js = {
 
 		e.style.marginTop = Math.round( cssLineHeightAdjustment / 2 ) + 'px';
 		e.style.marginBottom = Math.round( cssLineHeightAdjustment / 2) + 'px';
-	
+
 	},
 
 	vectorBackends: {
@@ -458,10 +458,10 @@ var _typeface_js = {
 
 				canvas.height = Math.round(this.pixelsFromPoints(face, style, face.lineHeight));
 				canvas.width = Math.round(this.pixelsFromPoints(face, style, extents.x, 'horizontal'));
-	
+
 				this.applyElementVerticalMetrics(face, style, canvas);
 
-				if (extents.x > extents.ha) 
+				if (extents.x > extents.ha)
 					canvas.style.marginRight = Math.round(this.pixelsFromPoints(face, style, extents.x - extents.ha, 'horizontal')) + 'px';
 
 				var ctx = canvas.getContext('2d');
@@ -518,12 +518,12 @@ var _typeface_js = {
 								ctx.bezierCurveTo(outline[i++], outline[i++], outline[i++], outline[i++], x, y);
 								break;
 						}
-					}					
+					}
 				}
 				if (glyph.ha) {
-					var letterSpacingPoints = 
-						style.letterSpacing && style.letterSpacing != 'normal' ? 
-							this.pointsFromPixels(face, style, style.letterSpacing) : 
+					var letterSpacingPoints =
+						style.letterSpacing && style.letterSpacing != 'normal' ?
+							this.pointsFromPixels(face, style, style.letterSpacing) :
 							0;
 
 					ctx.translate(glyph.ha + letterSpacingPoints, 0);
@@ -557,7 +557,7 @@ var _typeface_js = {
 				}
 
 				return { element: ctx.canvas, width: Math.floor(canvas.width) };
-			
+
 			}
 		},
 
@@ -568,8 +568,8 @@ var _typeface_js = {
 				var shape = document.createElement('v:shape');
 
 				var extents = this.getTextExtents(face, style, text);
-				
-				shape.style.width = shape.style.height = style.fontSize + 'px'; 
+
+				shape.style.width = shape.style.height = style.fontSize + 'px';
 				shape.style.marginLeft = '-1px'; // this seems suspect...
 
 				if (extents.x > extents.ha) {
@@ -580,7 +580,7 @@ var _typeface_js = {
 
 				var resolutionScale = face.resolution * 100 / 72;
 				shape.coordsize = (resolutionScale / style.fontStretchPercent) + "," + resolutionScale;
-				
+
 				shape.coordorigin = '0,' + face.ascender;
 				shape.style.flip = 'y';
 
@@ -601,13 +601,13 @@ var _typeface_js = {
 					this.renderGlyph(shape, face, this.fallbackCharacter, offsetX, style);
 					return;
 				}
-				
+
 				vmlSegments.push('m');
 
 				if (glyph.o) {
-					
+
 					var outline, outlineLength;
-					
+
 					if (glyph.cached_outline) {
 						outline = glyph.cached_outline;
 						outlineLength = outline.length;
@@ -626,26 +626,26 @@ var _typeface_js = {
 									outline[i] = Math.round(outline[i++]);
 									outline[i] = Math.round(outline[i++]);
 									break;
-							} 
-						}	
+							}
+						}
 
 						glyph.cached_outline = outline;
 					}
 
 					var prevX, prevY;
-					
+
 					for (var i = 0; i < outlineLength;) {
 
 						var action = outline[i++];
 
 						var x = Math.round(outline[i++]) + offsetX;
 						var y = Math.round(outline[i++]);
-	
+
 						switch(action) {
 							case 'm':
 								vmlSegments.push('xm ', x, ',', y);
 								break;
-	
+
 							case 'l':
 								vmlSegments.push('l ', x, ',', y);
 								break;
@@ -659,7 +659,7 @@ var _typeface_js = {
 
 								var cp2x = Math.round(cp1x + (x - prevX) / 3.0);
 								var cp2y = Math.round(cp1y + (y - prevY) / 3.0);
-								
+
 								vmlSegments.push('c ', cp1x, ',', cp1y, ',', cp2x, ',', cp2y, ',', x, ',', y);
 								break;
 
@@ -676,7 +676,7 @@ var _typeface_js = {
 
 						prevX = x;
 						prevY = y;
-					}					
+					}
 				}
 
 				vmlSegments.push('x e');
@@ -686,10 +686,10 @@ var _typeface_js = {
 			_renderWord: function(face, style, text) {
 				var offsetX = 0;
 				var shape = this.initializeSurface(face, style, text);
-		
-				var letterSpacingPoints = 
-					style.letterSpacing && style.letterSpacing != 'normal' ? 
-						this.pointsFromPixels(face, style, style.letterSpacing) : 
+
+				var letterSpacingPoints =
+					style.letterSpacing && style.letterSpacing != 'normal' ?
+						this.pointsFromPixels(face, style, style.letterSpacing) :
 						0;
 
 				letterSpacingPoints = Math.round(letterSpacingPoints);
@@ -698,7 +698,7 @@ var _typeface_js = {
 				for (var i = 0; i < chars.length; i++) {
 					var char = chars[i];
 					vmlSegments = this.renderGlyph(shape, face, char, offsetX, style, vmlSegments);
-					offsetX += face.glyphs[char].ha + letterSpacingPoints ;	
+					offsetX += face.glyphs[char].ha + letterSpacingPoints ;
 				}
 
 				if (style.textDecoration == 'underline') {
@@ -713,7 +713,7 @@ var _typeface_js = {
 
 				// make sure to preserve trailing whitespace
 				shape.path += vmlSegments.join('') + 'm ' + offsetX + ' 0 l ' + offsetX + ' ' + face.ascender;
-				
+
 				return {
 					element: shape,
 					width: Math.floor(this.pixelsFromPoints(face, style, offsetX, 'horizontal'))
@@ -734,12 +734,12 @@ var _typeface_js = {
 			this[backendFunction] = this.vectorBackends[backend]['_' + backendFunction];
 		}
 	},
-	
+
 	initialize: function() {
 
 		// quit if this function has already been called
-		if (arguments.callee.done) return; 
-		
+		if (arguments.callee.done) return;
+
 		// flag this function so we don't do the same thing twice
 		arguments.callee.done = true;
 
@@ -749,13 +749,13 @@ var _typeface_js = {
 		this.renderDocument( function(e) { e.style.visibility = 'visible' } );
 
 	}
-	
+
 };
 
 // IE won't accept real selectors...
 var typefaceSelectors = ['.typeface-js', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
 
-if (document.createStyleSheet) { 
+if (document.createStyleSheet) {
 
 	var styleSheet = document.createStyleSheet();
 	for (var i = 0; i < typefaceSelectors.length; i++) {
@@ -764,7 +764,7 @@ if (document.createStyleSheet) {
 	}
 
 	styleSheet.addRule(
-		'.typeface-js-selected-text', 
+		'.typeface-js-selected-text',
 		'-ms-filter: \
 			"Chroma(color=black) \
 			progid:DXImageTransform.Microsoft.MaskFilter(Color=white) \
@@ -792,7 +792,7 @@ if (document.createStyleSheet) {
 	})() }
 
 	var styleSheet = document.styleSheets[0];
-	document.styleSheets[0].insertRule(typefaceSelectors.join(',') + ' { visibility: hidden; }', styleSheet.cssRules.length); 
+	document.styleSheets[0].insertRule(typefaceSelectors.join(',') + ' { visibility: hidden; }', styleSheet.cssRules.length);
 
 	document.styleSheets[0].insertRule(
 		'.typeface-js-selected-text { \
@@ -801,25 +801,25 @@ if (document.createStyleSheet) {
 			position: absolute; \
 			font-family: Arial, sans-serif; \
 			white-space: pre \
-		}', 
+		}',
 		styleSheet.cssRules.length
 	);
 
-	try { 
+	try {
 		// set selection style for Mozilla / Firefox
 		document.styleSheets[0].insertRule(
-			'.typeface-js-selected-text::-moz-selection { background: blue; }', 
+			'.typeface-js-selected-text::-moz-selection { background: blue; }',
 			styleSheet.cssRules.length
-		); 
+		);
 
 	} catch(e) {};
 
-	try { 
+	try {
 		// set styles for browsers with CSS3 selectors (Safari, Chrome)
 		document.styleSheets[0].insertRule(
-			'.typeface-js-selected-text::selection { background: blue; }', 
+			'.typeface-js-selected-text::selection { background: blue; }',
 			styleSheet.cssRules.length
-		); 
+		);
 
 	} catch(e) {};
 
@@ -845,19 +845,19 @@ if (backend == 'vml') {
 
 _typeface_js.setVectorBackend(backend);
 window._typeface_js = _typeface_js;
-	
+
 if (/WebKit/i.test(navigator.userAgent)) {
 
 	var _typefaceTimer = setInterval(function() {
 		if (/loaded|complete/.test(document.readyState)) {
-			_typeface_js.initialize(); 
+			_typeface_js.initialize();
 		}
 	}, 10);
 }
 
 if (document.addEventListener) {
 	window.addEventListener('DOMContentLoaded', function() { _typeface_js.initialize() }, false);
-} 
+}
 
 /*@cc_on @*/
 /*@if (@_win32)
@@ -866,7 +866,7 @@ document.write("<script id=__ie_onload_typeface defer src=//:><\/script>");
 var script = document.getElementById("__ie_onload_typeface");
 script.onreadystatechange = function() {
 	if (this.readyState == "complete") {
-		_typeface_js.initialize(); 
+		_typeface_js.initialize();
 	}
 };
 

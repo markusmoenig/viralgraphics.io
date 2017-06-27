@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * (C) Copyright 2014-2017 Markus Moenig <markusm@visualgraphics.tv>.
  *
  * This file is part of Visual Graphics.
  *
@@ -24,9 +24,9 @@ VG.Nodes.Node=function()
 {
     /**
      * Creates a Node.<br>
-     * 
+     *
      * VG.Nodes.Node is the base class for all Nodes.
-     * 
+     *
      * @constructor
     */
 
@@ -39,8 +39,37 @@ VG.Nodes.Node=function()
     this.inputs=[];
 
     /**The list of output terminals of this node.
-     * @member {array} */    
+     * @member {array} */
     this.outputs=[];
+
+    this.createToken();
+};
+
+VG.Nodes.Node.prototype.createDefaultProperties=function( data )
+{
+    let group=this.container.addGroupByName( "basics", "Preview", false );
+    if ( !this.noPreview )
+        group.addParam( VG.Nodes.ParamBoolean( data, "showPreview", "Show Preview", true ) );
+    group.addParam( VG.Nodes.ParamText( data, "comment", "Comment", "" ) );
+
+    if ( this.description ) {
+        let group=this.container.addGroupByName( "about", "About", false );
+        group.addParam( VG.Nodes.ParamHtml( data, "about", "About", this.description ) );
+    }
+
+    return group;
+};
+
+VG.Nodes.Node.prototype.createToken=function( terminal )
+{
+   let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+   let token = [], rnd = Math.random, r;
+
+   for (let i = 0; i < 4; i++) {
+        r = 0 | rnd()*chars.length;
+        token[i] = chars[r];
+   }
+   this.token = token.join('');
 };
 
 VG.Nodes.Node.prototype.addInput=function( terminal )
@@ -52,19 +81,21 @@ VG.Nodes.Node.prototype.addInput=function( terminal )
     terminal.node=this;
     terminal.input=true; terminal.output=false;
     this.inputs.push( terminal );
+
+    return terminal;
 };
 
 VG.Nodes.Node.prototype.removeInput=function( terminal )
 {
     /**Removes the given terminal as an input terminal from this node.
      * @param {VG.Nodes.Terminal} terminal - The input terminal to remove.
-     */    
+     */
 
     terminal.disconnectAll();
     terminal.node=null;
 
     var index=this.inputs.indexOf( terminal );
-    if ( index >= 0 ) this.inputs.splice( index, 1 );     
+    if ( index >= 0 ) this.inputs.splice( index, 1 );
 };
 
 VG.Nodes.Node.prototype.addOutput=function( terminal )
@@ -74,8 +105,10 @@ VG.Nodes.Node.prototype.addOutput=function( terminal )
      */
 
     terminal.node=this;
-    terminal.input=false; terminal.output=true;    
+    terminal.input=false; terminal.output=true;
     this.outputs.push( terminal );
+
+    return terminal;
 };
 
 VG.Nodes.Node.prototype.getInput=function( name )
@@ -87,6 +120,19 @@ VG.Nodes.Node.prototype.getInput=function( name )
 
     for ( var i=0; i < this.inputs.length; ++i )
         if ( this.inputs[i].name === name ) return this.inputs[i];
+
+    return null;
+};
+
+VG.Nodes.Node.prototype.getOutput=function( name )
+{
+    /**Gets the input terminal specified by name.
+     * @param {string} terminal - The name of the terminal.
+     * @returns The found terminal or null.
+     */
+
+    for ( var i=0; i < this.outputs.length; ++i )
+        if ( this.outputs[i].name === name ) return this.outputs[i];
 
     return null;
 };
@@ -110,19 +156,20 @@ VG.Nodes.Node.prototype.getTerminal=function( terminalName )
      * @returns The found terminal or null.
      */
 
-    for ( var i=0; i < this.inputs.length; ++i )
+    var i;
+    for ( i=0; i < this.inputs.length; ++i )
     {
         if ( this.inputs[i].name === terminalName )
             return this.inputs[i];
     }
 
-    for ( var i=0; i < this.outputs.length; ++i )
+    for ( i=0; i < this.outputs.length; ++i )
     {
         if ( this.outputs[i].name === terminalName )
             return this.outputs[i];
     }
 
-    return null;    
+    return null;
 };
 
 VG.Nodes.Node.prototype.readConnections=function( outputsOnly )
@@ -132,6 +179,7 @@ VG.Nodes.Node.prototype.readConnections=function( outputsOnly )
      */
 
     if ( this.data.connections ) {
+
         for ( var i=0; i < this.data.connections.length; ++i )
         {
             var conn=this.data.connections[i];
@@ -141,12 +189,7 @@ VG.Nodes.Node.prototype.readConnections=function( outputsOnly )
                 if ( outputsOnly && terminal.input )
                     continue;
 
-                var destNode;
-                if ( conn.connNodeId === -1 ) {
-                    destNode=this.graph.previewNode;
-                    this.graph.outputTerminal=terminal;
-                }
-                else destNode=this.graph.nodes.get( conn.connNodeId );
+                var destNode=this.graph.nodes.get( conn.connNodeId );
                 if ( destNode )
                 {
                     var destTerminal=destNode.getTerminal( conn.connTerminalName );
@@ -162,27 +205,28 @@ VG.Nodes.Node.prototype.disconnectAll=function()
     /**Disonnects all terminals.
      */
 
-    for ( var i=0; i < this.inputs.length; ++i )
+    var i, t, c, ct;
+    for ( i=0; i < this.inputs.length; ++i )
     {
-        var t=this.inputs[i];
+        t=this.inputs[i];
 
-        for ( var c=0; c < t.connectedTo.length; ++c )
+        for ( c=0; c < t.connectedTo.length; ++c )
         {
-            var ct=t.connectedTo[c];
+            ct=t.connectedTo[c];
             t.disconnectFrom( ct, true );
         }
     }
 
-    for ( var i=0; i < this.outputs.length; ++i )
+    for ( i=0; i < this.outputs.length; ++i )
     {
-        var t=this.outputs[i];
+        t=this.outputs[i];
 
-        for ( var c=0; c < t.connectedTo.length; ++c )
+        for ( c=0; c < t.connectedTo.length; ++c )
         {
-            var ct=t.connectedTo[c];
+            ct=t.connectedTo[c];
             t.disconnectFrom( ct, true );
         }
-    }    
+    }
 };
 
 VG.Nodes.Node.prototype.setParamColor=function( name, r, g, b, a )
@@ -287,3 +331,84 @@ VG.Nodes.Node.prototype.setParamImage=function( name, imageName, imageData)
 };
 
 VG.Nodes.availableNodes=new Map();
+
+// ----------------------------------------------------------------- VG.Nodes.TimeCode
+
+VG.Nodes.TimeCode=function()
+{
+    if ( !arguments.length || ( arguments.length === 1 && arguments[0] === undefined ) ) {
+        this.h=0;
+        this.m=0;
+        this.s=0;
+        this.f=0;
+    } else
+    if ( arguments.length === 4 ) {
+        this.h=arguments[0];
+        this.m=arguments[1];
+        this.s=arguments[2];
+        this.f=arguments[3];
+    } else
+    if ( arguments.length === 1 && typeof arguments[0] === 'string' ) {
+        var arr=arguments[0].split( ":" );
+        if ( arr.length === 4 ) {
+            this.h=Number( arr[0] );
+            this.m=Number( arr[1] );
+            this.s=Number( arr[2] );
+            this.f=Number( arr[3] );
+        }
+    } else
+    if ( arguments.length === 1 && typeof arguments[0] === TimeCode ) {
+        this.h=arguments[0].h;
+        this.m=arguments[0].m;
+        this.s=arguments[0].s;
+        this.f=arguments[0].f;
+        this.frames=arguments[0].frames;
+    }
+
+    this.calcFrames();
+};
+
+VG.Nodes.TimeCode.prototype.copy=function( tc )
+{
+    this.h=tc.h;
+    this.m=tc.m;
+    this.s=tc.s;
+    this.f=tc.f;
+    this.frames=tc.frames;
+};
+
+VG.Nodes.TimeCode.prototype.toString=function()
+{
+    var mText=this.m < 9 ? "0" + this.m : "" + this.m;
+    var sText=this.s < 9 ? "0" + this.s : "" + this.s;
+
+    return "" + this.h + ":" + mText + ":" + sText + ":" + this.f;
+};
+
+VG.Nodes.TimeCode.prototype.calcFrames=function()
+{
+    var fps=VG.context.frameBase;
+
+    var rc=this.f;
+    rc+=this.s * fps;
+    rc+=this.m * 60 * fps;
+    rc+=this.h * 60 * 60 * fps;
+
+    this.frames=rc;
+    return rc;
+};
+
+VG.Nodes.TimeCode.prototype.setTotalFrames=function( frame )
+{
+    var fps=VG.context.frameBase;
+
+    this.f=Math.floor( frame % fps );
+    this.s=Math.floor( frame / fps );
+    this.m=Math.floor( this.s / 60 );
+    this.h=Math.floor( this.m / (60 * 60) );
+
+    this.s%=60;
+    this.m%=60;
+
+    this.calcFrames();
+};

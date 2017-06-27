@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * (C) Copyright 2014-2017 Markus Moenig <markusm@visualgraphics.tv>.
  *
  * This file is part of Visual Graphics.
  *
@@ -19,7 +19,7 @@
  */
 
 VG.DB.createFolder=function( appId, name, description, publicRead, publicWrite, callback )
-{   
+{
     /**Creates a new Folder for the given application. Folders can contain any kind of data and is the primary way to store data in the Cloud for
      * Visual Graphics applications.
      * @param {string} name - The name of the new folder.
@@ -47,7 +47,7 @@ VG.DB.createFolder=function( appId, name, description, publicRead, publicWrite, 
         if ( response.status === "ok" ) {
 
         }
-    
+
     }, "PUT" );
 };
 
@@ -76,18 +76,19 @@ VG.DB.Folder=function( id, callback )
                 this.isVerified=true;
             }
 
-        callback( this );        
+        callback( this );
         }.bind( this ), "GET" );
     }
-}
+};
 
 VG.DB.Folder.prototype.getAllContent=function( callback )
 {
     /**Downloads all content of the Folder.
      * @param {function} Callback - The callback to be called when the operation finishes. The first argument of the callback
      * will contain an array of the content of the folder.
-     */    
+     */
     VG.sendBackendRequest( "/folder/" + this.id + "/content", "", function( responseText ) {
+        if ( !responseText ) return;
         var response=JSON.parse( responseText );
         //console.log( responseText );
 
@@ -104,7 +105,7 @@ VG.DB.Folder.prototype.addContent=function( name, content, callback )
      * @param {string} content - The content, has to be JSON.
      * @param {function} Callback - The callback to be called when the operation finishes. The first argument of the callback
      * will be true if the upload succeeded, false otherwise.
-     */      
+     */
     var params={ "name" : name, "data" : content };
     VG.sendBackendRequest( "/folder/" + this.id + "/content", JSON.stringify( params ), function( responseText ) {
         var response=JSON.parse( responseText );
@@ -121,7 +122,7 @@ VG.DB.Folder.prototype.removeContent=function( id, callback )
      * @param {number} id - The id of the content.
      * @param {function} Callback - The callback to be called when the operation finishes. The first argument of the callback
      * will be true if the upload succeeded, false otherwise.
-     */      
+     */
     VG.sendBackendRequest( "/folder/" + this.id + "/content/" + id, "", function( responseText ) {
         var response=JSON.parse( responseText );
 

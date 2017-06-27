@@ -38,7 +38,7 @@ VG.Utils = {
   },
 
   compressToBase64 : function (input) {
-    if (input == null) return "";
+    if (input === null) return "";
     var res = VG.Utils._compress(input, 6, function(a){return VG.Utils.keyStrBase64.charAt(a);});
     switch (res.length % 4) { // To produce valid Base64
     default: // When could this happen ?
@@ -50,19 +50,19 @@ VG.Utils = {
   },
 
   decompressFromBase64 : function (input) {
-    if (input == null) return "";
-    if (input == "") return null;
+    if (input === null) return "";
+    if (input === "") return null;
     return VG.Utils._decompress(input.length, 32, function(index) { return VG.Utils.getBaseValue(VG.Utils.keyStrBase64, input.charAt(index)); });
   },
 
   compressToUTF16 : function (input) {
-    if (input == null) return "";
+    if (input === null) return "";
     return VG.Utils._compress(input, 15, function(a){return String.fromCharCode(a+32);}) + " ";
   },
 
   decompressFromUTF16: function (compressed) {
-    if (compressed == null) return "";
-    if (compressed == "") return null;
+    if (compressed === null) return "";
+    if (compressed === "") return null;
     return VG.Utils._decompress(compressed.length, 16384, function(index) { return compressed.charCodeAt(index) - 32; });
   },
 
@@ -102,14 +102,14 @@ VG.Utils = {
 
   //compress into a string that is already URI encoded
   compressToEncodedURIComponent: function (input) {
-    if (input == null) return "";
+    if (input === null) return "";
     return VG.Utils._compress(input, 6, function(a){return VG.Utils.keyStrUriSafe.charAt(a);});
   },
 
   //decompress from an output of compressToEncodedURIComponent
   decompressFromEncodedURIComponent:function (input) {
-    if (input == null) return "";
-    if (input == "") return null;
+    if (input === null) return "";
+    if (input === "") return null;
     input = input.replace(/ /g, "+");
     return VG.Utils._decompress(input.length, 32, function(index) { return VG.Utils.getBaseValue(VG.Utils.keyStrUriSafe, input.charAt(index)); });
   },
@@ -118,7 +118,7 @@ VG.Utils = {
     return VG.Utils._compress(uncompressed, 16, function(a){return String.fromCharCode(a);});
   },
   _compress: function (uncompressed, bitsPerChar, getCharFromInt) {
-    if (uncompressed == null) return "";
+    if (uncompressed === null) return "";
     var i, value,
         context_dictionary= {},
         context_dictionaryToCreate= {},
@@ -195,7 +195,7 @@ VG.Utils = {
             }
           }
           context_enlargeIn--;
-          if (context_enlargeIn == 0) {
+          if (context_enlargeIn === 0) {
             context_enlargeIn = Math.pow(2, context_numBits);
             context_numBits++;
           }
@@ -217,7 +217,7 @@ VG.Utils = {
 
         }
         context_enlargeIn--;
-        if (context_enlargeIn == 0) {
+        if (context_enlargeIn === 0) {
           context_enlargeIn = Math.pow(2, context_numBits);
           context_numBits++;
         }
@@ -280,7 +280,7 @@ VG.Utils = {
           }
         }
         context_enlargeIn--;
-        if (context_enlargeIn == 0) {
+        if (context_enlargeIn === 0) {
           context_enlargeIn = Math.pow(2, context_numBits);
           context_numBits++;
         }
@@ -302,7 +302,7 @@ VG.Utils = {
 
       }
       context_enlargeIn--;
-      if (context_enlargeIn == 0) {
+      if (context_enlargeIn === 0) {
         context_enlargeIn = Math.pow(2, context_numBits);
         context_numBits++;
       }
@@ -335,8 +335,8 @@ VG.Utils = {
   },
 
   decompress: function (compressed) {
-    if (compressed == null) return "";
-    if (compressed == "") return null;
+    if (compressed === null) return "";
+    if (compressed === "") return null;
     return VG.Utils._decompress(compressed.length, 32768, function(index) { return compressed.charCodeAt(index); });
   },
 
@@ -364,7 +364,7 @@ VG.Utils = {
     while (power!=maxpower) {
       resb = data.val & data.position;
       data.position >>= 1;
-      if (data.position == 0) {
+      if (data.position === 0) {
         data.position = resetValue;
         data.val = getNextValue(data.index++);
       }
@@ -380,7 +380,7 @@ VG.Utils = {
           while (power!=maxpower) {
             resb = data.val & data.position;
             data.position >>= 1;
-            if (data.position == 0) {
+            if (data.position === 0) {
               data.position = resetValue;
               data.val = getNextValue(data.index++);
             }
@@ -396,7 +396,7 @@ VG.Utils = {
           while (power!=maxpower) {
             resb = data.val & data.position;
             data.position >>= 1;
-            if (data.position == 0) {
+            if (data.position === 0) {
               data.position = resetValue;
               data.val = getNextValue(data.index++);
             }
@@ -422,7 +422,7 @@ VG.Utils = {
       while (power!=maxpower) {
         resb = data.val & data.position;
         data.position >>= 1;
-        if (data.position == 0) {
+        if (data.position === 0) {
           data.position = resetValue;
           data.val = getNextValue(data.index++);
         }
@@ -438,7 +438,7 @@ VG.Utils = {
           while (power!=maxpower) {
             resb = data.val & data.position;
             data.position >>= 1;
-            if (data.position == 0) {
+            if (data.position === 0) {
               data.position = resetValue;
               data.val = getNextValue(data.index++);
             }
@@ -457,7 +457,7 @@ VG.Utils = {
           while (power!=maxpower) {
             resb = data.val & data.position;
             data.position >>= 1;
-            if (data.position == 0) {
+            if (data.position === 0) {
               data.position = resetValue;
               data.val = getNextValue(data.index++);
             }
@@ -472,7 +472,7 @@ VG.Utils = {
           return result.join('');
       }
 
-      if (enlargeIn == 0) {
+      if (enlargeIn === 0) {
         enlargeIn = Math.pow(2, numBits);
         numBits++;
       }
@@ -494,7 +494,7 @@ VG.Utils = {
 
       w = entry;
 
-      if (enlargeIn == 0) {
+      if (enlargeIn === 0) {
         enlargeIn = Math.pow(2, numBits);
         numBits++;
       }

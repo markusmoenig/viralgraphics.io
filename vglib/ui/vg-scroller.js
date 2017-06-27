@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,11 +21,10 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 // ----------------------------------------------------------------- VG.UI.NewsScrollerItem
 
 VG.UI.ScrollerImageItem=function( image )
-{    
+{
     if ( !(this instanceof VG.UI.ScrollerImageItem) ) return new VG.UI.ScrollerImageItem( image );
 
     VG.UI.Widget.call( this );
@@ -57,7 +56,7 @@ VG.UI.ScrollerImageItem.prototype.paintWidget=function( canvas )
 VG.UI.Scroller=function()
 {
     if ( !(this instanceof VG.UI.Scroller) ) return new VG.UI.Scroller();
-    
+
     VG.UI.Widget.call( this );
     this.name="Scroller";
 
@@ -68,7 +67,7 @@ VG.UI.Scroller=function()
     this.current=null;
     this.currentIndex=0;
 
-    this.nextAnimationEventAt=0; 
+    this.nextAnimationEventAt=0;
 
     this.animStartTime=-1;
     this.animDuration=600;
@@ -83,7 +82,7 @@ VG.UI.Scroller=function()
     this.htmlFont=VG.Font.Font( "Open Sans Semibold", 8 );
 
     this.blurbAlpha=0;
-}
+};
 
 VG.UI.Scroller.prototype=VG.UI.Widget();
 
@@ -102,14 +101,14 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
 
     if ( this.items.length > 1 ) {
         var time=new Date().getTime();
-        
+
         if ( this.nextAnimationEventAt === 0 )
         {
             this.nextAnimationEventAt=time + this.animPeriod;
             VG.context.workspace.redrawList.push( this.nextAnimationEventAt );
         } else {
 
-            if ( time > this.nextAnimationEventAt ) 
+            if ( time > this.nextAnimationEventAt )
             {
                 // --- Inside Scroll Event
 
@@ -121,7 +120,7 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
                     this.animOffset=time - this.animStartTime;
 
                     this.nextAnimationEventAt=time + 1;
-                    VG.context.workspace.redrawList.push( this.nextAnimationEventAt );                    
+                    VG.context.workspace.redrawList.push( this.nextAnimationEventAt );
                 } else
                 {
                     this.animActive=false;
@@ -133,9 +132,9 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
                     this.currentIndex=0;
 
                     this.nextAnimationEventAt=time + this.animPeriod;
-                    VG.context.workspace.redrawList.push( this.nextAnimationEventAt );                    
+                    VG.context.workspace.redrawList.push( this.nextAnimationEventAt );
                 }
-            }            
+            }
         }
     }
 
@@ -152,7 +151,7 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
 
         rect.x-=this.animPixelOffset;
 
-        this.current.rect.copy( rect );        
+        this.current.rect.copy( rect );
         this.current.paintWidget( canvas );
 
         var nextIndex=this.currentIndex + 1;
@@ -162,14 +161,14 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
         rect.copy( this.rect );
         rect.x=this.rect.right() - this.animPixelOffset;
 
-        nextItem.rect.copy( rect );        
+        nextItem.rect.copy( rect );
         nextItem.paintWidget( canvas );
 
           this.blurbAlpha=0;
     } else
     {
-        this.current.rect.copy( rect );        
-        this.current.paintWidget( canvas );        
+        this.current.rect.copy( rect );
+        this.current.paintWidget( canvas );
 
         // --- Draw the Circles
 
@@ -183,7 +182,7 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
             if ( this.currentIndex === i )
                 this.circleColor.a=1.0;
             else this.circleColor.a=0.5;
-                
+
             canvas.draw2DShape( VG.Canvas.Shape2D.Circle, rect, this.circleColor );
             this.items[i]._circleRect.copy( rect );
 
@@ -203,7 +202,7 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
                 rect.height=120;
             } else {
                 rect.y+=639 - 120 - 20;
-                rect.height=120;                
+                rect.height=120;
             }
 
             if ( !this.current.rightBlurb ) {
@@ -217,7 +216,7 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
             canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, rect, this.blurbBackColor );
 
             rect.x+=16; rect.y+=10;
-            rect.width-=16; rect.height-10;
+            rect.width-=16; rect.height-=10;
 
             canvas.pushFont( this.titleFont );
             canvas.drawTextRect( this.current.title, rect, this.titleColor, 0, 0 );
@@ -246,7 +245,7 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
                 this.blurbAlpha+=0.05;
                 VG.context.workspace.redrawList.push( Date.now() );
             }
-            canvas.setAlpha( 1.0 );            
+            canvas.setAlpha( 1.0 );
         }
     }
 };

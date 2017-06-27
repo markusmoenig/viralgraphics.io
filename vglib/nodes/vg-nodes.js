@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * (C) Copyright 2014-2017 Markus Moenig <markusm@visualgraphics.tv>.
  *
  * This file is part of Visual Graphics.
  *
@@ -18,21 +18,24 @@
  *
  */
 
-// ----------------------------------------------------------------- VG.Nodes.NodeFloat --- Primitive.Float
+// ----------------------------------------------------------------- VG.Nodes.NodeFloat
 
 VG.Nodes.NodeFloat=function()
-{   
+{
     if ( !(this instanceof VG.Nodes.NodeFloat ) ) return new VG.Nodes.NodeFloat();
+
+    this.name="Float Value";
+    this.className="NodeFloat";
+    this.noPreview=true;
 
     VG.Nodes.Node.call( this );
 
-    this.name="Float";
-    this.className="NodeFloat";
-
     // --- Terminals
 
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "out", function() {
-        return this.container.getParamValue( "value" );
+    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "float", function( options ) {
+        let param = this.container.getParamValue( "float" );
+        this.customTitle = param.toFixed( 3 );
+        return param.toFixed( 3 );
     }.bind( this ) ) );
 };
 
@@ -41,481 +44,376 @@ VG.Nodes.NodeFloat.prototype=VG.Nodes.Node();
 VG.Nodes.NodeFloat.prototype.createProperties=function( data )
 {
     this.container=VG.Nodes.ParamContainer( this );
-    var group=this.container.addGroupByName( "settings", "Settings" );
+    var group=this.container.addGroupByName( "basics", "Float Settings" );
 
-    group.addParam( VG.Nodes.ParamNumber( data, "value", "Value", 1.0 ) );
+    group.addParam( VG.Nodes.ParamNumber( data, "float", "Float Value", 0.000, -10000.00, 10000.00, 3 ) );
 };
 
-// ----------------------------------------------------------------- VG.Nodes.NodeVector2 --- Primitive.Vector2
+VG.Nodes.availableNodes.set( "Generator.Float", "NodeFloat" );
 
-VG.Nodes.NodeVector2=function()
-{   
-    if ( !(this instanceof VG.Nodes.NodeVector2 ) ) return new VG.Nodes.NodeVector2();
+// ----------------------------------------------------------------- VG.Nodes.NodeShapes
 
-    VG.Nodes.Node.call( this );
-
-    this.name="Vector2";
-    this.className="NodeVector2";
-
-    // --- Terminals
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector2, "out", function() {
-        return this.container.getParamValue( "value" );
-    }.bind( this ) ) );
-};
-
-VG.Nodes.NodeVector2.prototype=VG.Nodes.Node();
-
-VG.Nodes.NodeVector2.prototype.createProperties=function( data )
+VG.Nodes.NodeShapes2D = function()
 {
-    this.container=VG.Nodes.ParamContainer( this );
-    var group=this.container.addGroupByName( "settings", "Settings" );
+    if ( !(this instanceof VG.Nodes.NodeShapes2D ) ) return new VG.Nodes.NodeShapes2D();
 
-    group.addParam( VG.Nodes.ParamVector2( data, "value", "Value", 1.0, 1.0 ) );
-};
-
-// ----------------------------------------------------------------- VG.Nodes.NodeVector2Breaker --- Breaker.Vector2
-
-VG.Nodes.NodeVector2Breaker=function()
-{   
-    if ( !(this instanceof VG.Nodes.NodeVector2Breaker ) ) return new VG.Nodes.NodeVector2Breaker();
-
-    this.name="Vector2Breaker";
-    this.className="NodeVector2Breaker";
+    this.name="Shapes 2D";
+    this.className="NodeShapes2D";
+    this.modifiesGlobal = true;
 
     VG.Nodes.Node.call( this );
 
-    // --- Input Terminal
-
-    this.inputTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector2, "vector2" );
-    this.addInput( this.inputTerminal );   
-
-    // --- Output Terminals
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "x", function() {
-        if ( this.inputTerminal.isConnected() ) return this.inputTerminal.connectedTo[0].onCall().x;
-        else return undefined;
-    }.bind( this ) ) );
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "y", function() {
-        if ( this.inputTerminal.isConnected() ) return this.inputTerminal.connectedTo[0].onCall().y;
-        else return undefined;
-    }.bind( this ) ) );
-};
-
-VG.Nodes.NodeVector2Breaker.prototype=VG.Nodes.Node();
-
-// ----------------------------------------------------------------- VG.Nodes.NodeVector2Maker --- Maker.Vector2
-
-VG.Nodes.NodeVector2Maker=function()
-{   
-    if ( !(this instanceof VG.Nodes.NodeVector2Maker ) ) return new VG.Nodes.NodeVector2Maker();
-
-    this.name="Vector2Maker";
-    this.className="NodeVector2Maker";
-
-    VG.Nodes.Node.call( this );
-
-    this.vector=new VG.Math.Vector2();
-
-    // --- Input Terminals
-
-    this.xTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "x" );
-    this.addInput( this.xTerminal );
-    this.yTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "y" );
-    this.addInput( this.yTerminal );
-
-    // --- Output Terminal
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector2, "out", function() {
-        if ( this.xTerminal.isConnected() ) this.vector.x=this.xTerminal.connectedTo[0].onCall();
-        if ( this.yTerminal.isConnected() ) this.vector.y=this.yTerminal.connectedTo[0].onCall();
-        return this.vector;
-    }.bind( this ) ) );
-
-};
-
-VG.Nodes.NodeVector2Maker.prototype=VG.Nodes.Node();
-
-// ----------------------------------------------------------------- VG.Nodes.NodeVector3 --- Primitive.Vector3
-
-VG.Nodes.NodeVector3=function()
-{   
-    if ( !(this instanceof VG.Nodes.NodeVector3 ) ) return new VG.Nodes.NodeVector3();
-
-    this.name="Vector3";
-    this.className="NodeVector3";
-
-    VG.Nodes.Node.call( this );
-
-    // --- Terminals
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector3, "out", function() {
-        return this.container.getParamValue( "value" );
-    }.bind( this ) ) );
-};
-
-VG.Nodes.NodeVector3.prototype=VG.Nodes.Node();
-
-VG.Nodes.NodeVector3.prototype.createProperties=function( data )
-{
-    this.container=VG.Nodes.ParamContainer( this );
-    var group=this.container.addGroupByName( "settings", "Settings" );
-
-    group.addParam( VG.Nodes.ParamVector3( data, "value", "Value", 1.0, 1.0, 1.0 ) );
-};
-
-// ----------------------------------------------------------------- VG.Nodes.NodeVector3Breaker --- Breaker.Vector3
-
-VG.Nodes.NodeVector3Breaker=function()
-{   
-    if ( !(this instanceof VG.Nodes.NodeVector3Breaker ) ) return new VG.Nodes.NodeVector3Breaker();
-
-    this.name="Vector3Breaker";
-    this.className="NodeVector3Breaker";
-
-    VG.Nodes.Node.call( this );
-
-    // --- Input Terminal
-
-    this.inputTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector3, "vector3" );
-    this.addInput( this.inputTerminal );   
-
-    // --- Output Terminals
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "x", function() {
-        if ( this.inputTerminal.isConnected() ) return this.inputTerminal.connectedTo[0].onCall().x;
-        else return undefined;
-    }.bind( this ) ) );
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "y", function() {
-        if ( this.inputTerminal.isConnected() ) return this.inputTerminal.connectedTo[0].onCall().y;
-        else return undefined;
-    }.bind( this ) ) );
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "z", function() {
-        if ( this.inputTerminal.isConnected() ) return this.inputTerminal.connectedTo[0].onCall().z;
-        else return undefined;
-    }.bind( this ) ) ); 
-};
-
-VG.Nodes.NodeVector3Breaker.prototype=VG.Nodes.Node();
-
-// ----------------------------------------------------------------- VG.Nodes.NodeVector3Maker --- Maker.Vector3
-
-VG.Nodes.NodeVector3Maker=function()
-{   
-    if ( !(this instanceof VG.Nodes.NodeVector3Maker ) ) return new VG.Nodes.NodeVector3Maker();
-
-    this.name="Vector3Maker";
-    this.className="NodeVector3Maker";
-
-    VG.Nodes.Node.call( this );
-
-    this.vector=new VG.Math.Vector3();
-
-    // --- Input Terminals
-
-    this.xTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "x" );
-    this.addInput( this.xTerminal );
-    this.yTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "y" );
-    this.addInput( this.yTerminal );
-    this.zTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "z" );
-    this.addInput( this.zTerminal );
-
-    // --- Output Terminal
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector3, "out", function() {
-        if ( this.xTerminal.isConnected() ) this.vector.x=this.xTerminal.connectedTo[0].onCall();
-        if ( this.yTerminal.isConnected() ) this.vector.y=this.yTerminal.connectedTo[0].onCall();
-        if ( this.zTerminal.isConnected() ) this.vector.z=this.zTerminal.connectedTo[0].onCall();
-        return this.vector;
-    }.bind( this ) ) );
-
-};
-
-VG.Nodes.NodeVector3Maker.prototype=VG.Nodes.Node();
-
-// ----------------------------------------------------------------- VG.Nodes.NodeVector4 --- Primitive.Vector4
-
-VG.Nodes.NodeVector4=function()
-{   
-    if ( !(this instanceof VG.Nodes.NodeVector4 ) ) return new VG.Nodes.NodeVector4();
-
-    this.name="Vector4";
-    this.className="NodeVector4";
-
-    VG.Nodes.Node.call( this );
-
-    // --- Terminals
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector4, "out", function() {
-        return this.container.getParamValue( "value" );
-    }.bind( this ) ) );
-};
-
-VG.Nodes.NodeVector4.prototype=VG.Nodes.Node();
-
-VG.Nodes.NodeVector4.prototype.createProperties=function( data )
-{
-    this.container=VG.Nodes.ParamContainer( this );
-    var group=this.container.addGroupByName( "settings", "Settings" );
-
-    group.addParam( VG.Nodes.ParamVector4( data, "value", "Value", 1.0, 1.0, 1.0, 1.0 ) );    
-};
-
-// ----------------------------------------------------------------- VG.Nodes.NodeVector4Breaker --- Breaker.Vector4
-
-VG.Nodes.NodeVector4Breaker=function()
-{   
-    if ( !(this instanceof VG.Nodes.NodeVector4Breaker ) ) return new VG.Nodes.NodeVector4Breaker();
-
-    this.name="Vector4Breaker";
-    this.className="NodeVector4Breaker";
-
-    VG.Nodes.Node.call( this );
-
-    // --- Input Terminal
-
-    this.inputTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector4, "vector4" );
-    this.addInput( this.inputTerminal );   
-
-    // --- Output Terminals
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "x", function() {
-        if ( this.inputTerminal.isConnected() ) return this.inputTerminal.connectedTo[0].onCall().x;
-        else return undefined;
-    }.bind( this ) ) );
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "y", function() {
-        if ( this.inputTerminal.isConnected() ) return this.inputTerminal.connectedTo[0].onCall().y;
-        else return undefined;
-    }.bind( this ) ) );
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "z", function() {
-        if ( this.inputTerminal.isConnected() ) return this.inputTerminal.connectedTo[0].onCall().z;
-        else return undefined;
-    }.bind( this ) ) );
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "w", function() {
-        if ( this.inputTerminal.isConnected() ) return this.inputTerminal.connectedTo[0].onCall().w;
-        else return undefined;
-    }.bind( this ) ) );    
-};
-
-VG.Nodes.NodeVector4Breaker.prototype=VG.Nodes.Node();
-
-// ----------------------------------------------------------------- VG.Nodes.NodeVector4Breaker --- Maker.Vector4
-
-VG.Nodes.NodeVector4Maker=function()
-{   
-    if ( !(this instanceof VG.Nodes.NodeVector4Maker ) ) return new VG.Nodes.NodeVector4Maker();
-
-    this.name="Vector4Maker";
-    this.className="NodeVector4Maker";
-
-    VG.Nodes.Node.call( this );
-
-    this.vector=new VG.Math.Vector4();
-
-    // --- Input Terminals
-
-    this.xTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "x" );
-    this.addInput( this.xTerminal );
-    this.yTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "y" );
-    this.addInput( this.yTerminal );
-    this.zTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "z" );
-    this.addInput( this.zTerminal );
-    this.wTerminal=VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "w" );
-    this.addInput( this.wTerminal );
-
-    // --- Output Terminal
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector4, "out", function() {
-        if ( this.xTerminal.isConnected() ) this.vector.x=this.xTerminal.connectedTo[0].onCall();
-        if ( this.yTerminal.isConnected() ) this.vector.y=this.yTerminal.connectedTo[0].onCall();
-        if ( this.zTerminal.isConnected() ) this.vector.z=this.zTerminal.connectedTo[0].onCall();
-        if ( this.wTerminal.isConnected() ) this.vector.w=this.wTerminal.connectedTo[0].onCall();
-        return this.vector;
-    }.bind( this ) ) );
-
-};
-
-VG.Nodes.NodeVector4Maker.prototype=VG.Nodes.Node();
-
-// ----------------------------------------------------------------- VG.Nodes.NodeColor --- Primitive.Color
-
-VG.Nodes.NodeColor=function()
-{   
-    if ( !(this instanceof VG.Nodes.NodeColor ) ) return new VG.Nodes.NodeColor();
-
-    this.name="Color";
-    this.className="NodeColor";
-
-    VG.Nodes.Node.call( this );
-
-    this.vector4=new VG.Math.Vector4();
-
-    // --- Terminals
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector4, "Vector4", function() {
-        var color=this.container.getParamValue( "color" );
-        this.vector4.set( color.r, color.g, color.b, color.a );
-        return this.vector4;
-    }.bind( this ) ) );
-};
-
-VG.Nodes.NodeColor.prototype=VG.Nodes.Node();
-
-VG.Nodes.NodeColor.prototype.createProperties=function( data )
-{
-    this.container=VG.Nodes.ParamContainer( this );
-    var group=this.container.addGroupByName( "settings", "Settings" );
-
-    group.addParam( VG.Nodes.ParamColor( data, "color", "Color", VG.Core.Color( "#000000" ) ) );    
-};
-
-// ----------------------------------------------------------------- VG.Nodes.NodeCheckerGen --- Generator.Checker
-
-VG.Nodes.NodeCheckerGen=function()
-{   
-    if ( !(this instanceof VG.Nodes.NodeCheckerGen ) ) return new VG.Nodes.NodeCheckerGen();
-
-    this.name="Checker Generator";
-    this.className="NodeCheckerGen";
-
-    VG.Nodes.Node.call( this );
-    this.size=new VG.Math.Vector2();
-    var outVector=new VG.Math.Vector4();
-
-    // --- Terminals
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Sample, "sample", function( vector ) {
-
-        var colorName="color1";
-
-        if ( !( Math.floor( vector.x / this.container.getParamValue( "width" ) ) % 2 ) ) 
+    this.boxD = `
+        float boxDist_${this.token}(vec2 p, vec2 size, float radius)
         {
-            if ( ( Math.floor( vector.y / this.container.getParamValue( "height" ) ) % 2 ) ) colorName="color2";
-        } else
+            size -= vec2(radius);
+            vec2 d = abs(p) - size;
+            return min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - radius;
+        }
+    `;
+
+    this.hexD = `
+        float hexDist_${this.token}(vec2 p, vec2 h) {
+	        vec2 q = abs(p);
+            return max(q.x-h.y,max(q.x+q.y*0.57735,q.y*1.1547)-h.x);
+        }
+    `;
+
+    this.triangleD = `
+        float triangleDist_${this.token}(vec2 p, float width, float height)
         {
-            if ( !( Math.floor( vector.y / this.container.getParamValue( "height" ) ) % 2 ) ) colorName="color2";
+            vec2 n = normalize(vec2(height, width / 2.0));
+            return max(	abs(p).x*n.x + p.y*n.y - (height*n.y), -p.y);
+        }
+    `;
+
+    this.strokeCode = `
+        float stroke_${this.token}(float dist, float width)
+        {
+            //dist += 1.0;
+            float alpha1 = clamp(dist + width, 0.0, 1.0);
+            float alpha2 = clamp(dist, 0.0, 1.0);
+            return alpha1 - alpha2;
+        }
+    `;
+
+    // --- Terminals
+
+    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "fill", function( options ) {
+
+        let addVar = options.getVar( this, "dist", "float" );
+        if ( !addVar.exists || options.override )
+            options.code += "  " + addVar.code + " = " + `NodeShapes2D_${this.token}( pos, normal )` + ";\n";
+
+        if ( !this.rt ) {
+            let prevCode = options.globalCode + options.code + `  material.color = vec3( clamp( - ${addVar.name}, 0., 1.0 ) );\n}`;
+            options.generatePreview( self, prevCode );
         }
 
-        var value=this.container.getParamValue( colorName );
+        return `clamp( -${addVar.name}, 0., 1.)`;
 
-        outVector.set( value.r, value.g, value.b, value.a );
-        return outVector;
     }.bind( this ) ) );
 
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector2, "size", function( vector ) {
-        this.size.set( this.container.getParamValue( "width" ) * 2, this.container.getParamValue( "height" ) * 2 );
-        return this.size;
-    }.bind( this ) ) );       
+    this.strokeTerminal = this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "stroke", function( options ) {
+
+        let addVar = options.getVar( this, "dist", "float" );
+        if ( !addVar.exists || options.override )
+            options.code += "  " + addVar.code + " = " + `NodeShapes2D_${this.token}( pos, normal )` + ";\n";
+
+        let stroke = this.container.getParamValue( "stroke" ).toFixed(3);
+
+        if ( !this.rt ) {
+            let prevCode = options.globalCode + options.code + ` material.color = vec3( stroke_${this.token}( ${addVar.name}, ${stroke} ) );\n}`;
+            options.generatePreview( self, prevCode );
+        }
+
+        return `stroke_${this.token}( ${addVar.name}, ${stroke} )`;
+
+    }.bind( this ) ) );
+
+    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "dist", function( options ) {
+
+        let addVar = options.getVar( this, "dist", "float" );
+        if ( !addVar.exists || options.override )
+            options.code += "  " + addVar.code + " = " + `NodeShapes2D_${this.token}( pos, normal )` + ";\n";
+
+        if ( !this.rt ) {
+            let prevCode = options.globalCode + options.code + `  material.color = vec3( ${addVar.name} );\n}`;
+            options.generatePreview( self, prevCode );
+        }
+
+        return addVar.name;
+
+    }.bind( this ) ) );
 };
 
-VG.Nodes.NodeCheckerGen.prototype=VG.Nodes.Node();
+VG.Nodes.NodeShapes2D.prototype=VG.Nodes.Node();
 
-VG.Nodes.NodeCheckerGen.prototype.createProperties=function( data )
+VG.Nodes.NodeShapes2D.prototype.getGlobalCode=function( data )
+{
+    let shape = this.container.getParamValue( "shape" );
+    let round = this.container.getParamValue( "round" ).toFixed(3);
+    let scale = this.container.getParamValue( "scale" ).toFixed(3);
+    let translate = this.container.getParam( "translate" ).toString();
+    let rotate = this.container.getParamValue( "rotate" ).toFixed(3);
+    let hard = this.container.getParamValue( "hard" ).toFixed(3);
+    let size= this.container.getParamValue( "size" );
+    let repeat = this.container.getParam( "repeat" ).toString();
+
+    let global = "";
+
+    if ( this.strokeTerminal.isConnected() )
+        global += this.strokeCode;
+
+    if ( shape === 0 ) {
+        // --- Box
+        global += this.boxD;
+        global += `
+            float NodeShapes2D_${this.token}( in vec3 pos, in vec3 normal )
+            {
+                vec2 uv;
+                vec3 n = abs(normal);
+                if(n.x > 0.57735) {
+                    uv = pos.yz;
+                } else if (n.y>0.57735){
+                    uv = pos.xz;
+                }else{
+                    uv = pos.xy;
+                }
+
+                // uv.x -= step(0.5, uv.y)*.5;
+
+                // if ( mod( uv.y * ( ${size.y.toFixed(2)} + (2.0 * ${size.y.toFixed(2)} - ${repeat}.y ) / 2.0 ) / ${scale}, 1.0 ) > 0.5 )
+	                // uv.x += 0.5;
+
+                uv /= ${scale};
+                uv += ${translate};
+
+                float angle = ${rotate};
+	            mat2 m = mat2( cos( angle ), sin( angle ), -sin( angle ), cos( angle ) );
+	            uv = uv * m;
+
+                vec2 r=${repeat};
+                vec2 q=mod(uv,r)-0.5*r;
+
+                // if ( mod( uv.y * 0.5, 1.0 ) > 0.5 )
+	                // uv.x += 0.5;
+
+                float d = boxDist_${this.token}( q, vec2( ${size.x.toFixed(2)}, ${size.y.toFixed(2)} ), ${round} ) * 100.0 * ${hard};
+                return d;
+            }
+        `;
+    } else
+    if ( shape === 1 ) {
+        // --- Hex
+        global += this.hexD;
+        global += `
+            float NodeShapes2D_${this.token}( in vec3 pos, in vec3 normal )
+            {
+                vec2 uv;
+                vec3 n = abs(normal);
+                if(n.x > 0.57735) {
+                    uv = pos.yz;
+                } else if (n.y>0.57735){
+                    uv = pos.xz;
+                }else{
+                    uv = pos.xy;
+                }
+
+                uv /= ${scale};
+                uv += ${translate};
+                float angle = ${rotate};
+	            mat2 m = mat2( cos( angle ), sin( angle ), -sin( angle ), cos( angle ) );
+	            uv = uv * m;
+
+                vec2 r=${repeat};
+                vec2 q=mod(uv,r)-0.5*r;
+
+                float d = hexDist_${this.token}( q, vec2( ${size.x.toFixed(2)}, ${size.y.toFixed(2)} ) ) * 100.0 * ${hard};
+                return d;
+            }
+        `;
+    } else
+    if ( shape === 2 ) {
+        // --- Sphere
+        global += this.hexD;
+        global += `
+            float NodeShapes2D_${this.token}( in vec3 pos, in vec3 normal )
+            {
+                vec2 uv;
+                vec3 n = abs(normal);
+                if(n.x > 0.57735) {
+                    uv = pos.yz;
+                } else if (n.y>0.57735){
+                    uv = pos.xz;
+                }else{
+                    uv = pos.xy;
+                }
+
+                uv /= ${scale};
+                uv += ${translate};
+                float angle = ${rotate};
+	            mat2 m = mat2( cos( angle ), sin( angle ), -sin( angle ), cos( angle ) );
+	            uv = uv * m;
+
+                vec2 r=${repeat};
+                vec2 q=mod(uv,r)-0.5*r;
+
+                float d = ( length( q ) - ${size.x.toFixed(2)} ) * 100.0 * ${hard} ;
+                return d;
+            }
+        `;
+    } else
+    if ( shape === 3 ) {
+        // --- Triangle
+        global += this.triangleD;
+        global += `
+            float NodeShapes2D_${this.token}( in vec3 pos, in vec3 normal )
+            {
+                vec2 uv;
+                vec3 n = abs(normal);
+                if(n.x > 0.57735) {
+                    uv = pos.yz;
+                } else if (n.y>0.57735){
+                    uv = pos.xz;
+                }else{
+                    uv = pos.xy;
+                }
+
+                uv /= ${scale};
+                uv += ${translate};
+                float angle = ${rotate};
+	            mat2 m = mat2( cos( angle ), sin( angle ), -sin( angle ), cos( angle ) );
+	            uv = uv * m;
+
+                vec2 r=${repeat};
+                vec2 q=mod(uv,r)-0.5*r;
+
+                float d = triangleDist_${this.token}( q, ${size.x.toFixed(2)}, ${size.y.toFixed(2)} ) * 100.0 * ${hard};
+                return d;
+            }
+        `;
+    }
+
+    // console.log( global );
+
+    return global;
+};
+
+VG.Nodes.NodeShapes2D.prototype.createProperties=function( data )
 {
     this.container=VG.Nodes.ParamContainer( this );
-    var group=this.container.addGroupByName( "settings", "Settings" );
+    var group=this.container.addGroupByName( "basics", "Shapes Settings" );
 
-    group.addParam( VG.Nodes.ParamNumber( data, "width", "Tile Width", 0.5, 0.0001, 1, 3 ) );
-    group.addParam( VG.Nodes.ParamNumber( data, "height", "Tile Height", 0.5, 0.0001, 1, 3 ) );
-    group.addParam( VG.Nodes.ParamColor( data, "color1", "Color 1", VG.Core.Color( "#ffffff" ) ) );
-    group.addParam( VG.Nodes.ParamColor( data, "color2", "Color 2", VG.Core.Color( "#000000" ) ) );    
+    group.addParam( VG.Nodes.ParamList( data, "shape", "Shape", 0, ["Cube", "Hex", "Sphere", "Triangle"] ) );
+    group.addParam( VG.Nodes.ParamVector2( data, "size", "Size", 1.00, 1.00, 0, 100, 2 ) );
+    group.addParam( VG.Nodes.ParamSlider( data, "round", "Rounding", 0.2, 0.001, 2.00, 0.1, 3 ) );
+    group.addParam( VG.Nodes.ParamSlider( data, "hard", "Hardness", 1.0, 0.001, 1.00, 0.1, 3 ) );
+    group.addParam( VG.Nodes.ParamSlider( data, "stroke", "Stroke", 1.0, 0.001, 20.00, 0.1, 3 ) );
+    group.addParam( VG.Nodes.ParamDivider( data, "divider", "Transform" ) );
+    group.addParam( VG.Nodes.ParamSlider( data, "scale", "Scale", 1, 0.001, 10.00, 0.1, 3 ) );
+    group.addParam( VG.Nodes.ParamSlider( data, "rotate", "Rotate", 0, 0.0, 359, 0.1, 2 ) );
+    group.addParam( VG.Nodes.ParamVector2( data, "translate", "Translate", 0.00, 0.00, -100, 100, 2 ) );
+    group.addParam( VG.Nodes.ParamVector2( data, "repeat", "Repeat", 0.00, 0.00, 0, 100, 2 ) );
+    // group.addParam( VG.Nodes.ParamNumber( data, "alternate", "Alternate", 0.00, 0, 100, 2 ) );
+
+    this.createDefaultProperties( data );
 };
 
-// ----------------------------------------------------------------- VG.Nodes.NodeImage --- Image
+VG.Nodes.availableNodes.set( "Shapes 2D.Shapes 2D", "NodeShapes2D" );
 
-VG.Nodes.NodeImage=function()
-{   
-    if ( !(this instanceof VG.Nodes.NodeImage ) ) return new VG.Nodes.NodeImage();
+// ----------------------------------------------------------------- VG.Nodes.NodeShapes
 
-    this.name="Image";
-    this.className="NodeImage";
+VG.Nodes.NodeShapes=function()
+{
+    if ( !(this instanceof VG.Nodes.NodeShapes ) ) return new VG.Nodes.NodeShapes();
+
+    this.name="Shapes";
+    this.className="NodeShapes";
+
+    this.global = `
+        float NodeShapes( in vec3 pos, in vec3 normal )
+        {
+            pos /= <! SCALE !>;
+
+            // vec3 repeat = mix( <! REPEAT !>, vec3(0), step( vec3( 0.999999 ), normal ) );
+            //normal.z = mix( repeat.z, 0.0, step( 0.999999, normal.z ) );
+
+            vec3 repeat = <! REPEAT !>;
+            // if ( normal.x > 0.999999 ) repeat.x = 0.0;
+            // if ( normal.y > 0.999999 ) repeat.y = 0.0;
+            if ( normal.z > 0.999999 ) repeat.z = 0.0;
+
+            vec3 tp = mod( pos, repeat ) - 0.5 * repeat;
+            <! SHAPE !>
+
+            // vec3 d = abs(tp) - <! SIZE !>;
+            // float t = min(max(d.x,max(d.y,d.z)),0.0) + length(max(d,0.0));
+
+            return clamp( t, 0., 1. );
+        }
+    `;
 
     VG.Nodes.Node.call( this );
 
-    this.color=VG.Core.Color();
-    this.size=new VG.Math.Vector2();
-
     // --- Terminals
 
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Sample, "sample", function( vector ) {
-        
-		var image=this.container.getParam( "image" ).value;
-        
-		if (image.width && image.height) {
-			image.getPixel(vector.x, vector.y, this.color);
-			return this.color;
-		} else
-		{
-			return null;
-		}
-	}.bind( this ) ) );
+    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "float", function( options ) {
+        // let param = this.container.getParamValue( "float" );
+        // this.customTitle = param.toFixed( 3 );
+        // return param.toFixed( 3 );
 
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Texture, "texture", function(w, h, reference) {
-		// w : width to output
-		// h : height to output
-		// reference : reference image to output
-        
-		var image=this.container.getParam( "image" ).value;
-		if (!image || !image.width || !image.height)
-			return null;
+        if ( !this.rt ) {
+            let prevCode = options.globalCode + options.code + "  material.color = vec3( 1.0 - NodeShapes( pos, vec3(1,1,0) ) );\n}";
+            options.generatePreview( self, prevCode );
+        }
 
-		for( var y=0; y < h; ++y )
-		{
-			for( var x=0; x < w; ++x )
-			{
-				image.getPixel(x, y, this.color);
-				reference.setPixel( x, y, this.color.r, this.color.g, this.color.b, this.color.a );
-			}
-		}
+        return "1.0 - NodeShapes( pos, normal )";
 
-		var texture = VG.Renderer().getTexture(reference);
-		return texture;
-    }.bind( this ) ) );
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector2, "size", function( vector ) {
-
-        var image=this.container.getParam( "image" ).value;
-        this.size.set( image.width, image.height );
-
-        return this.size;
     }.bind( this ) ) );
 };
 
-VG.Nodes.NodeImage.prototype=VG.Nodes.Node();
+VG.Nodes.NodeShapes.prototype=VG.Nodes.Node();
 
-VG.Nodes.NodeImage.prototype.createProperties=function( data )
+VG.Nodes.NodeShapes.prototype.getGlobalCode=function( data )
+{
+    let global = this.global;
+
+    let shape = this.container.getParamValue( "shape" );
+    let round = this.container.getParamValue( "round" ).toFixed(3);
+    let scale = this.container.getParamValue( "scale" ).toFixed(3);
+    let size= this.container.getParam( "size" ).toString();
+    // let size= "vec3( " + this.container.getParamValue( "size" ).x.toFixed(3) + " - " + round +
+        // ", " + this.container.getParamValue( "size" ).y.toFixed(3) + " - " + round +
+        // ", " + this.container.getParamValue( "size" ).z.toFixed(3) + " - " + round + ")";
+    let repeat = this.container.getParam( "repeat" ).toString();
+
+    let t;
+    if ( shape === 0 ) t = "float t = length( max( abs( vec3( tp.x, tp.y, tp.z ) ) - <! SIZE !>, 0.0 ) ) - <! ROUND !> / 10.0;";
+    else t = "float t = length( tp - vec3( 0, 0, 0 ) ) - 0.001;//<! SIZE !>;";
+
+    global = global.replace( /<! SHAPE !>/g, t );
+    global = global.replace( /<! SCALE !>/g, scale );
+    global = global.replace( /<! ROUND !>/g, round );
+    global = global.replace( /<! SIZE !>/g, size );
+    global = global.replace( /<! REPEAT !>/g, repeat );
+
+    // console.log( global );
+
+    return global;
+};
+
+VG.Nodes.NodeShapes.prototype.createProperties=function( data )
 {
     this.container=VG.Nodes.ParamContainer( this );
-    var group=this.container.addGroupByName( "settings", "Settings" );
+    var group=this.container.addGroupByName( "basics", "Shapes Settings" );
 
-    group.addParam( VG.Nodes.ParamImage( data, "image", "Image" ) );
+    group.addParam( VG.Nodes.ParamList( data, "shape", "Shape", 0, ["Cube", "Sphere"] ) );
+    group.addParam( VG.Nodes.ParamVector3( data, "size", "Size", 1.00, 0.50, 1.00, 0, 100, 2 ) );
+    group.addParam( VG.Nodes.ParamSlider( data, "round", "Rounding", 0.2, 0.001, 10.00, 0.1, 3 ) );
+    group.addParam( VG.Nodes.ParamDivider( data, "divider", "Transform" ) );
+    group.addParam( VG.Nodes.ParamSlider( data, "scale", "Scale", 1, 0.001, 3.00, 0.1, 3 ) );
+    group.addParam( VG.Nodes.ParamVector3( data, "repeat", "Repeat", 0.00, 0.00, 0.00, -100, 100, 2 ) );
 };
 
-VG.Nodes.NodeImage.prototype.updateFromData=function( data )
-{
-    // --- Update the image data after undo / redo and load operations
-
-    var param=this.container.getParam( "image" );
-    param.updateFromData( param.data );
-};
-
-// ---
-VG.Nodes.availableNodes.set( "Primitive.Float", "NodeFloat" );
-VG.Nodes.availableNodes.set( "Primitive.Vector2", "NodeVector2" );
-VG.Nodes.availableNodes.set( "Primitive.Vector3", "NodeVector3" );
-VG.Nodes.availableNodes.set( "Primitive.Vector4", "NodeVector4" );
-VG.Nodes.availableNodes.set( "Primitive.Color", "NodeColor" );
-VG.Nodes.availableNodes.set( "Breaker.Vector2", "NodeVector2Breaker" );
-VG.Nodes.availableNodes.set( "Breaker.Vector3", "NodeVector3Breaker" );
-VG.Nodes.availableNodes.set( "Breaker.Vector4", "NodeVector4Breaker" );
-VG.Nodes.availableNodes.set( "Maker.Vector2", "NodeVector2Maker" );
-VG.Nodes.availableNodes.set( "Maker.Vector3", "NodeVector3Maker" );
-VG.Nodes.availableNodes.set( "Maker.Vector4", "NodeVector4Maker" );
-VG.Nodes.availableNodes.set( "Generator.Checker", "NodeCheckerGen" );
-VG.Nodes.availableNodes.set( "Image", "NodeImage" );
+// VG.Nodes.availableNodes.set( "Generator.Shapes", "NodeShapes" );

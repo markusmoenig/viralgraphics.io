@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * (C) Copyright 2014-2017 Markus Moenig <markusm@visualgraphics.tv>.
  *
  * This file is part of Visual Graphics.
  *
@@ -29,7 +29,7 @@ VG.DB.getAppId=function( callback, url )
      */
 
 	if ( !url ) {
-    	if ( VG.App && VG.App.url ) url=VG.Utils.decompressFromBase64( VG.App.url );	
+    	if ( VG.App && VG.App.url ) url=VG.Utils.decompressFromBase64( VG.App.url );
 	}
 
 	var serverUrl="/app/check/?url=" + url;// + "&domain="
@@ -37,7 +37,7 @@ VG.DB.getAppId=function( callback, url )
 	VG.sendBackendRequest( serverUrl, "", function( responseText ) {
 		var response=JSON.parse( responseText );
 		var array=response.check;
-                
+
         for( var i=0; i < array.length; ++i ) {
         	if ( array[i].name === "url" ) {
         		if ( array[i].exists )
@@ -73,7 +73,7 @@ VG.DB.userChangePassword=function( password, callback )
 			if ( response.status === "ok" ) callback( true );
     		else callback( false );
     	}
-    
+
     }, "PUT" );
 };
 
@@ -93,11 +93,11 @@ VG.DB.userLogIn=function( userName, password, callback )
     	if ( callback ) {
 			if ( response.status === "ok" && response.user.username && response.user.username.length )
 			{
-				callback( true, response.user.username, response.user.userid, response.user.admin );
+				callback( true, response.user.username, response.user.id, response.user.admin );
 			}
     		else callback( false );
     	}
-    
+
     }, "POST" );
 };
 
@@ -115,14 +115,14 @@ VG.DB.userIsAppAdmin=function( appId, userId, callback )
 
 		if ( response.status === "ok" )
 		{
-			for( var g=0; g < response.groups.length; ++g ) 
+			for( var g=0; g < response.groups.length; ++g )
 			{
 				var group=response.groups[g];
 
-				if ( group.app === appId ) 
+				if ( group.app === appId )
 				{
 					var users=group.users;
-                
+
         			for( var i=0; i < users.length; ++i ) {
         				if ( users[i]._id === userId && callback ) {
         					callback( true );
@@ -133,7 +133,7 @@ VG.DB.userIsAppAdmin=function( appId, userId, callback )
         	}
         }
         if ( callback ) callback( false );
-    }, "GET" );	
+    }, "GET" );
 };
 
 VG.DB.sendEMailToAppAdmins=function( appId, name, email, subject, message, callback )
@@ -157,7 +157,7 @@ VG.DB.sendEMailToAppAdmins=function( appId, name, email, subject, message, callb
             if ( response.status === "ok" ) callback( true );
             else callback( false );
         }
-    
+
     }, "POST" );
 };
 
@@ -176,7 +176,7 @@ VG.DB.getAppChatMessages=function( appId, callback, since )
     VG.sendBackendRequest( cmd, "", function( responseText ) {
         var response=JSON.parse( responseText );
         if ( callback ) callback( response );
-    }, "GET" );    
+    }, "GET" );
 };
 
 VG.DB.postAppChatMessage=function( appId, message )
@@ -205,5 +205,5 @@ VG.DB.getAppSource=function( appId, callback )
         var response=JSON.parse( responseText );
         //VG.log( responseText );
         if ( callback ) callback( response );
-    }, "GET" );    
+    }, "GET" );
 };

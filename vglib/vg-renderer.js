@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv> and Contributors
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -84,20 +84,20 @@ VG.Renderer = function()
 	// the render targets(fbo) for continued effect-chain process, while ping pong (switching).
 	this.rtPing = new VG.RenderTarget();
 	this.rtPong = new VG.RenderTarget();
-    
+
 	this.framePingPong = new VG.GPUBuffer(VG.Type.Float, 4 * 4, true);
 	this.framePingPong.create();
-}
+};
 
 VG.Renderer.prototype.addResource = function(resource)
 {
     this.resources.set(resource, resource);
-}
+};
 
 VG.Renderer.prototype.removeResource = function(resource)
 {
     this.resources.delete(resource);
-}
+};
 
 // ping pong RT mechanism - begin
 VG.Renderer.prototype.startPingPong = function(width, height, imageWidth, imageHeight )
@@ -110,7 +110,7 @@ VG.Renderer.prototype.startPingPong = function(width, height, imageWidth, imageH
 
 	this.mainRT.setViewportEx(0, VG.context.workspace.rect.height-height, width, height );
 	this.prepareFrameQuad(0, 0, width, height, VG.Core.Size(width, height), this.framePingPong);
-}
+};
 
 VG.Renderer.prototype.whilePingPong = function(texture)
 {
@@ -120,11 +120,11 @@ VG.Renderer.prototype.whilePingPong = function(texture)
 		rtActive = this.rtPong;
 	else
 		rtActive = this.rtPing;
-	
+
 	rtActive.bind();
 
 	return rtActive;
-}
+};
 
 VG.Renderer.prototype.drawPingPong = function(aPos, aTex)
 {
@@ -133,20 +133,20 @@ VG.Renderer.prototype.drawPingPong = function(aPos, aTex)
 	 *  @param {number} aTex - The Texture coordinate attribute location of shader.
      *  */
     this.drawFrameQuad(aPos, aTex, true, this.framePingPong);
-}
+};
 
 VG.Renderer.prototype.endPingPong = function(texture)
 {
 	if (texture.bindAsTexture) // instanceof VG.RenderTarget
 		texture.unbind();
-}
+};
 // ping pong RT mechanism - end
 
 VG.Renderer.prototype.getTexture = function(source)
 {
-    /** Gets a texture from the pool 
-     *  @param {string | VG.Core.Image} source - The image source, either a path or an image object 
-     *  @returns {VG.Texture} 
+    /** Gets a texture from the pool
+     *  @param {string | VG.Core.Image} source - The image source, either a path or an image object
+     *  @returns {VG.Texture}
      *  */
     var tex = null;
 
@@ -171,7 +171,7 @@ VG.Renderer.prototype.getTexture = function(source)
     }
 
     return tex;
-}
+};
 
 VG.Renderer.prototype.onResize = function(w, h)
 {
@@ -179,7 +179,7 @@ VG.Renderer.prototype.onResize = function(w, h)
     this.h = h;
 
     this.resources.forEach(function(r) {
-        
+
         if (r.bindAsTexture) // instanceof VG.RenderTarget
         {
             if (r.autoResize)
@@ -192,7 +192,7 @@ VG.Renderer.prototype.onResize = function(w, h)
 
 
     this.proj2d.setOrtho(0, this.w, this.h, 0, 1, 0);
-}
+};
 
 VG.Renderer.prototype.restore = function()
 {
@@ -203,7 +203,7 @@ VG.Renderer.prototype.restore = function()
 
         r.create();
     });
-}
+};
 
 VG.Renderer.prototype.release = function()
 {
@@ -212,17 +212,17 @@ VG.Renderer.prototype.release = function()
     this.resources.forEach(function(r) {
         r.destroy();
     });
-}
+};
 
 VG.Renderer.prototype.invalidateAll = function()
 {
     /** Same as release */
     this.release();
-}
+};
 
 VG.Renderer.prototype.tick = function()
 {
-}
+};
 
 /**
  *
@@ -268,8 +268,7 @@ VG.Renderer.prototype.drawQuadRotate = function(options){
     // buffer init
     VG.Renderer._gpuBuffer = VG.Renderer._gpuBuffer || {};
     if(!VG.Renderer._gpuBuffer.drawQuadRotate){
-        buffer = VG.Renderer._gpuBuffer.drawQuadRotate
-            = new VG.GPUBuffer(VG.Type.Float, 4 * 8, true);
+        buffer = VG.Renderer._gpuBuffer.drawQuadRotate = new VG.GPUBuffer(VG.Type.Float, 4 * 8, true);
         buffer.create();
     }
     buffer = VG.Renderer._gpuBuffer.drawQuadRotate;
@@ -277,8 +276,7 @@ VG.Renderer.prototype.drawQuadRotate = function(options){
     // shader init
     VG.Renderer._shader = VG.Renderer._shader || {};
     if(!VG.Renderer._shader.drawQuadRotate){
-        shader = VG.Renderer._shader.drawQuadRotate
-            = new VG.Shader([
+        shader = VG.Renderer._shader.drawQuadRotate = new VG.Shader([
             "#version 100",
             "attribute vec2 a_center;",
             "attribute vec2 a_offset;",
@@ -290,7 +288,7 @@ VG.Renderer.prototype.drawQuadRotate = function(options){
             "void main(){",
             "   float c = cos(a_angle);",
             "   float s = sin(a_angle);",
-            "   v_texCoord = vec2(a_texCoord.x, 1.0-a_texCoord.y);",
+            "   v_texCoord = vec2(a_texCoord.x, a_texCoord.y);",
             "   vec2 offset = a_offset * a_scale;",
             "   gl_Position = vec4(a_center + vec2((offset.x*c - offset.y*s), (offset.x*s + offset.y*c))*u_aspect, 0.0, 1.0);",
             "}", ""
@@ -361,10 +359,10 @@ VG.Renderer.prototype.drawQuadRotate = function(options){
 VG.Renderer.prototype.drawQuad = function(texture, w, h, x, y, alpha, viewportSize)
 {
     /** Draws a textured quad, if rect is null then it render a full screen quad
-     *  unless w or h are defined 
-     *  @param {VG.Texture | VG.TextureCube | VG.RenderTarget} texture - The texture to use 
-     *  @param {number} w - Width in pixels 
-     *  @param {number} h - Height in pixels 
+     *  unless w or h are defined
+     *  @param {VG.Texture | VG.TextureCube | VG.RenderTarget} texture - The texture to use
+     *  @param {number} w - Width in pixels
+     *  @param {number} h - Height in pixels
      *  @param {number} x - X offset
      *  @param {number} y - Y offset
      *  @param {number} alpha - The alpha for the blend
@@ -374,25 +372,25 @@ VG.Renderer.prototype.drawQuad = function(texture, w, h, x, y, alpha, viewportSi
 	// texture
     this.shaderTex2d.bind();
     this.shaderTex2d.setTexture("tex", texture, 0);
-	
+
 	// alpha
 	if (alpha === undefined)
 		alpha = 1.0;
     this.shaderTex2d.setFloat("alpha", alpha);
-	
+
 	// quad
 	this.prepareFrameQuad(x, y, w, h, viewportSize);
 	this.drawFrameQuad(this.shaderTex2d.getAttrib("vPos"), this.shaderTex2d.getAttrib("vTexCoord"), true);
-}
+};
 
 VG.Renderer.prototype.prepareFrameQuad = function(x, y, w, h, viewportSize, quad)
 {
     /** Prepares a frame-quad to draw, if rect is null then it render a full screen quad
-     *  unless w or h are defined 
+     *  unless w or h are defined
      *  @param {number} x - X offset
      *  @param {number} y - Y offset
-     *  @param {number} w - Width in pixels 
-     *  @param {number} h - Height in pixels 
+     *  @param {number} w - Width in pixels
+     *  @param {number} h - Height in pixels
      *  @param {VG.Core.Size} [null] viewportSize - The viewport size
 	 *  @param {VG.GPUBuffer} quad - primitive to set
      *  */
@@ -405,7 +403,7 @@ VG.Renderer.prototype.prepareFrameQuad = function(x, y, w, h, viewportSize, quad
     if (!y) y = 0;
 
     var b = quad ? quad : this.texQuadBuffer;
-    
+
 	var x1 = (x - vw / 2) / (vw / 2);
     var y1 = (vh / 2 - y) / (vh / 2);
     var x2 = ((x + w) - vw / 2) / (vw / 2);
@@ -422,7 +420,7 @@ VG.Renderer.prototype.prepareFrameQuad = function(x, y, w, h, viewportSize, quad
     b.update();
 
 	return b;
-}
+};
 
 VG.Renderer.prototype.drawFrameQuad = function(aPos, aTex, nobind, quad)
 {
@@ -439,16 +437,16 @@ VG.Renderer.prototype.drawFrameQuad = function(aPos, aTex, nobind, quad)
     b.vertexAttrib(aTex, 2, false, 16, 4 * 2);
 
 	b.drawBuffer(VG.Renderer.Primitive.TriangleStrip, 0, 4);
-}
+};
 
 VG.Renderer.prototype.drawMesh = function(mesh, element, shader)
 {
-    /** Draw a mesh element(s) with a shader 
-     *  @param {VG.Render.Mesh} mesh - The mesh, must be valid 
-     *  @param {Number} element - The element index, -1 to draw all elements 
+    /** Draw a mesh element(s) with a shader
+     *  @param {VG.Render.Mesh} mesh - The mesh, must be valid
+     *  @param {Number} element - The element index, -1 to draw all elements
      *  @param {VG.Shader} shader - The shader to use */
 
-    if (mesh.isValid() == false) return;
+    if (mesh.isValid() === false) return;
 
 	var vb;
     for (var i = 0; i < mesh.vBuffers.length; i++)
@@ -495,7 +493,7 @@ VG.Renderer.prototype.drawMesh = function(mesh, element, shader)
     {
 		vb.drawBuffer(VG.Renderer.Primitive.Triangles, eOffset, eSize);
     }
-}
+};
 
 
 VG.Renderer.Primitive = { Triangles: 0, Lines: 1, TriangleStrip: 2, LineStrip: 3, Points: 4 };
@@ -512,34 +510,34 @@ VG.Render.TraceContext = function()
     /** Ray tracing context, used with VG.Render.trace function, holds an image which gets updated
      *  per pixel/tile asynchronously
      *
-     *  @constructor */ 
+     *  @constructor */
 
-    /** Output image 
+    /** Output image
      *  @member {VG.Core.Image} */
     this.output = new VG.Core.Image(1, 1);
     this.output.forcePowerOfTwo = false;
     this.output.alloc();
 
-    /** Internal ID, if set/zero then a new internal context is created 
+    /** Internal ID, if set/zero then a new internal context is created
      *  @member {Number} */
     this.id = 0;
 
-    /** Texture to use in real time rendering 
+    /** Texture to use in real time rendering
      *  @member {VG.Texture} */
     this.texture = new VG.Texture([this.output]);
-    
+
     /** If true then the tracing re-starts from zero, usefull when the camera or geometry changes
      *  to avoid artifacts, otherwise the tracer would continue to trace the scene with the new changes regardless
-     *  
+     *
      *  This gets automatically set to false once processed.
      *  @member {Bool} */
     this.resetAccumulation = false;
 
-    /** Set by the tracer, current iterations 
+    /** Set by the tracer, current iterations
      *  @member {Number} */
     this.iterations = 0;
 
-    /** Maximum iterations 
+    /** Maximum iterations
      *  @member {Number} */
     this.maxIterations = 512;
 
@@ -552,16 +550,16 @@ VG.Render.TraceContext = function()
     this.sceneChanged = true;
 
     this.texture.create();
-}
+};
 
 VG.Render.networkTrace = function()
 {
     return false; // not implemented, as for nows
-}
+};
 
 VG.Render.TraceSettings = function()
 {
     /** Ray tracing settings, used with VG.Render.trace function.
      *
-     *  @constructor */ 
+     *  @constructor */
 };

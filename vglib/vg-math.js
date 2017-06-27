@@ -1,12 +1,12 @@
 // cuon-matrix.js (c) 2012 kanda and matsuda
-/** 
+/**
  * This is a class treating 4x4 matrix.
  * This class contains the function that is equivalent to OpenGL matrix stack.
  * The matrix after conversion is calculated by multiplying a conversion matrix from the right.
  * The matrix is replaced by the calculated result.
  */
 
-/** 
+/**
  * Contains Math related classes used by Visual Graphics
  * @namespace
  */
@@ -61,7 +61,7 @@ VG.Math.Matrix4.prototype.set = function(src) {
   if (s === d) {
     return;
   }
-    
+
   for (i = 0; i < 16; ++i) {
     d[i] = s[i];
   }
@@ -76,12 +76,12 @@ VG.Math.Matrix4.prototype.set = function(src) {
  */
 VG.Math.Matrix4.prototype.concat = function(other) {
   var i, e, a, b, ai0, ai1, ai2, ai3;
-  
+
   // Calculate e = a * b
   e = this.elements;
   a = this.elements;
   b = other.elements;
-  
+
   // If e equals b, copy b to temporary matrix.
   if (e === b) {
     b = new Float32Array(16);
@@ -170,41 +170,25 @@ VG.Math.Matrix4.prototype.setInverseOf = function(other) {
   d = this.elements;
   inv = new Float32Array(16);
 
-  inv[0]  =   s[5]*s[10]*s[15] - s[5] *s[11]*s[14] - s[9] *s[6]*s[15]
-            + s[9]*s[7] *s[14] + s[13]*s[6] *s[11] - s[13]*s[7]*s[10];
-  inv[4]  = - s[4]*s[10]*s[15] + s[4] *s[11]*s[14] + s[8] *s[6]*s[15]
-            - s[8]*s[7] *s[14] - s[12]*s[6] *s[11] + s[12]*s[7]*s[10];
-  inv[8]  =   s[4]*s[9] *s[15] - s[4] *s[11]*s[13] - s[8] *s[5]*s[15]
-            + s[8]*s[7] *s[13] + s[12]*s[5] *s[11] - s[12]*s[7]*s[9];
-  inv[12] = - s[4]*s[9] *s[14] + s[4] *s[10]*s[13] + s[8] *s[5]*s[14]
-            - s[8]*s[6] *s[13] - s[12]*s[5] *s[10] + s[12]*s[6]*s[9];
+  inv[0]  =   s[5]*s[10]*s[15] - s[5] *s[11]*s[14] - s[9] *s[6]*s[15] + s[9]*s[7] *s[14] + s[13]*s[6] *s[11] - s[13]*s[7]*s[10];
+  inv[4]  = - s[4]*s[10]*s[15] + s[4] *s[11]*s[14] + s[8] *s[6]*s[15] - s[8]*s[7] *s[14] - s[12]*s[6] *s[11] + s[12]*s[7]*s[10];
+  inv[8]  =   s[4]*s[9] *s[15] - s[4] *s[11]*s[13] - s[8] *s[5]*s[15] + s[8]*s[7] *s[13] + s[12]*s[5] *s[11] - s[12]*s[7]*s[9];
+  inv[12] = - s[4]*s[9] *s[14] + s[4] *s[10]*s[13] + s[8] *s[5]*s[14] - s[8]*s[6] *s[13] - s[12]*s[5] *s[10] + s[12]*s[6]*s[9];
 
-  inv[1]  = - s[1]*s[10]*s[15] + s[1] *s[11]*s[14] + s[9] *s[2]*s[15]
-            - s[9]*s[3] *s[14] - s[13]*s[2] *s[11] + s[13]*s[3]*s[10];
-  inv[5]  =   s[0]*s[10]*s[15] - s[0] *s[11]*s[14] - s[8] *s[2]*s[15]
-            + s[8]*s[3] *s[14] + s[12]*s[2] *s[11] - s[12]*s[3]*s[10];
-  inv[9]  = - s[0]*s[9] *s[15] + s[0] *s[11]*s[13] + s[8] *s[1]*s[15]
-            - s[8]*s[3] *s[13] - s[12]*s[1] *s[11] + s[12]*s[3]*s[9];
-  inv[13] =   s[0]*s[9] *s[14] - s[0] *s[10]*s[13] - s[8] *s[1]*s[14]
-            + s[8]*s[2] *s[13] + s[12]*s[1] *s[10] - s[12]*s[2]*s[9];
+  inv[1]  = - s[1]*s[10]*s[15] + s[1] *s[11]*s[14] + s[9] *s[2]*s[15] - s[9]*s[3] *s[14] - s[13]*s[2] *s[11] + s[13]*s[3]*s[10];
+  inv[5]  =   s[0]*s[10]*s[15] - s[0] *s[11]*s[14] - s[8] *s[2]*s[15] + s[8]*s[3] *s[14] + s[12]*s[2] *s[11] - s[12]*s[3]*s[10];
+  inv[9]  = - s[0]*s[9] *s[15] + s[0] *s[11]*s[13] + s[8] *s[1]*s[15] - s[8]*s[3] *s[13] - s[12]*s[1] *s[11] + s[12]*s[3]*s[9];
+  inv[13] =   s[0]*s[9] *s[14] - s[0] *s[10]*s[13] - s[8] *s[1]*s[14] + s[8]*s[2] *s[13] + s[12]*s[1] *s[10] - s[12]*s[2]*s[9];
 
-  inv[2]  =   s[1]*s[6]*s[15] - s[1] *s[7]*s[14] - s[5] *s[2]*s[15]
-            + s[5]*s[3]*s[14] + s[13]*s[2]*s[7]  - s[13]*s[3]*s[6];
-  inv[6]  = - s[0]*s[6]*s[15] + s[0] *s[7]*s[14] + s[4] *s[2]*s[15]
-            - s[4]*s[3]*s[14] - s[12]*s[2]*s[7]  + s[12]*s[3]*s[6];
-  inv[10] =   s[0]*s[5]*s[15] - s[0] *s[7]*s[13] - s[4] *s[1]*s[15]
-            + s[4]*s[3]*s[13] + s[12]*s[1]*s[7]  - s[12]*s[3]*s[5];
-  inv[14] = - s[0]*s[5]*s[14] + s[0] *s[6]*s[13] + s[4] *s[1]*s[14]
-            - s[4]*s[2]*s[13] - s[12]*s[1]*s[6]  + s[12]*s[2]*s[5];
+  inv[2]  =   s[1]*s[6]*s[15] - s[1] *s[7]*s[14] - s[5] *s[2]*s[15] + s[5]*s[3]*s[14] + s[13]*s[2]*s[7]  - s[13]*s[3]*s[6];
+  inv[6]  = - s[0]*s[6]*s[15] + s[0] *s[7]*s[14] + s[4] *s[2]*s[15] - s[4]*s[3]*s[14] - s[12]*s[2]*s[7]  + s[12]*s[3]*s[6];
+  inv[10] =   s[0]*s[5]*s[15] - s[0] *s[7]*s[13] - s[4] *s[1]*s[15] + s[4]*s[3]*s[13] + s[12]*s[1]*s[7]  - s[12]*s[3]*s[5];
+  inv[14] = - s[0]*s[5]*s[14] + s[0] *s[6]*s[13] + s[4] *s[1]*s[14] - s[4]*s[2]*s[13] - s[12]*s[1]*s[6]  + s[12]*s[2]*s[5];
 
-  inv[3]  = - s[1]*s[6]*s[11] + s[1]*s[7]*s[10] + s[5]*s[2]*s[11]
-            - s[5]*s[3]*s[10] - s[9]*s[2]*s[7]  + s[9]*s[3]*s[6];
-  inv[7]  =   s[0]*s[6]*s[11] - s[0]*s[7]*s[10] - s[4]*s[2]*s[11]
-            + s[4]*s[3]*s[10] + s[8]*s[2]*s[7]  - s[8]*s[3]*s[6];
-  inv[11] = - s[0]*s[5]*s[11] + s[0]*s[7]*s[9]  + s[4]*s[1]*s[11]
-            - s[4]*s[3]*s[9]  - s[8]*s[1]*s[7]  + s[8]*s[3]*s[5];
-  inv[15] =   s[0]*s[5]*s[10] - s[0]*s[6]*s[9]  - s[4]*s[1]*s[10]
-            + s[4]*s[2]*s[9]  + s[8]*s[1]*s[6]  - s[8]*s[2]*s[5];
+  inv[3]  = - s[1]*s[6]*s[11] + s[1]*s[7]*s[10] + s[5]*s[2]*s[11] - s[5]*s[3]*s[10] - s[9]*s[2]*s[7]  + s[9]*s[3]*s[6];
+  inv[7]  =   s[0]*s[6]*s[11] - s[0]*s[7]*s[10] - s[4]*s[2]*s[11] + s[4]*s[3]*s[10] + s[8]*s[2]*s[7]  - s[8]*s[3]*s[6];
+  inv[11] = - s[0]*s[5]*s[11] + s[0]*s[7]*s[9]  + s[4]*s[1]*s[11] - s[4]*s[3]*s[9]  - s[8]*s[1]*s[7]  + s[8]*s[3]*s[5];
+  inv[15] =   s[0]*s[5]*s[10] - s[0]*s[6]*s[9]  - s[4]*s[1]*s[10] + s[4]*s[2]*s[9]  + s[8]*s[1]*s[6]  - s[8]*s[2]*s[5];
 
   det = s[0]*inv[0] + s[1]*inv[4] + s[2]*inv[8] + s[3]*inv[12];
   if (det === 0) {
@@ -584,6 +568,42 @@ VG.Math.Matrix4.prototype.rotate = function(angle, x, y, z) {
 };
 
 /**
+ * Return a new rotation matrix, with rotation angle specified by theta
+ * according to taitBryan angles.
+ * I.e rotate(x).rotate(y).rotate(z)
+ */
+VG.Math.Matrix4.taitBryan = (theta0, theta1, theta2) => {
+  theta0 = theta0 * Math.PI / 180;
+  theta1 = theta1 * Math.PI / 180;
+  theta2 = theta2 * Math.PI / 180;
+  let c = {
+    x: Math.cos(theta0),
+    y: Math.cos(theta1),
+    z: Math.cos(theta2)
+  };
+  let s = {
+      x: Math.sin(theta0),
+      y: Math.sin(theta1),
+      z: Math.sin(theta2)
+  };
+  let m = new VG.Math.Matrix4();
+  let e = m.elements;
+  e[0] = c.y*c.z;
+  e[1] = c.x*s.z + c.z*s.x*s.y;
+  e[2] = s.x*s.z-c.x*c.z*s.y;
+  e[3] = 0.0;
+  e[4] = -c.y*s.z;
+  e[5] = c.x*c.z-s.x*s.y*s.z;
+  e[6] = c.z*s.x + c.x*s.y*s.z;
+  e[7] = 0.0;
+  e[8] = s.y;
+  e[9] = -c.y*s.x;
+  e[10] = c.x*c.y;
+  e[11] = 0.0;
+  return m;
+};
+
+/**
  * Set the viewing matrix.
  * @param eyeX, eyeY, eyeZ The position of the eye point.
  * @param centerX, centerY, centerZ The position of the reference point.
@@ -689,7 +709,7 @@ VG.Math.Matrix4.prototype.dropShadow = function(plane, light) {
   e[15] = dot - light[3] * plane[3];
 
   return this.concat(mat);
-}
+};
 
 /**
  * Multiply the matrix for project vertex to plane from the right.(Projected by parallel light.)
@@ -732,10 +752,10 @@ VG.Math.Matrix4.prototype.dropShadowDirectionally = function(normX, normY, normZ
 
 //TODO implement own Matrix4
 
-/** 
- * Transform a single vector 3 or 4 array 
- * @param {Array} p - The vector array 
- * @param {Bool} normal - Determines if the vector is a normal, must be 3 element long 
+/**
+ * Transform a single vector 3 or 4 array
+ * @param {Array} p - The vector array
+ * @param {Bool} normal - Determines if the vector is a normal, must be 3 element long
  */
 
 VG.Math.Matrix4.prototype.transformVectorArray=function(p, normal)
@@ -773,27 +793,27 @@ VG.Math.Matrix4.prototype.transformVectorArray=function(p, normal)
         w = p[0] * e[3] + p[1] * e[7] + p[2] * e[11] + p[3] * e[15];
     }
 
-    p[0] = x; 
+    p[0] = x;
     p[1] = y;
     p[2] = z;
     if (p[3])
 		p[3] = w;
-}
+};
 
-/** Multiplies against 
+/** Multiplies against
  *  @paramn {VG.Math.Matrix4} other - The other matrix
- *  @return this 
+ *  @return this
  */
 
 VG.Math.Matrix4.prototype.mul=function(other)
 {
     return this.concat(other);
-}
+};
 
 /** Sets this matrix rotation from a quaternion
- *  @param {VG.Math.Quat} q - The quaternion 
+ *  @param {VG.Math.Quat} q - The quaternion
  *  @return this */
-    
+
 VG.Math.Matrix4.prototype.setQuatRotation=function(q)
 {
     var te = this.elements;
@@ -840,27 +860,27 @@ VG.Math.Matrix4.prototype.setQuatRotation=function(q)
     te[15] = 1;
 
     return this;
-}
+};
 
-/** Converts degrees to radians 
+/** Converts degrees to radians
  * @param {Number} deg - The degree value to convert
  */
 
 VG.Math.rad=function(deg)
 {
     return deg * (Math.PI / 180.0);
-}
+};
 
-/** Converts radians to degrees 
+/** Converts radians to degrees
  *  @param {Number} rad - The radian value to convert
  */
 
 VG.Math.deg=function(rad)
 {
     return rad * (180.0 / Math.PI);
-}
+};
 
-/** Float linear interpolation 
+/** Float linear interpolation
  *  @param {Number} a - The value from
  *  @param {Number} b - The value to
  *  @param {Number} d - The alpha / time */
@@ -868,7 +888,7 @@ VG.Math.deg=function(rad)
 VG.Math.lerp=function(a, b, d)
 {
     return a + (d * (b - a));
-}
+};
 
 /** Clamps val between min and max.
  *  @param {Number} val - The value to clamp
@@ -878,7 +898,7 @@ VG.Math.lerp=function(a, b, d)
 VG.Math.clamp=function(val, min, max)
 {
     return Math.min(Math.max(val, min), max);
-}
+};
 
 //TODO upgrade to use Vector2
 VG.Math.testLine=function(vT, v0, v1)
@@ -895,7 +915,7 @@ VG.Math.testLine=function(vT, v0, v1)
 
     var zero = 0.0;
     return ( det > zero ? 1 : (det < zero ? -1 : 0) );
-}
+};
 
 //TODO upgrade to use Vector2
 VG.Math.testTri=function(ts, v0, v1, v2)
@@ -911,10 +931,10 @@ VG.Math.testTri=function(ts, v0, v1, v2)
     if (sign2 > 0) return 1;
 
     return (sign0 && sign1 && sign2) ? -1 : 0;
-}
+};
 
 VG.Math.bezierCubic=function(t, p0, p1, p2, p3)
-{   
+{
     function Bp0(t, p) { var k = 1 - t; return k * k * k * p; }
     function Bp1(t, p) { var k = 1 - t; return 3 * k * k * t * p; }
     function Bp2(t, p) { var k = 1 - t; return 3 * k * t * t * p; }
@@ -922,7 +942,7 @@ VG.Math.bezierCubic=function(t, p0, p1, p2, p3)
     function Bp3(t, p) { return t * t * t * p; }
 
     return Bp0(t, p0) + Bp1(t, p1) + Bp2(t, p2) + Bp3(t, p3);
-}
+};
 
 VG.Math.bezier=function(t, p0, p1, p2)
 {
@@ -931,13 +951,13 @@ VG.Math.bezier=function(t, p0, p1, p2)
     function Bp2(t, p) { return t * t * p; }
 
     return Bp0(t, p0) + Bp1(t, p1) + Bp2(t, p2);
-}
+};
 
 
 /** Two-dimensional vector class
- *  @constructor 
- *  @param {number} x 
- *  @param {number} y 
+ *  @constructor
+ *  @param {number} x
+ *  @param {number} y
  */
 
 
@@ -945,20 +965,20 @@ VG.Math.Vector2=function(x, y)
 {
     this.x = x ? x : 0.0;
     this.y = y ? y : 0.0;
-}
+};
 
-/** Sets the vector from individual components 
+/** Sets the vector from individual components
  *  @param {Number} x - The x component
- *  @param {Number} y - The y component 
+ *  @param {Number} y - The y component
  */
 
 VG.Math.Vector2.prototype.set=function(x, y)
 {
     this.x = x;
     this.y = y;
-}
+};
 
-/** Copies the vector 
+/** Copies the vector
  *  @param {VG.Math.Vector2} other - The vector to copy from
  *  @returns this */
 
@@ -968,15 +988,15 @@ VG.Math.Vector2.prototype.copy=function(other)
     this.y = other.y;
 
     return this;
-}
+};
 
-/** Returns a copy of this vector 
+/** Returns a copy of this vector
  *  @returns VG.Math.Vector2 */
 
 VG.Math.Vector2.prototype.clone=function()
 {
     return new VG.Math.Vector2(this.x, this.y);
-}
+};
 
 /** Adds the provided value into this vector
  *  @param {VG.Math.Vector2 | number} v - The value to add
@@ -996,7 +1016,7 @@ VG.Math.Vector2.prototype.add=function(v)
     }
 
     return this;
-}
+};
 
 /** Substracts the provided value from this vector
  *  @param {VG.Math.Vector2 | number} v - The value to substract
@@ -1016,9 +1036,9 @@ VG.Math.Vector2.prototype.sub=function(v)
     }
 
     return this;
-}
+};
 
-/** Multiplies this vector by the provided value 
+/** Multiplies this vector by the provided value
  *  @param {VG.Math.Vector2 | number} v - The multiplier
  *  @returns this */
 
@@ -1036,9 +1056,9 @@ VG.Math.Vector2.prototype.mul=function(v)
     }
 
     return this;
-}
+};
 
-/** Divides this vector by the provided value 
+/** Divides this vector by the provided value
  *  @param {VG.Math.Vector2 | number} v - The divisor
  *  @returns this */
 
@@ -1056,15 +1076,15 @@ VG.Math.Vector2.prototype.div=function(v)
     }
 
     return this;
-}
+};
 
-/** Negates into a new vector 
+/** Negates into a new vector
  *  @returns VG.Math.Vector2 */
 
 VG.Math.Vector2.prototype.neg=function()
 {
     return new VG.Vector2(-this.x, -this.y);
-}
+};
 
 /** Dot product
  *  @param {VG.Math.Vector2} v - The other vector
@@ -1073,7 +1093,7 @@ VG.Math.Vector2.prototype.neg=function()
 VG.Math.Vector2.prototype.dot=function(v)
 {
     return this.x * v.x + this.y * v.y;
-}
+};
 
 /** Vector length
  *  @returns number */
@@ -1081,7 +1101,7 @@ VG.Math.Vector2.prototype.dot=function(v)
 VG.Math.Vector2.prototype.length=function()
 {
     return Math.sqrt(this.x * this.x + this.y * this.y);
-}
+};
 
 /** Vector square length
  *  @returns number */
@@ -1089,7 +1109,7 @@ VG.Math.Vector2.prototype.length=function()
 VG.Math.Vector2.prototype.lengthSq=function()
 {
     return this.x * this.x + this.y * this.y;
-}
+};
 
 /** Normalizes the vector, returns the inverse scalar
  *  @returns number */
@@ -1101,7 +1121,7 @@ VG.Math.Vector2.prototype.normalize=function()
     this.mul(invScal);
 
     return invScal;
-}
+};
 
 /** Returns a normalized copy of this vector
  *  @returns VG.Math.Vector2 */
@@ -1112,19 +1132,19 @@ VG.Math.Vector2.prototype.normalized=function()
     v.normalize();
 
     return v;
-}
+};
 
-/** Returns the distance to the provided vector 
- *  @param {VG.Math.Vector2} v - The other vector 
+/** Returns the distance to the provided vector
+ *  @param {VG.Math.Vector2} v - The other vector
  *  @returns number */
 
 VG.Math.Vector2.prototype.dist=function(v)
 {
     return Math.sqrt(this.distSq(v));
-}
+};
 
-/** Returns the squared distance to the provided vector 
- *  @param {VG.Math.Vector2} v - The other vector 
+/** Returns the squared distance to the provided vector
+ *  @param {VG.Math.Vector2} v - The other vector
  *  @returns number */
 
 VG.Math.Vector2.prototype.distSq=function(v)
@@ -1133,30 +1153,30 @@ VG.Math.Vector2.prototype.distSq=function(v)
     var dy = this.y - v.y;
 
     return dx * dx + dy * dy;
-}
+};
 
-/** Returns the quadratic angle in radians 
+/** Returns the quadratic angle in radians
  *  @params {VG.Math.Vector2} v - The other vector */
 
 VG.Math.Vector2.prototype.angleTo=function(v)
 {
     return Math.atan2(v.x - this.x, v.y - this.y);
-}
+};
 
 VG.Math.Vector2.prototype.dirFromAngle=function(a)
 {
-    /** Returns the a normalized direction from a quadratic angle in radians 
+    /** Returns the a normalized direction from a quadratic angle in radians
      *  @params {number} a - The angle in radians */
-     
+
     this.y = Math.cos(a);
     this.x = Math.sin(a);
 
     return this;
-}
+};
 
-/** Linearly interpolates to the provided vector 
+/** Linearly interpolates to the provided vector
  *  @param {VG.Math.Vector2} v - The other vector
- *  @param {number} delta - The interpolation delta 
+ *  @param {number} delta - The interpolation delta
  *  @returns this */
 
 VG.Math.Vector2.prototype.lerp=function(v, delta)
@@ -1165,7 +1185,7 @@ VG.Math.Vector2.prototype.lerp=function(v, delta)
     this.y += (v.y - this.y) * alpha;
 
     return this;
-}
+};
 
 /** Applies floor function to this vector */
 
@@ -1175,7 +1195,7 @@ VG.Math.Vector2.prototype.floor=function()
     this.y = Math.floor(this.y);
 
     return this;
-}
+};
 
 /** Applies ceil function to this vector */
 
@@ -1185,7 +1205,7 @@ VG.Math.Vector2.prototype.ceil=function()
     this.y = Math.ceil(this.y);
 
     return this;
-}
+};
 
 /** Applies round function to this vector */
 
@@ -1195,7 +1215,7 @@ VG.Math.Vector2.prototype.round=function()
     this.y = Math.round(this.y);
 
     return this;
-}
+};
 
 /** Sets this vector (direction) to its perpendicular form */
 
@@ -1208,7 +1228,7 @@ VG.Math.Vector2.prototype.setPerpendicular=function()
 
     this.x = invX / length;
     this.y = invY / length;
-}
+};
 
 VG.Math.Vector2.Zero = new VG.Math.Vector2(0, 0);
 VG.Math.Vector2.Up = new VG.Math.Vector2(1, 0);
@@ -1218,11 +1238,11 @@ VG.Math.Vector2.Up = new VG.Math.Vector2(1, 0);
 
 
 
-/** Three-dimensional vector class 
- *  @constructor 
- *  @param {number} x 
- *  @param {number} y 
- *  @param {number} z 
+/** Three-dimensional vector class
+ *  @constructor
+ *  @param {number} x
+ *  @param {number} y
+ *  @param {number} z
  */
 
 VG.Math.Vector3=function(x, y, z)
@@ -1231,12 +1251,12 @@ VG.Math.Vector3=function(x, y, z)
     this.y = y ? y : 0.0;
     this.z = z ? z : 0.0;
 
-}
+};
 
-/** Sets the vector values directly 
- *  @param {number} x 
- *  @param {number} y 
- *  @param {number} z 
+/** Sets the vector values directly
+ *  @param {number} x
+ *  @param {number} y
+ *  @param {number} z
  */
 
 VG.Math.Vector3.prototype.set=function(x, y, z)
@@ -1246,9 +1266,9 @@ VG.Math.Vector3.prototype.set=function(x, y, z)
     this.z = z;
 
     return this;
-}
+};
 
-/** Copies the vector 
+/** Copies the vector
  *  @param {VG.Math.Vector3} other - The vector to copy from
  *  @returns this */
 
@@ -1259,16 +1279,16 @@ VG.Math.Vector3.prototype.copy=function(other)
     this.z = other.z;
 
     return this;
-}
+};
 
-/** 
+/**
  * Returns array of all components.
  *  @returns [x, y, z] */
 
 VG.Math.Vector3.prototype.toArray = function()
 {
     return [this.x, this.y, this.z];
-}
+};
 
 /** set array of all components.
  *  @param [x, y, z] array - array to set
@@ -1276,18 +1296,18 @@ VG.Math.Vector3.prototype.toArray = function()
 
 VG.Math.Vector3.prototype.getArray = function(array)
 {
-    array[0] = this.x;
+  array[0] = this.x;
 	array[1] = this.y;
 	array[2] = this.z;
-}
+};
 
-/** Returns a copy of this vector  
+/** Returns a copy of this vector
  *  @returns VG.Math.Vector3 */
 
 VG.Math.Vector3.prototype.clone=function()
 {
     return new VG.Math.Vector3(this.x, this.y, this.z);
-}
+};
 
 /** Adds the provided value into this vector
  *  @param {VG.Math.Vector3 | number} v - The value to add
@@ -1309,7 +1329,7 @@ VG.Math.Vector3.prototype.add=function(v)
     }
 
     return this;
-}
+};
 
 /** Adds the given vector multiplied
  *  @param {VG.Math.Vector3} v - The value to add
@@ -1323,7 +1343,7 @@ VG.Math.Vector3.prototype.addMul=function(v, m)
     this.z += v.z * m;
 
     return this;
-}
+};
 
 /** Substracts the provided value from this vector
  *  @param {VG.Math.Vector3 | number} v - The value to substract
@@ -1345,9 +1365,9 @@ VG.Math.Vector3.prototype.sub=function(v)
     }
 
     return this;
-}
+};
 
-/** Multiplies this vector by the provided value 
+/** Multiplies this vector by the provided value
  *  @param {VG.Math.Vector3 | number} v - The multiplier
  *  @returns this */
 
@@ -1367,9 +1387,9 @@ VG.Math.Vector3.prototype.mul=function(v)
     }
 
     return this;
-}
+};
 
-/** Divides this vector by the provided value 
+/** Divides this vector by the provided value
  *  @param {VG.Math.Vector3 | number} v - The divisor
  *  @returns this */
 
@@ -1389,7 +1409,7 @@ VG.Math.Vector3.prototype.div=function(v)
     }
 
     return this;
-}
+};
 
 /** Negates this vector */
 
@@ -1400,15 +1420,15 @@ VG.Math.Vector3.prototype.negate=function()
     this.z = -this.z;
 
     return this;
-}
+};
 
-/** Negates into a new vector 
+/** Negates into a new vector
  *  @returns VG.Math.Vector3 */
 
 VG.Math.Vector3.prototype.negated=function()
 {
     return this.clone().negate();
-}
+};
 
 /** Dot product
  *  @param {VG.Math.Vector3} v - The other vector
@@ -1417,7 +1437,7 @@ VG.Math.Vector3.prototype.negated=function()
 VG.Math.Vector3.prototype.dot=function(v)
 {
     return this.x * v.x + this.y * v.y + this.z * v.z;
-}
+};
 
 /** Vector length
  *  @returns number */
@@ -1425,7 +1445,7 @@ VG.Math.Vector3.prototype.dot=function(v)
 VG.Math.Vector3.prototype.length=function()
 {
     return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-}
+};
 
 /** Vector square length
  *  @returns number */
@@ -1433,7 +1453,7 @@ VG.Math.Vector3.prototype.length=function()
 VG.Math.Vector3.prototype.lengthSq=function()
 {
     return this.x * this.x + this.y * this.y + this.z * this.z;
-}
+};
 
 /** Normalizes the vector, returns the inverse scalar
  *  @returns number */
@@ -1445,9 +1465,9 @@ VG.Math.Vector3.prototype.normalize=function()
     this.mul(invScal);
 
     return invScal;
-}
+};
 
-/** Sets the min value per component 
+/** Sets the min value per component
  *  @param {VG.Math.Vector3} v - The vector
  *  @returns this */
 
@@ -1458,9 +1478,9 @@ VG.Math.Vector3.prototype.min=function(v)
     if (this.z > v.z) this.z = v.z;
 
     return this;
-}
+};
 
-/** Sets the max value per component 
+/** Sets the max value per component
  *  @param {VG.Math.Vector3} v - The vector
  *  @returns this */
 
@@ -1471,7 +1491,7 @@ VG.Math.Vector3.prototype.max=function(v)
     if (this.z < v.z) this.z = v.z;
 
     return this;
-}
+};
 
 /** Returns a normalized copy of this vector
  *  @returns VG.Math.Vector3 */
@@ -1482,19 +1502,19 @@ VG.Math.Vector3.prototype.normalized=function()
     v.normalize();
 
     return v;
-}
+};
 
-/** Returns the distance to the provided vector 
- *  @param {VG.Math.Vector3} v - The other vector 
+/** Returns the distance to the provided vector
+ *  @param {VG.Math.Vector3} v - The other vector
  *  @returns number */
 
 VG.Math.Vector3.prototype.dist=function(v)
 {
     return Math.sqrt(this.distSq(v));
-}
+};
 
-/** Returns the squared distance to the provided vector 
- *  @param {VG.Math.Vector3} v - The other vector 
+/** Returns the squared distance to the provided vector
+ *  @param {VG.Math.Vector3} v - The other vector
  *  @returns number */
 
 VG.Math.Vector3.prototype.distSq=function(v)
@@ -1504,21 +1524,21 @@ VG.Math.Vector3.prototype.distSq=function(v)
     var dz = this.z - v.z;
 
     return dx * dx + dy * dy + dz * dz;
-}
+};
 
-/** Linearly interpolates to the provided vector 
+/** Linearly interpolates to the provided vector
  *  @param {VG.Math.Vector3} v - The other vector
- *  @param {number} delta - The interpolation delta 
+ *  @param {number} alpha - The interpolation alpha
  *  @returns this */
 
-VG.Math.Vector3.prototype.lerp=function(v, delta)
+VG.Math.Vector3.prototype.lerp=function(v, alpha)
 {
     this.x += (v.x - this.x) * alpha;
     this.y += (v.y - this.y) * alpha;
     this.z += (v.z - this.z) * alpha;
 
     return this;
-}
+};
 
 /** Applies round function to this vector */
 
@@ -1529,13 +1549,13 @@ VG.Math.Vector3.prototype.round=function()
     this.z = Math.round(this.z);
 
     return this;
-}
+};
 
 /* Computes the surface normal of the given three-dimmensional triangle
  * result is set into this vector.
- * 
- * @param {VG.Math.Vector3} p1 - Point in a triangle 
- * @param {VG.Math.Vector3} p2 - Point in a triangle  
+ *
+ * @param {VG.Math.Vector3} p1 - Point in a triangle
+ * @param {VG.Math.Vector3} p2 - Point in a triangle
  * @param {VG.Math.Vector3} p2 - Point in a triangle */
 
 VG.Math.Vector3.prototype.computeNormal=function(p1, p2, p3)
@@ -1543,15 +1563,15 @@ VG.Math.Vector3.prototype.computeNormal=function(p1, p2, p3)
     var u = p2.clone().sub(p1);
     var v = p3.clone().sub(p1);
 
-    this.x = (u.y * v.z) - (u.z * v.y); 
+    this.x = (u.y * v.z) - (u.z * v.y);
     this.y = (u.z * v.x) - (u.x * v.z);
     this.z = (u.x * v.y) - (u.y * v.x);
 
     return this;
-}
+};
 
 /**
- * Compute cross product from vectors, this cross B. 
+ * Compute cross product from vectors, this cross B.
  * @param {VG.Math.Vector3} B - a vector
  */
 
@@ -1565,8 +1585,8 @@ VG.Math.Vector3.prototype.cross=function(B)
     );
 };
 
-/** Transforms this vector by a matrix4 
- *  @param {VG.Math.Matrix4} 
+/** Transforms this vector by a matrix4
+ *  @param {VG.Math.Matrix4}
  *  @returns this */
 
 VG.Math.Vector3.prototype.transform=function(m, byVector)
@@ -1578,9 +1598,9 @@ VG.Math.Vector3.prototype.transform=function(m, byVector)
     this.x = p[0];
     this.y = p[1];
     this.z = p[2];
-    
+
 	return this;
-}
+};
 
 VG.Math.Vector3.Zero = new VG.Math.Vector3(0, 0, 0);
 VG.Math.Vector3.Up = new VG.Math.Vector3(0, 1, 0);
@@ -1593,8 +1613,8 @@ VG.Math.Vector3.Front = new VG.Math.Vector3(0, 0, -1);
 
 
 
-/** Four-dimmensional vector (mostly used for matrix transform) 
- *  @constructor 
+/** Four-dimmensional vector (mostly used for matrix transform)
+ *  @constructor
  *  @param {Number} x - The x component
  *  @param {Number} y - The x component
  *  @param {Number} z - The x component
@@ -1603,23 +1623,23 @@ VG.Math.Vector3.Front = new VG.Math.Vector3(0, 0, -1);
 VG.Math.Vector4=function(x, y, z, w)
 {
     this.set(x, y, z, w);
-}
+};
 
-/** Sets the vector 
+/** Sets the vector
  *  @param {Number} x - The x component
  *  @param {Number} y - The x component
  *  @param {Number} z - The x component
  *  @param {Number} w - The x component */
 
 VG.Math.Vector4.prototype.set=function(x, y, z, w)
-{   
+{
     this.x = x;
     this.y = y;
     this.z = z;
     this.w = w;
-}
+};
 
-/** Copies the vector 
+/** Copies the vector
  *  @param {VG.Math.Vector4} other - The vector to copy from
  *  @returns this */
 
@@ -1631,10 +1651,10 @@ VG.Math.Vector4.prototype.copy=function(other)
     this.w = other.w;
 
     return this;
-}
+};
 
-/** Transforms this vector by a matrix4 
- *  @param {VG.Math.Matrix4} 
+/** Transforms this vector by a matrix4
+ *  @param {VG.Math.Matrix4}
  *  @returns this */
 
 VG.Math.Vector4.prototype.transform=function(m)
@@ -1649,7 +1669,7 @@ VG.Math.Vector4.prototype.transform=function(m)
     this.w = p[3];
 
     return this;
-}
+};
 
 /** Returns array of all components.
  *  @returns [x, y, z, w] */
@@ -1657,7 +1677,7 @@ VG.Math.Vector4.prototype.transform=function(m)
 VG.Math.Vector4.prototype.toArray = function()
 {
     return [this.x, this.y, this.z, this.w];
-}
+};
 
 /** set array of all components.
  *  @param [x, y, z, w] array - array to set*/
@@ -1668,26 +1688,26 @@ VG.Math.Vector4.prototype.getArray = function(array)
 	array[1] = this.y;
 	array[2] = this.z;
 	array[3] = this.w;
-}
+};
 
 
-/** Axis aligned bounding box 
+/** Axis aligned bounding box
  *  @constructor */
 
 VG.Math.Aabb=function()
 {
-    /** Minimum bounds vector 
+    /** Minimum bounds vector
      *  @member {VG.Math.Vector3} */
     this.min = new VG.Math.Vector3();
 
-    /** Minimum bounds vector 
+    /** Minimum bounds vector
      *  @member {VG.Math.Vector3} */
     this.max = new VG.Math.Vector3();
 
     this.setEmpty();
-}
+};
 
-/** Copies the given aabb into this 
+/** Copies the given aabb into this
  *  @param {VG.Math.Aabb} other - The aabb to copy from
  *  @returns this */
 
@@ -1697,16 +1717,16 @@ VG.Math.Aabb.prototype.copy=function(other)
     this.max.copy(other.max);
 
     return this;
-}
+};
 
-/** Checks the validity of the bounds 
+/** Checks the validity of the bounds
  *  @return {Bool} */
 
 
 VG.Math.Aabb.prototype.isValid=function()
 {
     return this.min.length() > 0 || this.max.length() > 0;
-}
+};
 
 /** Expands by the given value (Vector or another Aabb)
  *  @param {VG.Math.Vector3 | VG.Math.Vector4 | VG.Math.Aabb} v - The value */
@@ -1736,18 +1756,18 @@ VG.Math.Aabb.prototype.expand=function(v)
     {
         throw "Value not recognized or undefined";
     }
-}
+};
 
-/** Sets the bounds from a half extent vector 
+/** Sets the bounds from a half extent vector
  * @param {VG.Math.Vector3} halfExtent - The half extent vector */
 
 VG.Math.Aabb.prototype.setFromHalfExtent=function(halfExtent)
 {
     this.min.copy(halfExtent).negate();
     this.max.copy(halfExtent);
-}
+};
 
-/** Sets the bounds from a center vector and a radius 
+/** Sets the bounds from a center vector and a radius
  * @param {VG.Math.Vector3} center - Center vector */
 
 VG.Math.Aabb.prototype.setFromCenterRadius=function(center, radius)
@@ -1758,7 +1778,7 @@ VG.Math.Aabb.prototype.setFromCenterRadius=function(center, radius)
 
     this.min.add(center);
     this.max.add(center);
-}
+};
 
 VG.Math.Aabb.__cacheV3 = new VG.Math.Vector3();
 
@@ -1773,7 +1793,7 @@ VG.Math.Aabb.__cacheV4Array = [
     new VG.Math.Vector4()
 ];
 
-/** Sets the bounds as empty/null 
+/** Sets the bounds as empty/null
  *  @returns this */
 
 
@@ -1788,14 +1808,14 @@ VG.Math.Aabb.prototype.setEmpty=function()
     this.max.z = -Infinity;
 
     return this;
-}
+};
 
-/** Tests if the given Aabb overlaps with this bounds 
+/** Tests if the given Aabb overlaps with this bounds
  *  @param {VG.Math.Aabb} other - The other aabb
  *  @returns {Bool}*/
 
 VG.Math.Aabb.prototype.overlaps=function(other)
-{   
+{
     if (other.max.x < this.min.x || other.min.x > this.max.x ||
         other.max.y < this.min.y || other.min.y > this.max.y ||
         other.max.z < this.min.z || other.min.z > this.max.z)
@@ -1804,9 +1824,9 @@ VG.Math.Aabb.prototype.overlaps=function(other)
     }
 
     return true;
-}
+};
 
-/** Transforms the aabb by the given matrix 
+/** Transforms the aabb by the given matrix
  *  @param {VG.Math.Matrix4} m - The matrix
  *  @returns this */
 
@@ -1831,9 +1851,9 @@ VG.Math.Aabb.prototype.transform=function(m)
     }
 
     return this;
-}
+};
 
-VG.Math.Aabb.prototype.sample=function( svec )
+VG.Math.Aabb.prototype.sample=function()
 {
     var svec=new VG.Math.Vector3();
 
@@ -1846,18 +1866,18 @@ VG.Math.Aabb.prototype.sample=function( svec )
     return svec;
 };
 
-/** Quaternion 
+/** Quaternion
  *
  *  @constructor
  *  @param {VG.Math.Quat} q - A quaternion to copy from
  *
- *  @constructor 
+ *  @constructor
  *  @param {Number} x - The x component
  *  @param {Number} y - The y component
  *  @param {Number} z - The z component
  *  @param {Number} w - The w component
  *
- *  @constructor 
+ *  @constructor
  *  @param {Number} yaw - Yaw in radians
  *  @param {Number} pitch - Pitch in radians
  *  @param {Number} roll - Roll in radians */
@@ -1890,18 +1910,18 @@ VG.Math.Quat=function()
     {
         this.setIdentity();
     }
-}
+};
 
-/** Clones this quaternion 
+/** Clones this quaternion
  *  @return {VG.Math.Quat} */
 
 VG.Math.Quat.prototype.clone=function()
 {
     return new VG.Math.Quat(this);
-}
+};
 
-/** Copies the provided quaternion into this one 
- *  @param {VG.Math.Quat} other - The other quaternion 
+/** Copies the provided quaternion into this one
+ *  @param {VG.Math.Quat} other - The other quaternion
  *  @return this */
 
 VG.Math.Quat.prototype.copy=function(other)
@@ -1912,11 +1932,11 @@ VG.Math.Quat.prototype.copy=function(other)
     this.w = other.w;
 
     return this;
-}
+};
 
 /** Sets this quaternion angle axis
- *  @param {Number} angle - The angle in radians 
- *  @param {VG.Math.Vector3} axis - The axis vector, normalized 
+ *  @param {Number} angle - The angle in radians
+ *  @param {VG.Math.Vector3} axis - The axis vector, normalized
  *  @return this */
 
 VG.Math.Quat.prototype.setAxis=function(angle, axis)
@@ -1930,7 +1950,7 @@ VG.Math.Quat.prototype.setAxis=function(angle, axis)
     this.w = Math.cos(hAngle);
 
     return this;
-}
+};
 
 /** Sets this quaternion from euler angles in radians
  *  @param {Number} yaw - Yaw in radians
@@ -1959,25 +1979,25 @@ VG.Math.Quat.prototype.setEuler=function(yaw, pitch, roll)
     this.w = c1 * c2 * c3 - s1 * s2 * s3;
 
     return this;
-}
+};
 
-/** Returns the length squared of this quaternion 
+/** Returns the length squared of this quaternion
  *  @return {Number} */
 
 VG.Math.Quat.prototype.lengthSq=function()
 {
     return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
-}
+};
 
-/** Returns the length of this quaternion 
+/** Returns the length of this quaternion
  *  @return {Number} */
 
 VG.Math.Quat.prototype.length=function()
 {
     return Math.sqrt(this.lengthSq());
-}
+};
 
-/** Inverses this quaternion in place 
+/** Inverses this quaternion in place
  *  @return this */
 
 VG.Math.Quat.prototype.inverse=function()
@@ -1986,7 +2006,7 @@ VG.Math.Quat.prototype.inverse=function()
     this.normalize();
 
     return this;
-}
+};
 
 /** Sets this quaternion as identity (0, 0, 0, 1) */
 
@@ -1996,18 +2016,18 @@ VG.Math.Quat.prototype.setIdentity=function()
     this.y = 0.0;
     this.z = 0.0;
     this.w = 1.0;
-}
+};
 
-/** Returns the dot product 
- *  @param {VG.Math.Quat} other - The other quaternion 
+/** Returns the dot product
+ *  @param {VG.Math.Quat} other - The other quaternion
  *  @return {Number} */
 
 VG.Math.Quat.prototype.dot=function(other)
 {
     return this.x * other.x + this.y * other.y + this.z * other.z + this.w * other.w;
-}
+};
 
-/** Normalizes this quaternion 
+/** Normalizes this quaternion
  *  @return this */
 
 VG.Math.Quat.prototype.normalize=function()
@@ -2027,16 +2047,16 @@ VG.Math.Quat.prototype.normalize=function()
     }
 
     return this;
-}
+};
 
-/** Multiplies two quaternions and sets the result into this quaternion 
+/** Multiplies two quaternions and sets the result into this quaternion
  *  @param {VG.Math.Quat} a = The A quaternion
- *  @param {VG.Math.Quat} b = The B quaternion 
+ *  @param {VG.Math.Quat} b = The B quaternion
  *  @return this */
 
 VG.Math.Quat.prototype.setMul=function(a, b)
 {
-     
+
     var ax = a.x;
     var ay = a.y;
     var az = a.z;
@@ -2053,9 +2073,9 @@ VG.Math.Quat.prototype.setMul=function(a, b)
     this.w = aw * bw - ax * bx - ay * by - az * bz;
 
     return this;
-}
+};
 
-/** Multiplies against the provided quaternion 
+/** Multiplies against the provided quaternion
  *  @param {VG.Math.Quat} other - The other quaternion
  *  @return this */
 
@@ -2064,7 +2084,7 @@ VG.Math.Quat.prototype.mul=function(other)
     this.setMul(this, other);
 
     return this;
-}
+};
 
 /** Multiplies against the provided quaternion in inverse order
  *  @param {VG.Math.Quat} other - The other quaternion
@@ -2075,9 +2095,9 @@ VG.Math.Quat.prototype.mulInv=function(other)
     this.setMul(other, this);
 
     return this;
-}
+};
 
-/** Conjugates this quaternion 
+/** Conjugates this quaternion
  *  @return this */
 
 VG.Math.Quat.prototype.conj=function()
@@ -2088,9 +2108,9 @@ VG.Math.Quat.prototype.conj=function()
     this.z = this.z * -1.0;
 
     return this;
-}
+};
 
-/** Rotates a vector 
+/** Rotates a vector
  *  @param {VG.Math.Vector3} vin - The vector to rotate
  *  @param {VG.Math.Vector3} [null] vout - If not null/undefined then vin is left untouched */
 
@@ -2118,15 +2138,15 @@ VG.Math.Quat.prototype.rotateVector=function(vin, vout)
     vout.x = rx * qw + rw * -qx + ry * -qz - rz * -qy;
     vout.y = ry * qw + rw * -qy + rz * -qx - rx * -qz;
     vout.z = rz * qw + rw * -qz + rx * -qy - ry * -qx;
-}
+};
 
-/** Sphere-interpolates this quaternion against 
- *  @param {VG.Math.Quat} qb - The other quaternion 
- *  @param {Number} t - The alpha 
+/** Sphere-interpolates this quaternion against
+ *  @param {VG.Math.Quat} qb - The other quaternion
+ *  @param {Number} t - The alpha
  *  @return this */
 
 VG.Math.Quat.prototype.slerp=function(qb, a)
-{   
+{
     if (a === 0) return this;
     if (a === 1) return this.copy(qb);
 
@@ -2181,4 +2201,4 @@ VG.Math.Quat.prototype.slerp=function(qb, a)
     this.w = w * rA + this.w * rB;
 
     return this;
-}
+};

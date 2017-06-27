@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -23,11 +23,13 @@
 
 // Web specific Implementations
 
-VG.downloadRequest=function( url, parameters, method ) 
-{ 
+VG.downloadRequest=function( url, parameters, method )
+{
+    VG.context.workspace._downloadIP=true;
+
 	var serverUrl="https://visualgraphics.tv";
 
-    method=method || "POST"; 
+    method=method || "POST";
 
     var form = document.createElement("form");
     form.setAttribute("method", method);
@@ -93,14 +95,14 @@ VG.ajaxRequest=function()
         // --- IE
         for (var i=0; i<activexmodes.length; i++) {
             try {
-                return new ActiveXObject(activexmodes[i])
+                return new ActiveXObject(activexmodes[i]);
             }
-    
+
             catch(e) {
                 //suppress error
             }
         }
-    } else  
+    } else
     {
         if (window.XMLHttpRequest) // --- Mozilla, Safari etc
             return new XMLHttpRequest();
@@ -108,7 +110,7 @@ VG.ajaxRequest=function()
     }
 };
 
-VG.setMouseCursorByID=function( id, cursorStyle ) 
+VG.setMouseCursorByID=function( id, cursorStyle )
 {
     var elem;
     if (document.getElementById && (elem=document.getElementById(id)) ) {
@@ -124,6 +126,7 @@ VG.setMouseCursorByID=function( id, cursorStyle )
 VG.setMouseCursor=function( cursor )
 {
     VG.setMouseCursorByID( "webgl", cursor );
+    VG.activeMouseCursor = cursor;
 };
 
 VG.getHostProperty=function( property )
@@ -132,9 +135,8 @@ VG.getHostProperty=function( property )
     {
         case VG.HostProperty.Platform :
             return VG.HostProperty.PlatformWeb;
-        break;
 
-        case VG.HostProperty.OperatingSystem : 
+        case VG.HostProperty.OperatingSystem :
         {
             var OS = "Unknown";
             if (window.navigator.userAgent.indexOf("Windows NT 6.2") != -1) OS=VG.HostProperty.OSWindows;
@@ -152,7 +154,6 @@ VG.getHostProperty=function( property )
 
         case VG.HostProperty.DrawMenus :
             return true;
-        break;
     }
 };
 
@@ -191,12 +192,12 @@ VG.remoteSaveFile=function( fileName, data, callback )
  */
 
 VG.decompressImageData=function( data, image, finishedCallback, options )
-{        
+{
     var im=new Image();
     image.locked=true;
 
-    im.onload=function() 
-    { 
+    im.onload=function()
+    {
         //image.data=null;
         image.imageData=data;
 
@@ -240,8 +241,8 @@ VG.decompressImageData=function( data, image, finishedCallback, options )
         VG.update();
 
         if ( finishedCallback ) finishedCallback( image );
-    }
-    im.src=data;  
+    };
+    im.src=data;
 };
 
 /**
@@ -254,46 +255,69 @@ VG.decompressImageData=function( data, image, finishedCallback, options )
  *
  */
 
-VG.compressImage=function( image, format )
+VG.compressImage=function( image, format, quality )
 {
     var ctx=textureCanvas.getContext('2d');
-        
+
     ctx.canvas.width=image.width;
-    ctx.canvas.height=image.height;    
+    ctx.canvas.height=image.height;
 
     var id=ctx.getImageData( 0, 0, image.width, image.height );
     var pixelData=id.data;
-    
-    for ( var h=0; h < image.height; ++h )
+
+    var h, w, offset, dOffset;
+    if ( image.elements === 4 )
     {
-        for ( var w=0; w < image.width; ++w )
+        for ( h=0; h < image.height; ++h )
         {
-            var offset=h * image.width * 4 + w * 4
-            var dOffset=h * image.modulo + w * 4
+            for ( w=0; w < image.width; ++w )
+            {
+                offset=h * image.width * 4 + w * 4;
+                dOffset=h * image.modulo + w * 4;
+
+                pixelData[offset]=image.data[dOffset];
+                pixelData[offset+1]=image.data[dOffset+1];
+                pixelData[offset+2]=image.data[dOffset+2];
+                pixelData[offset+3]=image.data[dOffset+3];
+            }
+        }
+    } else
+    if ( image.elements === 1 )
+    {
+        for ( h=0; h < image.height; ++h )
+        {
+            for ( w=0; w < image.width; ++w )
+            {
+                offset=h * image.width * 4 + w * 4;
+                dOffset=h * image.modulo + w;
                 //im.setPixelRGBA( w, h, pixelData[offset], pixelData[offset+1], pixelData[offset+2], pixelData[offset+3] );
 
-            pixelData[offset]=image.data[dOffset];
-            pixelData[offset+1]=image.data[dOffset+1];
-            pixelData[offset+2]=image.data[dOffset+2];
-            pixelData[offset+3]=image.data[dOffset+3];
+                var val=Math.floor( image.data[dOffset] );
+                pixelData[offset]=val;
+                pixelData[offset+1]=val;
+                pixelData[offset+2]=val;
+                pixelData[offset+3]=255;
+            }
         }
     }
 
     ctx.putImageData( id, 0, 0 );
 
     if ( format && format === "JPEG" )
-        return ctx.canvas.toDataURL( "image/jpeg" );
-    else return ctx.canvas.toDataURL();
+        return ctx.canvas.toDataURL( "image/jpeg", quality );
+    else if ( format )
+        return ctx.canvas.toDataURL( "image/" + format.toLowerCase(), quality );
+    else return ctx.canvas.toDataURL( "image/png", quality );
 };
 
-VG.loadStyleSVG=function( style, svgName, callback ) 
+VG.loadStyleSVG=function( style, svgName, callback )
 {
     var request = new VG.ajaxRequest();
 
     request.withCredentials = true;
 
     request.onreadystatechange = function() {
-        if (request.readyState == 4) 
+        if (request.readyState == 4)
         {
             if ( request.status == 200 || window.location.href.indexOf("http") ==-1 ) {
                 VG.Core.SVG( svgName, request.responseText, 20 );
@@ -308,14 +332,65 @@ VG.loadStyleSVG=function( style, svgName, callback )
 
     request.open( "GET", path, true );
     request.setRequestHeader( "Content-type", "application/json;charset=UTF-8" );
-    request.send();// parameters );    
+    request.send();// parameters );
 };
 
-VG.loadStyleImage=function( style, imageName, callback ) 
+VG.loadStyleHtml=function( style, svgName, callback )
+{
+    var request = new VG.ajaxRequest();
+
+    request.withCredentials = true;
+
+    request.onreadystatechange = function() {
+        if (request.readyState == 4)
+        {
+            if ( request.status == 200 || window.location.href.indexOf("http") ==-1 ) {
+                VG.Shaders.fs[svgName]=request.responseText;
+            }
+        }
+    };
+
+    var path;
+
+    if ( VG.localVGLibPrefix ) path=VG.localVGLibPrefix + "vglib/ui/styles/" + style + "/svg/" + svgName;
+    else path="/vglib/ui/styles/" + style + "/svg/" + svgName;
+
+    request.open( "GET", path, true );
+    request.setRequestHeader( "Content-type", "application/json;charset=UTF-8" );
+    request.send();// parameters );
+};
+
+
+VG.loadShader=function( shaderName )
+{
+    var request = new VG.ajaxRequest();
+
+    request.withCredentials = true;
+
+    request.onreadystatechange = function() {
+        if (request.readyState == 4)
+        {
+            if ( request.status == 200 || window.location.href.indexOf("http") ==-1 ) {
+                VG.Shaders.fs[shaderName]=request.responseText;
+            }
+        }
+    };
+
+    var path;
+
+    if ( VG.localVGLibPrefix ) path=VG.localVGLibPrefix + "vglib/shaders/" + shaderName;
+    else path="/vglib/shaders/" + shaderName;
+
+    request.open( "GET", path, true );
+    request.setRequestHeader( "Content-type", "application/json;charset=UTF-8" );
+    request.send();// parameters );
+};
+
+VG.loadStyleImage=function( style, imageName, callback )
 {
     var image=new Image();
     image.onload=function()
-    { 
+    {
         var im=VG.Core.Image( image.width, image.height );
         im.name=image.name;
 
@@ -337,9 +412,9 @@ VG.loadStyleImage=function( style, imageName, callback )
                 var offset=h * image.width * 4 + w * 4;
 
                 im.setPixelRGBA( w, h,
-                    pixelData[offset], 
-                    pixelData[offset+1], 
-                    pixelData[offset+2], 
+                    pixelData[offset],
+                    pixelData[offset+1],
+                    pixelData[offset+2],
                     pixelData[offset+3]
                 );
             }
@@ -350,7 +425,7 @@ VG.loadStyleImage=function( style, imageName, callback )
         VG.update();
 
         if (callback) callback(im);
-     }
+     };
 
     if ( VG.localVGLibPrefix ) image.src=VG.localVGLibPrefix + "vglib/ui/styles/" + style + "/icons/" + imageName;
     else image.src="/vglib/ui/styles/" + style + "/icons/" + imageName;
@@ -366,6 +441,8 @@ VG.copyToClipboard=function( type, data )
     if ( type === "Image" ) VG.context.workspace.imageClipboard=data;
     else
     if ( type === "Nodes" ) VG.context.workspace.nodesClipboard=data;
+    else
+    VG.context.workspace.textClipboard = data;
 };
 
 VG.clipboardPasteDataForType=function( type )
@@ -375,7 +452,8 @@ VG.clipboardPasteDataForType=function( type )
     if ( type === "Image" ) return VG.context.workspace.imageClipboard;
     else
     if ( type === "Nodes" ) return VG.context.workspace.nodesClipboard;
-    return null;
+    else
+    return VG.context.workspace.textClipboard;
 };
 
 /**
@@ -386,5 +464,5 @@ VG.clipboardPasteDataForType=function( type )
 
 VG.gotoUrl=function( link )
 {
-    window.open( link );    
+    window.open( link );
 };

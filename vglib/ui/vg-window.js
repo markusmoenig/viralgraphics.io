@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -34,7 +34,7 @@
 VG.UI.Window=function( title )
 {
     if ( !(this instanceof VG.UI.Window) ) return new VG.UI.Window( title );
-    
+
     VG.UI.Widget.call( this );
 
     this.supportsFocus=true;
@@ -49,7 +49,7 @@ VG.UI.Window=function( title )
     this.dragOpStart=VG.Core.Point();
     this.dragOpPos=VG.Core.Point();
 
-    this.dragOp=false;    
+    this.dragOp=false;
 
     this.closeRect=VG.Core.Rect();
     this.supportsClose=true;
@@ -58,6 +58,14 @@ VG.UI.Window=function( title )
 };
 
 VG.UI.Window.prototype=VG.UI.Widget();
+
+VG.UI.Window.prototype.dispose=function()
+{
+    if ( this.frameImage ) {
+        this.frameImage.dispose();
+        this.frameImage = undefined;
+    }
+};
 
 VG.UI.Window.prototype.setFocus=function()
 {
@@ -79,11 +87,15 @@ VG.UI.Window.prototype.calcSize=function( canvas )
         //layoutSize.height+=10;
 
         size.width=layoutSize.width;
-        size.height=VG.UI.stylePool.current.skin.Window.HeaderHeight + layoutSize.height;
+
+        if ( this.rounded )
+            size.height=VG.UI.stylePool.current.skin.RoundedWindow.HeaderHeight + layoutSize.height;
+        else
+            size.height=VG.UI.stylePool.current.skin.Window.HeaderHeight + layoutSize.height;
 
         this.rect.width=size.width;
         this.rect.height=size.height;
-    }  
+    }
 
     return size;
 };
@@ -92,7 +104,10 @@ VG.UI.Window.prototype.paintWidget=function( canvas )
 {
     if ( !this.visible ) return;
 
-    VG.context.style.drawWindow( canvas, this );    
+    if ( this.rounded )
+        VG.UI.stylePool.current.drawRoundedWindow( this, canvas );
+    else
+        VG.UI.stylePool.current.drawWindow( this, canvas );
 
     if ( this.layout ) {
 
@@ -123,7 +138,7 @@ VG.UI.Window.prototype.mouseMove=function( event )
     } else if ( this.insideCloseRect )
     {
         VG.update();
-        this.insideCloseRect=false;        
+        this.insideCloseRect=false;
     }
 };
 
@@ -132,11 +147,11 @@ VG.UI.Window.prototype.mouseDown=function( event )
     if ( event.pos.y >= this.rect.y && event.pos.y <= (this.rect.y + VG.UI.stylePool.current.skin.Window.HeaderHeight ) ) {
 
         this.dragOp=true;
-        this.dragOpStart.set( event.pos ); 
-        this.dragOpPos.x=this.rect.x; 
-        this.dragOpPos.y=this.rect.y; 
+        this.dragOpStart.set( event.pos );
+        this.dragOpPos.x=this.rect.x;
+        this.dragOpPos.y=this.rect.y;
 
-        VG.context.workspace.mouseTrackerWidget=this;    
+        VG.context.workspace.mouseTrackerWidget=this;
     }
 
     if ( this.closeRect.contains( event.pos ) )
@@ -149,8 +164,8 @@ VG.UI.Window.prototype.mouseUp=function( event )
 {
     //this.mouseIsDown=false;
 
-    this.dragOp=0;  
-    VG.context.workspace.mouseTrackerWidget=0;    
+    this.dragOp=0;
+    VG.context.workspace.mouseTrackerWidget=0;
 };
 
 /**Creates an VG.UI.Dialog object. VG.UI.Dialog inherits from VG.UI.Window.<br>
@@ -165,10 +180,10 @@ VG.UI.Window.prototype.mouseUp=function( event )
 VG.UI.Dialog=function( title )
 {
     if ( !(this instanceof VG.UI.Dialog) ) return new VG.UI.Dialog( title );
-    
+
     VG.UI.Window.call( this );
 
-    this.name="Dialog";   
+    this.name="Dialog";
     this.text=title;
 
     /**The layout of the Dialog, default is null. You should set your own layout into this property and the Dialog will adjust its size to fit the layout.
@@ -198,7 +213,7 @@ VG.UI.Dialog.prototype=VG.UI.Window();
 
 VG.UI.Dialog.prototype.calcSize=function( canvas )
 {
-    if ( this.layout ) 
+    if ( this.layout )
     {
         //this.layout.margin.set( 15, 12, 15, 6 );
         this.layout.maximumSize.set( this.maximumSize.width, this.maximumSize.height );
@@ -206,7 +221,9 @@ VG.UI.Dialog.prototype.calcSize=function( canvas )
 
     var size=VG.UI.Window.prototype.calcSize.call( this, canvas );
 
-    this.buttonLayoutSize.set( this.buttonLayout.calcSize( canvas ) );
+    if ( this.buttonLayout.visible )
+        this.buttonLayoutSize.set( this.buttonLayout.calcSize( canvas ) );
+    else this.buttonLayoutSize.set( 0, 0 );
 
     //size.width+=this.buttonLayoutSize.width;
     size.height+=this.buttonLayoutSize.height;
@@ -235,6 +252,7 @@ VG.UI.Dialog.prototype.addButton=function( text, func )
     else button.clicked=function() { this.close( this ); }.bind( this );
 
     this.buttonLayout.addChild( button );
+    return button;
 };
 
 /**Adds horizontal space to the button layout. If space is defined, it adds the value of space in pixels, otherwise the space is set to expanding, meaning
@@ -243,7 +261,7 @@ VG.UI.Dialog.prototype.addButton=function( text, func )
  */
 
 VG.UI.Dialog.prototype.addButtonSpacer=function( space )
-{    
+{
     var spacer=VG.UI.LayoutHSpacer();
 
     if ( space ) spacer.maximumSize.width=space;
@@ -311,7 +329,7 @@ VG.UI.Dialog.prototype.paintWidget=function( canvas )
 VG.UI.StatusDialog=function( type, title, message )
 {
     if ( !(this instanceof VG.UI.StatusDialog) ) return new VG.UI.StatusDialog( type, title, message );
-    
+
     VG.UI.Dialog.call( this );
 
     this.text=title;
@@ -321,9 +339,9 @@ VG.UI.StatusDialog=function( type, title, message )
 
     if ( type === VG.UI.StatusDialog.Type.Error ) imageName="status_error.png";
     else
-    if ( type === VG.UI.StatusDialog.Type.Warning ) imageName="status_warning.png";        
+    if ( type === VG.UI.StatusDialog.Type.Warning ) imageName="status_warning.png";
     else
-    if ( type === VG.UI.StatusDialog.Type.Question ) imageName="status_question.png";    
+    if ( type === VG.UI.StatusDialog.Type.Question ) imageName="status_question.png";
 
     this.image.image=VG.Utils.getImageByName( imageName );
     this.image.horizontalExpanding=false;
@@ -337,9 +355,9 @@ VG.UI.StatusDialog=function( type, title, message )
     this.layout.margin.left=20;
     this.layout.margin.right=20;
 
-    this.addButton( "Close" );
+    // this.addButton( "Close" );
 
-    this.type=type;   
+    this.type=type;
     this.message=message;
 };
 
@@ -351,3 +369,33 @@ VG.UI.StatusDialog.prototype=VG.UI.Dialog();
 
 VG.UI.StatusDialog.Type={ "Success" : 0, "Error" : 1, "Warning" : 2, "Question" : 3 };
 
+/**Creates an VG.UI.ProgressDialog object. VG.UI.ProgressDialog inherits from {@link VG.UI.Dialog}.<br>
+ *
+ * @constructor
+ */
+
+VG.UI.ProgressDialog=function( message, progress, title )
+{
+    if ( !(this instanceof VG.UI.ProgressDialog) ) return new VG.UI.ProgressDialog( message, progress, title );
+
+    VG.UI.Dialog.call( this );
+
+    this.text=title ? title : "Progress Dialog";
+
+    this.label=VG.UI.Label( message );
+    this.label.hAlignment=VG.UI.HAlignment.Left;
+
+    this.layout=VG.UI.Layout( this.label );
+    this.layout.spacing=40;
+    this.layout.margin.left=20;
+    this.layout.margin.right=20;
+
+    this.supportsClose=false;
+};
+
+VG.UI.ProgressDialog.prototype=VG.UI.Dialog();
+
+VG.UI.ProgressDialog.prototype.setStatus=function( message, progress )
+{
+    this.label.text=message;
+};

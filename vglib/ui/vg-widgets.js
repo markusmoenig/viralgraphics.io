@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv> and Contributors
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -33,7 +33,7 @@
 VG.UI.Widget=function()
 {
     if ( !(this instanceof VG.UI.Widget) ) return new VG.UI.Widget();
-    
+
     this.name="Widget";
     this.rect=VG.Core.Rect();
     this.contentRect=VG.Core.Rect();
@@ -41,9 +41,9 @@ VG.UI.Widget=function()
     /**The optional layout of the Widget, only used by widgets which contain a sub-layout, default is null.
      * @member {object} */
     this.layout=0;
-    
+
     /**The visual state of the Widget as defined in {@link VG.UI.Widget.VisualState}, set by {@link VG.UI.Workspace}.
-     * @member {VG.UI.Widget.VisualState} VG.UI.Widget.visualState */    
+     * @member {VG.UI.Widget.VisualState} VG.UI.Widget.visualState */
     this.visualState=VG.UI.Widget.VisualState.Normal;
 
     /** True if the widget has focus state. An easier and quicker to use alternative than to read out {@link VG.UI.Widget.VisualState}
@@ -52,39 +52,39 @@ VG.UI.Widget=function()
     this.hasFocusState=false;
     /** True if the widget has hover state. An easier and quicker to use alternative than to read out {@link VG.UI.Widget.VisualState}
     * @member {bool}
-    */    
+    */
     this.hasHoverState=false;
-    
+
     /**The disabled state of the object, false by default.
      * @member {bool} VG.UI.Widget.disabled */
     this._disabled=false;
 
     /**The visible state of the object, true by default. If false, the object will not be shown inside layouts.
-     * @member {bool} VG.UI.Widget.visible */     
+     * @member {bool} VG.UI.Widget.visible */
     this._visible=true;
 
     /**If true indicates that the Widgets supports focus, i.e. accepts mouse and keyboard events. Default is false.
-     * @member {bool} */       
+     * @member {bool} */
     this.supportsFocus=false;
 
-    /**If true indicates that the Widgets supports auto focus, i.e. accepts mouse and keyboard events automatically when the mouse is over the widget. Useful for Widgets on 
+    /**If true indicates that the Widgets supports auto focus, i.e. accepts mouse and keyboard events automatically when the mouse is over the widget. Useful for Widgets on
      * Website and Teblets. Default is false.
-     * @member {bool} */        
+     * @member {bool} */
     this.supportsAutoFocus=false;
     this.noFocusDrawing=false;
 
     /**If the widget is part of a layout, this property indicates to the Layout that the Widget supports expanding in the horizontal direction and does not have a fixed width.
      * If not expanding it has a fixed width which is set to the size calculated by calcSize().
      * The default state depends on the Widget implementation.
-     * @member {bool} VG.UI.Widget.horizontalExpanding */    
+     * @member {bool} VG.UI.Widget.horizontalExpanding */
     this._horizontalExpanding=true;
 
     /**If the widget is part of a layout, this property indicates to the Layout that the Widget supports expanding in the vertical direction and does not have a fixed height.
      * If not expanding it has a fixed height which is set to the size calculated by calcSize().
      * The default state depends on the Widget implementation.
-     * @member {bool} VG.UI.Widget.verticalExpanding */     
+     * @member {bool} VG.UI.Widget.verticalExpanding */
     this._verticalExpanding=true;
-    
+
     this.canvas=0;
     this.parent=0;
 
@@ -93,11 +93,11 @@ VG.UI.Widget=function()
     this.minimumSize=VG.Core.Size( 0, 0 );
 
     /**The maximumSize of the widget, defaults to {@link VG.UI.MaxLayoutSize}.
-    * @member {VG.Core.Size} */    
+    * @member {VG.Core.Size} */
     this.maximumSize=VG.Core.Size( 32768, 32768 );
 
     /**The preferredSize of the widget, defaults to 100, 100. Used in layouts to identify the preferred size for the Widget. This size is returned by calcSize() by default.
-    * @member {VG.Core.Size} */    
+    * @member {VG.Core.Size} */
     this.preferredSize=VG.Core.Size( 100, 100 );
 
     /**If the Widget contains other VG.UI.Widget derived Widgets at fixed positions, which also need keyboard or mouse events, the Widget can assign an array to childWidgets
@@ -117,12 +117,12 @@ VG.UI.Widget=function()
  * @enum
  */
 
-VG.UI.Widget.VisualState={ /** @type {number} Widget has normal state */ "Normal" : 0, 
-    /** @type {number} Mouse is on top of the widget */ "Hover" : 1, 
-    /** @type {number} Widget is being clicked */ "Clicked" : 2, 
+VG.UI.Widget.VisualState={ /** @type {number} Widget has normal state */ "Normal" : 0,
+    /** @type {number} Mouse is on top of the widget */ "Hover" : 1,
+    /** @type {number} Widget is being clicked */ "Clicked" : 2,
     /** @type {number} Widget has focus*/ "Focus" : 3 };
 
-Object.defineProperty( VG.UI.Widget.prototype, "disabled", 
+Object.defineProperty( VG.UI.Widget.prototype, "disabled",
 {
     get: function() {
         if ( !this.parent ) return this._disabled;
@@ -134,10 +134,10 @@ Object.defineProperty( VG.UI.Widget.prototype, "disabled",
             if ( this.visualState === VG.UI.Widget.VisualState.Focus )
                 VG.context.workspace.widgetLostFocus( this );
         }
-    }    
+    }
 });
 
-Object.defineProperty( VG.UI.Widget.prototype, "visible", 
+Object.defineProperty( VG.UI.Widget.prototype, "visible",
 {
     get: function() {
         return this._visible;
@@ -147,27 +147,27 @@ Object.defineProperty( VG.UI.Widget.prototype, "visible",
     set: function( visible ) {
         this._visible=visible;
         VG.update();
-    }    
+    }
 });
 
-Object.defineProperty( VG.UI.Widget.prototype, "horizontalExpanding", 
+Object.defineProperty( VG.UI.Widget.prototype, "horizontalExpanding",
 {
     get: function() {
         return this._horizontalExpanding;
     },
     set: function( expanding ) {
         this._horizontalExpanding=expanding;
-    }    
+    }
 });
 
-Object.defineProperty( VG.UI.Widget.prototype, "verticalExpanding", 
+Object.defineProperty( VG.UI.Widget.prototype, "verticalExpanding",
 {
     get: function() {
         return this._verticalExpanding;
     },
     set: function( expanding ) {
         this._verticalExpanding=expanding;
-    }    
+    }
 });
 
 /** Sets keyboard and mouse focus to this Widget.*/
@@ -175,6 +175,12 @@ Object.defineProperty( VG.UI.Widget.prototype, "verticalExpanding",
 VG.UI.Widget.prototype.setFocus=function()
 {
     VG.context.workspace.setFocus( this );
+};
+
+/** Implement in your sub-class to dispose allocated resources like textures etc.*/
+
+VG.UI.Widget.prototype.dispose=function()
+{
 };
 
 /**Key down event, send to the widget when it has focus and the user is pressing a key. The keycode together with an array containing all currently pressed keys are passed as arguments.
@@ -225,7 +231,7 @@ VG.UI.Widget.prototype.showContextMenu=function( event )
 {
     if ( this.contextMenu && this.rect.contains( event.pos ) )
         this.contextMenu.activate( event.pos );
-}
+};
 
 /**Paints the widget. Called by the parent when the widget should be painted. The rect member of the widget has been set to the valid
  * dimensions for the Widget before this call. All paint operations should be clipped to this rectangle.
@@ -235,7 +241,7 @@ VG.UI.Widget.prototype.showContextMenu=function( event )
 VG.UI.Widget.prototype.paintWidget=function( canvas )
 {
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, VG.UI.stylePool.current.skin.Widget.BackgroundColor );
-    
+
     if ( this.layout ) this.layout.layout( canvas );
 };
 
@@ -267,11 +273,11 @@ VG.UI.Widget.prototype.setFixedSize=function( width, height )
 
 VG.UI.Widget.prototype.checkSizeDimensionsMinMax=function( size )
 {
-    if ( !this.horizontalExpanding )    
+    if ( !this.horizontalExpanding )
         if ( this.minimumSize.width < size.width )
             this.minimumSize.width=size.width;
 
-    if ( !this.verticalExpanding )    
+    if ( !this.verticalExpanding )
         if ( this.minimumSize.height < size.height )
             this.minimumSize.height=size.height;
 
@@ -279,7 +285,7 @@ VG.UI.Widget.prototype.checkSizeDimensionsMinMax=function( size )
         if ( this.minimumSize.width > size.width )
             size.width=this.minimumSize.width;
 
-    if ( !this.verticalExpanding )    
+    if ( !this.verticalExpanding )
         if ( this.minimumSize.height > size.height )
             size.height=this.minimumSize.height;
 
@@ -287,9 +293,9 @@ VG.UI.Widget.prototype.checkSizeDimensionsMinMax=function( size )
         if ( this.maximumSize.width < size.width )
             size.width=this.maximumSize.width;
 
-    if ( !this.verticalExpanding )    
+    if ( !this.verticalExpanding )
         if ( this.maximumSize.height < size.height )
-            size.height=this.maximumSize.height;    
+            size.height=this.maximumSize.height;
 };
 
 VG.UI.Widget.prototype.valueFromModel=function( value )
@@ -302,12 +308,12 @@ VG.UI.Widget.prototype.setDragSourceId=function( id )
     this.dragSourceId=id;
 };
 
-/** 
+/**
  * Creates an RenderWidget to perform arbitrary realtime 2D/3D rendering.
- *  
+ *
  * The method render() is called to perform the rendering and needs to be overriden. The widget receives
  * calls to render() in 60 fps per second.
- * @constructor 
+ * @constructor
  */
 
 VG.UI.RenderWidget=function( noRealtime )
@@ -315,7 +321,7 @@ VG.UI.RenderWidget=function( noRealtime )
     if ( !(this instanceof VG.UI.RenderWidget) ) return new VG.UI.RenderWidget( noRealtime );
 
     VG.UI.Widget.call( this );
- 
+
     this.supportsFocus=true;
     this.clearColor=false;
 
@@ -329,13 +335,13 @@ VG.UI.RenderWidget=function( noRealtime )
 
 VG.UI.RenderWidget.prototype=VG.UI.Widget();
 
-/** Called to perform rendering, must be overrided, otherwise this does nothing 
+/** Called to perform rendering, must be overrided, otherwise this does nothing
  * @param {number} delta - The time passed in seconds from the last call to this method
  */
 
 VG.UI.RenderWidget.prototype.render=function(delta)
 {
-}
+};
 
 VG.UI.RenderWidget.prototype.paintWidget=function( canvas )
 {
@@ -356,9 +362,6 @@ VG.UI.RenderWidget.prototype.paintWidget=function( canvas )
     if ( VG.context.workspace.mainRect ) this._mainRT.setViewport( VG.context.workspace.mainRect );
     else this._mainRT.setViewport(VG.context.workspace.rect);
     canvas.popClipRect();
-
-    if ( this.context && this.context.trace )
-        canvas.drawImage( this.rect, this.context.traceContext.image );
 };
 
 // ----------------------------------------------------------------- VG.UI.Frame
@@ -368,7 +371,7 @@ VG.UI.Frame=function()
     if ( !(this instanceof VG.UI.Frame) ) return new VG.UI.Frame();
 
     VG.UI.Widget.call( this );
-    
+
     this.frameType=VG.UI.Frame.Type.None;
     this._image=VG.Core.Image();
 };
@@ -382,12 +385,12 @@ VG.UI.Frame.prototype.paintWidget=function( canvas )
     VG.UI.stylePool.current.drawFrame( this, canvas );
 };
 
-/** 
- * Displays an image. 
+/**
+ * Displays an image.
  *
  * @property {VG.Core.Image} image - The image object to show.
  * @property {string} imageName - The name of the image to load from the applications image pool.
- * @constructor 
+ * @constructor
  * @param image {VG.Core.Image|string} image - The image to display, can either be an image object or the name of the image which will be retrieved from the applications {@link VG.Core.ImagePool|image pool}.
  */
 
@@ -396,7 +399,7 @@ VG.UI.Image=function( image )
     if ( !(this instanceof VG.UI.Image) ) return new VG.UI.Image( image );
 
     VG.UI.Frame.call( this );
-    
+
     this.frameType=VG.UI.Frame.Type.None;
     this._verticalExpanding=true;
     this._horizontalExpanding=true;
@@ -409,10 +412,10 @@ VG.UI.Image=function( image )
     if ( image && typeof image === 'string' )
     {
         this.imageName=image;
-        var image=VG.Utils.getImageByName( this.imageName );
+        image=VG.Utils.getImageByName( this.imageName );
         if ( image && !image.locked ) this._image.set( image );
 
-    } else    
+    } else
     this._image=VG.Core.Image();
 
     this.adjustSizeToImage=true;
@@ -429,8 +432,8 @@ Object.defineProperty( VG.UI.Image.prototype, "image", {
         this._image.set( image );
 
         if ( this.collection && this.path )
-            this.collection.storeDataForPath( this.path, this._image.imageData );
-    }    
+            this.collection.storeDataForPath( { path : this.path, value : this._image.imageData } );
+    }
 });
 
 VG.UI.Image.prototype.calcSize=function()
@@ -492,12 +495,13 @@ VG.UI.Image.prototype.mouseUp=function( event )
 VG.UI.Image.prototype.paintWidget=function( canvas )
 {
     VG.UI.Frame.prototype.paintWidget.call( this, canvas );
+    var image;
 
     if ( !this._image.isValid() )
     {
         // --- Check if this image is based on an imageName and if yes, try to load it
         if ( this.imageName ) {
-            var image=VG.Utils.getImageByName( this.imageName );
+            image=VG.Utils.getImageByName( this.imageName );
 
             if ( image && !image.locked ) this._image.set( image );
             else return;
@@ -506,15 +510,15 @@ VG.UI.Image.prototype.paintWidget=function( canvas )
 
     if ( !this.rect.width || !this.rect.height ) return;
 
-    var image=this._image;
+    image=this._image;
 
     if ( this.clickedImage && this.mouseIsDown ) image=this.clickedImage;
-    else 
+    else
     if ( this.hoverImage && this.visualState === VG.UI.Widget.VisualState.Hover ) image=this.hoverImage;
 
     // --- Draw It
 
-    if ( this.rect.width >= image.width && this.rect.height >= image.height ) 
+    if ( this.rect.width >= image.width && this.rect.height >= image.height )
     {
         if ( !this.upScaling ) {
             var x=this.contentRect.x + (this.contentRect.width - image.width) / 2;
@@ -524,8 +528,8 @@ VG.UI.Image.prototype.paintWidget=function( canvas )
     } else canvas.drawScaledImage( this.contentRect, image );
 };
 
-/** 
- * Displays an clickable button widget. 
+/**
+ * Displays an clickable button widget.
  *
  *
  * @param {string} text - The text to display.
@@ -533,22 +537,22 @@ VG.UI.Image.prototype.paintWidget=function( canvas )
  * @property {bool} checkable - Indicates if the button supports a checked state.
  * @property {bool} checked - If the button is checkable, indicates if the button is currently checked.
  * @property {callback} clicked - Set this property to a callback function which gets called when the users clicks (mouse-press and release) the button.
- * @constructor 
+ * @constructor
  */
 
 VG.UI.Button=function( text )
 {
     if ( !(this instanceof VG.UI.Button) ) return new VG.UI.Button( text );
     this.text=arguments[0];
-    
+
     VG.UI.Widget.call( this );
     this.name="Button";
 
     this.minimumSize.set( 80, 20 );
-    
+
     this.horizontalExpanding=false;
     this.verticalExpanding=false;
-    
+
     this.supportsFocus=true;
     this.mouseIsDown=false;
     this.big=true;
@@ -567,11 +571,11 @@ Object.defineProperty( VG.UI.Button.prototype, "icon", {
     },
     set: function( icon ) {
         this._icon=icon;
-    }    
+    }
 });*/
 
 VG.UI.Button.prototype.calcSize=function( canvas )
-{    
+{
     var size=this.preferredSize;
 
     if ( this.big )
@@ -580,7 +584,7 @@ VG.UI.Button.prototype.calcSize=function( canvas )
 
         VG.context.workspace.canvas.getTextSize( this.text, size );
 
-        if ( size.width < 80 ) size.width=80;  
+        if ( size.width < 80 ) size.width=80;
 
         size.width+=20;
 
@@ -593,13 +597,13 @@ VG.UI.Button.prototype.calcSize=function( canvas )
 
         VG.context.workspace.canvas.getTextSize( this.text, size );
 
-        if ( size.width < 80 ) size.width=80;  
+        if ( size.width < 80 ) size.width=80;
 
         if ( size.height < 17 )
             size.height=17;
 
         size.width+=10;
-        this.minimumSize.set( size );      
+        this.minimumSize.set( size );
     }
 
     this.checkSizeDimensionsMinMax( size );
@@ -627,13 +631,13 @@ VG.UI.Button.prototype.mouseUp=function( event )
             if ( this.parent && this.parent instanceof VG.UI.Layout ) {
                 for ( var i=0; i <= this.parent.children.length; ++i ) {
                     var obj=this.parent.children[i];
-                    if ( obj instanceof VG.UI.Button && obj !== this ) 
+                    if ( obj instanceof VG.UI.Button && obj !== this )
                         obj.checked=false;
                 }
             }
         }
     }
-    this.mouseIsDown=false;    
+    this.mouseIsDown=false;
 };
 
 VG.UI.Button.prototype.paintWidget=function( canvas )
@@ -646,8 +650,8 @@ VG.UI.Button.prototype.paintWidget=function( canvas )
 VG.UI.ScrollBar=function()
 {
     if ( !(this instanceof VG.UI.ScrollBar) ) return new VG.UI.ScrollBar();
-    
-    VG.UI.Widget.call( this );  
+
+    VG.UI.Widget.call( this );
     this.name="ScrollBar";
 
     this.direction=VG.UI.ScrollBar.Direction.Vertical;
@@ -658,6 +662,7 @@ VG.UI.ScrollBar=function()
     this.dragHandleOffset=0;
     this.handleOffset=0;
 
+    this.offset=0;
     this.callbackObject=0;
 };
 
@@ -672,15 +677,17 @@ VG.UI.ScrollBar.prototype.setScrollBarContentSize=function( totalSize, visibleSi
 };
 
 VG.UI.ScrollBar.prototype.scrollTo=function( offset )
-{    
+{
+    offset=Math.max( offset, 0 );
+
     this.calibrateHandleOffset();
     this.handleOffset=offset / this.totalSize * this.visibleSize;
     this.verifyHandleRect();
-    
+
     if ( this.direction === VG.UI.ScrollBar.Direction.Vertical ) this.callbackObject.vHandleMoved( this.handleRect.y - this.rect.y );
     else this.callbackObject.hHandleMoved( this.handleRect.x - this.rect.x );
 
-    VG.update();    
+    VG.update();
 };
 
 VG.UI.ScrollBar.prototype.calibrateHandleOffset=function( offset )
@@ -690,13 +697,13 @@ VG.UI.ScrollBar.prototype.calibrateHandleOffset=function( offset )
     if ( this.handleOffset < 0 ) this.handleOffset=0;
 
     if ( this.direction === VG.UI.ScrollBar.Direction.Vertical ) {
-        if ( this.handleOffset > (this.rect.height - this.handleRect.height) ) this.handleOffset=this.rect.height - this.handleRect.height;            
+        if ( this.handleOffset > (this.rect.height - this.handleRect.height) ) this.handleOffset=this.rect.height - this.handleRect.height;
     } else
     if ( this.direction === VG.UI.ScrollBar.Direction.Horizontal ) {
-        if ( this.handleOffset > (this.rect.width - this.handleRect.width) ) this.handleOffset=this.rect.width - this.handleRect.width; 
+        if ( this.handleOffset > (this.rect.width - this.handleRect.width) ) this.handleOffset=this.rect.width - this.handleRect.width;
     }
-    this.dragHandleOffset=0;  
-}
+    this.dragHandleOffset=0;
+};
 
 VG.UI.ScrollBar.prototype.verifyHandleRect=function()
 {
@@ -722,17 +729,18 @@ VG.UI.ScrollBar.prototype.verifyHandleRect=function()
 
         if ( this.handleRect.right() > this.rect.right() )
             this.handleRect.x=this.rect.right() - this.handleRect.width;
-    } 
+    }
 };
 
 VG.UI.ScrollBar.prototype.mouseMove=function( event )
 {
-    if ( VG.context.workspace.mouseTrackerWidget !== this ) 
+    if ( VG.context.workspace.mouseTrackerWidget !== this )
         return;
 
+    var offset;
     if ( this.direction === VG.UI.ScrollBar.Direction.Vertical )
     {
-        var offset=event.pos.y - this.dragOpStartPos.y;
+        offset=event.pos.y - this.dragOpStartPos.y;
 
         if ( offset != this.handleOffset ) {
 
@@ -747,7 +755,7 @@ VG.UI.ScrollBar.prototype.mouseMove=function( event )
     } else
     if ( this.direction === VG.UI.ScrollBar.Direction.Horizontal )
     {
-        var offset=event.pos.x - this.dragOpStartPos.x;
+        offset=event.pos.x - this.dragOpStartPos.x;
 
         if ( offset != this.handleOffset ) {
 
@@ -759,19 +767,19 @@ VG.UI.ScrollBar.prototype.mouseMove=function( event )
             }
             VG.update();
         }
-    }    
+    }
 };
 
 VG.UI.ScrollBar.prototype.getHandleOffset=function()
 {
     if ( this.direction === VG.UI.ScrollBar.Direction.Vertical )
-    {    
+    {
         return this.handleRect.y - this.rect.y;
     } else
     if ( this.direction === VG.UI.ScrollBar.Direction.Horizontal )
     {
         return this.handleRect.x - this.rect.x;
-    };    
+    }
 };
 
 VG.UI.ScrollBar.prototype.setHandleOffset=function( offset )
@@ -801,7 +809,7 @@ VG.UI.ScrollBar.prototype.setHandleOffset=function( offset )
             }
             VG.update();
         }
-    }       
+    }
 };
 
 VG.UI.ScrollBar.prototype.mouseDown=function( event )
@@ -811,7 +819,7 @@ VG.UI.ScrollBar.prototype.mouseDown=function( event )
     if ( this.handleRect.contains( event.pos ) ) {
         VG.context.workspace.mouseTrackerWidget=this;
 
-        this.dragOpStartPos.set( event.pos );     
+        this.dragOpStartPos.set( event.pos );
         this.handleOffset=0;
 
         if ( this.direction === VG.UI.ScrollBar.Direction.Vertical ) {
@@ -819,7 +827,7 @@ VG.UI.ScrollBar.prototype.mouseDown=function( event )
         } else
         if ( this.direction === VG.UI.ScrollBar.Direction.Horizontal ) {
             this.dragHandleOffset=this.handleRect.x - this.rect.x;
-        }        
+        }
     } else
     if ( this.direction === VG.UI.ScrollBar.Direction.Vertical )
     {
@@ -829,18 +837,39 @@ VG.UI.ScrollBar.prototype.mouseDown=function( event )
             // --- User clicks above the ScrollBar
 
             this.handleOffset-=this.handleRect.height;
-        }  else        
+        }  else
         if ( event.pos.y > this.handleRect.bottom() ) {
             // --- User clicks below the ScrollBar
 
             this.handleOffset+=this.handleRect.height;
-        }        
+        }
 
         if ( this.callbackObject && this.callbackObject.vHandleMoved ) {
-            this.verifyHandleRect();                
+            this.verifyHandleRect();
             this.callbackObject.vHandleMoved( this.handleRect.y - this.rect.y );
         }
-        VG.update();        
+        VG.update();
+    } else
+    if ( this.direction === VG.UI.ScrollBar.Direction.Horizontal )
+    {
+        this.dragHandleOffset=0;
+
+        if ( event.pos.x < this.handleRect.x ) {
+            // --- User clicks left of the ScrollBar
+
+            this.handleOffset-=this.handleRect.width;
+        }  else
+        if ( event.pos.x > this.handleRect.right() ) {
+            // --- User clicks right of the ScrollBar
+
+            this.handleOffset+=this.handleRect.width;
+        }
+
+        if ( this.callbackObject && this.callbackObject.hHandleMoved ) {
+            this.verifyHandleRect();
+            this.callbackObject.hHandleMoved( this.handleRect.x - this.rect.x );
+        }
+        VG.update();
     }
 };
 
@@ -850,7 +879,7 @@ VG.UI.ScrollBar.prototype.autoScrollStart=function( event )
 
     VG.context.workspace.mouseTrackerWidget=this;
 
-    this.dragOpStartPos.set( event.pos );     
+    this.dragOpStartPos.set( event.pos );
     this.handleOffset=0;
 
     if ( this.direction === VG.UI.ScrollBar.Direction.Vertical ) {
@@ -861,17 +890,17 @@ VG.UI.ScrollBar.prototype.autoScrollStart=function( event )
     }
 
     this.autoScrolling=true;
-}; 
+};
 
 VG.UI.ScrollBar.prototype.mouseUp=function( event )
 {
-    if ( VG.context.workspace.mouseTrackerWidget === this ) 
-        VG.context.workspace.mouseTrackerWidget=0;  
+    if ( VG.context.workspace.mouseTrackerWidget === this )
+        VG.context.workspace.mouseTrackerWidget=0;
 
     this.autoScrolling=false;
 
     VG.update();
-};  
+};
 
 VG.UI.ScrollBar.prototype.paintWidget=function( canvas, adjustAlpha )
 {
@@ -883,13 +912,13 @@ VG.UI.ScrollBar.prototype.paintWidget=function( canvas, adjustAlpha )
     VG.UI.stylePool.current.drawScrollBar( this, canvas );
 };
 
-/** 
- * Displays a clickable check box widget. 
+/**
+ * Displays a clickable check box widget.
  *
  * @param {bool} checked - The initial checked state of the button.
  * @property {bool} checked - The checked state of the button.
  * @property {callback} clicked - Set this property to a callback function which gets called when the users clicks (mouse-press and release) the check box.
- * @constructor 
+ * @constructor
  */
 
 VG.UI.CheckBox=function( checked )
@@ -918,7 +947,7 @@ VG.UI.CheckBox.prototype.bind=function( collection, path )
 {
     this.collection=collection;
     this.path=path;
-    collection.addValueBindingForPath( this, path ); 
+    collection.addValueBindingForPath( this, path );
 };
 
 VG.UI.CheckBox.prototype.valueFromModel=function( value )
@@ -926,12 +955,12 @@ VG.UI.CheckBox.prototype.valueFromModel=function( value )
     //console.log( "TextEdit.valueFromModel: " + value );
 
     if ( value === null ) this.checked=false;
-    else this.checked=value;  
+    else this.checked=value;
 
     if ( this.changed )
-        this.changed( this.checked );   
+        this.changed( this.checked );
 
-    VG.update();    
+    VG.update();
 };
 
 VG.UI.CheckBox.prototype.mouseDown=function( event )
@@ -942,7 +971,7 @@ VG.UI.CheckBox.prototype.mouseDown=function( event )
     else this.checked=true;
 
     if ( this.collection && this.path )
-        this.collection.storeDataForPath( this.path, this.checked, undefined, undefined, this.undoText );   
+        this.collection.storeDataForPath( { path : this.path, value : this.checked, undoText : this.undoText } );
 
     if ( this.changed )
         this.changed( this.checked, this );
@@ -1010,7 +1039,7 @@ Object.defineProperty( VG.UI.ShiftWidget.prototype, "index", {
             this.layout.current=undefined;
         else
             this.layout.current=this.childs[index].widget;
-    }    
+    }
 });
 
 VG.UI.ShiftWidget.prototype.clear=function( text )
@@ -1019,7 +1048,7 @@ VG.UI.ShiftWidget.prototype.clear=function( text )
     this.index=-1;
 };
 
-VG.UI.ShiftWidget.prototype.text=function( text )
+VG.UI.ShiftWidget.prototype.text=function()
 {
     var text="";
     if ( this.index !== -1 ) text=this.childs[this.index];
@@ -1065,9 +1094,9 @@ VG.UI.ShiftWidget.prototype.valueFromModel=function( value )
 
 VG.UI.ShiftWidget.prototype.applyNewIndex=function( index )
 {
-    this.index=index;    
+    this.index=index;
     if ( this.collection && this.path )
-        this.collection.storeDataForPath( this.path, this.index );
+        this.collection.storeDataForPath( { path : this.path, value : this.index } );
 
     if ( this.changed )
         this.changed( index, this.childs[index].widget, this );
@@ -1100,7 +1129,7 @@ VG.UI.ShiftWidget.prototype.keyDown=function( keyCode )
                 this.applyNewIndex( this.index -1 );
                 VG.update();
             }
-        } else        
+        } else
         if ( keyCode == VG.Events.KeyCodes.ArrowDown )
         {
             if ( this.index < (this.childs.length -1 )) {
@@ -1126,9 +1155,9 @@ VG.UI.ShiftWidget.prototype.mouseMove=function( event )
 
 VG.UI.ShiftWidget.prototype.mouseDown=function( event )
 {
+    var index;
     if ( event.pos.x - this.rect.x < 25 )
     {
-        var index;
         if ( this.index === 0 ) index=this.childs.length-1;
         else index=this.index-1;
 
@@ -1136,7 +1165,7 @@ VG.UI.ShiftWidget.prototype.mouseDown=function( event )
     } else
     if ( this.rect.right() - event.pos.x < 25 )
     {
-        var index=(this.index + 1 ) % this.childs.length;
+        index=(this.index + 1 ) % this.childs.length;
         this.applyNewIndex( index );
     } else
     if ( this.rect.contains( event.pos ) ) {
@@ -1150,7 +1179,7 @@ VG.UI.ShiftWidget.prototype.mouseDown=function( event )
 
 VG.UI.ShiftWidget.prototype.mouseUp=function( event )
 {
-    VG.context.workspace.mouseTrackerWidget=null;    
+    VG.context.workspace.mouseTrackerWidget=null;
 
     if ( this.popup && this.highlightedIndex !== this.oldIndex )
         this.applyNewIndex( this.highlightedIndex );
@@ -1166,7 +1195,7 @@ VG.UI.ShiftWidget.prototype.paintWidget=function( canvas )
 
     if ( this.popup && canvas.delayedPaintWidgets.indexOf( this ) === -1 ) {
         canvas.delayedPaintWidgets.push( this );
-    } else 
+    } else
     {
         if ( this.index !== -1 ) {
 
@@ -1175,16 +1204,16 @@ VG.UI.ShiftWidget.prototype.paintWidget=function( canvas )
             this.layout.layout( canvas );
         }
 
-        VG.UI.stylePool.current.drawShiftWidget( this, canvas );        
+        VG.UI.stylePool.current.drawShiftWidget( this, canvas );
     }
 };
 
-/** 
+/**
  * Displays a drop down menu widget, offering several selectable choices to the user.
  *
  * @param {string} Texts - Initial content of the widget.
  * @property {callback} changed - Called when the current string item changes, parameters are: index, text, this.
- * @constructor 
+ * @constructor
  */
 
 VG.UI.DropDownMenu=function()
@@ -1215,7 +1244,7 @@ VG.UI.DropDownMenu=function()
 VG.UI.DropDownMenu.prototype=VG.UI.Widget();
 
 /**
- * Clears the content of the widget. 
+ * Clears the content of the widget.
  */
 
 VG.UI.DropDownMenu.prototype.clear=function( text )
@@ -1229,14 +1258,14 @@ VG.UI.DropDownMenu.prototype.clear=function( text )
  * @returns {string} The currently displayed text.
  */
 
-VG.UI.DropDownMenu.prototype.text=function( text )
+VG.UI.DropDownMenu.prototype.text=function()
 {
     var text="";
     if ( this.index !== -1 ) text=this.items[this.index];
     return text;
 };
 
-/** 
+/**
  * Adds a text to the drop down menu list.
  *
  * @param {string} Text - The text to add.
@@ -1248,7 +1277,7 @@ VG.UI.DropDownMenu.prototype.addItem=function( text )
     if ( this.index === -1 ) this.index=0;
 };
 
-/** 
+/**
  * Adds all text arguments to the drop down menu list.
  *
  * @param {string} Texts - The list of text to add.
@@ -1312,9 +1341,9 @@ VG.UI.DropDownMenu.prototype.valueFromModel=function( value )
 
 VG.UI.DropDownMenu.prototype.applyNewIndex=function( index )
 {
-    this.index=index;    
+    this.index=index;
     if ( this.collection && this.path )
-        this.collection.storeDataForPath( this.path, this.index );
+        this.collection.storeDataForPath( { path : this.path, value : this.index, undoText : this.undoText } );
 
     if ( this.changed )
         this.changed( index, this.items[index], this );
@@ -1337,6 +1366,31 @@ VG.UI.DropDownMenu.prototype.keyDown=function( keyCode )
         {
             this.index=this.oldIndex;
             this.popup=false;
+            VG.context.workspace.mouseTrackerWidget=null;
+
+            VG.update();
+        } else
+        if ( keyCode == VG.Events.KeyCodes.ArrowUp )
+        {
+            if ( this.index > 0 ) {
+                this.index--;
+                VG.update();
+            }
+        } else
+        if ( keyCode == VG.Events.KeyCodes.ArrowDown )
+        {
+            if ( this.index < (this.items.length -1 )) {
+                this.index++;
+                VG.update();
+            }
+        } else
+        if ( keyCode == VG.Events.KeyCodes.Enter )
+        {
+            if ( this.index !== this.oldIndex )
+                this.applyNewIndex( this.index );
+
+            this.popup=false;
+            VG.context.workspace.mouseTrackerWidget=null;
             VG.update();
         }
     } else
@@ -1347,7 +1401,7 @@ VG.UI.DropDownMenu.prototype.keyDown=function( keyCode )
                 this.applyNewIndex( this.index -1 );
                 VG.update();
             }
-        } else        
+        } else
         if ( keyCode == VG.Events.KeyCodes.ArrowDown )
         {
             if ( this.index < (this.items.length -1 )) {
@@ -1374,50 +1428,63 @@ VG.UI.DropDownMenu.prototype.mouseMove=function( event )
 
 VG.UI.DropDownMenu.prototype.mouseDown=function( event )
 {
-    if ( this.rect.contains( event.pos ) ) {
+    if ( this.popup === false )
+    {
+        if ( this.rect.contains( event.pos ) )
+        {
+            VG.context.workspace.mouseTrackerWidget=this;
 
-        VG.context.workspace.mouseTrackerWidget=this;
+            this.popup=true;
+            this.oldIndex=this.index;
+        }
+    } else
+    {
+        if ( this.popupRect.contains( event.pos ) )
+        {
+            if ( this.index !== this.oldIndex )
+                this.applyNewIndex( this.index );
+        } else this.index=this.oldIndex;
 
-        this.popup=true;
-        this.oldIndex=this.index;
+        this.popup=false;
+        VG.context.workspace.mouseTrackerWidget=null;
     }
 };
 
 VG.UI.DropDownMenu.prototype.mouseUp=function( event )
 {
+/*
     this.popup=false;
-    VG.context.workspace.mouseTrackerWidget=null;    
+    VG.context.workspace.mouseTrackerWidget=null;
 
     if ( this.index !== this.oldIndex )
         this.applyNewIndex( this.index );
-
-    VG.update();
+*/
 };
 
 VG.UI.DropDownMenu.prototype.paintWidget=function( canvas )
 {
     this.contentRect.set( this.rect );
 
-    if ( this.popup && canvas.delayedPaintWidgets.indexOf( this ) === -1 ) canvas.delayedPaintWidgets.push( this )
-    else VG.UI.stylePool.current.drawDropDownMenu( this, canvas );   
+    if ( this.popup && canvas.delayedPaintWidgets.indexOf( this ) === -1 ) canvas.delayedPaintWidgets.push( this );
+    else VG.UI.stylePool.current.drawDropDownMenu( this, canvas );
 };
 
-/** 
+/**
  * Status bar widget. Create a status bar and set it to the {@link VG.UI.Workspace|workspace} via the {@link VG.UI.Workspace.statusBar} property.
  *
  * @property {VG.UI.Layout} layout - Modify this layout with the content you want to add to the status bar. By default this layout is empty.
- * @constructor 
+ * @constructor
  */
 
 VG.UI.StatusBar=function()
 {
     if ( !(this instanceof VG.UI.StatusBar) ) return new VG.UI.StatusBar();
-    
+
     VG.UI.Widget.call( this );
     this.name="StatusBar";
 
     // ---
-    
+
     this.layout=VG.UI.Layout();
 
     this.layout.margin.left=10;
@@ -1475,7 +1542,7 @@ VG.UI.StatusBar.prototype.paintWidget=function( canvas )
     } else
     {
         this.messageLayout.rect.set( this.rect );
-        this.messageLayout.layout( canvas );        
+        this.messageLayout.layout( canvas );
     }
 };
 
@@ -1488,13 +1555,13 @@ VG.UI.TabWidgetItem=function( text, object )
     this.rect=VG.Core.Rect();
 };
 
-/** 
+/**
  * Creates a tab widget, the tabs are listed at the top of the widget. Each tab points to a layout or widget which will be displayed if the tab is selected.
  *
  * @param {string} text - The initial text of the tab.
  * @param {object} object - The initial content object for the tab.
  * @property {callback} changed - Callback will be called when the current tab changes, will suppy the content object of the current tab as parameter.
- * @constructor 
+ * @constructor
  */
 
 VG.UI.TabWidget=function( text )
@@ -1510,17 +1577,17 @@ VG.UI.TabWidget=function( text )
     this.layout.spacing=0;
     this.layout.parent=this;
 
-    this.supportsFocus=true;  
+    this.supportsFocus=true;
 
     this.items=[];
 
     for( var i=0; i < arguments.length; i+=2 )
-        this.addItem( arguments[i], arguments[i+1] );      
+        this.addItem( arguments[i], arguments[i+1] );
 };
 
 VG.UI.TabWidget.prototype=VG.UI.Widget();
 
-/** 
+/**
  * Adds a new tab item.
  *
  * @param {string} text - The text of the tab.
@@ -1540,7 +1607,7 @@ VG.UI.TabWidget.prototype.addItem=function( text, object )
     VG.update();
 };
 
-/** 
+/**
  * Adds several new new tab item.
  *
  * @param {string} text - The text of the tab.
@@ -1550,33 +1617,35 @@ VG.UI.TabWidget.prototype.addItem=function( text, object )
 VG.UI.TabWidget.prototype.addItems=function()
 {
     for( var i=0; i < arguments.length; i+=2 )
-        this.addItem( arguments[i], arguments[i+1] );    
+        this.addItem( arguments[i], arguments[i+1] );
 };
 
 VG.UI.TabWidget.prototype.mouseMove=function( event )
 {
-    if ( event.pos.y >= this.rect.y && event.pos.y <= this.rect.y + VG.UI.stylePool.current.skin.TabWidgetHeader.Height )
+    var headerHeight = this.small ? VG.UI.stylePool.current.skin.TabWidgetSmallHeader.Height : VG.UI.stylePool.current.skin.TabWidgetHeader.Height;
+    if ( event.pos.y >= this.rect.y && event.pos.y <= this.rect.y + headerHeight )
         VG.update();
 };
 
 VG.UI.TabWidget.prototype.mouseDown=function( event )
 {
-    if ( event.pos.y >= this.rect.y && event.pos.y <= this.rect.y + VG.UI.stylePool.current.skin.TabWidgetHeader.Height )
+    var headerHeight = this.small ? VG.UI.stylePool.current.skin.TabWidgetSmallHeader.Height : VG.UI.stylePool.current.skin.TabWidgetHeader.Height;
+    if ( event.pos.y >= this.rect.y && event.pos.y <= this.rect.y + headerHeight )
     {
         for ( var i=0; i < this.items.length; ++i )
         {
-            var item=this.items[i];    
+            var item=this.items[i];
 
             if ( event.pos.x >= item.rect.x && event.pos.x <= item.rect.x + item.rect.width ) {
                 this.layout.current=item.object;
-                if ( this.changed ) this.changed( item.object );
+                if ( this.changed ) this.changed( item.object, i );
             }
         }
     }
 };
 
 VG.UI.TabWidget.prototype.mouseUp=function( event )
-{   
+{
 };
 
 VG.UI.TabWidget.prototype.calcSize=function( canvas )
@@ -1588,7 +1657,7 @@ VG.UI.TabWidget.prototype.calcSize=function( canvas )
 
 VG.UI.TabWidget.prototype.paintWidget=function( canvas )
 {
-    VG.UI.stylePool.current.drawTabWidgetHeader( this, canvas );  
+    VG.UI.stylePool.current.drawTabWidgetHeader( this, canvas );
 
     this.layout.rect.set( this.contentRect );
     this.layout.layout( canvas );
@@ -1640,17 +1709,17 @@ VG.UI.SnapperWidgetItem.prototype.mouseDown=function( event )
     this.object.visible=this.open;
     this.mouseIsDown=true;
 
-    VG.update();    
+    VG.update();
 };
 
 VG.UI.SnapperWidgetItem.prototype.mouseUp=function( event )
-{   
-    this.mouseIsDown=false;    
+{
+    this.mouseIsDown=false;
 };
 
 VG.UI.SnapperWidgetItem.prototype.paintWidget=function( canvas )
 {
-    VG.UI.stylePool.current.drawSnapperWidgetItem( this, canvas );  
+    VG.UI.stylePool.current.drawSnapperWidgetItem( this, canvas );
 };
 
 // ----------------------------------------------------------------- VG.UI.SnapperWidget
@@ -1669,12 +1738,12 @@ VG.UI.SnapperWidget=function( text )
     this.layout.spacing=0;
     this.layout.parent=this;
 
-    this.supportsFocus=false;  
+    this.supportsFocus=false;
 
     this.items=[];
 
     for( var i=0; i < arguments.length; i+=2 )
-        this.addItem( arguments[i], arguments[i+1] );      
+        this.addItem( arguments[i], arguments[i+1] );
 };
 
 VG.UI.SnapperWidget.prototype=VG.UI.Widget();
@@ -1689,7 +1758,7 @@ Object.defineProperty( VG.UI.SnapperWidget.prototype, "disabled", {
         {
             this.layout.children[i].disabled=value;
         }
-    }    
+    }
 });
 
 VG.UI.SnapperWidget.prototype.addItem=function( text, object, open, enabler )
@@ -1708,7 +1777,7 @@ VG.UI.SnapperWidget.prototype.addItem=function( text, object, open, enabler )
 VG.UI.SnapperWidget.prototype.addItems=function()
 {
     for( var i=0; i < arguments.length; i+=2 )
-        this.addItem( arguments[i], arguments[i+1] );    
+        this.addItem( arguments[i], arguments[i+1] );
 };
 
 VG.UI.SnapperWidget.prototype.mouseMove=function( event )
@@ -1720,7 +1789,7 @@ VG.UI.SnapperWidget.prototype.mouseDown=function( event )
 };
 
 VG.UI.SnapperWidget.prototype.mouseUp=function( event )
-{   
+{
 };
 
 VG.UI.SnapperWidget.prototype.calcSize=function( canvas )
@@ -1736,7 +1805,7 @@ VG.UI.SnapperWidget.prototype.paintWidget=function( canvas )
     this.layout.layout( canvas );
 };
 
-/** 
+/**
  * Creates a slider widget.
  *
  * @param {number} min - The initial minimum value of the slider.
@@ -1749,9 +1818,9 @@ VG.UI.SnapperWidget.prototype.paintWidget=function( canvas )
  * @property {number} step - The step size of the slider.
  * @property {number} value - The current value of the slider.
  * @property {callback} changed - Callback will be called when the current value changes, will suppy the current value as parameter.
- * @constructor 
+ * @constructor
  */
-
+/*
 VG.UI.Slider=function( min, max, step, editable, precision )
 {
     if ( !(this instanceof VG.UI.Slider) ) return new VG.UI.Slider( min, max, step, editable, precision );
@@ -1783,10 +1852,10 @@ VG.UI.Slider=function( min, max, step, editable, precision )
             this.value=value;
 
             if ( this.collection && this.path )
-                this.collection.storeDataForPath( this.path, this.value, undefined, undefined, this.undoText );   
+                this.collection.storeDataForPath( { path : this.path, value : this.value, undoText : this.undoText } );
 
             if ( this.changed )
-                this.changed.call( VG.context, this.value, false, this, fromModel );            
+                this.changed.call( VG.context, this.value, false, this, fromModel );
         }.bind( this );
         this.childWidgets=[ this.edit ];
     }
@@ -1801,8 +1870,8 @@ Object.defineProperty( VG.UI.Slider.prototype, "value", {
     set: function( value ) {
         this._value=value;
         if ( this.edit )
-            this.edit.value=value;    
-    }    
+            this.edit.value=value;
+    }
 });
 
 Object.defineProperty( VG.UI.Slider.prototype, "toolTip", {
@@ -1812,17 +1881,17 @@ Object.defineProperty( VG.UI.Slider.prototype, "toolTip", {
     set: function( value ) {
         this._toolTip=value;
         if ( this.edit )
-            this.edit.toolTip=value;    
-    }    
+            this.edit.toolTip=value;
+    }
 });
-
+*/
 /**
  * Binds the widget to the data model. This widget has to be bound to a Number value.
  * @param {VG.Data.Collection} collection - The data collection to link this widget to.
  * @param {string} path - The path inside the data collection to bind this widget to.
  * @tutorial Data Model
  */
-
+/*
 VG.UI.Slider.prototype.bind=function( collection, path )
 {
     this.collection=collection;
@@ -1833,15 +1902,15 @@ VG.UI.Slider.prototype.bind=function( collection, path )
 VG.UI.Slider.prototype.valueFromModel=function( value )
 {
     if ( value === null ) this.value=this.min;
-    else this.value=value;  
+    else this.value=value;
 
     if ( this.changed )
-        this.changed.call( VG.context, value, false, this, true );  
+        this.changed.call( VG.context, value, false, this, true );
 
     if ( this.edit )
         this.edit.value=value;
 
-    VG.update();    
+    VG.update();
 };
 
 VG.UI.Slider.prototype.calcSize=function( canvas )
@@ -1878,7 +1947,7 @@ VG.UI.Slider.prototype.mouseMove=function( event )
     {
         var offset=event.pos.x - this.sliderRect.x;
         this.gotoPixelOffset( offset );
-        VG.update(); 
+        VG.update();
     }
 };
 
@@ -1888,11 +1957,12 @@ VG.UI.Slider.prototype.gotoPixelOffset=function( offset )
     if ( offset >= this.sliderRect.width ) offset=this.sliderRect.width;
 
     var oldValue=this.value;
+    var distance, perPixel;
 
     if ( !this.halfWidthValue )
     {
-        var distance=this.max - this.min;
-        var perPixel=distance / this.sliderRect.width;
+        distance=this.max - this.min;
+        perPixel=distance / this.sliderRect.width;
 
         if ( this.step == Math.round( this.step ) )
             this.value=this.min + Math.round( offset * perPixel );
@@ -1902,8 +1972,8 @@ VG.UI.Slider.prototype.gotoPixelOffset=function( offset )
     {
         if ( offset <= this.sliderRect.width / 2 )
         {
-            var distance=this.halfWidthValue - this.min;
-            var perPixel=distance / this.sliderRect.width * 2;
+            distance=this.halfWidthValue - this.min;
+            perPixel=distance / this.sliderRect.width * 2;
 
             if ( this.step == Math.round( this.step ) )
                 this.value=this.min + Math.round( offset * perPixel );
@@ -1912,8 +1982,8 @@ VG.UI.Slider.prototype.gotoPixelOffset=function( offset )
         } else
         {
             offset-=this.sliderRect.width / 2;
-            var distance=this.max - this.halfWidthValue;
-            var perPixel=distance / this.sliderRect.width * 2;
+            distance=this.max - this.halfWidthValue;
+            perPixel=distance / this.sliderRect.width * 2;
 
             if ( this.step == Math.round( this.step ) )
                 this.value=this.halfWidthValue + Math.round( offset * perPixel );
@@ -1935,21 +2005,239 @@ VG.UI.Slider.prototype.mouseUp=function( event )
 {
     if ( this.dragging ) {
 
-        if ( this.collection && this.path )
-            this.collection.storeDataForPath( this.path, this.value, undefined, undefined, this.undoText );   
-
         if ( this.changed )
-            this.changed.call( VG.context, this.value, false, this );  
+            this.changed.call( VG.context, this.value, false, this );
+
+        if ( this.collection && this.path )
+            this.collection.storeDataForPath( { path : this.path, value : this.value, undoText : this.undoText } );
     }
-    this.dragging=false;    
+    this.dragging=false;
     VG.context.workspace.mouseTrackerWidget=null;
 };
 
 VG.UI.Slider.prototype.paintWidget=function( canvas )
 {
-    this.contentRect.set( this.rect );
+    this.contentRect.copy( this.rect );
 
-    VG.UI.stylePool.current.drawSlider( this, canvas );  
+    VG.UI.stylePool.current.drawSlider( this, canvas );
+};
+*/
+/**
+ * Creates a slider widget.
+ *
+ * @param {number} min - The initial minimum value of the slider.
+ * @param {number} max - The initial maximum value of the slider.
+ * @param {number} step - The initial step size of the slider.
+ * @param {bool} editable - True if the current value should be editable.
+ * @param {number} precision - Indicates how many floating point values should be used for the slider.
+ * @property {number} min - The minimum value of the slider.
+ * @property {number} max - The maximum value of the slider.
+ * @property {number} step - The step size of the slider.
+ * @property {number} value - The current value of the slider.
+ * @property {callback} changed - Callback will be called when the current value changes, will suppy the current value as parameter.
+ * @constructor
+ */
+
+VG.UI.Slider=function( { min=0, max=100, step=1, editable=true, precision=0, noValue, value } = {} )
+{
+    if ( !(this instanceof VG.UI.Slider) ) return new VG.UI.Slider( { min : min, max : max, step : step, editable : editable, precision : precision, noValue : noValue, value : value } );
+
+    VG.UI.Widget.call( this );
+    this.name="Slider";
+
+    this.horizontalExpanding=true;
+    this.verticalExpanding=false;
+
+    this.minimumSize.set( 100, 20 );
+
+    this.supportsFocus=true;
+    this.min=min;
+    this.max=max;
+    this.step=step;
+    this._value=value !== undefined ? value : min;
+    this.noValue=noValue;
+
+    this.sliderRect=VG.Core.Rect();
+    this.sliderHandleRect=VG.Core.Rect();
+
+    this.checked=false;
+    this.dragging=false;
+
+    if ( editable ) {
+        this.editable=true;
+        this.edit=VG.UI.NumberEdit( min, min, max, precision );
+        this.edit.changed=function( value, cont, object, fromModel ) {
+            this.value=value;
+
+            if ( this.collection && this.path )
+                this.collection.storeDataForPath( { path : this.path, value : this.value, undoText : this.undoText } );
+
+            if ( this.changed )
+                this.changed.call( VG.context, this.value, false, this, fromModel );
+        }.bind( this );
+        this.childWidgets=[ this.edit ];
+    }
+};
+
+VG.UI.Slider.prototype=VG.UI.Widget();
+
+Object.defineProperty( VG.UI.Slider.prototype, "value", {
+    get: function() {
+        return this._value;
+    },
+    set: function( value ) {
+        this._value=value;
+        if ( this.edit )
+            this.edit.value=value;
+    }
+});
+
+Object.defineProperty( VG.UI.Slider.prototype, "toolTip", {
+    get: function() {
+        return this._toolTip;
+    },
+    set: function( value ) {
+        this._toolTip=value;
+        if ( this.edit )
+            this.edit.toolTip=value;
+    }
+});
+
+/**
+ * Binds the widget to the data model. This widget has to be bound to a Number value.
+ * @param {VG.Data.Collection} collection - The data collection to link this widget to.
+ * @param {string} path - The path inside the data collection to bind this widget to.
+ * @tutorial Data Model
+ */
+
+VG.UI.Slider.prototype.bind=function( collection, path )
+{
+    this.collection=collection;
+    this.path=path;
+    collection.addValueBindingForPath( this, path );
+};
+
+VG.UI.Slider.prototype.valueFromModel=function( value )
+{
+    if ( value === null ) this.value=this.min;
+    else this.value=value;
+
+    if ( this.changed )
+        this.changed.call( VG.context, value, false, this, true );
+
+    if ( this.edit )
+        this.edit.value=value;
+
+    VG.update();
+};
+
+VG.UI.Slider.prototype.calcSize=function( canvas )
+{
+    this.preferredSize.set( 100, canvas.getLineHeight() );
+    return this.preferredSize;
+};
+
+VG.UI.Slider.prototype.mouseDown=function( event )
+{
+    if ( !this.rect.contains( event.pos ) ) return;
+
+    if ( this.sliderHandleRect.contains( event.pos ) )
+    {
+        this.startValue=this.value;
+        this.dragging=true;
+
+        VG.context.workspace.mouseTrackerWidget=this;
+    } else
+    if ( event.pos.x >= this.sliderRect.x && event.pos.x <= (this.sliderRect.x + this.sliderRect.width) )
+    {
+        this.startValue=this.value;
+        var offset=event.pos.x - this.sliderRect.x;
+        this.gotoPixelOffset( offset );
+        this.dragging=true;
+    }
+
+    VG.update();
+};
+
+VG.UI.Slider.prototype.mouseMove=function( event )
+{
+    if ( this.dragging )
+    {
+        var offset=event.pos.x - this.sliderRect.x;
+        this.gotoPixelOffset( offset );
+        VG.update();
+    }
+};
+
+VG.UI.Slider.prototype.gotoPixelOffset=function( offset )
+{
+    if ( offset < 0 ) offset=0;
+    if ( offset >= this.sliderRect.width ) offset=this.sliderRect.width;
+
+    var oldValue=this.value;
+    var distance, perPixel;
+
+    if ( !this.halfWidthValue )
+    {
+        distance=this.max - this.min;
+        perPixel=distance / this.sliderRect.width;
+
+        if ( this.step == Math.round( this.step ) )
+            this.value=this.min + Math.round( offset * perPixel );
+        else
+            this.value=this.min + offset * perPixel;
+    } else
+    {
+        if ( offset <= this.sliderRect.width / 2 )
+        {
+            distance=this.halfWidthValue - this.min;
+            perPixel=distance / this.sliderRect.width * 2;
+
+            if ( this.step == Math.round( this.step ) )
+                this.value=this.min + Math.round( offset * perPixel );
+            else
+                this.value=this.min + offset * perPixel;
+        } else
+        {
+            offset-=this.sliderRect.width / 2;
+            distance=this.max - this.halfWidthValue;
+            perPixel=distance / this.sliderRect.width * 2;
+
+            if ( this.step == Math.round( this.step ) )
+                this.value=this.halfWidthValue + Math.round( offset * perPixel );
+            else
+                this.value=this.halfWidthValue + offset * perPixel;
+        }
+    }
+
+    if ( oldValue !== this.value ) {
+        if ( this.changed )
+            this.changed.call( VG.context, this.value, true, this );
+
+        if ( this.edit )
+            this.edit.value=this.value;
+    }
+};
+
+VG.UI.Slider.prototype.mouseUp=function( event )
+{
+    if ( this.dragging ) {
+
+        if ( this.changed )
+            this.changed.call( VG.context, this.value, false, this );
+
+        if ( this.collection && this.path )
+            this.collection.storeDataForPath( { path : this.path, value : this.value, undoText : this.undoText } );
+    }
+    this.dragging=false;
+    VG.context.workspace.mouseTrackerWidget=null;
+};
+
+VG.UI.Slider.prototype.paintWidget=function( canvas )
+{
+    this.contentRect.copy( this.rect );
+
+    VG.UI.stylePool.current.drawRoundSlider( this, canvas );
 };
 
 /**
@@ -2008,9 +2296,9 @@ VG.UI.ColorWheel=function( expanding )
     this.lastRect=VG.Core.Rect();
 };
 
-VG.UI.ColorWheel.prototype=VG.UI.Widget(); 
+VG.UI.ColorWheel.prototype=VG.UI.Widget();
 
-Object.defineProperty(VG.UI.ColorWheel.prototype, "hue", 
+Object.defineProperty(VG.UI.ColorWheel.prototype, "hue",
 {
     get: function() {
         return this._hue;
@@ -2020,10 +2308,10 @@ Object.defineProperty(VG.UI.ColorWheel.prototype, "hue",
         this._hue = hue;
 
         this.toRGBA();
-    } 
+    }
 });
 
-Object.defineProperty(VG.UI.ColorWheel.prototype, "saturation", 
+Object.defineProperty(VG.UI.ColorWheel.prototype, "saturation",
 {
     get: function() {
         return this._saturation;
@@ -2032,10 +2320,10 @@ Object.defineProperty(VG.UI.ColorWheel.prototype, "saturation",
 
         this._saturation = VG.Math.clamp(sat, 0.0, 1.0);
         this.toRGBA();
-    }    
+    }
 });
 
-Object.defineProperty(VG.UI.ColorWheel.prototype, "lightness", 
+Object.defineProperty(VG.UI.ColorWheel.prototype, "lightness",
 {
     get: function() {
         return this._ligtness;
@@ -2044,16 +2332,15 @@ Object.defineProperty(VG.UI.ColorWheel.prototype, "lightness",
 
         this._ligtness = VG.Math.clamp(lit, 0.0, 1.0);
         this.toRGBA();
-    }    
+    }
 });
 
-Object.defineProperty(VG.UI.ColorWheel.prototype, "color", 
+Object.defineProperty(VG.UI.ColorWheel.prototype, "color",
 {
     get: function() {
         return this._color;
     },
     set: function(color) {
-        
         this._color.copy(color);
 
         var hsl = this._color.toHSL();
@@ -2063,7 +2350,7 @@ Object.defineProperty(VG.UI.ColorWheel.prototype, "color",
         this._lightness = hsl.l;
 
         this.toRGBA();
-    }    
+    }
 });
 
 VG.UI.ColorWheel.prototype.bind=function( collection, path )
@@ -2079,9 +2366,9 @@ VG.UI.ColorWheel.prototype.valueFromModel=function( value )
     else this.color=VG.Core.Color( value );
 
     if ( this.changed )
-        this.changed.call( VG.context, this._color, false, this, true ); 
+        this.changed.call( VG.context, this._color, false, this, true );
 
-    VG.update();    
+    VG.update();
 };
 
 VG.UI.ColorWheel.prototype.toRGBA=function()
@@ -2097,7 +2384,7 @@ VG.UI.ColorWheel.prototype.toRGBA=function()
     this.ls3.setHSL(h, 0.0, 1.0);
 
     this.dirty=true;
-}
+};
 
 VG.UI.ColorWheel.prototype.calcSize=function( canvas )
 {
@@ -2108,8 +2395,8 @@ VG.UI.ColorWheel.prototype.mouseMove=function(event)
 {
     if ( this.hueDrag ) {
         this.computeHueFromEvent( event );
-        this.toRGBA();       
-        
+        this.toRGBA();
+
         if ( this.changed )
             this.changed( this._color, true, this );
 
@@ -2118,21 +2405,21 @@ VG.UI.ColorWheel.prototype.mouseMove=function(event)
     if ( this.slDrag )
     {
         this.computeSLFromEvent( event );
-        this.toRGBA();       
-        
+        this.toRGBA();
+
         if ( this.changed )
             this.changed( this._color, true, this );
 
         VG.update();
     }
-}
+};
 
 VG.UI.ColorWheel.prototype.mouseUp=function(event)
 {
-    if ( this.hueDrag || this.slDrag ) 
+    if ( this.hueDrag || this.slDrag )
     {
-        if ( this.collection && this.path )        
-            VG.context.dc.storeDataForPath( this.path, this._color.toHex(), undefined, undefined, this.undoText );
+        if ( this.collection && this.path )
+            VG.context.dc.storeDataForPath( { path : this.path, value : this._color.toHex(), undoText : this.undoText } );
 
         if ( this.changed )
             this.changed( this._color, false, this );
@@ -2141,11 +2428,11 @@ VG.UI.ColorWheel.prototype.mouseUp=function(event)
     VG.context.workspace.mouseTrackerWidget=null;
 
     this.hueDrag=false;
-    this.slDrag=false;    
+    this.slDrag=false;
 };
 
 VG.UI.ColorWheel.prototype.mouseDown=function(event)
-{ 
+{
     VG.context.workspace.mouseTrackerWidget=this;
 
     var centerX=this.rect.x + this.rect.width / 2, centerY=this.rect.y + this.rect.height / 2;
@@ -2183,7 +2470,7 @@ VG.UI.ColorWheel.prototype.mouseDown=function(event)
 VG.UI.ColorWheel.prototype.computeHueFromEvent=function( event )
 {
     var localX = event.pos.x - this.rect.x;
-    var localY = event.pos.y - this.rect.y;    
+    var localY = event.pos.y - this.rect.y;
 
     //the center
     var center = new VG.Math.Vector2( this.circleSize /2, this.circleSize / 2 );
@@ -2203,7 +2490,7 @@ VG.UI.ColorWheel.prototype.computeHueFromEvent=function( event )
 
 VG.UI.ColorWheel.prototype.computeSLFromEvent=function( event )
 {
-    function pDistance(x, y, x1, y1, x2, y2) 
+    function pDistance(x, y, x1, y1, x2, y2)
     {
       var A = x - x1;
       var B = y - y1;
@@ -2213,7 +2500,7 @@ VG.UI.ColorWheel.prototype.computeSLFromEvent=function( event )
       var dot = A * C + B * D;
       var len_sq = C * C + D * D;
       var param = -1;
-      if (len_sq != 0) //in case of 0 length line
+      if (len_sq !== 0) //in case of 0 length line
           param = dot / len_sq;
 
       var xx, yy;
@@ -2234,11 +2521,11 @@ VG.UI.ColorWheel.prototype.computeSLFromEvent=function( event )
       var dx = x - xx;
       var dy = y - yy;
       return Math.sqrt(dx * dx + dy * dy);
-    };
+    }
 
     function isLeft( a, b, c) {
         return ((b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x)) > 0;
-    };
+    }
 
     var dSL13X=this.ls3Pt.x - this.ls1Pt.x;
     var dSL13Y=this.ls3Pt.y - this.ls1Pt.y;
@@ -2247,36 +2534,69 @@ VG.UI.ColorWheel.prototype.computeSLFromEvent=function( event )
     var midY=this.ls3Pt.y - dSL13Y * 0.5;
 
     var dWidthX=midX - this.ls2Pt.x;
-    var dWidthY=midY - this.ls2Pt.y;    
+    var dWidthY=midY - this.ls2Pt.y;
 
     var rectWidth=Math.sqrt( dWidthX * dWidthX + dWidthY * dWidthY );
     var rectHeight=Math.sqrt( dSL13X * dSL13X + dSL13Y * dSL13Y );
 
-    // --- Get Saturation
+    // --- Get Saturation and Lightness
 
-    var xPosOk=isLeft( this.ls3Pt, this.ls1Pt, { x: event.pos.x, y: event.pos.y } );
-    if ( xPosOk ) {
-        var xDist=pDistance( event.pos.x, event.pos.y, this.ls1Pt.x + 100 * dSL13X, this.ls1Pt.y + 100 * dSL13Y, 
-            this.ls3Pt.x - 100 * dSL13X, this.ls3Pt.y - 100 * dSL13Y );
-    } else xDist=0;
+    /**
+     * Is p1 on the left side of p2p3?
+     * @param p1
+     * @param p2
+     * @param p3
+     * @returns {Number}
+     */
+    function signOf(p1, p2, p3){
+        "use strict";
+        return (p2.x-p1.x) * (p3.y-p1.y) - (p2.y-p1.y) * (p3.x-p1.x);
+    }
 
-    this._saturation=VG.Math.clamp( xDist / rectWidth, 0, 1.0 );
+    function limit(v){
+        "use strict";
+        if(v<0) return 0;
+        if(v>1) return 1;
+        return v;
+    }
 
-    // --- Get Lightness
+    var ev = new VG.Math.Vector2(event.pos.x, event.pos.y);
 
-    var yDist=pDistance( event.pos.x, event.pos.y, this.ls2Pt.x - 100 * dWidthX, this.ls2Pt.y - 100 * dWidthY, 
-        midX + 100 * dWidthX, midY + 100 * dWidthY );
+    var b1 = signOf(ev, this.ls1Pt, this.ls2Pt) >= 0;
+    var b2 = signOf(ev, this.ls2Pt, this.ls3Pt) >= 0;
+    var b3 = signOf(ev, this.ls3Pt, this.ls1Pt) >= 0;
 
-    var yBelowMidLine=isLeft( { x : midX, y : midY }, this.ls2Pt, { x: event.pos.x, y: event.pos.y } );
+    var fail = false;
+    // in this case coordinate axis is clockwise
+    if(b1 && b2 && b3) { // inside triangle
+        ev.sub(this.ls1Pt);
+    } else if(b2 && b3) {
+        let line = this.ls2Pt.clone().sub(this.ls1Pt);
+        ev.sub(this.ls1Pt);
+        ev.copy(line.mul(limit(line.dot(ev)/(line.length()*line.length()))));
+    } else if (b1 && b2){
+        let line = this.ls3Pt.clone().sub(this.ls1Pt);
+        ev.sub(this.ls1Pt);
+        ev.copy(line.mul(limit(line.dot(ev)/(line.length()*line.length()))));
+    } else if (b1 && b3){
+        var line = this.ls2Pt.clone().sub(this.ls3Pt);
+        ev.sub(this.ls3Pt);
+        ev.copy(line.mul(limit(line.dot(ev)/(line.length()*line.length()))));
+        ev.add(this.ls3Pt).sub(this.ls1Pt);
+    } else {
+        fail = true;
+    }
+    if(!fail) {
+        // at this point ev is wrt. p1
+        var p3 = this.ls3Pt.clone().sub(this.ls1Pt);
+        var side = p3.length();
+        this._lightness = p3.dot(ev) / (side * side);
+        if (this._lightness > 0.01 && this._lightness < 0.99) {
+            var up = this.ls3Pt.clone().add(this.ls1Pt).mul(-0.5).add(this.ls2Pt);
+            this._saturation = ev.clone().dot(up) / up.length() / up.length() * 0.5 / ((this._lightness < 0.5 ? this._lightness : 1 - this._lightness));
+        }
+    }
 
-    var clipHeight=rectHeight/2 - rectHeight/2 * (this._saturation)
-
-    yDist=VG.Math.clamp( yDist, 0, clipHeight );
-
-    if ( !yBelowMidLine ) 
-        this._lightness=VG.Math.clamp( 0.5 - yDist / rectHeight, 0, 1 );
-    else
-        this._lightness=VG.Math.clamp( 0.5 + yDist / rectHeight, 0, 1 );
 };
 
 VG.UI.ColorWheel.prototype.computeUI=function(canvas)
@@ -2298,7 +2618,7 @@ VG.UI.ColorWheel.prototype.computeUI=function(canvas)
 
     // --- SL Triangle
 
-    var vD = new VG.Math.Vector2();
+    vD = new VG.Math.Vector2();
     vD.dirFromAngle(VG.Math.rad(this._hue - 180));
     vD.normalize();
 
@@ -2310,57 +2630,38 @@ VG.UI.ColorWheel.prototype.computeUI=function(canvas)
 
     //
 
-    var vD = new VG.Math.Vector2();
+    vD = new VG.Math.Vector2();
     vD.dirFromAngle(VG.Math.rad(this._hue - 180 + 120));
     vD.normalize();
 
     vD.mul( this.circleSize /2 - this.hueSize - 2 );
 
     this.ls1Pt.copy( vC );
-    this.ls1Pt.x+=this.rect.x; this.ls1Pt.y+=this.rect.y;    
+    this.ls1Pt.x+=this.rect.x; this.ls1Pt.y+=this.rect.y;
     this.ls1Pt.add(vD);
 
     //
 
-    var vD = new VG.Math.Vector2();
+    vD = new VG.Math.Vector2();
     vD.dirFromAngle(VG.Math.rad(this._hue - 180 - 120));
     vD.normalize();
 
     vD.mul( this.circleSize /2 - this.hueSize - 2 );
 
     this.ls3Pt.copy( vC );
-    this.ls3Pt.x+=this.rect.x; this.ls3Pt.y+=this.rect.y;    
+    this.ls3Pt.x+=this.rect.x; this.ls3Pt.y+=this.rect.y;
     this.ls3Pt.add(vD);
 
     // --- SL Dot
 
-    var getNormal = function( p1, p2, D ){
-        var d = p2.clone();
-        d.sub(p1);
-        var n = new VG.Math.Vector2(-d.y, d.x);
-        n.normalize();
-        var R = n.clone();
-        R.mul(D);
-        R.add(p1);
-        return R;
-    };
-
-    var dSL13X=this.ls3Pt.x - this.ls1Pt.x;
-    var dSL13Y=this.ls3Pt.y - this.ls1Pt.y;
-
-    var ptOnBase=new VG.Math.Vector2( this.ls3Pt.x - dSL13X  * (1-this._lightness), 
-        this.ls3Pt.y - dSL13Y * (1-this._lightness) );
-
-    // --- get the distance of mid point of base to the tip
-
-    var midX=this.ls3Pt.x - dSL13X * 0.5;
-    var midY=this.ls3Pt.y - dSL13Y * 0.5;
-
-    var dWidthX=midX - this.ls2Pt.x;
-    var dWidthY=midY - this.ls2Pt.y;    
-
-    var distance=Math.sqrt( dWidthX * dWidthX + dWidthY * dWidthY );
-    this.slDot=getNormal( ptOnBase, this.ls1Pt, distance * this._saturation );
+    // assume iso-sides triangle, with peak at p2
+    // assume we work in coordinate with P1 as origin
+    var base = this.ls3Pt.clone().sub(this.ls1Pt).mul(this._lightness);
+    var up = this.ls3Pt.clone().add(this.ls1Pt).mul(-0.5).add(this.ls2Pt);
+    this.slDot = base.add(
+        up.mul(
+            (this._lightness < 0.5 ? this._lightness : 1-this._lightness) *2.0*this._saturation )
+    ).add(this.ls1Pt);
 
     // ---
 
@@ -2382,7 +2683,7 @@ VG.UI.ColorWheel.prototype.paintWidget=function(canvas)
     canvas.draw2DShape( VG.Canvas.Shape2D.CircleOutline, rect, this.borderColor );
 
     rect.shrink( this.hueSize, this.hueSize, rect );
-    canvas.draw2DShape( VG.Canvas.Shape2D.Circle, rect, this.centerColor );    
+    canvas.draw2DShape( VG.Canvas.Shape2D.CircleGL, rect, this.centerColor );
 
     // --- Hue Dot
 
@@ -2392,12 +2693,12 @@ VG.UI.ColorWheel.prototype.paintWidget=function(canvas)
     rect.width = this.hueSize;
     rect.height = this.hueSize;
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.Circle, rect, VG.Core.Color.White );    
-    canvas.draw2DShape( VG.Canvas.Shape2D.CircleOutline, rect, VG.Core.Color.Black );    
+    canvas.draw2DShape( VG.Canvas.Shape2D.CircleGL, rect, VG.Core.Color.Black );
+    canvas.draw2DShape( VG.Canvas.Shape2D.CircleGL, rect.shrink(1,1), VG.Core.Color.White );
 
     // --- SL Triangle
 
-    canvas.addTriangle2D( this.ls1Pt.x, this.ls1Pt.y, 
+    canvas.addTriangle2D( this.ls1Pt.x, this.ls1Pt.y,
         this.ls2Pt.x, this.ls2Pt.y, this.ls3Pt.x, this.ls3Pt.y, this.ls1, this.ls2, this.ls3 );
 
     // --- SL Dot
@@ -2408,12 +2709,237 @@ VG.UI.ColorWheel.prototype.paintWidget=function(canvas)
     rect.width = 8;
     rect.height = 8;
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.Circle, rect, VG.Core.Color.White );    
+    canvas.draw2DShape( VG.Canvas.Shape2D.CircleGL, rect, VG.Core.Color.White );
     rect.shrink( 1, 1, rect );
-    canvas.draw2DShape( VG.Canvas.Shape2D.Circle, rect, VG.Core.Color.Black );    
+    canvas.draw2DShape( VG.Canvas.Shape2D.CircleGL, rect, VG.Core.Color.Black );
 
     this.lastRect.copy( this.rect );
-    if ( this.disabled ) canvas.setAlpha( 1 );    
+    if ( this.disabled ) canvas.setAlpha( 1 );
+};
+
+// ----------------------------------------------------------------- VG.UI.ColorEdit
+
+VG.UI.ColorEdit=function()
+{
+    if ( !(this instanceof VG.UI.ColorEdit) ) return new VG.UI.ColorEdit();
+
+    VG.UI.Widget.call(this);
+    this.name="ColorEdit";
+
+    this.supportsFocus=true;
+
+    this.setFixedSize( 175, 80 );
+
+    this._color=VG.Core.Color();
+
+    this.colorWheel=VG.UI.ColorWheel();
+    this.colorWheel.color=this._color;
+    this.colorWheel.changed=function( value, continous ) {
+        if ( continous ) return;
+        this._color.copy( value );
+        // this.color=this._color;
+        this.colorEdit.text=this.color.toHex();
+        if ( this.changed ) this.changed( this._color, false, this );
+    }.bind( this );
+
+    this.colorEdit=VG.UI.TextLineEdit( this.color.toHex() );
+    this.colorEdit.maximumSize.width=80;
+    this.colorEdit.textChanged=function( value, continous ) {
+        this._color.setHex( value );
+        this.color=this._color;
+        if ( this.changed ) this.changed( this._color, false, this );
+    }.bind( this );
+
+    this.layout=VG.UI.Layout( this.colorEdit, this.colorWheel );
+    this.layout.spacing=5;
+    this.layout.margin.bottom=2;
+    this.layout.margin.top=2;
+};
+
+VG.UI.ColorEdit.prototype=VG.UI.Widget();
+
+Object.defineProperty(VG.UI.ColorEdit.prototype, "color",
+{
+    get: function() {
+        return this._color;
+    },
+    set: function(color) {
+
+        this._color.copy(color);
+
+        this.colorWheel.color=color;
+        this.colorEdit.text=this.color.toHex();
+    }
+});
+
+Object.defineProperty(VG.UI.ColorEdit.prototype, "disabled",
+{
+    get: function() {
+        return this.colorEdit.disabled;
+    },
+    set: function(disabled) {
+
+        this.colorWheel.disabled=disabled;
+        this.colorEdit.disabled=disabled;
+    }
+});
+
+Object.defineProperty(VG.UI.ColorEdit.prototype, "toolTip",
+{
+    get: function() {
+        return this.colorEdit.toolTip;
+    },
+    set: function(value) {
+
+        this.colorWheel.toolTip=value;
+        this.colorEdit.toolTip=value;
+    }
+});
+
+VG.UI.ColorEdit.prototype.bind=function( collection, path )
+{
+    this.collection=collection;
+    this.path=path;
+     this.colorWheel.bind( collection, path );
+     this.colorEdit.bind( collection, path );
+};
+
+VG.UI.ColorEdit.prototype.paintWidget=function(canvas)
+{
+    this.layout.rect.copy( this.rect );
+    this.layout.layout( canvas );
+};
+
+// ----------------------------------------------------------------- VG.UI.MaterialEdit
+
+VG.UI.MaterialEdit=function()
+{
+    if ( !(this instanceof VG.UI.MaterialEdit) ) return new VG.UI.MaterialEdit();
+
+    VG.UI.Widget.call(this);
+    this.name="MaterialEdit";
+
+    // this.minimumSize.height=this.maximumSize.height=
+
+    this.minimumSize.height=92;
+    this.preferredSize.height=92;
+
+    this.supportsFocus=true;
+
+    this.horizontalExpanding=true;
+    this.verticalExpanding=false;
+
+    this._material=VG.Core.Material();
+
+    this.colorWheel=VG.UI.ColorWheel();
+    this.colorWheel.color=this._material.color;
+    this.colorWheel.changed=function( value, continous ) {
+        //if ( continous ) return;
+        this._material.copy( value );
+        this.material=this._material;
+        if ( this.changed ) this.changed( this._material, false, this );
+    }.bind( this );
+
+    this.colorEdit=VG.UI.TextLineEdit( this._material.color.toHex() );
+    this.colorEdit.maximumSize.width=80;
+    this.colorEdit.textChanged=function( value, continous ) {
+        this._material.color.setHex( value );
+        this.material=this._material;
+        if ( this.changed ) this.changed( this._material, false, this );
+    }.bind( this );
+
+    this.metallicSlider=VG.UI.Slider( 0, 1, 0.01, true, 2 );
+    this.metallicSlider.value=VG.context.material ? VG.context.material.metallic : 0;
+    this.metallicSlider.toolTip="Metallic property of the Material.";
+    this.metallicSlider.text="Metallic";
+    this.metallicSlider.changed=function( value, cont ) {
+        this._material.metallic=value;
+        if ( this.changed ) this.changed( this._material, false, this );
+    }.bind( this );
+
+    this.smoothnessSlider=VG.UI.Slider( 0, 1, 0.01, true, 2 );
+    this.smoothnessSlider.value=VG.context.material ? VG.context.material.smoothness : 0;
+    this.smoothnessSlider.toolTip="Smoothness property of the Material.";
+    this.smoothnessSlider.text="Smoothness";
+    this.smoothnessSlider.changed=function( value, cont ) {
+        this._material.smoothness=value;
+        if ( this.changed ) this.changed( this._material, false, this );
+    }.bind( this );
+
+    this.reflectanceSlider=VG.UI.Slider( 0, 1, 0.01, true, 2 );
+    this.reflectanceSlider.value=VG.context.material ? VG.context.material.reflectance : 0.5;
+    this.reflectanceSlider.toolTip="Reflectance property of the Material.";
+    this.reflectanceSlider.text="Reflectance";
+    this.reflectanceSlider.changed=function( value, cont ) {
+        this._material.reflectance=value;
+        if ( this.changed ) this.changed( this._material, false, this );
+    }.bind( this );
+
+    this.materialLayout=VG.UI.LabelLayout( "M", this.metallicSlider, "S", this.smoothnessSlider, "R", this.reflectanceSlider );
+    this.materialLayout.margin.clear();
+    this.materialLayout.margin.top=8;
+    this.materialLayout.labelAlignment=VG.UI.HAlignment.Centered;
+
+
+    this.colorLayout=VG.UI.Layout( this.colorEdit, this.colorWheel );
+    this.colorLayout.spacing=5;
+    this.colorLayout.margin.bottom=2;
+    this.colorLayout.margin.top=2;
+
+    this.layout=VG.UI.Layout( this.colorLayout, this.materialLayout );//, this.materialLayout );//this.colorEdit, this.colorWheel );
+    this.layout.spacing=5;
+    this.layout.margin.bottom=2;
+    this.layout.margin.top=2;
+};
+
+VG.UI.MaterialEdit.prototype=VG.UI.Widget();
+
+Object.defineProperty(VG.UI.MaterialEdit.prototype, "material",
+{
+    get: function() {
+        return this._material;
+    },
+    set: function(material) {
+
+        this._material.copy( material );
+
+        this.colorWheel.color=material.color;
+        this.colorEdit.text=material.color.toHex();
+    }
+});
+
+Object.defineProperty(VG.UI.MaterialEdit.prototype, "disabled",
+{
+    get: function() {
+        return this.colorEdit.disabled;
+    },
+    set: function(disabled) {
+
+        this.colorWheel.disabled=disabled;
+        this.colorEdit.disabled=disabled;
+    }
+});
+
+VG.UI.MaterialEdit.prototype.bind=function( collection, path )
+{
+    this.collection=collection;
+    this.path=path;
+     this.colorWheel.bind( collection, path );
+     this.colorEdit.bind( collection, path );
+};
+
+VG.UI.MaterialEdit.prototype.paintWidget=function(canvas)
+{
+    this.layout.rect.copy( this.rect );
+
+    this.colorLayout.rect.copy( this.rect );
+    this.colorLayout.width=175;
+    this.colorLayout.layout( canvas );
+
+    this.materialLayout.rect.copy( this.rect );
+    this.materialLayout.rect.x+=175+5;
+    this.materialLayout.rect.width=this.rect.width - 175 - 5;
+    this.materialLayout.layout( canvas );
 };
 
 // ----------------------------------------------------------------- VG.UI.ToolTipWidget
@@ -2421,7 +2947,7 @@ VG.UI.ColorWheel.prototype.paintWidget=function(canvas)
 VG.UI.ToolTipWidget=function()
 {
     if ( !(this instanceof VG.UI.ToolTipWidget) ) return new VG.UI.ToolTipWidget();
-    
+
     VG.UI.Widget.call( this );
     this.name="ToolTip";
 
@@ -2472,7 +2998,12 @@ VG.UI.ToolTipWidget.prototype.paintWidget=function( canvas )
     this.rect.width=this.width;
     this.rect.height=this.height;
 
+    if ( !this.rect.width || !this.rect.height ) return;
     this.rect.round();
+
+    if ( canvas.twoD )
+        canvas.clearGLRect( this.rect );
+
     var rect=VG.context.workspace.getVisibleScreenRect( this.contentRect );
 
     if ( this.rect.bottom() > rect.bottom() ) this.rect.y-=this.rect.height;
@@ -2500,269 +3031,17 @@ VG.UI.ToolTipWidget.prototype.paintWidget=function( canvas )
     canvas.popFont();
 };
 
-// ----------------------------------------------------------------- VG.UI.IconStrip
-
-VG.UI.IconStrip=function()
-{
-    /** IconStrip
-    **/
-    
-    if ( !(this instanceof VG.UI.IconStrip) ) return new VG.UI.IconStrip();
-    
-    VG.UI.Widget.call( this );
-    this.name="IconStrip";
-
-    this.offset=0;
-
-    this.minimumSize.set( 100, 100 );
-    this.supportsFocus=true;
-
-    this.vScrollbar=0;
-    this.needsVScrollbar=false;
-    this.verified=false;
-
-    this.spacing=17;
-};
-
-VG.UI.IconStrip.prototype=VG.UI.Widget();
-
-VG.UI.IconStrip.prototype.bind=function( collection, path )
-{
-    this.controller=collection.controllerForPath( path );
-    if ( !this.controller ) {
-        this.controller=VG.Controller.Array( collection, path );
-        collection.addControllerForPath( this.controller, path );
-    }
-
-    this.controller.addObserver( "changed", this.changed, this );    
-    this.controller.addObserver( "selectionChanged", this.selectionChanged, this );
-
-    return this.controller;
-};
-
-VG.UI.IconStrip.prototype.focusIn=function()
-{
-};
-
-VG.UI.IconStrip.prototype.focusOut=function()
-{
-};
-
-VG.UI.IconStrip.prototype.keyDown=function( keyCode )
-{        
-    /*
-    if ( !this.controller.selected ) return;
-
-    var index=this.controller.indexOf( this.controller.selected );
-    if ( index === -1 ) return;
-
-    if ( keyCode === VG.Events.KeyCodes.ArrowUp && index > 0 )
-    {
-        this.controller.selected=this.controller.at( index - 1 );
-
-        if ( this.needsVScrollbar )
-        {
-            // --- Scroll one line up if necessary
-            var y=this.contentRect.y - this.offset + (index-1) * (this.itemHeight + this.spacing);
-
-            if ( y < this.contentRect.y ) {
-                this.offset-=this.itemHeight + this.spacing;
-                this.vScrollbar.scrollTo( this.offset );                
-            }
-        }        
-    } else
-    if ( keyCode === VG.Events.KeyCodes.ArrowDown && index < this.controller.length-1 )
-    {
-        this.controller.selected=this.controller.at( index + 1 );
-
-        if ( this.needsVScrollbar )
-        {
-            // --- Scroll one line down if necessary
-            var y=this.contentRect.y - this.offset + (index+1) * (this.itemHeight + this.spacing);
-
-            if ( y + this.itemHeight > this.contentRect.bottom() ) {
-                this.offset+=this.itemHeight + this.spacing;
-                this.vScrollbar.scrollTo( this.offset );                
-            }
-        }
-    } */
-};
-
-VG.UI.IconStrip.prototype.mouseWheel=function( step )
-{/*
-    if ( !this.needsVScrollbar ) return;
-
-    if ( step > 0 ) {
-        this.offset-=this.itemHeight + this.spacing;
-        this.vScrollbar.scrollTo( this.offset );   
-    } else
-    {
-        this.offset+=this.itemHeight + this.spacing;
-        this.vScrollbar.scrollTo( this.offset );            
-    }*/
-};
-
-VG.UI.IconStrip.prototype.mouseMove=function( event )
-{
-};
-
-VG.UI.IconStrip.prototype.mouseDown=function( event )
-{
-    /*
-    if ( this.needsVScrollbar && this.vScrollbar && this.vScrollbar.rect.contains( event.pos ) ) {
-        this.vScrollbar.mouseDown( event );
-        return;
-    }*/
-
-    if ( !this.rect.contains( event.pos ) ) return;
-
-    var selectedIndex=-1;
-    var x=this.contentRect.x - this.offset + 15;
-    var item=-1;
-
-    for ( var i=0; i < this.controller.length; ++i ) {
-        var item=this.controller.at( i ) ;
-
-        if ( x + this.itemWidth + this.spacing >= event.pos.x && x <= event.pos.x ) {
-            selectedIndex=i;
-            break;
-        } 
-        x+=this.itemWidth + this.spacing;
-    }
-
-    if ( selectedIndex >=0 && selectedIndex < this.controller.length )
-        item=this.controller.at( selectedIndex );
-
-    if ( this.controller.multiSelection ) 
-    {
-    } else {
-        if ( item !== -1 && !this.controller.isSelected( item ) ) {
-            this.controller.selected=item;
-        }
-    }
-};
-
-VG.UI.IconStrip.prototype.vHandleMoved=function( offsetInScrollbarSpace )
-{
-    this.offset=offsetInScrollbarSpace * this.vScrollbar.totalSize / this.vScrollbar.visibleSize;
-};
-
-VG.UI.IconStrip.prototype.verifyScrollbar=function( text )
-{
-    // --- Check if we have enough vertical space for all items
-
-    this.needsVScrollbar=false;
-
-    this.totalItemHeight=this.controller.length * this.itemHeight + (this.controller.length-1) * this.spacing;
-    this.heightPerItem=this.totalItemHeight / this.controller.length;
-    this.visibleItems=this.contentRect.height / this.heightPerItem;
-    this.lastTopItem=Math.ceil( this.controller.length - this.visibleItems );
-
-    if ( this.totalItemHeight > this.contentRect.height )
-        this.needsVScrollbar=true;
-
-    if ( this.needsVScrollbar && !this.vScrollbar ) {
-        this.vScrollbar=VG.UI.Scrollbar( "ListWidget Scrollbar" );
-        this.vScrollbar.callbackObject=this;
-    }    
-
-    this.verified=true;
-};
-
-VG.UI.IconStrip.prototype.changed=function()
-{
-    this.verified=false;    
-    VG.update();
-};
-
-VG.UI.IconStrip.prototype.selectionChanged=function()
-{
-    VG.update();
-};
-
-VG.UI.IconStrip.prototype.paintWidget=function( canvas )
-{
-    return;
-    this.iconStripHeight=this.rect.height - 4 - 5 - canvas.style.skin.IconStrip.TextStripHeight;
-
-    this.itemHeight=Math.floor( this.iconStripHeight-2 );
-    this.itemWidth=Math.floor( this.itemHeight * ( 114 / 76 ) );
-
-    //VG.log( this.itemHeight, this.itemWidth );
-
-    canvas.style.drawIconStripBackground( canvas, this );
-
-    if ( !this.controller.length ) return;
-
-    canvas.pushClipRect( this.contentRect );
-
-    var paintRect=VG.Core.Rect( this.contentRect );
-    paintRect.x+=15; paintRect.y+=1;
-    paintRect.width=this.itemWidth;
-    paintRect.height=this.itemHeight;
-
-    var textRect=VG.Core.Rect( this.contentRect );
-    textRect.x+=10; textRect.y+=this.itemHeight+5;
-    textRect.width=this.itemWidth+10;
-    textRect.height=18;
-
-    for ( var i=0; i < this.controller.length; ++i ) {
-        var item=this.controller.at( i );
-
-        // --- Draw Icon
-
-        if ( item === this.controller.selected )
-            canvas.style.drawIconStripSelectedItemBackground( canvas, paintRect.add( -5, -1, 10, 2 ), this );
-
-        var size=this.calculateAspectRatioFit( item.image.width, item.image.height, this.itemWidth, this.itemHeight );
-        canvas.drawImage( VG.Core.Point( paintRect.x + (this.itemWidth - size.width)/2, paintRect.y + (this.itemHeight - size.height)/2), item.image, size );
-
-
-        // --- Draw Text
-
-        canvas.pushFont( canvas.style.skin.IconStrip.Font );
-
-        if ( item === this.controller.selected ) {
-            canvas.style.drawIconStripSelectedItemBackground( canvas, textRect, this );
-            canvas.drawTextRect( item.text, textRect, canvas.style.skin.IconStrip.SelectedItem.TextColor, 1, 1 );
-        } else canvas.drawTextRect( item.text, textRect, canvas.style.skin.IconStrip.Item.TextColor, 1, 1 );
-
-        canvas.popFont();
-
-        // ---
-
-        paintRect.x+=this.itemWidth + this.spacing;
-        textRect.x+=this.itemWidth + this.spacing;
-
-        /*
-        if ( paintRect.y + this.itemHeight >= this.contentRect.y || paintRect.y < this.contentRect.bottom() ) {
-            VG.context.style.drawListWidgetItem( canvas, item, this.controller.isSelected( item ), paintRect, !this.paintItemCallback );
-
-            if ( this.paintItemCallback ) this.paintItemCallback( canvas, item, paintRect, this.controller.isSelected( item ) );
-
-            paintRect.y+=this.itemHeight + this.spacing;
-        } */
-    }
-
-    canvas.popClipRect();
-};
-
-VG.UI.IconStrip.prototype.calculateAspectRatioFit=function(srcWidth, srcHeight, maxWidth, maxHeight) {
-    var ratio = Math.min(maxWidth / srcWidth, maxHeight / srcHeight);
-    return VG.Core.Size( srcWidth*ratio, srcHeight*ratio );
-};
-
 // ----------------------------------------------------------------- VG.UI.ChatWidget
 
 VG.UI.ChatWidget=function()
-{ 
+{
     if ( !(this instanceof VG.UI.ChatWidget) ) return new VG.UI.ChatWidget();
 
     VG.UI.Widget.call( this );
 
     this.htmlView=VG.UI.HtmlView();
     this.htmlView.readOnly=true;
-    
+
     this.htmlView.elements.body.margin.left=5;
     this.htmlView.elements.body.margin.top=5;
     this.htmlView.elements.br.lineHeight=0;
@@ -2811,7 +3090,7 @@ VG.UI.ChatWidget.prototype.setUserInfo=function( userName, appId )
 
 VG.UI.ChatWidget.prototype.paintWidget=function( canvas )
 {
-    if ( !this.requestSend && this.appId ) 
+    if ( !this.requestSend && this.appId )
     {
         if ( Date.now() - this.requestSendAt > 3000 )
         {
@@ -2836,7 +3115,7 @@ VG.UI.ChatWidget.prototype.paintWidget=function( canvas )
 
             this.requestSendAtString=(new Date()).toISOString();
         }
-    };        
+    }
 
     this.layout.rect.copy( this.rect );
     this.layout.layout( canvas );
@@ -2879,7 +3158,7 @@ VG.UI.AppWidget.prototype.setAppSource=function( type, content )
     if ( type === "Source" )
     {
         var success=true;
-        try { 
+        try {
             eval( content );
         } catch ( e )
         {
@@ -2887,7 +3166,7 @@ VG.UI.AppWidget.prototype.setAppSource=function( type, content )
         }
 
         if ( success ) vgMain.call( VG.context, VG.context.workspace );
-    } else    
+    } else
     if ( type === "RemoteVIDE" )
     {
         this.loading=true;
@@ -2899,7 +3178,7 @@ VG.UI.AppWidget.prototype.setAppSource=function( type, content )
 
             VG.App=object.source;
             this.processVIDE( null, true );
-            
+
             VG.context=mainContext;
             this.switchStyle( oldStyle );
 
@@ -2909,7 +3188,7 @@ VG.UI.AppWidget.prototype.setAppSource=function( type, content )
     if ( type === "LocalVIDE" )
     {
         this.processVIDE( content );
-    }    
+    }
 
     VG.context=mainContext;
     this.appContext=appContext;
@@ -2919,7 +3198,7 @@ VG.UI.AppWidget.prototype.processVIDE=function( data, dontProcessData )
 {
     if ( !dontProcessData ) {
         var appString="VG.App=";
-        if ( data.search( appString ) == 0 ) {
+        if ( data.search( appString ) === 0 ) {
             data=appString + data;
         }
 
@@ -2933,7 +3212,7 @@ VG.UI.AppWidget.prototype.processVIDE=function( data, dontProcessData )
 
         VG.decompressImageData( VG.App.images[imageName], image );
         VG.context.imagePool.addImage( image );
-    }    
+    }
 
     // --- Eval the sources of the App stored in the VG.App Namespace
     for (var sourceName in VG.App.sources )  {
@@ -2944,7 +3223,7 @@ VG.UI.AppWidget.prototype.processVIDE=function( data, dontProcessData )
             eval( decodedSource );
         } catch ( e ) {
             success=false;
-        }        
+        }
     }
 
     // --- Add the SVGs of the project to the pool
@@ -2958,7 +3237,7 @@ VG.UI.AppWidget.prototype.processVIDE=function( data, dontProcessData )
     // ---
 
     var arg=[];
-    vgMain.call( VG.context, VG.context.workspace, arg.length, arg );    
+    vgMain.call( VG.context, VG.context.workspace, arg.length, arg );
 };
 
 VG.UI.AppWidget.prototype.paintWidget=function( canvas )
@@ -2982,15 +3261,15 @@ VG.UI.AppWidget.prototype.paintWidget=function( canvas )
         VG.context.workspace.paintWidget();
     }
 
-    this.switchToMain();    
+    this.switchToMain();
 };
 
 VG.UI.AppWidget.prototype.mouseMove=function( event )
 {
     if ( this.appContext && this.appContext.workspace.rect.contains( event.pos ) ) {
-        this.switchFromMain();        
+        this.switchFromMain();
         this.appContext.workspace.mouseMove( event.pos.x, event.pos.y );
-        this.switchToMain();        
+        this.switchToMain();
     }
 };
 
@@ -3068,7 +3347,7 @@ VG.UI.AppWidget.prototype.textInput=function( text )
 
 VG.UI.AppWidget.prototype.switchFromMain=function()
 {
-    VG.context.workspace.canvas.flush();    
+    VG.context.workspace.canvas.flush();
 
     this.mainContext=VG.context;
     VG.context=this.appContext;
@@ -3078,10 +3357,10 @@ VG.UI.AppWidget.prototype.switchFromMain=function()
 
 VG.UI.AppWidget.prototype.switchToMain=function()
 {
-    VG.context.workspace.canvas.flush();    
+    VG.context.workspace.canvas.flush();
     VG.context=this.mainContext;
 
-    this.switchStyle( this.appContext.style );    
+    this.switchStyle( this.appContext.style );
 };
 
 VG.UI.AppWidget.prototype.switchStyle=function( style )
@@ -3121,16 +3400,16 @@ VG.UI.AppEditWidget=function( code )
             this.stackedLayout.current=this.appWidget;
             this.running=true;
 
-            this.codeEdit.visible=true;            
+            this.codeEdit.visible=true;
             this.appWidget.visible=false;
         } else
         {
-            this.runButton.text="Start";                
+            this.runButton.text="Start";
             this.stackedLayout.current=this.codeEdit;
             this.running=false;
 
-            this.codeEdit.visible=false;            
-            this.appWidget.visible=true;            
+            this.codeEdit.visible=false;
+            this.appWidget.visible=true;
         }
     }.bind( this );
 
@@ -3142,8 +3421,8 @@ VG.UI.AppEditWidget=function( code )
     this.mainLayout.vertical=true;
     this.mainLayout.margin.clear();
 
-    this.codeEdit.visible=true;            
-    this.appWidget.visible=false;  
+    this.codeEdit.visible=true;
+    this.appWidget.visible=false;
 
     this.childWidgets=[ this.codeEdit,  this.appWidget, this.runButton ];
 };
@@ -3162,16 +3441,16 @@ VG.UI.HistoryWidgetController=function()
 {
     this.name="HistoryWidgetController";
 
-    this.emptyProject={ text : "Last Available State" };
+    this.emptyProject={ text : "Last Available State", visible : true };
 };
 
-Object.defineProperty( VG.UI.HistoryWidgetController.prototype, "selected", 
+Object.defineProperty( VG.UI.HistoryWidgetController.prototype, "selected",
 {
     get: function() {
         return this._visible;
     },
     set: function( visible ) {
-    }    
+    }
 });
 
 VG.UI.HistoryWidgetController.prototype=VG.UI.Widget();
@@ -3197,7 +3476,7 @@ VG.UI.HistoryWidgetController.prototype.count=function( index )
         var undo=dc.__vgUndo;
         if ( undo ) return undo.steps.length+1;
         else return 0;
-    } else return 0;    
+    } else return 0;
 };
 
 VG.UI.HistoryWidgetController.prototype.isSelected=function( item )
@@ -3219,7 +3498,7 @@ VG.UI.HistoryWidgetController.prototype.setSelected=function( item )
     var dc=VG.context.workspace.dataCollectionForUndoRedo;
     var undo=dc.__vgUndo;
 
-    var offset=0;
+    var offset=0, i, diff;
 
     if ( item !== this.emptyProject ) {
         offset=undo.steps.indexOf( item ) + 1;
@@ -3227,17 +3506,17 @@ VG.UI.HistoryWidgetController.prototype.setSelected=function( item )
 
     if ( offset > undo.stepIndex )
     {
-        var diff=offset - undo.stepIndex;
+        diff=offset - undo.stepIndex;
         //VG.log( diff, "forwards" );
 
-        for ( var i=0; i < diff; ++i ) {
+        for ( i=0; i < diff; ++i ) {
             undo.redo();
         }
     } else {
-        var diff=undo.stepIndex - offset;
+        diff=undo.stepIndex - offset;
         //VG.log( diff, "backwards" );
 
-        for ( var i=0; i < diff; ++i ) {
+        for ( i=0; i < diff; ++i ) {
             undo.undo();
         }
     }
@@ -3264,13 +3543,13 @@ VG.UI.HistoryWidget.prototype.paintWidget=function( canvas )
     canvas.hasBeenResized=true;
     this.listWidget.rect.copy( this.rect );
     this.listWidget.paintWidget( canvas );
-    canvas.hasBeenResized=false;    
+    canvas.hasBeenResized=false;
 };
 
 // ----------------------------------------------------------------- VG.UI.ButtonGroup
 
 VG.UI.ButtonGroupItem=function( text, icon, statusTip )
-{    
+{
     this.text=text;
     this.icon=icon;
     this.rect=VG.Core.Rect();
@@ -3278,7 +3557,7 @@ VG.UI.ButtonGroupItem=function( text, icon, statusTip )
 
     var canvas=VG.context.workspace.canvas;
     canvas.pushFont( VG.UI.stylePool.current.skin.ButtonGroup.Font );
-    this.textWidth=canvas.getTextSize( this.text ).width + 2 * 8;
+    this.textWidth=canvas.getTextSize( this.text ).width + 8;
     this.textHeight=canvas.getLineHeight();
     canvas.popFont();
 };
@@ -3316,10 +3595,31 @@ VG.UI.ButtonGroup.prototype.addButton=function( text, icon, statusTip )
     return button;
 };
 
+VG.UI.ButtonGroup.prototype.addSVGButton=function( text, svgName, svgGroupName, statusTip )
+{
+    var button=new VG.UI.ButtonGroupItem( text, undefined, statusTip );
+
+    button.svgName=svgName;
+    button.svgGroupName=svgGroupName;
+
+    this.items.push( button );
+
+    if ( this.activeButton === undefined ) {
+        this.activeButton=button;
+        this.index=this.items.indexOf( this.activeButton );
+
+        if ( this.selected )
+            this.selected( this.items.indexOf( this.activeButton ) );
+    }
+
+    VG.update();
+    return button;
+};
+
 VG.UI.ButtonGroup.prototype.addButtons=function()
 {
     for( var i=0; i < arguments.length; i+=3 )
-        this.addButton( arguments[i], arguments[i+1], arguments[i+2] );    
+        this.addButton( arguments[i], arguments[i+1], arguments[i+2] );
 };
 
 VG.UI.ButtonGroup.prototype.focusIn=function()
@@ -3328,7 +3628,7 @@ VG.UI.ButtonGroup.prototype.focusIn=function()
     {
         var item=this.items[i];
 
-        if ( item.rect.contains( VG.context.workspace.mousePos ) ) 
+        if ( item.rect.contains( VG.context.workspace.mousePos ) )
         {
             this.hoverButton=item;
             this.activeButton=this.hoverButton;
@@ -3337,14 +3637,16 @@ VG.UI.ButtonGroup.prototype.focusIn=function()
             if ( this.activeButton && this.changed )
                 this.changed( this.items.indexOf( this.activeButton ) );
 
-            VG.update();            
+            this.activeButtonNotified = true;
+
+            VG.update();
         }
     }
 };
 
 VG.UI.ButtonGroup.prototype.mouseMove=function( event )
 {
-    this.hoverButton=undefined;   
+    this.hoverButton=undefined;
 
     for ( var i=0; i < this.items.length; ++i )
     {
@@ -3365,6 +3667,11 @@ VG.UI.ButtonGroup.prototype.mouseDown=function( event )
     this.activeButton=this.hoverButton;
     this.index=this.items.indexOf( this.activeButton );
 
+    if ( this.activeButtonNotified ) {
+        this.activeButtonNotified = false;
+        return;
+    }
+
     if ( this.activeButton && this.changed )
         this.changed( this.items.indexOf( this.activeButton ) );
 
@@ -3372,7 +3679,8 @@ VG.UI.ButtonGroup.prototype.mouseDown=function( event )
 };
 
 VG.UI.ButtonGroup.prototype.mouseUp=function( event )
-{   
+{
+    this.activeButtonNotified = false;
 };
 
 VG.UI.ButtonGroup.prototype.calcSize=function( canvas )
@@ -3384,14 +3692,14 @@ VG.UI.ButtonGroup.prototype.calcSize=function( canvas )
 
         this.preferredSize.width+=item.textWidth + 16;
         if ( item.icon ) this.preferredSize.width+=5 + item.icon.width;
+        else if ( item.svgName ) this.preferredSize.width+=15;
         this.preferredSize.height=item.textHeight;
-        if ( !this.__vgInsideToolBar ) this.preferredSize.height+=4;
     }
 
     this.preferredSize.width+=(this.items.length-1);
 
     this.maximumSize.width=this.preferredSize.width;
-    this.maximumSize.height=this.preferredSize.height;
+    this.maximumSize.height=this.preferredSize.height + 4;
 
     return this.preferredSize;
 };
@@ -3403,8 +3711,8 @@ VG.UI.ButtonGroup.prototype.paintWidget=function( canvas )
 
 // ----------------------------------------------------------------- VG.UI.DropArea
 
-VG.handleImageDropEvent_DropArea=function( event ) 
-{    
+VG.handleImageDropEvent_DropArea=function( event )
+{
     event.stopPropagation();
     event.preventDefault();
 
@@ -3414,23 +3722,23 @@ VG.handleImageDropEvent_DropArea=function( event )
 
     var match=true;
 
-    if ( match ) 
+    if ( match )
     {
         var reader=new FileReader();
 
-        reader.onload = function( e ) 
+        reader.onload = function( e )
         {
             VG.dropArea.fileDropped( file.name, reader.result );
-        }
+        };
 
         if ( VG.dropArea.typeName === "Image" || VG.dropArea.typeName === "Binary" )
-            reader.readAsDataURL( file ); 
-        else reader.readAsText( file ); 
+            reader.readAsDataURL( file );
+        else reader.readAsText( file );
     }
-}
+};
 
-VG.handleDragOver_DropArea=function( event ) 
-{    
+VG.handleDragOver_DropArea=function( event )
+{
     event.stopPropagation();
     event.preventDefault();
     event.dataTransfer.dropEffect='copy';
@@ -3480,6 +3788,31 @@ VG.UI.DropArea=function( typeName, paintCallback, droppedCallback )
         VG.dropZone.addEventListener('drop', VG.handleImageDropEvent, false);
 
         this.makeVisible=true;
+
+        this.button=VG.UI.Button( "Select " + typeName + " ...");
+        var self = this;
+        this.button.clicked=function() {
+
+            function chooseFile(name) {
+                var chooser = document.querySelector(name);
+                chooser.addEventListener("change", function(evt) {
+
+                    var reader=new FileReader();
+                    var file=evt.target.files[0];
+
+                    reader.onload = function( e ) {
+                        self.fileDropped( file.name, reader.result );
+                    };
+
+                    if ( typeName === "Image" ) reader.readAsDataURL( file );
+                    else reader.readAsText( file );
+
+                }, false);
+
+                chooser.click();
+            }
+            chooseFile('#fileDialog');
+        }.bind( this );
     } else
     {
         this.button=VG.UI.Button( "Import " + typeName + " ...");
@@ -3509,6 +3842,7 @@ VG.UI.DropArea.prototype.fileDropped=function( name, data )
         if ( !this.image ) this.image=VG.Core.Image();
 
         this.image.name=name;
+        this.image.forcePowerOfTwo=false;
 
         VG.decompressImageData( data, this.image, function() {
             this.droppedCallback( name, data, this.image );
@@ -3525,7 +3859,7 @@ VG.UI.DropArea.prototype.fileDropped=function( name, data )
 VG.UI.DropArea.prototype.disableDropZone=function()
 {
     if ( this.platform === VG.HostProperty.PlatformWeb )
-    {    
+    {
         VG.dropZone.style.display="none";
         this.makeVisible=true;
     }
@@ -3535,6 +3869,8 @@ VG.UI.DropArea.prototype.paintWidget=function( canvas )
 {
     if ( !this.visible ) return;
 
+    this.contentRect.copy( this.rect );
+
     if ( this.paintCallback )
         this.paintCallback( canvas );
     else
@@ -3542,22 +3878,24 @@ VG.UI.DropArea.prototype.paintWidget=function( canvas )
 
         if ( this.typeName === "Image" && this.image && this.image.isValid() )
         {
-            canvas.drawScaledImage( this.rect, this.image, this.rect );
+            canvas.drawScaledImage( this.contentRect, this.image, this.contentRect );
         } else
         if ( this.platform === VG.HostProperty.PlatformWeb ) {
 
             var text=this.customText ? this.customText : "Drop " + this.typeName + " Here";
 
-            canvas.drawTextRect( text, this.rect, VG.UI.stylePool.current.skin.Widget.TextColor, 1, 1 );
+            canvas.drawTextRect( text, this.contentRect, VG.UI.stylePool.current.skin.Widget.TextColor, 1, 1 );
         }
+
+
     }
 
     if ( this.platform === VG.HostProperty.PlatformWeb )
     {
-        VG.dropZone.style.left=String( this.rect.x ) + "px";
-        VG.dropZone.style.top=String( this.rect.y ) + "px";
-        VG.dropZone.style.width=String( this.rect.width ) + "px";
-        VG.dropZone.style.height=String( this.rect.height ) + "px";
+        VG.dropZone.style.left=String( this.contentRect.x ) + "px";
+        VG.dropZone.style.top=String( this.contentRect.y ) + "px";
+        VG.dropZone.style.width=String( this.contentRect.width ) + "px";
+        VG.dropZone.style.height=String( this.contentRect.height ) + "px";
 
         if ( this.makeVisible ) {
             VG.dropZone.style.display="inline";
@@ -3565,5 +3903,5 @@ VG.UI.DropArea.prototype.paintWidget=function( canvas )
         }
     }
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect, VG.UI.stylePool.current.skin.TextEdit.BorderColor1 );    
+    canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.contentRect, VG.UI.stylePool.current.skin.TextEdit.BorderColor1 );
 };

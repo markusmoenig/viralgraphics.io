@@ -68,13 +68,6 @@ WebGLUtils = function() {
 var makeFailHTML = function(msg) {
   return '' +
         '<div style="margin: auto; width:500px;z-index:10000;margin-top:20em;text-align:center;">' + msg + '</div>';
-  return '' +
-    '<table style="background-color: #8CE; width: 100%; height: 100%;"><tr>' +
-    '<td align="center">' +
-    '<div style="display: table-cell; vertical-align: middle;">' +
-    '<div style="">' + msg + '</div>' +
-    '</div>' +
-    '</td></tr></table>';
 };
 
 /**
@@ -118,7 +111,7 @@ var setupWebGL = function(canvas, opt_attribs, opt_onError) {
       }
       container.innerHTML = makeFailHTML(str);
     }
-  };
+  }
 
   opt_onError = opt_onError || handleCreationError;
 
@@ -127,7 +120,7 @@ var setupWebGL = function(canvas, opt_attribs, opt_onError) {
           opt_onError(event.statusMessage);
         }, false);
   }
-  var context = create3DContext(canvas, {antialias:true, alpha: false, preserveDrawingBuffer: true}  );//premultipliedAlpha: false
+  var context = create3DContext(canvas, {antialias:true, alpha: true, preserveDrawingBuffer: true}  );//premultipliedAlpha: false
   if (!context) {
     if (!window.WebGLRenderingContext) {
       opt_onError("");
@@ -146,7 +139,7 @@ var setupWebGL = function(canvas, opt_attribs, opt_onError) {
  * @return {!WebGLContext} The created context.
  */
 var create3DContext = function(canvas, opt_attribs) {
-  var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+  var names = ["webgl2", "webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
   var context = null;
   for (var ii = 0; ii < names.length; ++ii) {
     try {
@@ -156,8 +149,9 @@ var create3DContext = function(canvas, opt_attribs) {
       break;
     }
   }
+  VG.webgl2 = names[ii] === "webgl2";
   return context;
-}
+};
 
 return {
   create3DContext: create3DContext,
@@ -182,10 +176,10 @@ if (!window.requestAnimationFrame) {
   })();
 }
 
-/** * ERRATA: 'cancelRequestAnimationFrame' renamed to 'cancelAnimationFrame' to reflect an update to the W3C Animation-Timing Spec. 
- * 
- * Cancels an animation frame request. 
- * Checks for cross-browser support, falls back to clearTimeout. 
+/** * ERRATA: 'cancelRequestAnimationFrame' renamed to 'cancelAnimationFrame' to reflect an update to the W3C Animation-Timing Spec.
+ *
+ * Cancels an animation frame request.
+ * Checks for cross-browser support, falls back to clearTimeout.
  * @param {number}  Animation frame request. */
 if (!window.cancelAnimationFrame) {
   window.cancelAnimationFrame = (window.cancelRequestAnimationFrame ||

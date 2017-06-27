@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,11 +21,10 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 // Web specific Implementations
 
-VG.handleImageDropEvent_Dialog=function( event ) 
-{    
+VG.handleImageDropEvent_Dialog=function( event )
+{
     event.stopPropagation();
     event.preventDefault();
 
@@ -38,13 +37,13 @@ VG.handleImageDropEvent_Dialog=function( event )
     if ( VG.fileDialog.fileType === VG.UI.FileDialog.Image )
     {
         if ( file.type.match( /image.*/ ) )
-            match=true; 
-    } else 
+            match=true;
+    } else
     if ( VG.fileDialog.fileType === VG.UI.FileDialog.Text ) {
         //if ( file.type.match( /text.*/ ) || file.type.match( /javascript.*/ ) )
             match=true;
     }
-    else 
+    else
     if ( VG.fileDialog.fileType === VG.UI.FileDialog.Project ) {
             match=true;
     }
@@ -53,27 +52,27 @@ VG.handleImageDropEvent_Dialog=function( event )
         match=true;
     }
 
-    if ( match ) 
+    if ( match )
     {
         var reader=new FileReader();
 
-        reader.onload = function( e ) 
+        reader.onload = function( e )
         {
             VG.fileDialog.fileSelected( file.name, reader.result );
-        }
+        };
 
         if ( VG.fileDialog.fileType === VG.UI.FileDialog.Image || VG.fileDialog.fileType === VG.UI.FileDialog.Binary )
-            reader.readAsDataURL( file ); 
+            reader.readAsDataURL( file );
         else reader.readAsText( file );
     }
-}
+};
 
-VG.handleDragOver_Dialog=function( event ) 
-{    
+VG.handleDragOver_Dialog=function( event )
+{
     event.stopPropagation();
     event.preventDefault();
     event.dataTransfer.dropEffect='copy';
-}
+};
 
 VG.OpenFileDialog=function( fileType, callback )
 {
@@ -94,7 +93,7 @@ VG.OpenFileDialog=function( fileType, callback )
 
     if ( this.fileType === VG.UI.FileDialog.Image )
         dropAreaName="\n\n\nDrop Image Here\n\n\n";
-    else 
+    else
     if ( this.fileType === VG.UI.FileDialog.Text )
         dropAreaName="\n\n\nDrop Text File Here\n\n\n";
     else
@@ -130,7 +129,7 @@ VG.OpenFileDialog=function( fileType, callback )
         this.textEdit.verticalExpanding=false;
 
         this.textEdit.minimumSize.set( 200, 200 );
-        this.textEdit.maximumSize.set( 200, 200 );        
+        this.textEdit.maximumSize.set( 200, 200 );
 
         layout.addChild( this.textEdit );
     }
@@ -139,27 +138,27 @@ VG.OpenFileDialog=function( fileType, callback )
 
     VG.dropZone.addEventListener('dragover', VG.handleDragOver, false);
     VG.dropZone.addEventListener('drop', VG.handleImageDropEvent, false);
-    
+
     VG.dropZone.width=320;
     VG.dropZone.height=200;
 
     this.layout=layout;
     this.addButton( "Close", function() { VG.dropZone.style.display="none"; this.close( this ); }.bind( this ) );
-    this.addButton( "Accept", function() { 
+    this.addButton( "Accept", function() {
 
-        VG.dropZone.style.display="none"; 
+        VG.dropZone.style.display="none";
 
         if ( this.fileType === VG.UI.FileDialog.Image ) {
-            if ( this.callback && this.image.image ) 
+            if ( this.callback && this.image.image )
                 this.callback( this.image.image.name, this.image.image );
         } else {
-            if ( this.callback && this.fileContent ) 
+            if ( this.callback && this.fileContent )
                 this.callback( this.fileName, this.fileContent );
         }
         this.close( this );
     }.bind( this ) );
 
-    this.makeVisible=true;    
+    this.makeVisible=true;
 
     VG.context.workspace.showWindow( this );
 };
@@ -183,12 +182,12 @@ VG.OpenFileDialog.prototype.paintWidget=function( canvas )
 VG.OpenFileDialog.prototype.fileSelected=function( name, data )
 {
     if ( this.fileType === VG.UI.FileDialog.Image )
-    {    
+    {
         VG.fileDialog.image.image.name=name;
         VG.decompressImageData( data, VG.fileDialog.image.image );
     } else
     if ( this.fileType === VG.UI.FileDialog.Binary )
-    { 
+    {
         var Base={};
         Base64.byteToCharMap_ = null;
         Base64.charToByteMap_ = null;
@@ -211,7 +210,7 @@ VG.OpenFileDialog.prototype.fileSelected=function( name, data )
 
             var output = [];
 
-            for (var i = 0; i < input.length; i += 3) 
+            for (var i = 0; i < input.length; i += 3)
             {
                 var byte1 = input[i];
                 var haveByte2 = i + 1 < input.length;
@@ -264,7 +263,7 @@ VG.OpenFileDialog.prototype.fileSelected=function( name, data )
         VG.fileDialog.textEdit.text=data;
         VG.fileDialog.fileContent=Base64.encodeByteArray( data );
         VG.fileDialog.fileName=name;
-    } else    
+    } else
     {
         VG.fileDialog.textEdit.text=data;
 
@@ -291,11 +290,11 @@ VG.OpenFileDialog.prototype.mouseUp=function( event )
     VG.UI.Dialog.prototype.mouseUp.call( this, event );
 
     if ( oldDragOp !== this.dragOp )
-        this.makeVisible=true; 
-}
+        this.makeVisible=true;
+};
 
 VG.SaveFileDialog=function( fileType, name, data )
-{       
+{
     var fileDialog=VG.RemoteFileDialog( fileType, function( callbackObject ) {
         var path=callbackObject.filePath;
         if ( path.length > 0 ) {

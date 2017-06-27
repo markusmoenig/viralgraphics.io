@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv> and contributors.
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -20,10 +20,10 @@
  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
- 
-/**Creates a new HtmlView widget that can render HTML source text. 
+
+/**Creates a new HtmlView widget that can render HTML source text.
  * @param {string} html - The html to display.
- * @constructor 
+ * @constructor
  */
 
 VG.UI.HtmlView=function( html )
@@ -36,13 +36,13 @@ VG.UI.HtmlView=function( html )
     this.textGroupArray=[];
 
     this.supportsScrollbars=true;
-    
+
     this.supportsFocus=true;
     this.minimumSize.width=40;
 
     this.maxTextLineSize=VG.Core.Size();
     this.textOffset=VG.Core.Point();
-    
+
     this.hAlignment=VG.UI.HAlignment.Left;
     this.vAlignment=VG.UI.VAlignment.Top;
 
@@ -171,7 +171,7 @@ VG.UI.HtmlView=function( html )
         "margin" : VG.Core.Margin(),
         "verticalExpanding" : true,
         "maxHeight" : 100
-    };    
+    };
 
     this.image={
         "margin" : VG.Core.Margin( 20, 10, 20, 10 )
@@ -197,7 +197,7 @@ VG.UI.HtmlView=function( html )
     this.elements.code=this.code;
     this.elements.appedit=this.appedit;
     this.elements.image=this.image;
-        
+
     if ( arguments.length ) this._html=arguments[0];
     else
     /** The HTML source text.
@@ -216,10 +216,10 @@ Object.defineProperty( VG.UI.HtmlView.prototype, "html", {
     set: function( newHtml ) {
 
         if ( !newHtml ) newHtml="";
-        
+
         this.resetFormattedText();
         this.parseHtmlText( newHtml );
-    }    
+    }
 });
 
 VG.UI.HtmlView.prototype.bind=function( collection, path )
@@ -237,12 +237,12 @@ VG.UI.HtmlView.prototype.valueFromModel=function( value )
 
 VG.UI.HtmlView.prototype.focusIn=function()
 {
-    
+
 };
 
 VG.UI.HtmlView.prototype.focusOut=function()
 {
-    
+
 };
 
 VG.UI.HtmlView.prototype.resetFormattedText=function()
@@ -282,7 +282,7 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
                 var i1=text.indexOf( "'" );
                 var i2=text.indexOf( "\"")
                 var valueEnd= i1 < 0 ? i2 : ( i2 < 0 ? i1 : ( i1 < i2 ? i1 : i2 ) );
-                
+
                 var attribValue=text.substring( 0, valueEnd );
                 text=text.substring( valueEnd+1 ).trim()
 
@@ -302,7 +302,7 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
             // Tag end
             var index=html.indexOf( ">" );
 
-            if( index < 0 ) 
+            if( index < 0 )
                 throw "html parse error, forgot to end a tag with >?";
 
             var tag=html.substring( 2, index );
@@ -333,7 +333,7 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
             // Tag start
 
             index=html.indexOf(">");
-            if( index < 0 ) 
+            if( index < 0 )
                 throw 'html parse error, forgot to end a tag with >?'
 
             tagAndAttrib=html.substring( 1, index );
@@ -351,7 +351,7 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
             {
                 tagName=tagAndAttrib.substring( 0, tagAndAttrib.length ).trim().toLowerCase();
             }
-            if(tagName === "br") 
+            if(tagName === "br")
             {
                 if( !textGroup ) textGroup=VG.UI.HtmlView.TextGroup();
 
@@ -384,9 +384,9 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
 
                             for( var i=0; i < openedTags.length; ++i ) {
 
-                                if( openedTags[i].tag.indexOf("b") < 0 
+                                if( openedTags[i].tag.indexOf("b") < 0
                                         && openedTags[i].tag.indexOf("i") < 0 )
-                                        
+
                                     formattedText.addModifier( VG.UI.HtmlView.TextModifiers( openedTags[i].tag, openedTags[i].attribs ), this.elements[openedTags[i].tag] );
                             }
 
@@ -398,9 +398,9 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
                             break;
                         }
                     }
-                    
+
                 }
-            } 
+            }
             else
                 openedTags.push( { tag : tagName, attribs : attribs } );
         }
@@ -415,9 +415,9 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
 
             for( var i=0; i < openedTags.length; ++i ) {
 
-                if( openedTags[i].tag.indexOf("b") < 0 
+                if( openedTags[i].tag.indexOf("b") < 0
                         && openedTags[i].tag.indexOf("i") < 0 )
-                        
+
                     formattedText.addModifier( VG.UI.HtmlView.TextModifiers( openedTags[i].tag, openedTags[i].attribs ), this.elements[openedTags[i].tag] );
             }
 
@@ -432,19 +432,19 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
 
             index=html.indexOf( "<" );
             indexSpecial=html.indexOf( "&vg" );
-            
+
             if ( index < 0 ) index=indexSpecial;
             if ( indexSpecial > 0 )
                 index=indexSpecial < index ? indexSpecial : index;
 
-            
+
             var text=index < 0 ? html : html.substring( 0, index );
             html=index < 0 ? "" : html.substring( index );
 
             var options={ "font" : this.elements.body.font,
                           "color" : this.elements.body.color };
             var formattedText=VG.UI.HtmlView.FormattedText(text, options);
-            
+
             // Apply modifiers for all open tags
             for( var i=0; i < openedTags.length; ++i )
                 formattedText.addModifier( VG.UI.HtmlView.TextModifiers( openedTags[i].tag, openedTags[i].attribs ), this.elements[ openedTags[i].tag ] );
@@ -453,11 +453,11 @@ VG.UI.HtmlView.prototype.parseHtmlText=function( html )
         }
     }
 
-    if( openedTags.length > 0 && html.length ) 
+    if( openedTags.length > 0 && html.length )
         throw 'Html warning: You forgot to close ' +  openedTags.length + ' tags.' + ' In ' + html;
     // push any unfinished text group
     if( textGroup ) this.textGroupArray.push( textGroup );
-    
+
 };
 
 VG.UI.HtmlView.prototype.verifyText=function()
@@ -485,7 +485,7 @@ VG.UI.HtmlView.prototype.verifyText=function()
                 ++gIndex;
             }
 
-            if( gIndex >= this.numTextGroups ) 
+            if( gIndex >= this.numTextGroups )
                 break;
         }
 
@@ -500,8 +500,8 @@ VG.UI.HtmlView.prototype.verifyText=function()
             VG.context.workspace.canvas.pushFont( currentGroupItem.codeEdit.font );
 
             // CodeEdits textLineRect only has its height.
-            rect.height=this.elements.code.verticalExpanding ? 
-                            codeTextArray.length * VG.context.workspace.canvas.getLineHeight() + 10 : 
+            rect.height=this.elements.code.verticalExpanding ?
+                            codeTextArray.length * VG.context.workspace.canvas.getLineHeight() + 10 :
                             Math.min( this.elements.code.maxHeight, codeTextArray.length * VG.context.workspace.canvas.getLineHeight());
 
             VG.context.workspace.canvas.popFont( currentGroupItem.codeEdit.font );
@@ -520,8 +520,8 @@ VG.UI.HtmlView.prototype.verifyText=function()
             VG.context.workspace.canvas.pushFont( currentGroupItem.appEdit.font );
 
             // CodeEdits textLineRect only has its height.
-            rect.height=this.elements.code.verticalExpanding ? 
-                            Math.min((codeTextArray.length +1 )* VG.context.workspace.canvas.getLineHeight() + 10, 250) : 
+            rect.height=this.elements.code.verticalExpanding ?
+                            Math.min((codeTextArray.length +1 )* VG.context.workspace.canvas.getLineHeight() + 10, 250) :
                             Math.min( this.elements.code.maxHeight, codeTextArray.length * VG.context.workspace.canvas.getLineHeight());
 
             VG.context.workspace.canvas.popFont( currentGroupItem.appEdit.font );
@@ -530,7 +530,7 @@ VG.UI.HtmlView.prototype.verifyText=function()
 
             ++tIndex;
             continue;
-        }        
+        }
 
         if( this.textGroupArray[gIndex].groupModifier === "Image" ) {
 
@@ -555,7 +555,7 @@ VG.UI.HtmlView.prototype.verifyText=function()
             VG.context.workspace.canvas.getTextSize( currentArrayItem.textLines[tIndex], size );
 
         VG.context.workspace.canvas.popFont( currentArrayItem.font )
-        
+
         if( size.width > this.maxTextLineSize.width ) this.maxTextLineSize.width=size.width;
         if ( size.height > this.maxTextLineSize.height ) this.maxTextLineSize.height=size.height;
 
@@ -589,8 +589,8 @@ VG.UI.HtmlView.prototype.verifyText=function()
                 ++items;
 
                 // If this formatted text was continued from the previous line and has only one textLine go back further.
-                if( this.textGroupArray[k].formattedTextArray[j].textLines.length === 1 
-                    && this.textGroupArray[k].formattedTextArray[j].continueLine ) --j; 
+                if( this.textGroupArray[k].formattedTextArray[j].textLines.length === 1
+                    && this.textGroupArray[k].formattedTextArray[j].continueLine ) --j;
                 else break;
             }
 
@@ -617,7 +617,7 @@ VG.UI.HtmlView.prototype.verifyText=function()
 
     }
 
-    this.verified=false;    
+    this.verified=false;
 
 };
 
@@ -671,7 +671,7 @@ VG.UI.HtmlView.prototype.processHtml=function()
                 for ( var i=0; i < textGroup.appEdit.childWidgets.length; ++i ) {
                     this.childWidgets.push( textGroup.appEdit.childWidgets[i] );
                 }
-            }            
+            }
             else if( textGroup.groupModifier === "Image" )
             {
                 if ( textGroup.image )
@@ -727,7 +727,7 @@ VG.UI.HtmlView.prototype.processHtml=function()
 
             // Force next line for headings and line breaks.
             if( textGroup.formattedTextArray[i].hasModifier("LineBreak") || textGroup.formattedTextArray[i].hasHeadings() ) {
-                
+
                 forceNextLine=true;
                 nextStart=0;
             }
@@ -747,7 +747,7 @@ VG.UI.HtmlView.prototype.processHtml=function()
                     forceNextLine=true;
                     nextStart=0;
                 }
-                
+
                 if( textGroup.formattedTextArray[i].hasModifier("UnorderedList") )
                     rectWidth -= this.elements.ul.margin.left + this.elements.ul.textStart + this.elements.ul.margin.right + (this.elements.ul.bulletSize * font.scale);
 
@@ -767,7 +767,7 @@ VG.UI.HtmlView.prototype.processHtml=function()
             font=textGroup.formattedTextArray[i].font;
 
             textGroup.formattedTextArray[i].resetTextLines();
-            
+
             VG.context.workspace.canvas.pushFont( textGroup.formattedTextArray[i].font );
 
             var ret=VG.context.workspace.canvas.wordWrap( textGroup.formattedTextArray[i].text, nextStart, rectWidth, textGroup.formattedTextArray[i].textLines );
@@ -785,10 +785,10 @@ VG.UI.HtmlView.prototype.processHtml=function()
             }
             else
                 forceNextLine=false;
-            
+
             nextStart=ret.nextStart;
 
-            if( textGroup.formattedTextArray[i].continueLine ) 
+            if( textGroup.formattedTextArray[i].continueLine )
                 ++textGroup.numContinueLines;
 
             textGroup.numTextLines+=textGroup.formattedTextArray[i].textLines.length;
@@ -837,7 +837,7 @@ VG.UI.HtmlView.prototype.verifyScrollbar=function()
 
         if( this.textGroupArray[gIndex].groupModifier === "Code" || this.textGroupArray[gIndex].groupModifier === "AppEdit" )
         {
-            this.totalItemHeight+=this.textGroupArray[gIndex].formattedTextArray[aIndex].textLineRects[tIndex].height 
+            this.totalItemHeight+=this.textGroupArray[gIndex].formattedTextArray[aIndex].textLineRects[tIndex].height
                                     + this.elements.code.margin.top + this.elements.code.margin.bottom;
 
             ++tIndex;
@@ -858,26 +858,26 @@ VG.UI.HtmlView.prototype.verifyScrollbar=function()
 
         if( aIndex === 0 ) {
 
-            if( this.textGroupArray[gIndex].formattedTextArray[aIndex].hasModifier("OrderedList") 
-                && gIndex-1 >= 0 
+            if( this.textGroupArray[gIndex].formattedTextArray[aIndex].hasModifier("OrderedList")
+                && gIndex-1 >= 0
                 && !this.textGroupArray[gIndex-1].formattedTextArray[this.textGroupArray[gIndex-1].numFormattedTexts-1].hasModifier("OrderedList") )
 
                     this.totalItemHeight+=this.elements.ol.margin.top + this.elements.ol.margin.bottom;
 
-            if( this.textGroupArray[gIndex].formattedTextArray[aIndex].hasModifier("UnorderedList") 
-                && gIndex-1 >= 0 
+            if( this.textGroupArray[gIndex].formattedTextArray[aIndex].hasModifier("UnorderedList")
+                && gIndex-1 >= 0
                 && !this.textGroupArray[gIndex-1].formattedTextArray[this.textGroupArray[gIndex-1].numFormattedTexts-1].hasModifier("UnorderedList") )
-                
+
                     this.totalItemHeight+=this.elements.ul.margin.top + this.elements.ul.margin.bottom;
 
             if( tIndex === 0 && this.textGroupArray[gIndex].groupModifier === "Paragraph" )
                 this.totalItemHeight+=this.elements.p.margin.top + this.elements.p.margin.bottom;
         }
 
-        if( tIndex+1 >= this.textGroupArray[gIndex].formattedTextArray[aIndex].textLines.length 
-            && aIndex+1 < this.textGroupArray[gIndex].numFormattedTexts 
+        if( tIndex+1 >= this.textGroupArray[gIndex].formattedTextArray[aIndex].textLines.length
+            && aIndex+1 < this.textGroupArray[gIndex].numFormattedTexts
             && this.textGroupArray[gIndex].formattedTextArray[aIndex+1].continueLine) {
-            
+
             ++tIndex;
             continue;
         }
@@ -896,28 +896,28 @@ VG.UI.HtmlView.prototype.verifyScrollbar=function()
     this.averageItemHeight=this.totalItemHeight/this.numActualLines;
 
     this.totalItemHeight+=this.elements.body.margin.top + this.elements.body.margin.bottom;
-    
+
     if ( this.supportsScrollbars && this.totalItemHeight > this.contentRect.height )
         this.needsVScrollbar=true;
 
     if ( this.needsVScrollbar && this.supportsScrollbars && !this.vScrollbar ) {
         this.vScrollbar=VG.UI.ScrollBar( "HtmlView Scrollbar" );
         this.vScrollbar.callbackObject=this;
-    } 
+    }
 
     this.verified=true;
 };
 
 VG.UI.HtmlView.prototype.paintWidget=function( canvas )
 {
-    if ( !this.rect.equals( this.previousRect ) ) 
+    if ( !this.rect.equals( this.previousRect ) )
         this.verified=false;
 
     this.rect.round(); // --- Make sure rect is integer only
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, this.body.bgColor );
 
     //TODO if( !this.elements.body.noframe ) canvas.style.drawGeneralBorder( canvas, this );
-    //else 
+    //else
         this.contentRect.copy( this.rect );
 
     if ( !this.textGroupArray.length ) return;
@@ -946,7 +946,7 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
     var aIndex=0;
     var gIndex=0;
     var numContinueLines=0;
-     
+
     for ( var i=0; i < this.numTextLines; ++i ) {
 
         // Wrap around the formattedTextArray to determine the correct indices.
@@ -965,7 +965,7 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
         var currentArrayItem=currentGroupItem.formattedTextArray[aIndex];
 
         paintRect.x=this.contentRect.x + this.elements.body.margin.left;
-        
+
         /*
          * Apply top and left margins
          */
@@ -975,7 +975,7 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
 
         var heading=currentArrayItem.getHeading();
         if( heading ) {
-            
+
             paintRect.x+=this.elements[heading.id].margin.left;
 
             if( i > 0)  paintRect.y+=this.elements[heading.id].margin.top;
@@ -985,11 +985,11 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
 
             paintRect.x+=this.elements.ul.margin.left
 
-            if( gIndex-1 >= 0 && aIndex === 0 
+            if( gIndex-1 >= 0 && aIndex === 0
                 && !this.textGroupArray[gIndex-1].formattedTextArray[this.textGroupArray[[gIndex-1]].numFormattedTexts-1].hasModifier("UnorderedList"))
-            paintRect.y+=this.elements.ul.margin.top;    
+            paintRect.y+=this.elements.ul.margin.top;
         }
-        
+
 
         if( currentArrayItem.hasModifier("OrderedList") ) {
 
@@ -1017,18 +1017,18 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
 
             paintRect.x+=this.elements.appedit.margin.left;
             paintRect.y+=this.elements.appedit.margin.top;
-        }        
+        }
 
         if( currentGroupItem.groupModifier === "Image" && currentGroupItem.image ) {
 
             paintRect.x+=this.elements.image.margin.left;
             paintRect.y+=this.elements.image.margin.top;
         }
-        
+
         paintRect.height=currentArrayItem.textLineRects[tIndex].height;
 
         if ( paintRect.y + paintRect.height >= this.contentRect.y || paintRect.y < this.contentRect.bottom() ) {
-            
+
             if(currentGroupItem.groupModifier === "Code" && currentGroupItem.codeEdit ) {
 
                 var codeRect=VG.Core.Rect( paintRect );
@@ -1036,7 +1036,8 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
                 codeRect.width-=codeRect.x - this.contentRect.x + this.elements.code.margin.right;
 
                 currentGroupItem.codeEdit.rect.set(codeRect);
-                currentGroupItem.codeEdit.paintWidget(canvas);
+                if ( codeRect.bottom() > this.rect.y + 35 )
+                    currentGroupItem.codeEdit.paintWidget(canvas);
 
                 paintRect.y+=paintRect.height + this.elements.code.margin.bottom;
 
@@ -1052,6 +1053,7 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
                 codeRect.width-=codeRect.x - this.contentRect.x + this.elements.code.margin.right;
 
                 currentGroupItem.appEdit.rect.set(codeRect);
+                if ( codeRect.bottom() > this.rect.y + 35 )
                 currentGroupItem.appEdit.paintWidget(canvas);
 
                 paintRect.y+=paintRect.height + this.elements.code.margin.bottom;
@@ -1059,14 +1061,14 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
                 //canvas.setClipRect( this.contentRect );todo
                 ++tIndex;
                 continue;
-            }            
+            }
 
             if ( currentGroupItem.groupModifier === "Image" ) {
 
                 if( currentGroupItem.image )
                 {
                     var maxImgWidth=this.contentRect.width - this.elements.body.margin.right
-                                        - this.elements.body.margin.left - this.elements.image.margin.left 
+                                        - this.elements.body.margin.left - this.elements.image.margin.left
                                         - this.elements.image.margin.right;
 
                     var imgWidth=Math.min( maxImgWidth, currentGroupItem.image.width );
@@ -1086,9 +1088,9 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
 
             // Make sure the next formatted text starts immediately
             // Adjust paintRect.x accordingly.
-            if( tIndex == 0 ) 
+            if( tIndex == 0 )
                 paintRect.x+=currentArrayItem.textStartPos;
-            
+
             var text=currentArrayItem.textLines[tIndex];
 
             // If the first line of the next formatted text should continue in the previous line
@@ -1108,16 +1110,16 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
             bgColor=currentArrayItem.bgColor ? currentArrayItem.bgColor : bgColor;
 
             VG.context.workspace.canvas.pushFont( font );
-        
+
             if( currentGroupItem.groupModifier === "ListItem"
                 && currentArrayItem.hasModifier("UnorderedList")
                 && aIndex === 0 && tIndex === 0 ) {
 
                 // Draw a circle for the bullet point
-                var circleRect = VG.Core.Rect( paintRect.x, 
-                    paintRect.y + paintRect.height/2 - this.elements.ul.bulletSize/2 * font.scale, 
+                var circleRect = VG.Core.Rect( paintRect.x,
+                    paintRect.y + paintRect.height/2 - this.elements.ul.bulletSize/2 * font.scale,
                         this.elements.ul.bulletSize * font.scale , this.elements.ul.bulletSize * font.scale);
-                
+
                 canvas.draw2DShape( VG.Canvas.Shape2D.Circle, circleRect,  textColor);
             }
 
@@ -1128,18 +1130,18 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
             if ( currentArrayItem.hasModifier("Link")
                     && currentArrayItem.mouseOver ) {
 
-                var underlineRect = VG.Core.Rect( paintRect.x, 
-                    paintRect.y + paintRect.height - canvas.fonts[canvas.fontIndex].triFont.descender, 
-                        currentArrayItem.textLineRects[tIndex].width, 
+                var underlineRect = VG.Core.Rect( paintRect.x,
+                    paintRect.y + paintRect.height - canvas.fonts[canvas.fontIndex].triFont.descender,
+                        currentArrayItem.textLineRects[tIndex].width,
                             this.elements.a.underlineHeight );
-            
+
                 canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, underlineRect,  textColor);
             }
-                
+
             currentArrayItem.textLineRects[tIndex].x = paintRect.x;
             currentArrayItem.textLineRects[tIndex].y = paintRect.y;
             canvas.drawTextRect( text, paintRect , textColor, this.hAlignment, 1);
-            
+
             VG.context.workspace.canvas.popFont( font );
 
             paintRect.y+=paintRect.height + this.elements.body.spacing;
@@ -1155,26 +1157,26 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
                 if( heading )
                     paintRect.y+=this.elements[heading.id].margin.bottom;
 
-                if( currentGroupItem.groupModifier === "Paragraph" 
+                if( currentGroupItem.groupModifier === "Paragraph"
                     && aIndex+1 >= currentGroupItem.numFormattedTexts )
-                        
+
                     paintRect.y+=this.elements.p.margin.bottom;
-                
+
                 if( aIndex+1 >= currentGroupItem.numFormattedTexts
                         || currentGroupItem.groupModifier === "None" ) {
 
-                    if( currentArrayItem.hasModifier("UnorderedList") && gIndex+1 < this.numTextGroups 
+                    if( currentArrayItem.hasModifier("UnorderedList") && gIndex+1 < this.numTextGroups
                         && !this.textGroupArray[gIndex+1].formattedTextArray[0].hasModifier("UnorderedList") )
 
                         paintRect.y+=this.elements.ul.margin.bottom;
 
-                    if( currentArrayItem.hasModifier("OrderedList") && gIndex+1 < this.numTextGroups 
+                    if( currentArrayItem.hasModifier("OrderedList") && gIndex+1 < this.numTextGroups
                         && !this.textGroupArray[gIndex+1].formattedTextArray[0].hasModifier("OrderedList") )
 
                         paintRect.y+=this.elements.ol.margin.bottom;
                 }
             }
-            
+
         } else break;
     }
 
@@ -1186,7 +1188,7 @@ VG.UI.HtmlView.prototype.paintWidget=function( canvas )
         this.vScrollbar.paintWidget( canvas );
     }
 
-    this.previousRect.set( this.rect ); 
+    this.previousRect.set( this.rect );
 };
 
 VG.UI.HtmlView.prototype.vHandleMoved=function( offsetInScrollbarSpace )
@@ -1297,8 +1299,8 @@ VG.UI.HtmlView.prototype.mouseDown=function( event )
 
                     if( link ) {
                         this.linkCallback( link );
-                        return;  
-                    } 
+                        return;
+                    }
                 }
             }
         }
@@ -1314,17 +1316,17 @@ VG.UI.HtmlView.prototype.mouseWheel=function( step )
 {
     if ( !this.needsVScrollbar ) return false;
 
-    if ( step > 0 ) 
+    if ( step > 0 )
     {
         this.textOffset.y-=this.averageItemHeight;
-        this.vScrollbar.scrollTo( this.textOffset.y );  
-    } else 
+        this.vScrollbar.scrollTo( this.textOffset.y );
+    } else
     {
         this.textOffset.y+=this.averageItemHeight;
-        this.vScrollbar.scrollTo( this.textOffset.y );   
+        this.vScrollbar.scrollTo( this.textOffset.y );
     }
 
-    VG.update();    
+    VG.update();
 
     return true;
 };
@@ -1337,7 +1339,7 @@ VG.UI.HtmlView.prototype.mouseLeave=function( step )
 VG.UI.HtmlView.prototype.setVScrollbarDimensions=function( canvas )
 {
     this.vScrollbar.rect=VG.Core.Rect( this.contentRect.right() + 2, this.contentRect.y, VG.UI.stylePool.current.skin.ScrollBar.Size, this.contentRect.height );
-    
+
     this.vScrollbar.setScrollBarContentSize( this.totalItemHeight, this.contentRect.height );
 };
 
@@ -1367,7 +1369,7 @@ VG.UI.HtmlView.TextGroup=function( groupModifier )
     this.groupModifier=VG.UI.HtmlView.TextGroupNames.None;
 
     if ( arguments.length && arguments[0])
-        this.groupModifier=arguments[0];  
+        this.groupModifier=arguments[0];
 }
 
 VG.UI.HtmlView.TextGroup.prototype=VG.UI.HtmlView.TextGroup();
@@ -1522,7 +1524,7 @@ VG.UI.HtmlView.TextModifiers=function( id, attribs )
     this.id=id;
     this.name=VG.UI.HtmlView.ModifierNames[id];
 
-    
+
     if(!attribs) {
         //@TODO: Improve this!
         if ( this.name === "Font" )

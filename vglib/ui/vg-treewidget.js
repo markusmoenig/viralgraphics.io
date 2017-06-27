@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -22,7 +22,7 @@
  */
 
 VG.UI.TreeWidgetItem=function( item, rect )
-{    
+{
     if ( !(this instanceof VG.UI.TreeWidgetItem) ) return new VG.UI.TreeWidgetItem( item, rect );
 
     this.item=item;
@@ -71,7 +71,7 @@ VG.UI.TreeWidgetItem=function( item, rect )
 VG.UI.TreeWidget=function()
 {
     if ( !(this instanceof VG.UI.TreeWidget) ) return new VG.UI.TreeWidget();
-    
+
     VG.UI.Widget.call( this );
     this.name="TreeWidget";
 
@@ -90,6 +90,8 @@ VG.UI.TreeWidget=function()
     this.needsVScrollbar=false;
     this.verified=false;
     this.previousRect=VG.Core.Rect();
+
+    this.columns = [];
 };
 
 VG.UI.TreeWidget.prototype=VG.UI.Widget();
@@ -110,13 +112,13 @@ VG.UI.TreeWidget.prototype.bind=function( collection, path )
         collection.addControllerForPath( this.controller, path );
     }
 
-    this.controller.addObserver( "changed", this.changed, this );    
+    this.controller.addObserver( "changed", this.changed, this );
     this.controller.addObserver( "selectionChanged", this.selectionChanged, this );
 
     return this.controller;
 };
 
-Object.defineProperty( VG.UI.TreeWidget.prototype, "itemHeight", 
+Object.defineProperty( VG.UI.TreeWidget.prototype, "itemHeight",
 {
     get: function() {
         if ( this._itemHeight === -1 ) {
@@ -130,8 +132,16 @@ Object.defineProperty( VG.UI.TreeWidget.prototype, "itemHeight",
     },
     set: function( itemHeight ) {
         this._itemHeight=itemHeight;
-    }    
+    }
 });
+
+VG.UI.TreeWidget.prototype.addColumn=function( column )
+{
+    if ( column.hAlign !== 1 )
+        column.hAlign = 0;
+
+    this.columns.push( column );
+};
 
 VG.UI.TreeWidget.prototype.addToolWidget=function( widget )
 {
@@ -158,18 +168,18 @@ VG.UI.TreeWidget.prototype.mouseWheel=function( step )
 
     if ( step > 0 ) {
         this.offset-=this.itemHeight + this.spacing;
-        this.vScrollbar.scrollTo( this.offset );   
+        this.vScrollbar.scrollTo( this.offset );
     } else
     {
         this.offset+=this.itemHeight + this.spacing;
-        this.vScrollbar.scrollTo( this.offset );            
+        this.vScrollbar.scrollTo( this.offset );
     }
 
     return true;
 };
 
 VG.UI.TreeWidget.prototype.keyDown=function( keyCode )
-{        
+{
     if ( !this.controller.selected ) return;
 
     var index=this.controller.indexOf( this.controller.selected );
@@ -187,12 +197,12 @@ VG.UI.TreeWidget.prototype.keyDown=function( keyCode )
     {
         if ( Math.floor( this.offset + this.visibleItems ) <= index +1 ) {
             this.offset=index+2-Math.floor(this.visibleItems);
-            this.vScrollbar.scrollTo( this.offset * this.itemHeight + (this.offset-1) * this.spacing );            
+            this.vScrollbar.scrollTo( this.offset * this.itemHeight + (this.offset-1) * this.spacing );
         }
 
         this.controller.selected=this.controller.at( index + 1 );
-    } 
-}
+    }
+};
 
 VG.UI.TreeWidget.prototype.mouseMove=function( event )
 {
@@ -213,6 +223,28 @@ VG.UI.TreeWidget.prototype.mouseDown=function( event )
 
     if ( !this.rect.contains( event.pos ) ) return;
 
+/*
+    if ( selectedIndex >=0 && selectedIndex < this.controller.count() )
+        item=this.controller.at( selectedIndex );
+
+    if ( this.controller.multiSelection )
+    {
+        if ( event.keysDown.indexOf( VG.Events.KeyCodes.Shift ) >= 0 )
+        {
+            if ( !this.controller.isSelected( item ) ) this.controller.addToSelection( item );
+            else this.controller.removeFromSelection( item );
+        } else
+        if ( item ) {
+            this.controller.setSelected( item );
+            this.possibleDnDSource=item;
+        }
+    } else
+    if ( item ) {
+        this.controller.setSelected( item );
+        this.possibleDnDSource=item;
+    }
+*/
+
     var treeItem=this.getItemAtPos( event.pos );
     if ( treeItem ) {
         if ( treeItem.item.children ) {
@@ -224,9 +256,20 @@ VG.UI.TreeWidget.prototype.mouseDown=function( event )
             if ( treeItem.item.selectable ) this.controller.selected=treeItem.item;
         } else
         {
-            this.controller.selected=treeItem.item;
+            if ( this.controller.multiSelection )
+            {
+                if ( event.keysDown.indexOf( VG.Events.KeyCodes.Shift ) >= 0 )
+                {
+                    if ( !this.controller.isSelected( treeItem.item ) ) this.controller.addToSelection( treeItem.item );
+                    else this.controller.removeFromSelection( treeItem.item );
+                } else {
+                    this.controller.selected=treeItem.item;
+                }
+            } else {
+                this.controller.selected=treeItem.item;
+            }
         }
-        this.possibleDnDSource=treeItem;        
+        this.possibleDnDSource=treeItem;
     }
     this.verified=false;
     this.mouseIsDown=true;
@@ -234,7 +277,11 @@ VG.UI.TreeWidget.prototype.mouseDown=function( event )
 
 VG.UI.TreeWidget.prototype.mouseUp=function( event )
 {
-    this.mouseIsDown=false;    
+    this.possibleDnDSource=undefined;
+    VG.context.workspace.dndOperation=undefined;
+    VG.context.workspace.dndValidDragTarget=undefined;
+
+    this.mouseIsDown=false;
 };
 
 VG.UI.TreeWidget.prototype.mouseDoubleClick=function( event )
@@ -245,9 +292,9 @@ VG.UI.TreeWidget.prototype.mouseDoubleClick=function( event )
         if ( itemUnderMouse ) itemUnderMouse=itemUnderMouse.item;
 
         if ( selected === itemUnderMouse )
-            this.controller.selected.open=this.controller.selected.open ? false : true;        
+            this.controller.selected.open=this.controller.selected.open ? false : true;
     }
-    this.verified=false; 
+    this.verified=false;
 };
 
 VG.UI.TreeWidget.prototype.vHandleMoved=function( offsetInScrollbarSpace )
@@ -275,14 +322,14 @@ VG.UI.TreeWidget.prototype.verifyScrollbar=function( text )
     if ( this.needsVScrollbar && !this.vScrollbar ) {
         this.vScrollbar=VG.UI.ScrollBar( "TreeWidget Scrollbar" );
         this.vScrollbar.callbackObject=this;
-    }    
+    }
 
     this.verified=true;
 };
 
 VG.UI.TreeWidget.prototype.changed=function()
 {
-    this.verified=false;    
+    this.verified=false;
     VG.update();
 };
 
@@ -317,7 +364,7 @@ VG.UI.TreeWidget.prototype.countVisibleControllerItems=function()
 
         ++count;
 
-        if ( item.children && item.open ) 
+        if ( item.children && item.open )
             count+=this.countVisibleControllerChildItems( item );
     }
 
@@ -328,7 +375,7 @@ VG.UI.TreeWidget.prototype.countVisibleControllerChildItems=function( item )
 {
     var count=0;
 
-    for ( var i=0; i < item.children.length; ++i ) 
+    for ( var i=0; i < item.children.length; ++i )
     {
         var child=item.children[i];
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv> and Contributors
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -33,7 +33,7 @@ VG.Import = {};
      *      http://en.wikipedia.org/wiki/Wavefront_.obj_file
      *      http://www.martinreddy.net/gfx/3d/OBJ.spec
      *      http://www.fileformat.info/format/wavefrontobj/egff.htm
-     * @example 
+     * @example
      * About .obj file:
      *      Vertex data:
      *          v,
@@ -76,7 +76,7 @@ VG.Import = {};
      *          group-mesh
      *          ....
      * @param text input .obj file as string
-     * @param auxFiles     
+     * @param auxFiles
      * @returns {VG.Render.Mesh} root mesh
      */
 
@@ -95,7 +95,7 @@ VG.Import.loadObj = function(text, auxFiles, scale) {
         return o !== '' && o[0] !== '#'; // remove empty line & comment
     });
     var materials = {};
-    var activeMaterial = undefined;
+    var activeMaterial;
     for (var i = 0; i < lines.length; i++) {
         // remove endline comment
         var comment = lines[i].indexOf('#');
@@ -117,7 +117,7 @@ VG.Import.loadObj = function(text, auxFiles, scale) {
             } else if (parts.length === 4) {
                 mesh.v.push({x: parts[1], y: parts[2], z: parts[3], w: '1.0'});
             } else {
-                mesh.v.push({x: parts[1], y: parts[2], z: parts[3], w: parts[4]})
+                mesh.v.push({x: parts[1], y: parts[2], z: parts[3], w: parts[4]});
             }
         } else if (command === 'vt') {
             /**
@@ -271,7 +271,7 @@ VG.Import.loadMtl = function(text)
             ];
             return index + 3;
         } else if (parts[index] === '-texres') {
-            map[parts[index]] = parseFloat(parts[index+1])
+            map[parts[index]] = parseFloat(parts[index+1]);
             return index + 2;
         } else {
             // unknown command
@@ -288,6 +288,7 @@ VG.Import.loadMtl = function(text)
     var textures = ['map_Ka', 'map_Kd', 'map_Ks', 'map_Ns', 'map_d',
         'disp', 'decal', 'bump'];
     var materials = {};
+    var index;
     var material;
     for (var i = 0; i < lines.length; i++) {
         var parts = lines[i].trim().split(" ").filter(function (o) {
@@ -323,7 +324,7 @@ VG.Import.loadMtl = function(text)
             material[command] = {
                 filename: parts[parts.length -1]
             };
-            var index = parseTextureArgs(parts, 1, material[command]);
+            index = parseTextureArgs(parts, 1, material[command]);
             while(index < parts.length - 1){
                 index = parseTextureArgs(parts, index, material[command]);
             }
@@ -334,7 +335,7 @@ VG.Import.loadMtl = function(text)
             material[command][tipe] = {
                 filename: parts[parts.length -1]
             };
-            var index = parseTextureArgs(parts, 3, material[command][tipe]);
+            index = parseTextureArgs(parts, 3, material[command][tipe]);
             while(index < parts.length - 1){
                 index = parseTextureArgs(parts, index, material[command][tipe]);
             }

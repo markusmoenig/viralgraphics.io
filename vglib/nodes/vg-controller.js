@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>.
+ * (C) Copyright 2014-2017 Markus Moenig <markusm@visualgraphics.tv>.
  *
  * This file is part of Visual Graphics.
  *
@@ -36,24 +36,26 @@ VG.Controller.Node=function( collection, path, graph )
     this.multiSelection=false;
 
     this._selected=0;
-    this.selection=[];    
+    this.selection=[];
 
     // --- Init possible OberverKeys
 
     this.addObserverKey( "parentSelectionChanged" );
     this.addObserverKey( "selectionChanged" );
+    this.addObserverKey( "addItem" );
+    this.addObserverKey( "removeItem" );
     this.addObserverKey( "changed" );
 };
 
 VG.Controller.Node.prototype=VG.Controller.Base();
 
-Object.defineProperty( VG.Controller.Node.prototype, "length", 
+Object.defineProperty( VG.Controller.Node.prototype, "length",
 {
     get: function() {
         var array=this.collection.dataForPath( this.path ).nodes;
         if ( array ) return array.length;
         else return 0;
-    }   
+    }
 });
 
 VG.Controller.Node.prototype.at=function( index )
@@ -74,30 +76,34 @@ VG.Controller.Node.prototype.add=function( item, noUndo )
     {
         this.graph.addNode( item.node );
     } else
+    if ( item.className )
     {
-        Object.defineProperty( item, "node", { 
-            enumerable: false, 
+        Object.defineProperty( item, "node", {
+            enumerable: false,
             writable: true
         });
 
-        item.node=new VG.Nodes[item.className];
+        item.node=new VG.Nodes[item.className]();
         item.node.data=item;
 
-        if ( item.node.createProperties )         
+        if ( item.node.createProperties )
             item.node.createProperties( item );
 
         if ( item.node.updateFromData )
             item.node.updateFromData( item );
 
         this.graph.addNode( item.node, true );
-        item.node.readConnections();        
+        item.node.readConnections();
     }
+
+    this.notifyObservers( "addItem", item );
+
     array.push( item );
 
-    if ( this.collection.__vgUndo && !noUndo ) 
+    if ( this.collection.__vgUndo && !noUndo )
         this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.Add, this.path, array.length-1, JSON.stringify( item ) );
 
-    this.notifyObservers( "changed" );    
+    this.notifyObservers( "changed" );
     return item;
 };
 
@@ -110,15 +116,15 @@ VG.Controller.Node.prototype.insert=function( index, item, noUndo )
         this.graph.addNode( item.node );
     } else
     {
-        Object.defineProperty( item, "node", { 
-            enumerable: false, 
+        Object.defineProperty( item, "node", {
+            enumerable: false,
             writable: true
         });
 
-        item.node=new VG.Nodes[item.className];
+        item.node=new VG.Nodes[item.className]();
         item.node.data=item;
 
-        if ( item.node.createProperties ) 
+        if ( item.node.createProperties )
             item.node.createProperties( item );
 
         if ( item.node.updateFromData )
@@ -127,12 +133,14 @@ VG.Controller.Node.prototype.insert=function( index, item, noUndo )
         this.graph.addNode( item.node, true );
         item.node.readConnections();
     }
+
+    this.notifyObservers( "addItem", item );
     array.splice( index, 0, item );
 
-    if ( this.collection.__vgUndo && !noUndo ) 
+    if ( this.collection.__vgUndo && !noUndo )
         this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.Add, this.path, array.length-1, JSON.stringify( item ) );
 
-    this.notifyObservers( "changed" );    
+    this.notifyObservers( "changed" );
     return item;
 };
 
@@ -141,6 +149,7 @@ VG.Controller.Node.prototype.remove=function( item, noUndo )
     var array=this.collection.dataForPath( this.path ).nodes;
 
     item.node.disconnectAll();
+    this.notifyObservers( "removeItem", item );
 
     var index=array.indexOf( item );
     if ( index >= 0 )
@@ -148,7 +157,7 @@ VG.Controller.Node.prototype.remove=function( item, noUndo )
 
     this.graph.nodes.delete( item.id );
 
-    if ( this.collection.__vgUndo && !noUndo ) 
+    if ( this.collection.__vgUndo && !noUndo )
         this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.Remove, this.path, index, JSON.stringify( item ) );
 
     this.notifyObservers( "changed" );
@@ -178,8 +187,44 @@ VG.Controller.Node.prototype.changeProperty=function( index, name, data, noUndo 
 
     this.selected=item;
 
-    this.notifyObservers( "selectionChanged" );    
-    this.notifyObservers( "changed" );    
+    this.notifyObservers( "selectionChanged" );
+    this.notifyObservers( "changed" );
+    return item;
+};
+
+VG.Controller.Node.prototype.keyAdd=function( index, name, data, noUndo )
+{
+    var array=this.collection.dataForPath( this.path ).nodes;
+    var item=array[index];
+
+    var param=item.node.container.getParam( name );
+    item.node.container.addKeyFrame( data._frame, param, data[name], true );
+    this.notifyObservers( "changed" );
+    return item;
+};
+
+VG.Controller.Node.prototype.keyRemove=function( index, name, data, noUndo )
+{
+    var array=this.collection.dataForPath( this.path ).nodes;
+    var item=array[index];
+
+    item.node.container.removeKeyFrameAt( data._frame, true );
+    this.notifyObservers( "changed" );
+    return item;
+};
+
+VG.Controller.Node.prototype.keyChange=function( index, name, data, noUndo )
+{
+    var array=this.collection.dataForPath( this.path ).nodes;
+    var item=array[index];
+
+    let param=item.node.container.getParam( name );
+    let key=item.node.container.keyFrameAt( param.data, data._frame );
+
+    for( var prop in data ) key[prop]=data[prop];
+
+    VG.update();
+    this.notifyObservers( "changed" );
     return item;
 };
 
@@ -199,8 +244,8 @@ VG.Controller.Node.prototype.disconnect=function( index, name, data, noUndo )
 
     sourceTerminal.disconnectFrom( destTerminal );
 
-    this.notifyObservers( "changed" );    
-    return item;    
+    this.notifyObservers( "changed" );
+    return item;
 };
 
 VG.Controller.Node.prototype.connect=function( index, name, data, noUndo )
@@ -219,41 +264,46 @@ VG.Controller.Node.prototype.connect=function( index, name, data, noUndo )
 
     sourceTerminal.connectTo( destTerminal );
 
-    this.notifyObservers( "changed" );    
-    return item;    
+    this.notifyObservers( "changed" );
+    return item;
 };
 
 VG.Controller.Node.prototype.modelChanged=function( forceRenew )
 {
-    var array=this.collection.dataForPath( this.path ).nodes;
+    var data=this.collection.dataForPath( this.path );
+    var array;
 
-    if ( this.graph.previewNode ) 
+    if ( !data || !this.graph ) return;
+    else array=data.nodes;
+
+    if ( this.graph.previewNode )
         this.graph.previewNode.disconnectAll();
 
     if ( !array || !array.length ) this.graph.clear();
     else
     {
         // --- Initialize new Nodes in controller
-        for( var i=0; i < array.length; ++i )
+        var i, item;
+        for( i=0; i < array.length; ++i )
         {
-            var item=array[i];
+            item=array[i];
 
             if ( !item.node || forceRenew )
             {
-                Object.defineProperty( item, "node", { 
-                    enumerable: false, 
+                Object.defineProperty( item, "node", {
+                    enumerable: false,
                     writable: true
                 });
 
-                Object.defineProperty( item, "readConnections", { 
-                    enumerable: false, 
+                Object.defineProperty( item, "readConnections", {
+                    enumerable: false,
                     writable: true
                 });
 
-                item.node=new VG.Nodes[item.className];
+                item.node=new VG.Nodes[item.className]();
                 item.node.data=item;
 
-                if ( item.node.createProperties )         
+                if ( item.node.createProperties )
                     item.node.createProperties( item );
 
                 if ( item.node.updateFromData )
@@ -261,29 +311,33 @@ VG.Controller.Node.prototype.modelChanged=function( forceRenew )
 
                 this.graph.addNode( item.node, true );
                 item.readConnections=true;
+
+                this.notifyObservers( "addItem", item );
             }
         }
 
         // --- Connect new Nodes in controller
-        for( var i=0; i < array.length; ++i )
+        for( i=0; i < array.length; ++i )
         {
-            var item=array[i];
+            item=array[i];
 
             if ( item.readConnections ) {
                 item.node.readConnections( true );
                 item.readConnections=false;
             }
-        }        
+        }
     }
-    this.notifyObservers( "changed" ); 
+
+    this.notifyObservers( "changed" );
 };
 
 VG.Controller.Node.prototype.syncGraph=function()
 {
-    var array=this.collection.dataForPath( this.path ).nodes;
+    var data=this.collection.dataForPath( this.path );
+    var array;
 
-    if ( this.graph.previewNode ) 
-        this.graph.previewNode.disconnectAll();
+    if ( !data ) return;
+    else array=data.nodes;
 
     this.graph.nodes.clear();
 
@@ -295,7 +349,7 @@ VG.Controller.Node.prototype.syncGraph=function()
         if ( item.node ) this.graph.nodes.set( item.node.data.id, item.node );
         else { this.modelChanged(); return; }
 
-    };
+    }
 };
 
 VG.Controller.Node.prototype.create=function( strClass )
@@ -311,7 +365,7 @@ VG.Controller.Node.prototype.create=function( strClass )
     return new F();
 };
 
-Object.defineProperty( VG.Controller.Node.prototype, "selected", 
+Object.defineProperty( VG.Controller.Node.prototype, "selected",
 {
     get: function() {
         return this._selected;
@@ -328,7 +382,7 @@ Object.defineProperty( VG.Controller.Node.prototype, "selected",
 
             this.notifyObservers( "selectionChanged" );
         }
-    }    
+    }
 });
 
 VG.Controller.Node.prototype.addToSelection=function( item )
@@ -336,10 +390,10 @@ VG.Controller.Node.prototype.addToSelection=function( item )
     if ( !this._selected ) this._selected=item;
 
     var index=this.selection.indexOf( item );
-    if ( index === -1 && item ) 
+    if ( index === -1 && item )
         this.selection.push( item );
 
-    this.notifyObservers( "selectionChanged" ); 
+    this.notifyObservers( "selectionChanged" );
 };
 
 VG.Controller.Node.prototype.removeFromSelection=function( item )
@@ -352,14 +406,14 @@ VG.Controller.Node.prototype.removeFromSelection=function( item )
         this.selection.splice( index, 1 );
 
      //   if ( this.selectionChanged )
-     //       this.selectionChanged.call( VG.context );        
-    }   
+     //       this.selectionChanged.call( VG.context );
+    }
 
     if ( this._selected === 0 && this.selection.length ) {
         this._selected=this.selection[0];
     }
 
-    this.notifyObservers( "selectionChanged" );    
+    this.notifyObservers( "selectionChanged" );
 };
 
 VG.Controller.Node.prototype.isSelected=function( item )
@@ -384,6 +438,6 @@ VG.Controller.Node.prototype.indexOf=function( item )
 
 VG.Controller.Node.prototype.isValid=function()
 {
-    var array=this.collection.dataForPath( this.path ).nodes;
-    if ( !array ) return false; else return true;
+    var data=this.collection.dataForPath( this.path );
+    if ( !data || !data.nodes ) return false; else return true;
 };

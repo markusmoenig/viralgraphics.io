@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv> and Contributors
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -48,7 +48,7 @@ VG.Font.Manager.prototype.addFonts=function()
 {
     for (var font in _typeface_js.faces ) {
         //console.log( font,  _typeface_js.faces[font] );
-    
+
         if ( this.getFont( font ) === null )
         {
             var fontFace=null;
@@ -60,7 +60,7 @@ VG.Font.Manager.prototype.addFonts=function()
                     fontFace=_typeface_js.faces[font].normal.normal;
                 else
                 if ( _typeface_js.faces[font].normal.italic )
-                    fontFace=_typeface_js.faces[font].normal.italic;                
+                    fontFace=_typeface_js.faces[font].normal.italic;
             }
             else
             if ( _typeface_js.faces[font].bold )
@@ -69,7 +69,7 @@ VG.Font.Manager.prototype.addFonts=function()
                     fontFace=_typeface_js.faces[font].bold.normal;
                 else
                 if ( _typeface_js.faces[font].bold.italic )
-                    fontFace=_typeface_js.faces[font].bold.italic;  
+                    fontFace=_typeface_js.faces[font].bold.italic;
             }
 
             var triFont=VG.Font.Triangulator.createFont( fontFace, { curveDiv: 3 } );
@@ -109,7 +109,7 @@ VG.Font.Font=function( name, size, curveDiv )
 {
     if ( !(this instanceof VG.Font.Font) ) return new VG.Font.Font( name, size, curveDiv );
 
-    if ( size === undefined && name.triFont ) 
+    if ( size === undefined && name.triFont )
     {
         // --- Copy
 
@@ -117,7 +117,7 @@ VG.Font.Font=function( name, size, curveDiv )
         this.size=name.size;
         this.triFont=name.triFont;
         this.scale=name.scale;
-    } else 
+    } else
     if ( !curveDiv )
     {
         // --- Use existing font
@@ -157,23 +157,23 @@ VG.Font.Font.prototype.setFont=function( name )
 VG.Font.Font.prototype.setSize=function( size )
 {
     this.size=size;
-    this.scale=this.size * this.triFont.pixelScale;    
+    this.scale=this.size * this.triFont.pixelScale;
 };
 
 
-VG.Font.Triangulator = {}; 
+VG.Font.Triangulator = {};
 
 VG.Font.Triangulator.createFont=function(font, options)
 {
     /** Takes a fontface.js face/font and creates a triangle version of it
      *
-     * Options: 
+     * Options:
      *    curveDiv - Divisor varible for the bezier curves (defult: 2)
      *
      * returns an structure similar to typeface.js's face*/
 
     if (!options) options = {};
-    
+
     var out = { glyphs: {}, tris: [] };
     var curveDiv = options.curveDiv ? options.curveDiv : 2;
 
@@ -183,7 +183,7 @@ VG.Font.Triangulator.createFont=function(font, options)
 
     var v = out.tris;
 
-    var text = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" + 
+    var text = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" +
                "~!@#$%^&*()_+{}:\"<>?|[];',./\\-=%";
 
     for (var i=0; i < text.length; ++i )
@@ -192,7 +192,7 @@ VG.Font.Triangulator.createFont=function(font, options)
 
         if (!font.glyphs[chr]) continue;
 
-        var g = 
+        var g =
         {
             offset: out.tris.length,
             size: 0,
@@ -209,26 +209,26 @@ VG.Font.Triangulator.createFont=function(font, options)
         for (var j = g.offset; j < (g.offset + g.size); j += 3)
         {
             var y1 = v[j].y;
-            var y2 = v[j + 1].y; 
+            var y2 = v[j + 1].y;
             var y3 = v[j + 2].y;
-                    
+
             g.baseLine = Math.max(g.baseLine, y1);
             g.baseLine = Math.max(g.baseLine, y2);
             g.baseLine = Math.max(g.baseLine, y3);
         }
     }
-            
+
     out.height = font.lineHeight / font.resolution;
     out.ascender = font.ascender / font.resolution;
     out.descender = font.descender / font.resolution;
-    out.pixelScale = (out.height + out.descender) / out.height;     
+    out.pixelScale = (out.height + out.descender) / out.height;
 
     if (totalSize != out.tris.length) throw "total size doesn't match the float array length";
 
     v = null;
 
     return out;
-}
+};
 
 VG.Font.Triangulator.getGlyph=function( font, chr )
 {
@@ -240,7 +240,7 @@ VG.Font.Triangulator.getGlyph=function( font, chr )
     }
 
     return g;
-}
+};
 
 VG.Font.Triangulator.clockwise=function(vs)
 {
@@ -252,33 +252,33 @@ VG.Font.Triangulator.clockwise=function(vs)
     {
         var sX = vs[i].x - vs[0].x;
         var sY = vs[i].y - vs[0].y;
-        var eX = vs[i + 1].x - vs[0].x; 
+        var eX = vs[i + 1].x - vs[0].x;
         var eY = vs[i + 1].y - vs[0].y;
 
-        area += (sX * -eY) - (eX * -sY);    
+        area += (sX * -eY) - (eX * -sY);
     }
 
     return  area < 0.0;
-}
+};
 
 VG.Font.Triangulator.processGlyph=function(face, char, seg, triOut)
 {
-    /** Utility function that wraps several other functions 
+    /** Utility function that wraps several other functions
      *
      * Returns the number of generated triangles */
 
     var polygons = this.generatePolygons(face, char, seg);
 
-    if (polygons.length == 0) return 0;
-    
+    if (polygons.length === 0) return 0;
+
     return this.triangulatePolygons(polygons, triOut);
-}
+};
 
 VG.Font.Triangulator.triangulatePolygons=function(polygons, triOut)
 {
     /** Triagulates the given array of polygons, if found holes then merges them
      *  into simple polygons */
-    var count = 0; 
+    var count = 0;
 
     var merged = []; //other clockwise polygons that aren't holes
 
@@ -294,7 +294,7 @@ VG.Font.Triangulator.triangulatePolygons=function(polygons, triOut)
         else
         {
             var iL = merged.length - 1;
-            
+
             if (iL == -1)
             {
                 polygons.push(p);
@@ -316,11 +316,11 @@ VG.Font.Triangulator.triangulatePolygons=function(polygons, triOut)
         }
     }
 
-    
+
     try
     {
 
-        for (var i = 0; i < merged.length; i++)
+        for (i = 0; i < merged.length; i++)
         {
             count += this.performEarClipping(merged[i], triOut);
         }
@@ -332,12 +332,12 @@ VG.Font.Triangulator.triangulatePolygons=function(polygons, triOut)
     }
 
     return count;
-}
+};
 
 VG.Font.Triangulator.mergePolygons=function(outer, inner)
 {
     /** Merges outer and inner polygons */
-    var p = outer; 
+    var p = outer;
 
     var EPSILON = 0.00001;
 
@@ -371,7 +371,7 @@ VG.Font.Triangulator.mergePolygons=function(outer, inner)
 
     var i0 = 0;
     var i1 = 0;
-    
+
     var s = cM, t = cM;
 
     function Sub(v1, v2)
@@ -382,6 +382,11 @@ VG.Font.Triangulator.mergePolygons=function(outer, inner)
     function Dot(v1, v2)
     {
         return (v1.x * v2.x) + (v1.y * v2.y);
+    }
+
+    function PerpDot(a, b)
+    {
+        return (a.y * b.x) - (a.x * b.y);
     }
 
     for (i0 = nOuter - 1, i1 = 0; i1 < nOuter; i0 = i1++)
@@ -469,11 +474,6 @@ VG.Font.Triangulator.mergePolygons=function(outer, inner)
             vD0 = Sub(outer[i0], vS);
             vD1 = Sub(outer[iO], vS);
 
-            function PerpDot(a, b)
-            {
-                return (a.y * b.x) - (a.x * b.y);
-            }
-
             var pD = PerpDot(vD0, vD1);
 
             if (pD > zr)
@@ -525,7 +525,7 @@ VG.Font.Triangulator.mergePolygons=function(outer, inner)
 
         iMCos = iP;
 
-        for (var i = 0; i < nOuter; i++)
+        for (i = 0; i < nOuter; i++)
         {
             if (i == iP)
             {
@@ -555,7 +555,7 @@ VG.Font.Triangulator.mergePolygons=function(outer, inner)
                     mxSqrLen = sqrL;
                     iMCos = i;
                 }
-                
+
                 throw 0;
             }
         }
@@ -571,14 +571,14 @@ VG.Font.Triangulator.mergePolygons=function(outer, inner)
     var out = [];//new Array(nOuter + nInner + 2);
 
     var iC = 0;
-    for (var i = 0; i <= iMCos; i++, iC++)
+    for (i = 0; i <= iMCos; i++, iC++)
     {
         out[iC] = outer[i];
     }
 
-    for (var i = 0; i < nInner; i++, iC++)
+    for (i = 0; i < nInner; i++, iC++)
     {
-        var j = (iM + i) % nInner;
+        j = (iM + i) % nInner;
         out[iC] = inner[j];
     }
 
@@ -587,7 +587,7 @@ VG.Font.Triangulator.mergePolygons=function(outer, inner)
     out[iC++] = inner[iM];
     out[iC++] = outer[iMCos];
 
-    for (var i = iMCos + 1; i < nOuter; i++, iC++)
+    for (i = iMCos + 1; i < nOuter; i++, iC++)
     {
         out[iC] = outer[i];
     }
@@ -598,7 +598,7 @@ VG.Font.Triangulator.mergePolygons=function(outer, inner)
 
 VG.Font.Triangulator.generatePolygons=function(face, char, seg)
 {
-    /** Generate polygons from a face and character, 
+    /** Generate polygons from a face and character,
      * Optionally takes a segmentation variable.
      *
      * returns an array of polygons (including holes) */
@@ -610,7 +610,7 @@ VG.Font.Triangulator.generatePolygons=function(face, char, seg)
     var vs = [];
 
     glyph = face.glyphs[char];
-    
+
     var i = 0;
     var i2 = 0;
     var scale = 1.0 / face.resolution;
@@ -645,7 +645,7 @@ VG.Font.Triangulator.generatePolygons=function(face, char, seg)
         switch (action)
         {
         case 'm':
-            
+
             vs = [];
 
             polygons.push(vs);
@@ -661,19 +661,19 @@ VG.Font.Triangulator.generatePolygons=function(face, char, seg)
 
         case 'q':
             //bezier curve
-            var px  = vX(outline[i++]);
-            var py  = vY(outline[i++]);
-            var px1 = vX(outline[i++]);
-            var py1 = vY(outline[i++]); 
+            px  = vX(outline[i++]);
+            py  = vY(outline[i++]);
+            px1 = vX(outline[i++]);
+            py1 = vY(outline[i++]);
 
-            var px0 = vs[vs.length - 1].x;
-            var py0 = vs[vs.length - 1].y;
+            px0 = vs[vs.length - 1].x;
+            py0 = vs[vs.length - 1].y;
 
-            for (var j = 1, seg = seg; j <= seg; j++)
+            for (j = 1, seg = seg; j <= seg; j++)
             {
-                var t = j / seg;
-                var tx = bezier(t, px0, px1, px);
-                var ty = bezier(t, py0, py1, py);
+                t = j / seg;
+                tx = bezier(t, px0, px1, px);
+                ty = bezier(t, py0, py1, py);
 
                 vs.push(new VG.Math.Vector3(tx, ty, 0.0));
             }
@@ -682,24 +682,24 @@ VG.Font.Triangulator.generatePolygons=function(face, char, seg)
 
         case 'b':
             //cubic bezier
-            var px  = vX(outline[i++]);
-            var py  = vY(outline[i++]);
-            var px1 = vX(outline[i++]);
-            var py1 = vY(outline[i++]); 
-            var px2 = vX(outline[i++]);
-            var py2 = vY(outline[i++]); 
+            px  = vX(outline[i++]);
+            py  = vY(outline[i++]);
+            px1 = vX(outline[i++]);
+            py1 = vY(outline[i++]);
+            px2 = vX(outline[i++]);
+            py2 = vY(outline[i++]);
 
-            var px0 = vs[vs.length - 1].x;
-            var py0 = vs[vs.length - 1].y;
+            px0 = vs[vs.length - 1].x;
+            py0 = vs[vs.length - 1].y;
 
-            for (var j = 1, seg = seg; j <= seg; j++)
+            for (j = 1, seg = seg; j <= seg; j++)
             {
-                var t = j / seg;
-                var tx = bezierCubic(t, px0, px1, px2, px);
-                var ty = bezierCubic(t, py0, py1, py2, py);
+                t = j / seg;
+                tx = bezierCubic(t, px0, px1, px2, px);
+                ty = bezierCubic(t, py0, py1, py2, py);
 
                 vs.push(new VG.Math.Vector3(tx, ty, 0.0));
-            }               
+            }
             break;
         }
 
@@ -711,7 +711,7 @@ VG.Font.Triangulator.generatePolygons=function(face, char, seg)
 VG.Font.Triangulator.performEarClipping=function(polygon, out)
 {
     /** Triangulates a polygon with a ear clipping algorithm */
-    var outCount = 0;   
+    var outCount = 0;
 
     var vs = polygon;
 
@@ -728,7 +728,6 @@ VG.Font.Triangulator.performEarClipping=function(polygon, out)
     var v = new Array(nVerts);
 
     var nVertsM1 = nVerts - 1;
-
 
     function CheckConvex(i)
     {
@@ -779,7 +778,7 @@ VG.Font.Triangulator.performEarClipping=function(polygon, out)
         var vtx = v[i];
         vtx.ePrev = cEP;
         vtx.eNext = iEF;
-        
+
         f.ePrev = i;
 
         v[cEP].eNext = i;
@@ -849,7 +848,7 @@ VG.Font.Triangulator.performEarClipping=function(polygon, out)
             {
                 continue;
             }
-        
+
             if (VG.Math.testTri(vs[ts], vs[prev], vs[curr], vs[next]) <= 0)
             {
                 vtx.ear = false;
@@ -864,7 +863,7 @@ VG.Font.Triangulator.performEarClipping=function(polygon, out)
     function WipeR(i)
     {
         if (!(iRF != -1 && iRL != -1)) throw "Reflex not defined";
-        
+
         if (i == iRF)
         {
             iRF = v[i].sNext;
@@ -911,7 +910,7 @@ VG.Font.Triangulator.performEarClipping=function(polygon, out)
 
         return cEN;
     }
-    
+
     function WipeV(i)
     {
         var cVP = v[i].vPrev;
@@ -920,13 +919,13 @@ VG.Font.Triangulator.performEarClipping=function(polygon, out)
         v[cVP].vNext = cVN;
         v[cVN].vPrev = cVP;
     }
-    
-    for (var i = 0; i <= nVertsM1; i++)
+
+    for (i = 0; i <= nVertsM1; i++)
     {
-        var vtx = v[i] = { 
-            convex: false, 
-            ear: false, 
-            ePrev: -1, 
+        var vtx = v[i] = {
+            convex: false,
+            ear: false,
+            ePrev: -1,
             eNext: -1,
             sPrev: -1,
             sNext: -1
@@ -937,7 +936,7 @@ VG.Font.Triangulator.performEarClipping=function(polygon, out)
         vtx.vNext = i < nVertsM1 ? i + 1 : 0;
     }
 
-    for (var i = 0; i <= nVertsM1; i++)
+    for (i = 0; i <= nVertsM1; i++)
     {
         if (CheckConvex(i))
         {
@@ -947,7 +946,7 @@ VG.Font.Triangulator.performEarClipping=function(polygon, out)
         {
             AddAfterR(i);
         }
-    }   
+    }
 
     function PushTri(iA, iB, iC)
     {
@@ -960,15 +959,15 @@ VG.Font.Triangulator.performEarClipping=function(polygon, out)
 
     if (iRF == -1)
     {
-        for (var i = 1; i < nVertsM1; i++)
+        for (i = 1; i < nVertsM1; i++)
         {
             PushTri(0, i, i + 1);
         }
-        
+
         return outCount;
     }
 
-    for (var i = iCF; i != -1; i = v[i].sNext)
+    for (i = iCF; i != -1; i = v[i].sNext)
     {
         if (CheckEar(i))
         {
@@ -1001,13 +1000,13 @@ VG.Font.Triangulator.performEarClipping=function(polygon, out)
             iVN = v[iEF].vNext;
 
             PushTri(v[iVP].index, v[iEF].index, v[iVN].index);
-            
+
             clipEar = false;
             continue;
         }
 
         var vtxPrev = v[iVP];
-        
+
         if (vtxPrev.ear)
         {
             if (!CheckEar(iVP))
@@ -1017,7 +1016,7 @@ VG.Font.Triangulator.performEarClipping=function(polygon, out)
         }
         else
         {
-            var wReflex = !vtxPrev.convex;
+            wReflex = !vtxPrev.convex;
 
             if (CheckConvex(iVP))
             {
@@ -1032,7 +1031,7 @@ VG.Font.Triangulator.performEarClipping=function(polygon, out)
                 }
             }
 
-        }   
+        }
 
         var vtxNext = v[iVN];
 
@@ -1045,7 +1044,7 @@ VG.Font.Triangulator.performEarClipping=function(polygon, out)
         }
         else
         {
-            var wReflex = !vtxNext.convex;
+            wReflex = !vtxNext.convex;
 
 
             if (CheckConvex(iVN))
@@ -1060,25 +1059,24 @@ VG.Font.Triangulator.performEarClipping=function(polygon, out)
                     AddAfterE(iVN);
                 }
             }
-                    
+
         }
 
 
         iEF = WipeE(iEF);
     }
-    
-    return outCount;
-}
 
+    return outCount;
+};
 
 VG.Font.Triangulator.create3DText=function(font, text, S, T, bS, bT)
 {
-    /** Creates an array of vertices from the given text for 3D Rendering 
+    /** Creates an array of vertices from the given text for 3D Rendering
      *  @param {VG.Font} font - The font for glyph look up
-     *  @param {string} text - The text to make into 3D text 
-     *  @param {number} [4] S - The 2d bazier segments 
-     *  @param {number} [0.1] T - The thickness 
-     *  @param {number} [0] bS - The bevel segments 
+     *  @param {string} text - The text to make into 3D text
+     *  @param {number} [4] S - The 2d bazier segments
+     *  @param {number} [0.1] T - The thickness
+     *  @param {number} [0] bS - The bevel segments
      *  @param {number} [0.01] bT - The bevel thickness
      *  @returns Object containing vertex position and normal arrays */
 
@@ -1114,16 +1112,16 @@ VG.Font.Triangulator.create3DText=function(font, text, S, T, bS, bT)
     }
 
     return tA;
-}
+};
 
 VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
 {
     /** Creates a 3D representation of the glyph
      *  @param {VG.Font} font - The font for glyph look up
      *  @param {char} chr - The glyph
-     *  @param {number} [4] S - The 2d bazier segments 
-     *  @param {number} [0.1] T - The thickness 
-     *  @param {number} [0] bS - The bevel segments 
+     *  @param {number} [4] S - The 2d bazier segments
+     *  @param {number} [0.1] T - The thickness
+     *  @param {number} [0] bS - The bevel segments
      *  @param {number} [0.01] bT - The bevel thickness
      *  @returns Object containing vertex position and normal arrays.*/
 
@@ -1166,7 +1164,7 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
         return tSize;
     }
 
-    
+
     var n0 = new VG.Math.Vector3();
     var n1 = new VG.Math.Vector3();
     var n2 = new VG.Math.Vector3();
@@ -1177,10 +1175,18 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
     var n2N = new VG.Math.Vector3();
     var n3N = new VG.Math.Vector3();
 
-    
+    function FlipV(iv)
+    {
+        var v = iv.clone();
+
+        v.z = -iv.z - T;
+
+        return v;
+    }
+
     function CreateContour(polygons, disp)
     {
-        if (disp === undefined) disp = 0; 
+        if (disp === undefined) disp = 0;
 
         var size = 0;
 
@@ -1219,15 +1225,15 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
                 n0.normalize();
                 n0.negate();
 
-                
+
                 n1.computeNormal(v1F, v2F, v1B);
                 n1.normalize();
                 n1.negate();
-        
+
 
                 n2.computeNormal(v2F, v2B, v1B);
                 n2.normalize();
-                n2.negate(); 
+                n2.negate();
 
 
                 n3.computeNormal(v2F, v3F, v2B);
@@ -1252,11 +1258,11 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
                 t.n.push(nAvg2);
                 t.n.push(nAvg2);
                 t.n.push(nAvg1);
-                
+
                 size += 6;
             }
         }
-        
+
         return size;
     }
 
@@ -1292,7 +1298,7 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
                     var v0C = polyC[i0];
                     var v0N = polyN[i0];
                     var v02 = poly2[i0];
- 
+
                     //current point and previous from p2
                     var v1P = polyP[i1];
                     var v1C = polyC[i1];
@@ -1310,17 +1316,6 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
                     var v3C = polyC[i3];
                     var v3N = polyN[i3];
                     var v32 = poly2[i3];
-    
-
-                    function FlipV(iv)
-                    {
-                        var v = iv.clone();
-
-                        v.z = -iv.z - T;
-
-                        return v;
-                    }
-
 
                     t.v.push(v1C);
                     t.v.push(v1N);
@@ -1367,13 +1362,13 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
                         n0.computeNormal(v0C, v0N, v1C);
                         n0.normalize();
                         if (!flip) n0.negate();
-                        
+
                         n1.computeNormal(v1C, v1N, v2C);
                         n1.normalize();
-                        if (!flip) n1.negate(); 
+                        if (!flip) n1.negate();
 
                         n2.computeNormal(v2C, v1N, v2N);
-                        n2.normalize(); 
+                        n2.normalize();
                         if (!flip) n2.negate();
 
                         n3.computeNormal(v2C, v2N, v3C);
@@ -1385,13 +1380,13 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
                         n0N.computeNormal(v0N, v02, v1N);
                         n0N.normalize();
                         if (!flip) n0N.negate();
-                        
+
                         n1N.computeNormal(v1N, v12, v2N);
                         n1N.normalize();
-                        if (!flip) n1N.negate(); 
+                        if (!flip) n1N.negate();
 
                         n2N.computeNormal(v2N, v12, v22);
-                        n2N.normalize(); 
+                        n2N.normalize();
                         if (!flip) n2N.negate();
 
                         n3N.computeNormal(v2N, v22, v3N);
@@ -1445,16 +1440,16 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
                     }
 
 
-                    var nAvg1 = n0.clone().add(n1);
+                    nAvg1 = n0.clone().add(n1);
                     nAvg1.normalize();
 
-                    var nAvg2 = n2.clone().add(n3);
+                    nAvg2 = n2.clone().add(n3);
                     nAvg2.normalize();
 
-                    var nAvg1N = n0N.clone().add(n1N);
+                    nAvg1N = n0N.clone().add(n1N);
                     nAvg1N.normalize();
 
-                    var nAvg2N = n2N.clone().add(n3N);
+                    nAvg2N = n2N.clone().add(n3N);
                     nAvg2N.normalize();
 
                     t.n.push(nAvg1);
@@ -1471,10 +1466,7 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
 
     }
 
-
-
-
-
+    var poly;
     var ha = font.glyphs[chr].ha / font.resolution;
 
     //create the shapes/polygons
@@ -1482,7 +1474,7 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
 
     var tSize = this.triangulatePolygons(polygons, t.v);
 
-    for (var j = 0; j < t.v.length; j++)
+    for (j = 0; j < t.v.length; j++)
     {
         t.n[j] = {x: 0.0, y: 0.0, z: 1.0};
     }
@@ -1492,9 +1484,9 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
 
 
     //remove the last vector in each polygon
-    for (var p = 0; p < polygons.length; p++)
+    for (p = 0; p < polygons.length; p++)
     {
-        var poly = polygons[p];
+        poly = polygons[p];
 
         poly.splice(poly.length - 1, 1);
     }
@@ -1503,14 +1495,14 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
     if (noBevel)
     {
         tSize += CreateContour(polygons);
-                   
+
     }
     else
     {
-        
+
         var bevels = [];
 
-        //the bevel segments 
+        //the bevel segments
         for (var bi = 0; bi < bS; bi++)
         {
 
@@ -1522,16 +1514,16 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
             var bPolygons = [];
 
 
-            for (var p = 0; p < polygons.length; p++)
+            for (p = 0; p < polygons.length; p++)
             {
-                var poly = polygons[p];
+                poly = polygons[p];
 
 
                 var isHole = !this.clockwise(poly);
 
                 var bevel = [];
 
-                for (var j = 0; j < poly.length; j++)
+                for (j = 0; j < poly.length; j++)
                 {
                     var pp = poly[j - 1 < 0 ? poly.length - 1 : j - 1];
                     var cp = poly[j];
@@ -1542,7 +1534,7 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
                     var b3 = new VG.Math.Vector3(b2.x, b2.y, 0.0);
 
                     b3 = cp.clone().sub(b3);
-                    b3.normalize(); 
+                    b3.normalize();
 
                     var cD = bT + -(bT) * (Math.sin(bTi * Math.PI / 2));
 
@@ -1557,7 +1549,7 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
 
                 bPolygons.push(bevel);
             }
-            
+
             bevels.push(bPolygons);
         }
 
@@ -1570,7 +1562,7 @@ VG.Font.Triangulator.create3DGlyph=function(font, chr, S, T, bS, bT)
     }
 
     return t;
-}
+};
 
 
 VG.Font.Triangulator.computeBevel=function(p, pp, pn)
@@ -1578,26 +1570,27 @@ VG.Font.Triangulator.computeBevel=function(p, pp, pn)
     /** Computes the bevel for the given point in a shape, previous and next
      *  points are required.
      *
-     *  @param {VG.Math.Vector2} p - The point of interest 
-     *  @param {VG.Math.Vector2} pp - The previous point relative to p 
+     *  @param {VG.Math.Vector2} p - The point of interest
+     *  @param {VG.Math.Vector2} pp - The previous point relative to p
      *  @param {VG.Math.Vector2} pn - The next point relative to n i
      *  @returns {VG.Math.Vector2} The bevel point */
 
     var EPSILON = 0.0000000001;
-    
+
     var shrink = 1.0;
     var vx = 0.0;
-    var vy = 0.0; 
-  
-    var vpx = p.x - pp.x; 
+    var vy = 0.0;
+
+    var vpx = p.x - pp.x;
     var vpy = p.y - pp.y;
     var vnx = pn.x - p.x;
     var vny = pn.y - p.y;
-    
+
     var vpLenSqr = vpx * vpx + vpy * vpy;
     var c0 = vpx * vny - vpy * vnx;
-    
-    if (!(Math.abs(c0) > EPSILON))
+
+    var con=!(Math.abs(c0));
+    if (con > EPSILON)
     {
         var dirEq = false;
 
@@ -1630,15 +1623,13 @@ VG.Font.Triangulator.computeBevel=function(p, pp, pn)
             shrink = Math.sqrt(vpLenSqr / 2);
         }
 
-    }
-    else
-    {
+    } else {
         var vpLen = Math.sqrt(vpLenSqr);
         var vnLen = Math.sqrt(vnx * vnx + vny * vny);
-        
+
         var ppsx = pp.x - vpy / vpLen;
         var ppsy = pp.y + vpx / vpLen;
-        
+
         var pnsx = pn.x - vny / vnLen;
         var pnsy = pn.y + vnx / vnLen;
 
@@ -1658,11 +1649,11 @@ VG.Font.Triangulator.computeBevel=function(p, pp, pn)
         else
         {
             shrink = Math.sqrt(vtLenSqr / 2);
-        }   
+        }
     }
 
     return new VG.Math.Vector2(vx / shrink, vy / shrink);
-}
+};
 
 
 
@@ -1671,6 +1662,6 @@ VG.Font.Triangulator.extrude=function(shape)
 {
     /** Extrudes the shape contour, returns a new shape */
 
-}
+};
 
 VG.fontManager=new VG.Font.Manager();

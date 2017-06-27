@@ -16,7 +16,9 @@
 ../vglib/vg-sax.js
 ../vglib/vg-svg.js
 ../vglib/vg-renderer.js
-../vglib/vg-canvas.js
+
+../vglib/vg-canvas2d.js
+
 ../web/vg-webgl.js
 ../web/vg-system.js
 ../vglib/vg-events.js
@@ -35,9 +37,11 @@
 ../vglib/ui/vg-widgets.js
 ../vglib/ui/vg-menu.js
 ../vglib/ui/vg-listwidget.js
+../vglib/ui/vg-iconwidget.js
 ../vglib/ui/vg-treewidget.js
 ../vglib/ui/vg-textwidgets.js
 ../vglib/ui/vg-htmlView.js
+../vglib/ui/vg-htmlwidget.js
 ../vglib/ui/vg-numericalwidgets.js
 ../vglib/ui/vg-toolbar.js
 ../vglib/ui/vg-layout.js
@@ -52,12 +56,16 @@
 ../vglib/nodes/vg-parameter.js
 ../vglib/nodes/vg-terminal.js
 ../vglib/nodes/vg-node.js
-../vglib/nodes/vg-nodes.js
 ../vglib/nodes/vg-material.js
 ../vglib/nodes/vg-graph.js
 ../vglib/nodes/vg-parameteredit.js
 ../vglib/nodes/vg-graphedit.js
+../vglib/nodes/vg-materialedit.js
 ../vglib/nodes/vg-materialwidget.js
+../vglib/nodes/vg-nodes.js
+../vglib/nodes/vg-noise.js
+../vglib/nodes/vg-operators.js
+../vglib/nodes/vg-generators.js
 
 ../vglib/render/vg-material.js
 ../vglib/render/vg-pipeline.js
@@ -67,5 +75,6 @@
 ../vglib/render/vg-light.js
 ../vglib/render/vg-import.js
 
-../vglib/vglib_a.js
+../vglib/shaders/vg-renderortho.js
+
 ../web/vg-dialogs.js

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv> and Contributors
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,12 +21,12 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/** Camera as an scene node 
- * @constructor 
+/** Camera as an scene node
+ * @constructor
  * @param {Number}[60] fov - The field of view
  * @param {Number}[1] aspect - Aspect ratio
  * @param {Number}[0.1] nearZ - Near plane
- * @param {Number}[100] farZ - Far plane 
+ * @param {Number}[100] farZ - Far plane
  * @augments VG.Render.SceneNode
  */
 
@@ -34,7 +34,7 @@ VG.Render.Camera = function(fov, aspect, nearZ, farZ)
 {
     VG.Render.SceneNode.call(this);
 	this.setProjection(fov, aspect, nearZ, farZ);
-}
+};
 
 VG.Render.Camera.prototype = Object.create(VG.Render.SceneNode.prototype);
 
@@ -42,7 +42,7 @@ VG.Render.Camera.prototype = Object.create(VG.Render.SceneNode.prototype);
  *  @param {Number}[60] fov - The field of view
  *  @param {Number}[1] aspect - Aspect ratio
  *  @param {Number}[0.1] nearZ - Near plane
- *  @param {Number}[100] farZ - Far plane 
+ *  @param {Number}[100] farZ - Far plane
  */
 
 VG.Render.Camera.prototype.setProjection = function(fov, aspect, nearZ, farZ)
@@ -52,24 +52,24 @@ VG.Render.Camera.prototype.setProjection = function(fov, aspect, nearZ, farZ)
     if (nearZ === undefined) nearZ = 0.1;
     if (farZ === undefined) farZ = 1000.0;
 
-    /** Field of view angle, default 60 degrees 
+    /** Field of view angle, default 60 degrees
      *  @member {Number} */
     this.fov = fov;
 
-    /** The near clipping plane 
+    /** The near clipping plane
      *  @member {Number} */
     this.nearZ = nearZ;
 
-   /** The far clipping plane 
+   /** The far clipping plane
      *  @member {Number} */
     this.farZ = farZ;
 
-   /** Aspect ratio, usually w / h, default 1.0 
+   /** Aspect ratio, usually w / h, default 1.0
     *  @member {Number} */
     this.aspect = aspect;
 
 
-    /** Projection matrix 
+    /** Projection matrix
      *  @member {VG.Math.Matrix4()} */
     this.projM = new VG.Math.Matrix4();
 
@@ -80,14 +80,54 @@ VG.Render.Camera.prototype.setProjection = function(fov, aspect, nearZ, farZ)
     this.lockUp = false;
 
     this.updateProjection();
-}
+};
+
+/**
+ * Set bounding box
+ * @param {VG.Math.Vector3} min - minimum of all coordinates
+ * @param {VG.Math.Vector3} max - maximum of all coordinates
+ */
+VG.Render.Camera.prototype.setBoundingBox = function (min, max) {
+    let center = new VG.Math.Vector3().copy(min).add(max).mul(0.5);
+    let span = new VG.Math.Vector3().copy(max).sub(min);
+    this.center = center;
+    let factor = Math.tan(this.fov * Math.PI/180/2)*2;
+    let w = span.x/factor;
+    let h = span.y/factor;
+    let dst = Math.max(w, h * this.aspect);
+
+    // console.log(w, h * this.aspect, dst, factor, span.x);
+    let eye = new VG.Math.Vector3().copy(this.eye).sub(center);
+    eye.normalize();
+    eye.mul(dst).add(center);
+    this.eye = eye;
+    // this.useBoundingBox = true;
+    // this.boundingBox = {
+    //     min: min,
+    //     max: max,
+    //     corners: []
+    // };
+    // for(let i = 0; i < 2; i ++){
+    //     for(let j = 0; j < 2; j++){
+    //         for(let k = 0; k < 2; k++){
+    //             let c = new VG.Math.Vector3(
+    //                 i === 0 ? this.boundingBox.min.x : this.boundingBox.max.x,
+    //                 j === 0 ? this.boundingBox.min.y : this.boundingBox.max.y,
+    //                 k === 0 ? this.boundingBox.min.z : this.boundingBox.max.z
+    //             );
+    //             this.boundingBox.corners.push(c);
+    //         }
+    //     }
+    // }
+    // this.center =
+};
 
 /** Updates the projection matrix, must be called if any member changes */
 
 VG.Render.Camera.prototype.updateProjection = function()
 {
     this.projM.setPerspective(this.fov, this.aspect, this.nearZ, this.farZ);
-}
+};
 
 /**
  * Activate lookAt and set lookAt parameter.
@@ -98,7 +138,7 @@ VG.Render.Camera.prototype.updateProjection = function()
  * @param {Boolean} lockUp - if true, then up direction is locked.
  */
 
-VG.Render.Camera.prototype.setLookAt = function (center, up, eye, lockUp) 
+VG.Render.Camera.prototype.setLookAt = function (center, up, eye, lockUp)
 {
     if(!center){
         this.center = null;
@@ -116,12 +156,36 @@ VG.Render.Camera.prototype.setLookAt = function (center, up, eye, lockUp)
  * @return this camera transform.
  */
 
-VG.Render.Camera.prototype.getTransform = function () 
+VG.Render.Camera.prototype.getTransform = function ()
 {
+    let transform;
     if (this.center) {
-        return this.getTransformLookAt();
+        transform = this.getTransformLookAt();
     } else {
-        return VG.Render.SceneNode.prototype.getTransform.call(this);
+        transform = VG.Render.SceneNode.prototype.getTransform.call(this);
+    }
+
+    if(this.useBoundingBox){
+        let min = {x:1e32, y:1e32};
+        let max = {x:-1e32, y:-1e32};
+        let center = {x:0, y:0};
+        for(let c0 of this.boundingBox.corners){
+            let c = transform.multiplyPosition(c0);
+            min.x = Math.min(c.x, min.x);
+            min.y = Math.min(c.y, min.y);
+            max.x = Math.max(c.x, max.x);
+            max.y = Math.max(c.y, max.y);
+            center.x += c.x;
+            center.y += c.y;
+        }
+        let delta = Math.max(max.x-min.x, max.y-min.y);
+        center.x /= this.boundingBox.corners.length;
+        center.y /= this.boundingBox.corners.length;
+        let out = new VG.Math.Matrix4().setTranslate(-center.x, -center.y, 0);
+        out.concat(new VG.Math.Matrix4().setScale(2.0/delta,2.0/delta, 1.0));
+        return out.concat(transform);
+    } else {
+        return transform;
     }
 };
 
@@ -158,6 +222,7 @@ VG.Render.Camera.prototype.getTransformLookAt = function ()
         m.elements[13] = eye.y;
         m.elements[14] = eye.z;
         m.elements[15] = 1;
+
         return m;
     }
 
@@ -279,8 +344,12 @@ VG.Render.Camera.prototype.pan = function(dx, dy)
     var t = Math.tan(this.fov/2 * Math.PI/180);
     var len = 2 * e.length() * t;
     var pc = this.center.clone();
-    this.center.add(dir.y.mul(dx * len * this.aspect));
-    this.center.add(dir.x.mul(dy * len));
+    dir.y.mul(dx * len * this.aspect);
+    dir.x.mul(dy * len);
+    this.center.add(dir.y);
+    this.center.add(dir.x);
+    this.eye.add(dir.y);
+    this.eye.add(dir.x);
 };
 
 
@@ -290,7 +359,7 @@ VG.Render.Camera.prototype.pan = function(dx, dy)
 
 
 
-/** Orbit camera 
+/** Orbit camera
  *  @constructor */
 
 VG.Render.OrbitCamera = function()
@@ -322,22 +391,22 @@ VG.Render.OrbitCamera = function()
      *  @member {Number} */
     this.stiffness = 4.0;
 
-    /** Smooth zoom stiffness 
+    /** Smooth zoom stiffness
      *  @member {Number} */
     this.smoothZoomStiffness = 0.7;
 
     /** Zoom limits as an object { min, max }
      *  @member {Object} */
     this.zoomLimit = { min: 1.0, max: 20.0 };
- 
-    this._zoomTarget = 0.0; 
+
+    this._zoomTarget = 0.0;
 
     /** The zoom against the focus point 0.0 to 1.0
      *  @member {Number} */
     this.zoom = 0.5;
 
     this.applyHardZoom();
-}
+};
 
 VG.Render.OrbitCamera.prototype = Object.create(VG.Render.SceneNode.prototype);
 
@@ -345,7 +414,7 @@ Object.defineProperty(VG.Render.OrbitCamera.prototype, "camera",
 {
     get: function()
     {
-        return this._camera;    
+        return this._camera;
     },
     set: function(camera)
     {
@@ -370,7 +439,7 @@ Object.defineProperty(VG.Render.OrbitCamera.prototype, "zoom",
     set: function(v)
     {
         v = VG.Math.clamp(v, 0.0, 1.0);
-        
+
         this._zoomTarget = ((v * (this.zoomLimit.max - this.zoomLimit.min)) + this.zoomLimit.min);
 
         if (!this.smooth)
@@ -380,20 +449,20 @@ Object.defineProperty(VG.Render.OrbitCamera.prototype, "zoom",
     }
 });
 
-/** Increments the zoom 
- * @param {Number} d - The delta zoom value */ 
+/** Increments the zoom
+ * @param {Number} d - The delta zoom value */
 
 VG.Render.OrbitCamera.prototype.incZoom = function(d)
 {
     this.zoom = this.zoom + d;
-}
+};
 
-/** If smooth zoom is enabled this will overwrite the smoothing and set it right away */ 
+/** If smooth zoom is enabled this will overwrite the smoothing and set it right away */
 
 VG.Render.OrbitCamera.prototype.applyHardZoom = function()
 {
     this.attachPoint.position.z = this._zoomTarget;
-}
+};
 
 /** Tick function, must be called every render frame */
 
@@ -406,12 +475,12 @@ VG.Render.OrbitCamera.prototype.tick = function(delta)
         this.rotation.slerp(this._qYawT, this.stiffness * delta);
         this.boom.rotation.slerp(this._qPitchT, this.stiffness * delta);
     }
-}
+};
 
-/** 
- * Rotates the orbit against the x and y axis relative to the focus point (this node position) 
+/**
+ * Rotates the orbit against the x and y axis relative to the focus point (this node position)
  * @param {number} dX - The delta x / yaw in degrees
- * @param {number} dY - The delta y / pitch in degrees 
+ * @param {number} dY - The delta y / pitch in degrees
  */
 
 VG.Render.OrbitCamera.prototype.incRotation = function(dX, dY)
@@ -426,4 +495,4 @@ VG.Render.OrbitCamera.prototype.incRotation = function(dX, dY)
 
     q.setEuler(0.0, VG.Math.rad(dY), 0);
     qPitch.mulInv(q);
-}
+};

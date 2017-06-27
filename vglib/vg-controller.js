@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -31,7 +31,7 @@ VG.Controller = {};
 VG.Controller.Observer=function( func, context )
 {
     if ( !(this instanceof VG.Controller.Observer) ) return new VG.Controller.Observer();
-    
+
     this.func=func;
 
     if ( context === undefined ) this.context=VG.context;
@@ -71,8 +71,9 @@ VG.Controller.Base.prototype.addObserver=function( key, func, context )
 
 VG.Controller.Base.prototype.notifyObservers=function( key, arg )
 {
+    var binding, i;
 	if ( this.observerKeys.indexOf( key ) !== -1 ) {
-		for( var i=0; i < this[key].length; ++i ) {
+		for( i=0; i < this[key].length; ++i ) {
 			var observer=this[key][i];
 			observer.func.call( observer.context, arg );
 		}
@@ -81,16 +82,16 @@ VG.Controller.Base.prototype.notifyObservers=function( key, arg )
 	if ( key === "selectionChanged" ) {
 		// --- Now search all value bindings depending on this controller and send an update message to those who need to be updated.
 
-		for ( var i=0; i < this.collection.__vgValueBindings.length; ++i ) {
-			var binding=this.collection.__vgValueBindings[i];
+		for ( i=0; i < this.collection.__vgValueBindings.length; ++i ) {
+			binding=this.collection.__vgValueBindings[i];
 
-			if ( binding.path.indexOf( this.path ) == 0 ) {
+			if ( binding.path.indexOf( this.path ) === 0 ) {
 				// --- This binding starts with our controller path
 
 				var restPath=binding.path.slice( this.path.length );
 				if ( restPath[0] === '.' ) {
 					// --- Sanity Check for the '.' (which represents this controller)
-					var restPath=restPath.slice( 1, restPath.length );
+					restPath=restPath.slice( 1, restPath.length );
 
 					if ( restPath.indexOf( '.' ) === -1 ) {
 						// --- The path does not contain any more dots / controllers, update the value
@@ -98,7 +99,7 @@ VG.Controller.Base.prototype.notifyObservers=function( key, arg )
 						if ( binding.object.isWidget ) {
 							// --- Set the value to the binding object
 							if ( !this.selected ) binding.object.valueFromModel( null );
-							else 
+							else
                             if ( this.selected.hasOwnProperty( restPath ) ) {
                                 binding.object.valueFromModel( this.selected[restPath] );
                             }
@@ -110,15 +111,29 @@ VG.Controller.Base.prototype.notifyObservers=function( key, arg )
 
         // --- Now search all the controller bindings and notify controller in the path that their parent path has changed
 
-        for ( var i=0; i < this.collection.__vgControllerBindings.length; ++i ) {
-            var binding=this.collection.__vgControllerBindings[i];   
+        for ( i=0; i < this.collection.__vgControllerBindings.length; ++i ) {
+            binding=this.collection.__vgControllerBindings[i];
 
-            if ( this.path != binding.path && binding.path.indexOf( this.path ) == 0 ) {
-                // --- This binding starts with our controller path              
+            if ( this.path != binding.path && binding.path.indexOf( this.path ) === 0 ) {
+                // --- This binding starts with our controller path
                 binding.object.notifyObservers( "parentSelectionChanged" );
             }
-        }       
+        }
 	}
+};
+
+VG.Controller.Base.prototype.modelChanged=function( forceRenew )
+{
+    var data=this.collection.dataForPath( this.path );
+    if ( !data ) return;
+
+    for( let i=0; i < data.length; ++i ) {
+        let item=data[i];
+
+        this.notifyObservers( "addItem", item );
+    }
+
+    this.notifyObservers( "changed" );
 };
 
 /**
@@ -149,7 +164,7 @@ VG.Controller.Array=function( collection, path )
     this.multiSelection=false;
 
     this._selected=0;
-    this.selection=[];    
+    this.selection=[];
 
     // --- Init possible OberverKeys
 
@@ -162,18 +177,29 @@ VG.Controller.Array=function( collection, path )
 
 VG.Controller.Array.prototype=VG.Controller.Base();
 
-Object.defineProperty( VG.Controller.Array.prototype, "length", 
+Object.defineProperty( VG.Controller.Array.prototype, "length",
 {
     get: function() {
     	var array=this.collection.dataForPath( this.path );
         if ( array ) return array.length;
         else return 0;
-    }   
+    }
 });
 
-VG.Controller.Array.prototype.count=function()
+VG.Controller.Array.prototype.count=function( selOnly )
 {
-    return this.length;
+    if ( !selOnly ) return this.length;
+
+    var array=this.collection.dataForPath( this.path );
+    if ( !array ) return 0;
+
+    var count=0;
+
+    array.forEach( function( item ) {
+        if ( item.visible ) count++;
+    }.bind( this ) );
+
+    return count;
 };
 
 /**
@@ -201,19 +227,21 @@ VG.Controller.Array.prototype.at=function( index )
 VG.Controller.Array.prototype.add=function( item, noUndo )
 {
     var array=this.collection.dataForPath( this.path );
+    item.visible=true;
 
     if ( item === undefined && this.contentClassName.length ) {
     	item=this.create( this.contentClassName );
     }
 
-    this.notifyObservers( "addItem", item );    
+    this.notifyObservers( "addItem", item );
 
     array.push( item );
 
-    if ( this.collection.__vgUndo && !noUndo ) 
+    if ( this.collection.__vgUndo && !noUndo )
         this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.Add, this.path, array.length-1, JSON.stringify( item ) );
 
-	this.notifyObservers( "changed" );    
+	this.notifyObservers( "changed" );
+
     return item;
 };
 
@@ -228,25 +256,26 @@ VG.Controller.Array.prototype.add=function( item, noUndo )
 VG.Controller.Array.prototype.insert=function( index, item, noUndo )
 {
     var array=this.collection.dataForPath( this.path );
+    item.visible=true;
 
     if ( item === undefined && this.contentClassName.length ) {
         item=this.create( this.contentClassName );
     }
 
-    this.notifyObservers( "addItem", item );    
+    this.notifyObservers( "addItem", item );
 
     array.splice( index, 0, item );
 
-    if ( this.collection.__vgUndo && !noUndo ) 
+    if ( this.collection.__vgUndo && !noUndo )
         this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.Add, this.path, index, JSON.stringify( item ) );
 
-    this.notifyObservers( "changed" );    
+    this.notifyObservers( "changed" );
     return item;
 };
 
 /**
  * Removes an object from the controller.
- * Triggers installed "removeItem" observers. 
+ * Triggers installed "removeItem" observers.
  * @param {object} item - The object to remove.
  * @param {bool} noUndo - Set to true if you don't want to trigger an undo step for this action inside the data model. Default is false.
  */
@@ -255,13 +284,13 @@ VG.Controller.Array.prototype.remove=function( item, noUndo )
 {
     var array=this.collection.dataForPath( this.path );
 
-    this.notifyObservers( "removeItem", item );    
+    this.notifyObservers( "removeItem", item );
 
     var index=array.indexOf( item );
     if ( index >= 0 )
         array.splice( index, 1 );
 
-    if ( this.collection.__vgUndo && !noUndo ) 
+    if ( this.collection.__vgUndo && !noUndo )
         this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.Remove, this.path, index, JSON.stringify( item ) );
 
 	this.notifyObservers( "changed" );
@@ -287,7 +316,7 @@ VG.Controller.Array.prototype.create=function( strClass )
     return new F();
 };
 
-Object.defineProperty( VG.Controller.Array.prototype, "selected", 
+Object.defineProperty( VG.Controller.Array.prototype, "selected",
 {
     get: function() {
         return this._selected;
@@ -304,7 +333,7 @@ Object.defineProperty( VG.Controller.Array.prototype, "selected",
 
 	        this.notifyObservers( "selectionChanged" );
         }
-    }    
+    }
 });
 
 /**
@@ -317,10 +346,10 @@ VG.Controller.Array.prototype.addToSelection=function( item )
 	if ( !this._selected ) this._selected=item;
 
     var index=this.selection.indexOf( item );
-    if ( index === -1 && item )	
+    if ( index === -1 && item )
 		this.selection.push( item );
 
-	this.notifyObservers( "selectionChanged" );	
+	this.notifyObservers( "selectionChanged" );
 };
 
 /**
@@ -338,14 +367,14 @@ VG.Controller.Array.prototype.removeFromSelection=function( item )
         this.selection.splice( index, 1 );
 
      //   if ( this.selectionChanged )
-     //       this.selectionChanged.call( VG.context );        
-    }	
+     //       this.selectionChanged.call( VG.context );
+    }
 
 	if ( this._selected === 0 && this.selection.length ) {
 		this._selected=this.selection[0];
 	}
 
-	this.notifyObservers( "selectionChanged" );    
+	this.notifyObservers( "selectionChanged" );
 };
 
 /**
@@ -392,8 +421,8 @@ VG.Controller.Array.prototype.indexOf=function( item )
 
 VG.Controller.Array.prototype.applyUndoForMultipleChanges=function( item, undoName )
 {
-    if ( this.collection.__vgUndo ) 
-        this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.MultipleChanges, 
+    if ( this.collection.__vgUndo )
+        this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.MultipleChanges,
             this.path, -1, JSON.stringify( item ), undoName );
 };
 
@@ -431,7 +460,7 @@ VG.Controller.Array.prototype.applyMultipleChanges=function( undoItem, undo )
  * @property {number} length - The number of items managed by the controller (read-only).
  * @constructor
  * @tutorial Data Model
- * @augments VG.Controller.Base 
+ * @augments VG.Controller.Base
  */
 
 VG.Controller.Tree=function( collection, path )
@@ -449,25 +478,25 @@ VG.Controller.Tree=function( collection, path )
     this.multiSelection=false;
 
     this._selected=0;
-    this.selection=[];    
+    this.selection=[];
 
     // --- Init possible OberverKeys
 
     this.addObserverKey( "selectionChanged" );
     this.addObserverKey( "changed" );
     this.addObserverKey( "addItem" );
-    this.addObserverKey( "removeItem" );    
+    this.addObserverKey( "removeItem" );
 };
 
 VG.Controller.Tree.prototype=VG.Controller.Base();
 
-Object.defineProperty( VG.Controller.Tree.prototype, "length", 
+Object.defineProperty( VG.Controller.Tree.prototype, "length",
 {
     get: function() {
         var array=this.collection.dataForPath( this.path );
         if ( !array ) return 0;
         return array.length;
-    }   
+    }
 });
 
 /**
@@ -508,7 +537,7 @@ VG.Controller.Tree.prototype.at=function( index )
         }
     }
 
-    return item; 
+    return item;
 };
 
 /**
@@ -526,13 +555,13 @@ VG.Controller.Tree.prototype.add=function( index, item, noUndo )
         item=this.create( this.contentClassName );
     }
 
-    this.notifyObservers( "addItem", item );    
+    this.notifyObservers( "addItem", item );
 
     // --- Add the item
 
     var itemIndex;
 
-    if ( index === "" ) 
+    if ( index === "" )
     {
         // --- New top level item
         array.push( item );
@@ -571,10 +600,10 @@ VG.Controller.Tree.prototype.add=function( index, item, noUndo )
     // ---
 
 
-    if ( this.collection.__vgUndo && !noUndo ) 
+    if ( this.collection.__vgUndo && !noUndo )
         this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.Add, this.path, itemIndex, JSON.stringify( item ) );
 
-    this.notifyObservers( "changed" );    
+    this.notifyObservers( "changed" );
     return item;
 };
 
@@ -594,13 +623,13 @@ VG.Controller.Tree.prototype.insert=function( index, item, noUndo )
         item=this.create( this.contentClassName );
     }
 
-    this.notifyObservers( "addItem", item );    
+    this.notifyObservers( "addItem", item );
 
     // --- Insert the item
 
     var done=false;
 
-    if ( index === "" ) 
+    if ( index === "" )
         array.push( item );
     else {
         var pathArray;
@@ -611,7 +640,7 @@ VG.Controller.Tree.prototype.insert=function( index, item, noUndo )
         } else
         {
             pathArray=index.split( "." );
-    
+
             var obj=array;
 
             for( var i=0; i < pathArray.length-1; ++i )
@@ -629,16 +658,16 @@ VG.Controller.Tree.prototype.insert=function( index, item, noUndo )
         }
     }
 
-    if ( this.collection.__vgUndo && !noUndo ) 
+    if ( this.collection.__vgUndo && !noUndo )
         this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.Add, this.path, index, JSON.stringify( item ) );
 
-    this.notifyObservers( "changed" );    
+    this.notifyObservers( "changed" );
     return item;
 };
 
 /**
  * Removes an object from the controller.
- * Triggers installed "removeItem" observers. 
+ * Triggers installed "removeItem" observers.
  * @param {object} item - The object to remove.
  * @param {bool} noUndo - Set to true if you don't want to trigger an undo step for this action inside the data model. Default is false.
  */
@@ -647,7 +676,7 @@ VG.Controller.Tree.prototype.remove=function( item, noUndo )
 {
     var array=this.collection.dataForPath( this.path );
 
-    this.notifyObservers( "removeItem", item );    
+    this.notifyObservers( "removeItem", item );
 
     var index=this.indexOf( item );
     var itemArray=this.arrayOfItem( item );
@@ -657,7 +686,7 @@ VG.Controller.Tree.prototype.remove=function( item, noUndo )
     {
         itemArray.splice( itemArray.indexOf( item ), 1 );
 
-        if ( this.collection.__vgUndo && !noUndo ) 
+        if ( this.collection.__vgUndo && !noUndo )
             this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.Remove, this.path, index, JSON.stringify( item ) );
 
         this.notifyObservers( "changed" );
@@ -698,7 +727,7 @@ VG.Controller.Tree.prototype.move=function( sourceIndex, destIndex, mode, noUndo
     {
         // --- Stays in same hierarchy
         var destArray=this.arrayOfItem( destItem );
-        var destIndex=destArray.indexOf( destItem );
+        destIndex=destArray.indexOf( destItem );
         if ( mode === 1 ) destIndex++;
 
         destArray.splice( destIndex, 0, sourceItem );
@@ -706,11 +735,16 @@ VG.Controller.Tree.prototype.move=function( sourceIndex, destIndex, mode, noUndo
     {
         // --- Add as a new child
 
+        var testIndexItem=this.indexOf( destItem );
+
+        if ( testIndexItem !== destIndex && testIndexItem )
+            destIndex = testIndexItem;
+
         if ( !noUndo )
         {
             destIndex+=".0";
 
-            undoItem.undo.sourceIndex=destIndex;            
+            undoItem.undo.sourceIndex=destIndex;
             undoItem.redo.destIndex=destIndex;
             undoItem.undo.mode=mode;
         }
@@ -718,8 +752,8 @@ VG.Controller.Tree.prototype.move=function( sourceIndex, destIndex, mode, noUndo
         this.insert( destIndex, sourceItem, true );
     }
 
-    if ( this.collection.__vgUndo && !noUndo ) 
-        this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.Move, this.path, sourceIndex, 
+    if ( this.collection.__vgUndo && !noUndo )
+        this.collection.__vgUndo.controllerProcessedItem( this, VG.Data.UndoItem.ControllerAction.Move, this.path, sourceIndex,
             JSON.stringify( undoItem  ) );
 };
 
@@ -736,7 +770,7 @@ VG.Controller.Tree.prototype.create=function( strClass )
     return new F();
 };
 
-Object.defineProperty( VG.Controller.Tree.prototype, "selected", 
+Object.defineProperty( VG.Controller.Tree.prototype, "selected",
 {
     get: function() {
         return this._selected;
@@ -753,7 +787,7 @@ Object.defineProperty( VG.Controller.Tree.prototype, "selected",
 
             this.notifyObservers( "selectionChanged" );
         }
-    }    
+    }
 });
 
 /**
@@ -766,10 +800,10 @@ VG.Controller.Tree.prototype.addToSelection=function( item )
     if ( !this._selected ) this._selected=item;
 
     var index=this.selection.indexOf( item );
-    if ( index === -1 && item ) 
+    if ( index === -1 && item )
         this.selection.push( item );
 
-    this.notifyObservers( "selectionChanged" ); 
+    this.notifyObservers( "selectionChanged" );
 };
 
 /**
@@ -787,14 +821,14 @@ VG.Controller.Tree.prototype.removeFromSelection=function( item )
         this.selection.splice( index, 1 );
 
      //   if ( this.selectionChanged )
-     //       this.selectionChanged.call( VG.context );        
-    }   
+     //       this.selectionChanged.call( VG.context );
+    }
 
     if ( this._selected === 0 && this.selection.length ) {
         this._selected=this.selection[0];
     }
 
-    this.notifyObservers( "selectionChanged" );    
+    this.notifyObservers( "selectionChanged" );
 };
 
 /**
@@ -839,7 +873,7 @@ VG.Controller.Tree.prototype.arrayOfItemChildren=function( curItem, item )
                 if ( rc ) return rc;
             }
         }
-    }        
+    }
     return 0;
 };
 
@@ -888,7 +922,7 @@ VG.Controller.Tree.prototype.indexOfChildren=function( curItem, path, item )
                 if ( rc != -1 ) return rc;
             }
         }
-    }        
+    }
     return -1;
 };
 
@@ -943,7 +977,7 @@ VG.Controller.Tree.prototype.parentOfItem=function( item )
 
         return this.at( array.join( '.' ) );
     }
-    
+
     return undefined;
 };
 
@@ -956,11 +990,48 @@ VG.Controller.Tree.prototype.topLevelIndexOfIndex=function( index )
 
     if ( index )
     {
-        if ( index.indexOf( '' ) === -1 ) return index;
+        if ( index.indexOf( '.' ) === -1 ) return index;
         else
         {
             var array=index.split('');
             return array[0];
         }
     }
+};
+
+VG.Controller.Tree.prototype.modelChanged_proccessChilds=function( item )
+{
+    this.notifyObservers( "addItem", item );
+
+    if ( item.children )
+    {
+        for( let c=0; c < item.children.length; ++c )
+        {
+            let child=item.children[c];
+            this.modelChanged_proccessChilds( child );
+        }
+    }
+};
+
+VG.Controller.Tree.prototype.modelChanged=function( forceRenew )
+{
+    var data=this.collection.dataForPath( this.path );
+    if ( !data ) return;
+
+    for( let i=0; i < data.length; ++i ) {
+        let item=data[i];
+
+        this.notifyObservers( "addItem", item );
+
+        if ( item.children )
+        {
+            for( let c=0; c < item.children.length; ++c )
+            {
+                let child=item.children[c];
+                this.modelChanged_proccessChilds( child );
+            }
+        }
+    }
+
+    this.notifyObservers( "changed" );
 };

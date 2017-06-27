@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv> and Contributors
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -21,31 +21,31 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
- /** Material interface, derived classes must create a shader and 
+ /** Material interface, derived classes must create a shader and
   *  optionally override the bind method
   *  @constructor */
 
 VG.Render.Material = function()
 {
-    /** The shader object 
+    /** The shader object
      *  @member {VG.Shader} */
     this.shader = null;
-}
+};
 
-/** Checks if the material has a valid shader, otherwise returns false 
+/** Checks if the material has a valid shader, otherwise returns false
  *  @return {Bool} */
 
 VG.Render.Material.prototype.isValid = function()
 {
     return (this.shader);
-}
+};
 
 /** Binds the shader, override for more complex binding */
 
 VG.Render.Material.prototype.bind = function()
 {
     if (this.shader) this.shader.bind();
-}
+};
 
 /** Deleted the material */
 
@@ -56,7 +56,7 @@ VG.Render.Material.prototype.dispose = function()
 		this.shader.dispose();
 		this.shader = null;
 	}
-}
+};
 
 /** Sets a model-view matrix from a float array, the matrial(i.e. shader) must be binded before.
  *  @param {array} value - A float array (2x2, 3x3 or 4x4) : column major
@@ -68,7 +68,7 @@ VG.Render.Material.prototype.setModelViewMatrix = function(matrix, transpose)
 	if (this.shader)
 		// the uniform {string} may be different according to material implementation.
 		this.shader.setMatrix("mvM", matrix, transpose);
-}
+};
 
 /** Sets a projection matrix from a float array, the matrial(i.e. shader) must be binded before.
  *  @param {array} value - A float array (2x2, 3x3 or 4x4) : column major
@@ -80,7 +80,7 @@ VG.Render.Material.prototype.setProjectionMatrix = function(matrix, transpose)
 	if (this.shader)
 		// the uniform {string} may be different according to material implementation.
 		this.shader.setMatrix("projM", matrix, transpose);
-}
+};
 
 /** Queries the attribute location/index
  *  @param {string} name - The attribute name as set in the source
@@ -93,7 +93,7 @@ VG.Render.Material.prototype.getAttrib = function(name)
 	if (this.shader)
 		attrib = this.shader.getAttrib(name);
 	return attrib;
-}
+};
 
 /** Applies sub material.
  *  @param {int} subIndex - The sub material(index) for facet
@@ -101,7 +101,7 @@ VG.Render.Material.prototype.getAttrib = function(name)
 
 VG.Render.Material.prototype.applySubMaterial = function(subIndex)
 {
-}
+};
 
 /** Applies global lights.
  *  @param {Array[VG.Render.Light]} lights
@@ -109,7 +109,7 @@ VG.Render.Material.prototype.applySubMaterial = function(subIndex)
 
 VG.Render.Material.prototype.applyLights = function(lights)
 {
-}
+};
 
 /** Barebone material, mostly used as fail-over
  * @augments VG.Render.Material
@@ -158,7 +158,7 @@ VG.Render.SimpleMaterial = function()
     this.shader.depthWrite = true;
 
     this.shader.create();
-}
+};
 
 VG.Render.SimpleMaterial.prototype = Object.create(VG.Render.Material.prototype);
 
@@ -183,7 +183,7 @@ VG.Render.SimpleMaterial.prototype = Object.create(VG.Render.Material.prototype)
  *       },
  *	   illum: 3
  *	});
- * @constructor 
+ * @constructor
  * @augments VG.Render.Material
  */
 
@@ -238,11 +238,11 @@ VG.Render.MtlMaterial.prototype.createTexture = function(images) {
 				}
 			}
 		});
-	if(this.opt['refl']){
+	if(this.opt.refl){
 		var fail = false;
 		var sides = ['cube_top', 'cube_bottom', 'cube_front', 'cube_back', 'cube_left', 'cube_right'].map(function(o){
-			if(that.opt['refl'][o]){
-				var image = images[that.opt['refl'][o].filename];
+			if(that.opt.refl[o]){
+				var image = images[that.opt.refl[o].filename];
 				if (image) {
 					return image;
 				} else {
@@ -253,9 +253,9 @@ VG.Render.MtlMaterial.prototype.createTexture = function(images) {
 		if(fail){
 			this.textureNeedsUpdate = true;
 		} else {
-			this.opt['refl'].texture = new VG.Texture(sides, true);
-			this.opt['refl'].texture.flipY = false;
-			this.opt['refl'].texture.create();
+			this.opt.refl.texture = new VG.Texture(sides, true);
+			this.opt.refl.texture.flipY = false;
+			this.opt.refl.texture.create();
 		}
 	}
 };
@@ -389,9 +389,7 @@ VG.Render.MtlMaterial.prototype.compile = function(lights)
 		// shadow
 	}
 	// check if texture coord needed
-	if ((use.Kd && opt.map_Kd)
-		|| (use.Ks && (opt.map_Ks || opt.map_Ns))
-		|| (use.Ka && opt.map_Ka)) {
+	if ((use.Kd && opt.map_Kd) || (use.Ks && (opt.map_Ks || opt.map_Ns)) || (use.Ka && opt.map_Ka)) {
 		use.texCoord = true;
 		use.texture = true;
 	}
@@ -544,12 +542,12 @@ VG.Render.MtlMaterial.prototype.compile = function(lights)
 					}
 				}
 			}
-			var arr = [];
+			var arr = [], text;
 			if(use.Ka){ arr.push('ambient * KA');}
 			if(use.Kd){ arr.push('diffuse * KD');}
 			if(use.Ks){ arr.push('specular');}
 			if(use.reflect){
-				var text = 'KS';
+				text = 'KS';
 				if (use.Fr) { text = 'Fr(dot(normal, pos_to_eye), KS)';}
 				arr.push(text +  '* textureCube(map_env, v_view * reflect(pos_to_eye, normal)).rgb');
 			}
@@ -561,7 +559,7 @@ VG.Render.MtlMaterial.prototype.compile = function(lights)
 					'vec3 T = normalize(cross(cross(pos_to_eye, normal), normal));',
 					'vec3 ray = normalize(cosB * normal + sinB * T);\n'
 				].join('\n');
-				var text = '';
+				text = '';
 				if (use.Fr) { text = 'Fr(dot(normal, pos_to_eye), 1.0-KS) * ';}
 				arr.push(text + 'Tf * textureCube(map_env, v_view * ray).rgb * (1.0 - KS)');
 			}
@@ -635,7 +633,7 @@ VG.Render.MtlMaterial.prototype.bind = function(context)
 		shader.setFloat('Ni', opt.Ni);
 	}
 	(function(){
-		var light, name;
+		var light, name, p;
 		for(var i in lights){
 			light = lights[i];
 			name = "L"+i;
@@ -645,11 +643,11 @@ VG.Render.MtlMaterial.prototype.bind = function(context)
 				if(use.Ks){shader.setColor3(name+'_col_s', light.color.specular);}
 				use.att = light.position && light.position.w !== 0;
 				if(!use.att) {
-					var p = new VG.Math.Vector3(light.position.x, light.position.y, light.position.z);
+					p = new VG.Math.Vector3(light.position.x, light.position.y, light.position.z);
 					p.normalize();
 					shader.setFloat(name + '_pos', [p.x, p.y, p.z, 0.0]);
 				} else {
-					var p = camera.getTransform().invert().multiplyPosition(light.position);
+					p = camera.getTransform().invert().multiplyPosition(light.position);
 					shader.setFloat(name + "_pos", [p.x, p.y, p.z, p.w]);
 					shader.setFloat(name + "_att_c", light.attenuation.constant);
 					shader.setFloat(name + "_att_l", light.attenuation.linear);

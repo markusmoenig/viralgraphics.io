@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -31,7 +31,7 @@ VG.Data = {};
 VG.Data.Binding=function( object, path )
 {
     if ( !(this instanceof VG.Data.Binding) ) return new VG.Data.Binding();
-    
+
     this.object=object;
     this.path=path;
 };
@@ -45,30 +45,30 @@ VG.Data.Base=function( name, extension )
 {
     if ( !(this instanceof VG.Data.Base) ) return new VG.Data.Base( name, extension );
 
-    Object.defineProperty( this, "__vgName", { 
-        enumerable: false, 
+    Object.defineProperty( this, "__vgName", {
+        enumerable: false,
         writable: true
     });
 
-    Object.defineProperty( this, "__vgExtension", { 
-        enumerable: false, 
-        writable: true
-    });  
-
-	Object.defineProperty( this, "__vgControllerBindings", { 
-        enumerable: false, 
+    Object.defineProperty( this, "__vgExtension", {
+        enumerable: false,
         writable: true
     });
 
-	Object.defineProperty( this, "__vgValueBindings", { 
-    	enumerable: false, 
+	Object.defineProperty( this, "__vgControllerBindings", {
+        enumerable: false,
         writable: true
     });
 
-    Object.defineProperty( this, "__vgUndo", { 
-        enumerable: false, 
+	Object.defineProperty( this, "__vgValueBindings", {
+    	enumerable: false,
         writable: true
-    });  
+    });
+
+    Object.defineProperty( this, "__vgUndo", {
+        enumerable: false,
+        writable: true
+    });
 
     this.__vgName=name ? name : "";
     this.__vgExtension=extension ? extension : "";
@@ -98,8 +98,8 @@ VG.Data.Base.prototype.removeAllValueBindingsForPath=function( path )
     for( var i=0; i < this.__vgValueBindings.length; ++i ) {
         var bind=this.__vgValueBindings[i];
         if ( path !== bind.path ) array.push( bind );
-    }    
-    this.__vgValueBindings=array;    
+    }
+    this.__vgValueBindings=array;
 };
 
 VG.Data.Base.prototype.controllerForPath=function( path )
@@ -128,7 +128,7 @@ VG.Data.Base.prototype.dataForPath=function( path )
 
     	if ( object ) {
 	    	return object[this.valueSegmentOfPath(path)];
-    	} 
+    	}
 /*
         else {
             var controller=this.controllerForPath( path );
@@ -161,17 +161,17 @@ VG.Data.Base.prototype.dataForPath=function( path )
  * this function will not store it, however to make sure this value is always stored set forceStorage to true. This is useful for undo groups
  * where the initial value may be the same as in the model but other value changes inside the group will change values.
  * @returns {VG.Data.UndoItem} The undo item created for this data value step. To add further undo steps into this group just call addSubItem() on the
- * undo item. 
+ * undo item.
  */
 
-VG.Data.Base.prototype.storeDataForPath=function( path, value, noUndo, forceStorage, undoText )
+VG.Data.Base.prototype.storeDataForPath=function( { path, value, noUndo, forceStorage, undoText } = {} )
 {
-    var undo=undefined;
-    if ( path.indexOf( '.' ) === -1 ) 
+    var undo;
+    if ( path.indexOf( '.' ) === -1 )
     {
-        if ( this.__vgUndo && !noUndo ) undo=this.__vgUndo.pathValueAboutToChange( this, path, value, undefined, undoText );        
+        if ( this.__vgUndo && !noUndo ) undo=this.__vgUndo.pathValueAboutToChange( this, path, value, undefined, undoText );
         this[path]=value;
-    } else 
+    } else
     {
     	var object=this.objectForPath( path );
     	if ( object ) {
@@ -223,7 +223,7 @@ VG.Data.Base.prototype.valueSegmentOfPath=function( path )
 
 VG.Data.Base.prototype.updateTopLevelBindings=function()
 {
-    for( var i=0; i < this.__vgControllerBindings.length; ++i ) {
+    for( i=0; i < this.__vgControllerBindings.length; ++i ) {
         var cont=this.__vgControllerBindings[i];
 
         if  ( cont.path.indexOf(".") === -1 ) {
@@ -233,18 +233,18 @@ VG.Data.Base.prototype.updateTopLevelBindings=function()
         if ( cont.object.modelChanged ) cont.object.modelChanged();
     }
 
-    for( var i=0; i < this.__vgValueBindings.length; ++i ) {
+    for( i=0; i < this.__vgValueBindings.length; ++i ) {
         var val=this.__vgValueBindings[i];
 
         if  ( val.path.indexOf(".") === -1 ) {
             val.object.valueFromModel( this.dataForPath( val.path ) );
         }
-    }    
+    }
 };
 
 VG.Data.Base.prototype.clearUndo=function( dontInvokeClearCallback )
 {
-    if ( this.__vgUndo ) 
+    if ( this.__vgUndo )
         this.__vgUndo.clear( dontInvokeClearCallback );
 };
 

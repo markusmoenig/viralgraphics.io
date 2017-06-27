@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -32,7 +32,7 @@ VG.resizeCanvas=function( forceResize ) {
     var width=canvas.clientWidth;
     var height=canvas.clientHeight;
 
-    if ( canvas.width != width || canvas.height != height || forceResize ) 
+    if ( canvas.width != width || canvas.height != height || forceResize )
     {
         canvas.width=width; canvas.height=height;
 
@@ -42,8 +42,8 @@ VG.resizeCanvas=function( forceResize ) {
 
 // ----------------------------------------------------------------- Default DragOver to disable image on the WebGL canvas
 
-VG.defaultHandleDragOver=function( event ) 
-{    
+VG.defaultHandleDragOver=function( event )
+{
     event.stopPropagation();
     event.preventDefault();
     event.dataTransfer.dropEffect='none';
@@ -51,13 +51,25 @@ VG.defaultHandleDragOver=function( event )
 
 // ----------------------------------------------------------------- Main
 
-function main() 
+function main()
 {
     VG.init();
- 
-    VG.dropZone=document.getElementById( 'dropZone' );
 
-    var canvas=document.getElementById( 'webgl' );
+    // --- Figure out which layer is on top, 2D or 3D, 3D by default
+
+    let canvasName = "webgl";
+
+    if ( VG.App.onTop ) {
+        let onTop = VG.Utils.decompressFromBase64( VG.App.onTop );
+        if ( onTop === "2D" ) {
+            document.getElementById("webgl").style.zIndex = 0;
+            canvasName = "workspace";
+            VG.context.twoDOnTop = true;
+        }
+    }
+
+    VG.dropZone=document.getElementById( 'dropZone' );
+    let canvas=document.getElementById( canvasName );
 
     canvas.addEventListener('dragover', VG.defaultHandleDragOver, false);
 
@@ -65,8 +77,8 @@ function main()
 
     window.addEventListener('cut', function ( event ) {
         VG.context.workspace.modelCutCallback.call( VG.context.workspace, true );
-        if ( event.clipboardData ) 
-            event.clipboardData.setData('text/plain',  VG.context.workspace.textClipboard );            
+        if ( event.clipboardData )
+            event.clipboardData.setData('text/plain',  VG.context.workspace.textClipboard );
         event.preventDefault();
     });
 
@@ -82,7 +94,7 @@ function main()
         var pasteData;
         if ( event.clipboardData ) {
 
-            var pasteData=event.clipboardData.getData( 'text/plain' );
+            pasteData=event.clipboardData.getData( 'text/plain' );
             if ( pasteData ) {
                 VG.copyToClipboard( "Text", pasteData );
             }
@@ -91,8 +103,8 @@ function main()
         if ( !pasteData )
         {
             var items = (event.clipboardData  || event.originalEvent.clipboardData).items;
-            
-            // find pasted image among pasted items            
+
+            // find pasted image among pasted items
             var blob = null;
             for (var i = 0; i < items.length; i++) {
                 if (items[i].type.indexOf("image") === 0) {
@@ -116,19 +128,17 @@ function main()
 
         VG.context.workspace.modelPasteCallback.call( VG.context.workspace, true );
         event.preventDefault();
-    });  
-
-    window.addEventListener('focus', function ( event ) {
-        VG.context.workspace.appReceivedFocus();
     });
 
     // --- Touch Events
 
     VG.context.workspace=VG.UI.Workspace();
+    if ( VG.App.id ) VG.context.workspace.appId = VG.Utils.decompressFromBase64( VG.App.id );
+    VG.context.workspace.appName = VG.Utils.decompressFromBase64( VG.App.name );
 
     window.addEventListener('touchstart', function ( event ) {
 
-        var touches = event.changedTouches;    
+        var touches = event.changedTouches;
         for (var i = 0; i < touches.length; i++) {
             var touch=touches[i];
             VG.context.workspace.mouseMove( touch.clientX, touch.clientY );
@@ -136,37 +146,68 @@ function main()
         }
 
         event.preventDefault();
-    });  
+    });
 
     window.addEventListener('touchmove', function ( event ) {
 
-        var touches = event.changedTouches;    
+        var touches = event.changedTouches;
         for (var i = 0; i < touches.length; i++) {
             var touch=touches[i];
             VG.context.workspace.mouseMove( touch.clientX, touch.clientY );
         }
 
         event.preventDefault();
-    });  
+    });
 
     window.addEventListener('touchend', function ( event ) {
 
-        var touches = event.changedTouches;    
+        var touches = event.changedTouches;
         for (var i = 0; i < touches.length; i++) {
             var touch=touches[i];
             VG.context.workspace.mouseUp( VG.Events.MouseButton.Left );
         }
 
         event.preventDefault();
-    }); 
+    });
+
+    window.addEventListener('DOMMouseScroll', function ( event ) {
+        // --- FF mousewheel
+        wheelRelay( event );
+        event.preventDefault();
+    });
+
+    window.addEventListener("beforeunload", function (e) {
+
+        let confirmationMessage;
+
+        if ( VG.context.workspace && !VG.context.workspace.canBeClosed() ) {
+                confirmationMessage = 'You have unsaved changes. If you leave before saving, your changes will be lost.';
+        }
+
+        if ( !confirmationMessage ) return undefined;
+
+        (e || window.event).returnValue = confirmationMessage; //Gecko + IE
+        return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
+    });
+
+    window.addEventListener('focus', function ( event ) {
+
+        VG.context.workspace.focusIn();
+    });
+
+    window.addEventListener('blur', function ( event ) {
+
+        VG.context.workspace.focusOut();
+    });
+
 
     // ---
 
     canvas.onmousedown = mouseDownRelay;
     document.onmouseup = mouseUpRelay;
-    document.onmousemove = mouseMoveRelay;  
-    document.ondblclick = mouseDoubleClickRelay;  
-    document.oncontextmenu = contextMenuRelay;  
+    document.onmousemove = mouseMoveRelay;
+    document.ondblclick = mouseDoubleClickRelay;
+    document.oncontextmenu = contextMenuRelay;
 
     document.onkeydown = keyDownRelay;
     document.onkeypress = keyPressRelay;
@@ -181,7 +222,7 @@ function main()
 
         VG.decompressImageData( VG.App.images[imageName], image );
         VG.context.imagePool.addImage( image );
-    }    
+    }
 
     // --- Eval the sources of the App stored in the VG.App Namespace
     for (var sourceName in VG.App.sources )  {
@@ -191,9 +232,11 @@ function main()
         try {
             eval( decodedSource );
         } catch ( e ) {
+            // todo: seems to never executed, even on error
             success=false;
+            console.log('decodedSource:=', decodedSource);
             console.log( e.message );
-        }        
+        }
     }
 
     // --- Add the SVGs of the project to the pool
@@ -201,10 +244,10 @@ function main()
         var decodedSVG=VG.Utils.decompressFromBase64( VG.App.svg[svgName] );
 
         var svg=VG.Core.SVG( svgName, decodedSVG );
-    }  
+    }
 
     // --- Load the Fonts of the project
-    for (var fontName in VG.App.fonts )  
+    for (var fontName in VG.App.fonts )
     {
         var decodedFont=VG.Utils.decompressFromBase64( VG.App.fonts[fontName] );
 
@@ -213,11 +256,11 @@ function main()
         } catch ( e ) {
             success=false;
             console.log( e.message );
-        }        
-    }   
+        }
+    }
 
-    VG.fontManager.addFonts();  
-    
+    VG.fontManager.addFonts();
+
     // --- Activate the right Skin
 
     if ( VG.App.defaultSkin ) {
@@ -233,34 +276,46 @@ function main()
         }
     }
 
-    // --- Splash Screen 
-
+    // --- Splash Screen
+/*
     if ( VG.App.splashScreen && VG.App.showSplashScreen )
     {
         var splashScreen=VG.Utils.decompressFromBase64( VG.App.splashScreen );
         eval( splashScreen );
 
-        if ( VG.drawSplashScreen ) 
+        if ( VG.drawSplashScreen )
         {
             VG.context.workspace.canvas.setAlpha( 0 );
             VG.splashStartTime=new Date().getTime();
         }
     } else
     {
-        VG.splashScreenFunc=null; 
+        VG.splashScreenFunc=null;
         //VG.splashScreenFuncFadeIn=null;
 
-        VG.resizeCanvas( true );      
+        VG.resizeCanvas( true );
 
         var rt=VG.Renderer().mainRT;
-        rt.setViewport( VG.context.workspace.rect );  
+        rt.setViewport( VG.context.workspace.rect );
 
         VG.context.workspace.canvas.setAlpha( 1 );
         VG.context.workspace.canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.context.workspace.rect, VG.Core.Color( 255, 255, 255 ) );
         VG.context.workspace.canvas.setAlpha( 0 );
     }
+*/
 
-    VG.resizeCanvas();    
+    VG.resizeCanvas();
+
+    // --- Set the border color if available
+
+    if ( VG.App.webBorderColor ) {
+        let body=document.body;
+        let borderColor=VG.Utils.decompressFromBase64( VG.App.webBorderColor );
+
+        body.style["background-color"]=borderColor;
+        canvas.style.margin="0 auto";
+        canvas.style.display="block";
+    }
 
     // ---
 
@@ -283,30 +338,32 @@ window.addEventListener( 'resize', VG.resizeCanvas );
 function tick () {
 
     requestAnimationFrame(tick);
-
+/*
     if ( VG.splashScreenFunc ) VG.splashScreenFunc();
     else
     if ( VG.splashScreenFuncFadeIn ) VG.splashScreenFuncFadeIn();
-    else
+    else*/
     {
-        VG.context.workspace.tick( VG.context.workspace.needsRedraw );
-        VG.context.workspace.needsRedraw=false; 
+        if ( VG.context.workspace.tick( VG.context.workspace.needsRedraw ) )
+            VG.context.workspace.needsRedraw=false;
     }
 }
 
 // ----------------------------------------------------------------- Mouse and Key Event Callbacks which get forwarded to the Workspace
 
 function mouseMoveRelay( event ) {
-    //VG.context.workspace.mouseMove( event.clientX, event.clientY );
-    VG.context.workspace.mouseMove( event.layerX, event.layerY );
+    VG.context.workspace.mouseMove( event.clientX, event.clientY );
+    //VG.context.workspace.mouseMove( event.layerX, event.layerY );
 }
 
 function mouseDownRelay( event ) {
-    VG.context.workspace.mouseDown( isRightMouseButton( event ) ? VG.Events.MouseButton.Right : VG.Events.MouseButton.Left );
+    let button = getMouseButton( event );
+    VG.context.workspace.mouseDown( button );
 }
 
 function mouseUpRelay( event ) {
-    VG.context.workspace.mouseUp( isRightMouseButton( event ) ? VG.Events.MouseButton.Right : VG.Events.MouseButton.Left);
+    let button = getMouseButton( event );
+    VG.context.workspace.mouseUp( button );
 }
 
 function mouseDoubleClickRelay() {
@@ -318,13 +375,16 @@ function contextMenuRelay( event ) {
     event.preventDefault();
 }
 
+var lastWheelStep;
 function wheelRelay( e ) {
-
-    var e = window.event || e;
+    e = window.event || e;
     var step = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+    if ( step === 0 && lastWheelStep ) step=lastWheelStep;
 
-    if ( VG.context.workspace.mouseWheel( step ) )
-        event.preventDefault();
+    VG.context.workspace.mouseWheel( step );
+    e.preventDefault();
+
+    lastWheelStep=step;
 }
 
 function keyPressRelay( event ) {
@@ -345,33 +405,45 @@ function keyUpRelay( event ) {
 }
 
 function keyDownRelay( event ) {
+    let keyCode = event.keyCode;
 
-    VG.context.workspace.keyDown( event.keyCode );
+    // --- Map Firefox Mac Command
+    if ( keyCode === 224 && VG.context.workspace.operatingSystem === VG.HostProperty.OSMac )
+        keyCode = 91;
+    // ---
+
+    VG.context.workspace.keyDown( keyCode );
 
     if ( event.keyCode === VG.Events.KeyCodes.Backspace || event.keyCode === VG.Events.KeyCodes.Tab ||
          event.keyCode === VG.Events.KeyCodes.ArrowUp || event.keyCode === VG.Events.KeyCodes.ArrowDown || event.keyCode === VG.Events.KeyCodes.ArrowRight ||
          event.keyCode === VG.Events.KeyCodes.ArrowLeft || event.keyCode === VG.Events.KeyCodes.Esc )
-        event.preventDefault();    
+        event.preventDefault();
 }
 
-function isRightMouseButton( event )
+function getMouseButton(e)
 {
-    var isRightMB;
-    event = event || window.event;
+    e = e || window.event;
+    let button;
 
-    if ("which" in event)  // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
-        isRightMB=event.which==3; 
-    else if ("button" in e)  // IE, Opera 
-        isRightMB=event.button==2; 
+    if (e.which === null)
+    {
+        button = (e.button < 2) ? VG.Events.MouseButton.Left:
+            ((e.button == 4) ? VG.Events.MouseButton.Middle : VG.Events.MouseButton.Right);
+    }
+    else
+    {
+        button = (e.which < 2) ? VG.Events.MouseButton.Left :
+            ((e.which == 2) ? VG.Events.MouseButton.Middle : VG.Events.MouseButton.Right);
+    }
 
-    return isRightMB;
+    return button;
 }
 
 // ----------------------------------------------------------------- Splash Screen Handler
 
-VG.splashScreenFunc=function() 
+VG.splashScreenFunc=function()
 {
-    var rt=VG.Renderer().mainRT;
+    let rt=VG.Renderer().mainRT;
     rt.clear( true, true );
     rt.setViewport( VG.context.workspace.rect );
 
@@ -391,7 +463,7 @@ VG.splashScreenFunc=function()
 
     var alpha=VG.context.workspace.canvas.alpha;
 
-    VG.context.workspace.canvas.setAlpha( 1.0 );            
+    VG.context.workspace.canvas.setAlpha( 1.0 );
     VG.context.workspace.canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.context.workspace.rect, VG.Core.Color( 255, 255, 255 ) );
     VG.context.workspace.canvas.setAlpha( alpha );
 
@@ -404,11 +476,11 @@ VG.splashScreenFunc=function()
 
     VG.context.workspace.canvas.setAlpha( alpha );
 
-    // --- When Finished Fade to White and than pass over to 
+    // --- When Finished Fade to White and than pass over to
 
     if ( splashFinished && ready )
     {
-        if ( VG.context.workspace.canvas.alpha < 1.0 ) 
+        if ( VG.context.workspace.canvas.alpha < 1.0 )
         {
             VG.context.workspace.canvas.setAlpha( VG.context.workspace.canvas.alpha + 0.05 );
         } else
@@ -429,21 +501,21 @@ VG.splashScreenFunc=function()
                 if ( h > 0 ) {
                     var height=h + "px";
                     body.style.height=height;
-                    canvas.style.height=height;                
-                }            
+                    canvas.style.height=height;
+                }
 
                 var borderColor=VG.Utils.decompressFromBase64( VG.App.webBorderColor );
 
                 body.style["background-color"]=borderColor;
                 canvas.style.margin="0 auto";
-                canvas.style.display="block";    
+                canvas.style.display="block";
 
-                VG.resizeCanvas( true );      
+                VG.resizeCanvas( true );
 
-                var rt=VG.Renderer().mainRT;
-                rt.setViewport( VG.context.workspace.rect );                          
+                rt=VG.Renderer().mainRT;
+                rt.setViewport( VG.context.workspace.rect );
             }
-            
+
             VG.context.workspace.canvas.setAlpha( 1 );
             VG.context.workspace.canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.context.workspace.rect, VG.Core.Color( 255, 255, 255 ) );
             VG.context.workspace.canvas.setAlpha( 0 );
@@ -451,17 +523,17 @@ VG.splashScreenFunc=function()
             VG.splashScreenFunc=null;
         }
     }
-    VG.context.workspace.canvas.flush();        
-}
+    VG.context.workspace.canvas.flush();
+};
 
-VG.splashScreenFuncFadeIn=function() 
+VG.splashScreenFuncFadeIn=function()
 {
     var alpha=0;
 
     if ( VG.splashScreenFuncFadeInCounter === undefined ) VG.splashScreenFuncFadeInCounter=Date.now();
     else alpha=( Date.now() - VG.splashScreenFuncFadeInCounter ) / 1000;
 
-    if ( alpha < 1.0 ) 
+    if ( alpha < 1.0 )
     {
         VG.context.workspace.canvas.setAlpha( alpha );
         VG.context.workspace.paintWidget();
@@ -481,5 +553,5 @@ VG.splashScreenFuncFadeIn=function()
             document.body.style.backgroundColor=borderColor;
         }
     }
-    VG.context.workspace.canvas.flush();        
-}
+    VG.context.workspace.canvas.flush();
+};
