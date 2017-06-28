@@ -1,7 +1,7 @@
 Visual Graphics JS
 ==================
 
-Visual Graphics is an Open Source Application Framework written entirely in JavaScript and WebGL. It's main goal is to be able to create complex applications which can compete with native desktop implementations in 'look and feel' and performance.
+Visual Graphics is an open source application framework written entirely in JavaScript and WebGL. It's main goal is to be able to create complex applications which can compete with native desktop implementations in 'look and feel' and performance.
 
 It combines the best of the HMTL5 2D canvas and WebGL in an easy to use API.
 
