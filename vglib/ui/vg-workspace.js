@@ -450,7 +450,9 @@ VG.UI.Workspace.prototype.paintWidget=function()
 
     for ( i=0; i < this.windows.length; ++i)
     {
-        var window=this.windows[i];
+        let window=this.windows[i];
+
+        if ( !window.visible ) continue;
 
         if ( this.canvas.twoD )
             this.canvas.clearGLRect( window.rect );

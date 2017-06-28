@@ -16,9 +16,7 @@
 ../vglib/vg-sax.js
 ../vglib/vg-svg.js
 ../vglib/vg-renderer.js
-
-../vglib/vg-canvas2d.js
-
+../vglib/vg-canvas.js
 ../web/vg-webgl.js
 ../web/vg-system.js
 ../vglib/vg-events.js
@@ -61,7 +59,6 @@
 ../vglib/nodes/vg-parameteredit.js
 ../vglib/nodes/vg-graphedit.js
 ../vglib/nodes/vg-materialedit.js
-../vglib/nodes/vg-materialwidget.js
 ../vglib/nodes/vg-nodes.js
 ../vglib/nodes/vg-noise.js
 ../vglib/nodes/vg-operators.js

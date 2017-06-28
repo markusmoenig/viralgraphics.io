@@ -2683,7 +2683,7 @@ VG.UI.ColorWheel.prototype.paintWidget=function(canvas)
     canvas.draw2DShape( VG.Canvas.Shape2D.CircleOutline, rect, this.borderColor );
 
     rect.shrink( this.hueSize, this.hueSize, rect );
-    canvas.draw2DShape( VG.Canvas.Shape2D.CircleGL, rect, this.centerColor );
+    canvas.draw2DShapeGL( VG.Canvas.Shape2D.Circle, rect, this.centerColor );
 
     // --- Hue Dot
 
@@ -2693,8 +2693,8 @@ VG.UI.ColorWheel.prototype.paintWidget=function(canvas)
     rect.width = this.hueSize;
     rect.height = this.hueSize;
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.CircleGL, rect, VG.Core.Color.Black );
-    canvas.draw2DShape( VG.Canvas.Shape2D.CircleGL, rect.shrink(1,1), VG.Core.Color.White );
+    canvas.draw2DShapeGL( VG.Canvas.Shape2D.Circle, rect, VG.Core.Color.Black );
+    canvas.draw2DShapeGL( VG.Canvas.Shape2D.Circle, rect.shrink(1,1), VG.Core.Color.White );
 
     // --- SL Triangle
 
@@ -2709,9 +2709,9 @@ VG.UI.ColorWheel.prototype.paintWidget=function(canvas)
     rect.width = 8;
     rect.height = 8;
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.CircleGL, rect, VG.Core.Color.White );
+    canvas.draw2DShapeGL( VG.Canvas.Shape2D.Circle, rect, VG.Core.Color.White );
     rect.shrink( 1, 1, rect );
-    canvas.draw2DShape( VG.Canvas.Shape2D.CircleGL, rect, VG.Core.Color.Black );
+    canvas.draw2DShapeGL( VG.Canvas.Shape2D.Circle, rect, VG.Core.Color.Black );
 
     this.lastRect.copy( this.rect );
     if ( this.disabled ) canvas.setAlpha( 1 );

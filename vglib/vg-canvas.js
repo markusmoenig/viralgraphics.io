@@ -144,6 +144,27 @@ VG.Canvas=function()
     this.clipRects=[];
 
     this.customProjectionMatrix = new VG.Math.Matrix4();
+    this.twoD = true;
+
+    this.canvas = document.getElementById( 'workspace' );
+    this.ctx = this.canvas.getContext('2d');
+
+    // If thie canvasContext class doesn't have  a fillRoundedRect, extend it now
+    if (!this.ctx.constructor.prototype.fillRoundedRect) {
+    // Extend the canvaseContext class with a fillRoundedRect method
+        this.ctx.constructor.prototype.fillRoundedRect =
+        function (xx,yy, ww,hh, rad, fill, stroke) {
+            if (typeof(rad) == "undefined") rad = 5;
+            this.beginPath();
+            this.moveTo(xx+rad, yy);
+            this.arcTo(xx+ww, yy,    xx+ww, yy+hh, rad);
+            this.arcTo(xx+ww, yy+hh, xx,    yy+hh, rad);
+            this.arcTo(xx,    yy+hh, xx,    yy,    rad);
+            this.arcTo(xx,    yy,    xx+ww, yy,    rad);
+            if (stroke) this.stroke();  // Default to no stroke
+            if (fill || typeof(fill)=="undefined") this.fill();  // Default to fill
+        };
+    }
 };
 
 /**
@@ -153,8 +174,8 @@ VG.Canvas=function()
 
 VG.Canvas.Shape2D={ "Rectangle" : 0, "VerticalGradient" : 1, "HorizontalGradient" : 2, "RectangleOutline" : 3,  "RectangleOutlineMin1px" : 4,  "RectangleOutlineMin2px" : 5,
                     "RoundedRectangleOutline1px" : 6, "RoundedRectangle2px" : 7, "RectangleCorners" : 8,
-                    "FlippedTriangle" : 9, "ArrowLeft" : 10, "ArrowRight" : 11, "Circle": 12, "CircleOutline": 13, "ArrowRightGradient": 14, "DropShadow_NoTop7px" : 15,
-                    "CircleGL" : 16, "RectangleGL" : 17 };
+                    "FlippedTriangle" : 9, "ArrowLeft" : 10, "ArrowRight" : 11, "Circle": 12, "CircleHue" : 13, "CircleOutline": 14, "ArrowRightGradient": 15,
+                };
 
 /**
  * Sets an {@link VG.RenderTarget} to the canvas. All drawing operations will be applied to the given render target. Call setTarget again with undefined to clear the render target.
@@ -184,20 +205,48 @@ VG.Canvas.prototype.pushFont=function( font )
 {
     this.fontIndex++;
     this.fonts.splice( this.fontIndex, 0, font );
+
+    this.font = this.fonts[this.fontIndex];
+    this.fontText = this.font.size + "px " + this.font.triFont.face.familyName;
+
+    if ( typeof font.name === 'string' ) {
+        if ( font.name.includes( "Bold") ) {
+            this.fontText = "Bold " + this.fontText;
+        }
+        if ( font.name.includes( "Italic") ) {
+            this.fontText = "Italic " + this.fontText;
+        }
+    }
+    this.ctx.font = this.fontText;
+    this.fontHeight = this.font.size;
 };
 
 /**
  * Takes the current font of the font stack and the canvas resumes using the new font at the top of the stack.
  */
 
-VG.Canvas.prototype.popFont=function( font )
+VG.Canvas.prototype.popFont=function()
 {
     this.fonts.splice( this.fontIndex, 1 );
     --this.fontIndex;
+
+    this.font = this.fonts[this.fontIndex];
+    this.fontText = this.font.size + "px " + this.font.triFont.face.familyName;
+
+    if ( typeof this.font.name === 'string' ) {
+        if ( this.font.name.includes( "Bold") ) {
+            this.fontText = "Bold " + this.fontText;
+        }
+        if ( this.font.name.includes( "Italic") ) {
+            this.fontText = "Italic " + this.fontText;
+        }
+    }
+    this.ctx.font = this.fontText;
+    this.fontHeight = this.font.size;
 };
 
 /**
- * Sets a new alpha value to the canvas. All following drawing operations will use this new alpha value. Calls {@link VG.Canvas.flush} to draw all pending triangles.
+ * Sets a new alpha value for the canvas. All following drawing operations will use this new alpha value. Calls {@link VG.Canvas.flush} to draw all pending triangles.
  * @param {number} alpha - The new alpha value to use, has to be in the range of 0..1.
  */
 
@@ -205,6 +254,7 @@ VG.Canvas.prototype.setAlpha=function( alpha )
 {
     this.flush();
     this.alpha = alpha;
+    this.ctx.globalAlpha = alpha;
 };
 
 /**
@@ -214,6 +264,11 @@ VG.Canvas.prototype.setAlpha=function( alpha )
 
 VG.Canvas.prototype.pushClipRect=function( rect )
 {
+    let ctx = this.ctx;
+
+    if ( !this.clipRects.length ) ctx.save();
+    else { ctx.restore(); ctx.save(); }
+
     this.flush();
 
     if ( rect )
@@ -230,11 +285,19 @@ VG.Canvas.prototype.pushClipRect=function( rect )
                 return;
             } else {
                 this.clipRects.push( intersectRect );
+                ctx.beginPath();
+                ctx.rect( intersectRect.x, intersectRect.y, intersectRect.width, intersectRect.height );
+                ctx.clip();
+                ctx.beginPath();
                 this.rt.setScissor( intersectRect );
             }
 
         } else {
             this.clipRects.push( rect );
+            ctx.beginPath();
+            ctx.rect( rect.x, rect.y, rect.width, rect.height );
+            ctx.clip();
+            ctx.beginPath();
             this.rt.setScissor( rect );
         }
     }
@@ -248,13 +311,26 @@ VG.Canvas.prototype.popClipRect=function()
 {
     if ( this.clipRects.length <= 0 ) { VG.error( "popClipRect -- Stack Underflow"); return; }
 
+    let ctx = this.ctx;
+    ctx.restore(); ctx.save();
+
     this.flush();
 
     this.clipRects.splice(-1,1);
 
-    var last=this.clipRects[this.clipRects.length-1];
-    if ( last ) this.rt.setScissor( last );
-    else this.rt.setScissor();
+    let last=this.clipRects[this.clipRects.length-1];
+    if ( last ) {
+        ctx.beginPath();
+        ctx.rect( last.x, last.y, last.width, last.height );
+        ctx.clip();
+        ctx.beginPath();
+        this.rt.setScissor( last );
+    } else {
+        // ctx.beginPath();
+        // ctx.rect( 0, 0, VG.context.workspace.rect.width, VG.context.workspace.rect.height );
+        // ctx.clip();
+        this.rt.setScissor();
+    }
 };
 
 /**
@@ -284,7 +360,6 @@ VG.Canvas.prototype.addTriangle2D=function( x1, y1, x2, y2, x3, y3, col1, col2, 
     var db = this.triBufferDB;
     var data=db.data;
 
-
     data[this.triCount++] = x1;
     data[this.triCount++] = y1;
 
@@ -309,31 +384,6 @@ VG.Canvas.prototype.addTriangle2D=function( x1, y1, x2, y2, x3, y3, col1, col2, 
     data[this.triCount++] = col3.b;
     data[this.triCount++] = col3.a;
 
-/*
-    db.set(this.triCount++, x1);
-    db.set(this.triCount++, y1);
-
-    db.set(this.triCount++, col1.r);
-    db.set(this.triCount++, col1.g);
-    db.set(this.triCount++, col1.b);
-    db.set(this.triCount++, col1.a);
-
-    db.set(this.triCount++, x2);
-    db.set(this.triCount++, y2);
-
-    db.set(this.triCount++, col2.r);
-    db.set(this.triCount++, col2.g);
-    db.set(this.triCount++, col2.b);
-    db.set(this.triCount++, col2.a);
-
-    db.set(this.triCount++, x3);
-    db.set(this.triCount++, y3);
-
-    db.set(this.triCount++, col3.r);
-    db.set(this.triCount++, col3.g);
-    db.set(this.triCount++, col3.b);
-    db.set(this.triCount++, col3.a);*/
-
     if (this.triCount >= db.getSize())
         this.flushTris();
 };
@@ -355,7 +405,9 @@ VG.Canvas.prototype.addSolidRectangle2D=function( x1, y1, x2, y2, col )
 
 VG.Canvas.prototype.flushTris=function()
 {
-    var b = this.triBuffer;
+    if ( !this.triCount ) return;
+
+   var b = this.triBuffer;
     var shader = this.primShader;
 
     shader.bind();
@@ -385,7 +437,7 @@ VG.Canvas.prototype.flushTris=function()
 };
 
 /**
- * Draws a 2D Shape using the specified rectangle and colors.
+ * Draws a 2D Shape using the specified rectangle and colors on the 2D canvas layer.
  * @param {VG.Canvas.Shape2D} shape - The shape as specified in the VG.Canvas.Shape2D enum
  * @param {VG.Core.Rect} rect - The rectangle for the shape
  * @param {VG.Core.Color} col1 - The main color of the shape
@@ -394,6 +446,209 @@ VG.Canvas.prototype.flushTris=function()
  */
 
 VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
+{
+    let ctx = this.ctx; ctx.globalAlpha = this.alpha;
+
+    switch( shape )
+    {
+        case VG.Canvas.Shape2D.Rectangle:
+            ctx.fillStyle = col1.toCanvasStyle();
+            ctx.fillRect( rect.x, rect.y, rect.width, rect.height );
+        break;
+
+        case VG.Canvas.Shape2D.RectangleGL:
+            this.addSolidRectangle2D( rect.x, rect.y, rect.right(), rect.bottom(), col1 );
+        break;
+
+        case VG.Canvas.Shape2D.VerticalGradient:
+        {
+            let lingrad = ctx.createLinearGradient(0,rect.y,0, rect.bottom() );
+            lingrad.addColorStop( 0, col1.toCanvasStyle() );
+            lingrad.addColorStop( 1, col2.toCanvasStyle() );
+
+            ctx.fillStyle = lingrad;
+            ctx.fillRect( rect.x, rect.y, rect.width, rect.height );
+        }
+        break;
+
+        case VG.Canvas.Shape2D.HorizontalGradient:
+        {
+            let lingrad = ctx.createLinearGradient(rect.x,0,rect.right(),0);
+            lingrad.addColorStop( 0, col1.toCanvasStyle() );
+            lingrad.addColorStop( 1, col2.toCanvasStyle() );
+
+            ctx.fillStyle = lingrad;
+            ctx.fillRect( rect.x, rect.y, rect.width, rect.height );
+        }
+        break;
+
+        case VG.Canvas.Shape2D.RectangleOutline:
+            ctx.strokeStyle = col1.toCanvasStyle();
+            ctx.lineWidth = 1.0;
+            ctx.strokeRect( rect.x + 0.5, rect.y + 0.5, rect.width - 1.0, rect.height - 1.0 );
+        break;
+
+        case VG.Canvas.Shape2D.RectangleOutlineMin1px:
+            ctx.strokeStyle = col1.toCanvasStyle();
+            ctx.lineWidth = 1.0;
+
+            ctx.beginPath();
+            ctx.moveTo( rect.x + 1.5, rect.y + 0.5 );
+            ctx.lineTo( rect.right() - 1.5, rect.y + 0.5 );
+
+            ctx.moveTo( rect.x + 1.5, rect.bottom() - 0.5 );
+            ctx.lineTo( rect.right() - 1.5, rect.bottom() - 0.5 );
+
+            ctx.moveTo( rect.right() - 0.5, rect.y + 1.5 );
+            ctx.lineTo( rect.right() - 0.5, rect.bottom() - 1.5 );
+            ctx.moveTo( rect.x + 0.5, rect.y + 1.5 );
+            ctx.lineTo( rect.x + 0.5, rect.bottom() - 1.5 );
+            ctx.stroke();
+        break;
+
+        case VG.Canvas.Shape2D.RectangleOutlineMin2px:
+            ctx.strokeStyle = col1.toCanvasStyle();
+            ctx.lineWidth = 1.0;
+
+            ctx.beginPath();
+            ctx.moveTo( rect.x + 2.5, rect.y + 0.5 );
+            ctx.lineTo( rect.right() - 2.5, rect.y + 0.5 );
+
+            ctx.moveTo( rect.x + 2.5, rect.bottom() - 0.5 );
+            ctx.lineTo( rect.right() - 2.5, rect.bottom() - 0.5 );
+
+            ctx.moveTo( rect.right() - 0.5, rect.y + 2.5 );
+            ctx.lineTo( rect.right() - 0.5, rect.bottom() - 2.5 );
+            ctx.moveTo( rect.x + 0.5, rect.y + 2.5 );
+            ctx.lineTo( rect.x + 0.5, rect.bottom() - 2.5 );
+            ctx.stroke();
+        break;
+
+        case VG.Canvas.Shape2D.RoundedRectangleOutline1px:
+            ctx.strokeStyle = col1.toCanvasStyle();
+            ctx.lineWidth = 1.0;
+            ctx.fillRoundedRect( rect.x, rect.y, rect.width, rect.height, 2, false, true );
+        break;
+
+        case VG.Canvas.Shape2D.RoundedRectangle2px:
+            ctx.fillStyle = col1.toCanvasStyle();
+            ctx.fillRoundedRect( rect.x, rect.y, rect.width, rect.height, 5 );
+        break;
+
+        case VG.Canvas.Shape2D.RectangleCorners:
+            // --- Top Left
+            this.addSolidRectangle2D( rect.x, rect.y, rect.x+1, rect.y+1, col1 );
+            // --- Bottom Left
+            this.addSolidRectangle2D( rect.x, rect.bottom()-1, rect.x+1, rect.bottom(), col1 );
+            // --- Top Right
+            this.addSolidRectangle2D( rect.right()-1, rect.y, rect.right(), rect.y+1, col1 );
+            // --- Bottom Right
+            this.addSolidRectangle2D( rect.right()-1, rect.bottom()-1, rect.right(), rect.bottom(), col1 );
+        break;
+
+        case VG.Canvas.Shape2D.FlippedTriangle:
+            this.addTriangle2D( rect.x, rect.y, rect.right(), rect.y, rect.x + rect.width/2, rect.bottom(), col1, col1, col1 );
+        break;
+
+        case VG.Canvas.Shape2D.ArrowRightGradient:
+            this.addTriangle2D( rect.x, rect.y, rect.right(), rect.y + rect.height/2, rect.x, rect.bottom(), col1, col2, col3 );
+        break;
+
+        case VG.Canvas.Shape2D.ArrowLeft:
+            this.addTriangle2D( rect.x, rect.y+rect.height/2, rect.right(), rect.y, rect.right(), rect.bottom(), col1, col1, col1 );
+        break;
+
+        case VG.Canvas.Shape2D.ArrowRight:
+            this.addTriangle2D( rect.x, rect.y, rect.right(), rect.y + rect.height/2, rect.x, rect.bottom(), col1, col1, col1 );
+        break;
+
+        case VG.Canvas.Shape2D.Circle:
+            ctx.beginPath();
+            ctx.fillStyle = col1.toCanvasStyle();
+            ctx.arc( rect.x + rect.width/2, rect.y + rect.height/2, Math.min( rect.width, rect.height) / 2, 0, 2 * Math.PI, false);
+            ctx.fill();
+        break;
+
+        case VG.Canvas.Shape2D.CircleGL:
+            rW = rect.width / 2;
+            rH =  rect.height / 2;
+
+            step = Math.floor(VG.Math.clamp(rW * rH, 8, 64));
+
+            theta = 0.0;
+            pX = rect.x + rect.width / 2;
+            pY = rect.y + rect.height / 2;
+            inc = (Math.PI * 2.0) / step;
+
+            if (!col3) col3 = col1;
+            if (!col2) col2 = col1;
+
+            for (var i = 1; i <= step; i++)
+            {
+                x1 = pX + rW * Math.cos(inc * (i - 1));
+                y1 = pY - rH * Math.sin(inc * (i - 1));
+
+                x2 = pX + rW * Math.cos(inc * i);
+                y2 = pY - rH * Math.sin(inc * i);
+
+                this.addTriangle2D(x1, y1, x2, y2, pX, pY, col1, col2, col3);
+            }
+        break;
+
+        case VG.Canvas.Shape2D.CircleHue:
+            rW = rect.width / 2;
+            rH =  rect.height / 2;
+
+            step = Math.floor(VG.Math.clamp(rW * rH, 8, 64));
+
+            theta = 0.0;
+            pX = rect.x + rect.width / 2;
+            pY = rect.y + rect.height / 2;
+            inc = (Math.PI * 2.0) / step;
+
+            if (!col3) col3 = col1;
+            if (!col2) col2 = col1;
+
+            for (let i = 1; i <= step; i++)
+            {
+                x1 = pX + rW * Math.cos(inc * (i - 1));
+                y1 = pY - rH * Math.sin(inc * (i - 1));
+
+                x2 = pX + rW * Math.cos(inc * i);
+                y2 = pY - rH * Math.sin(inc * i);
+
+                col1 = this.cacheC1;
+                col1.setHSL(VG.Math.deg(inc * (i - 1)) - 90, 1.0, 0.5);
+
+                col2 = this.cacheC2;
+                col2.setHSL(VG.Math.deg(inc * i) - 90, 1.0, 0.5);
+
+                col3 = VG.Core.Color.White;
+
+                this.addTriangle2D(x1, y1, x2, y2, pX, pY, col1, col2, col3);
+            }
+        break;
+
+        case VG.Canvas.Shape2D.CircleOutline:
+            ctx.beginPath();
+            ctx.fillStyle = col1.toCanvasStyle();
+            ctx.lineWidth = 1.0;
+            ctx.arc( rect.x + rect.width/2, rect.y + rect.height/2, Math.min( rect.width, rect.height) / 2, 0, 2 * Math.PI, false);
+            ctx.stroke();
+        break;
+    }
+};
+
+/**
+ * Draws a 2D Shape using the specified rectangle and colors on the WebGL layer.
+ * @param {VG.Canvas.Shape2D} shape - The shape as specified in the VG.Canvas.Shape2D enum
+ * @param {VG.Core.Rect} rect - The rectangle for the shape
+ * @param {VG.Core.Color} col1 - The main color of the shape
+ * @param {VG.Core.Color} col2 - The optional 2nd color of the shape. Usage depends on shape type.
+ * @param {VG.Core.Color} col3 - The optional 3rd color of the shape. Usage depends on shape type.
+ */
+
+VG.Canvas.prototype.draw2DShapeGL=function( shape, rect, col1, col2, col3 )
 {
     switch( shape )
     {
@@ -544,7 +799,6 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
 
         case VG.Canvas.Shape2D.CircleHue:
         case VG.Canvas.Shape2D.Circle:
-        case VG.Canvas.Shape2D.CircleGL:
             rW = rect.width / 2;
             rH =  rect.height / 2;
 
@@ -579,7 +833,6 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
 
                 this.addTriangle2D(x1, y1, x2, y2, pX, pY, col1, col2, col3);
             }
-
         break;
 
         case VG.Canvas.Shape2D.CircleOutline:
@@ -604,75 +857,87 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
                 x2 = pX + rW * Math.cos(inc * i);
                 y2 = pY - rH * Math.sin(inc * i);
 
-                this.drawLine(x1, y1, x2, y2, 1, col1 );
-            }
-
-        break;
-
-        case VG.Canvas.Shape2D.DropShadow_NoTop7px:
-
-            col1.a=102.0 / 255.0;
-            var startColor=col1;
-            var midColor=VG.Core.Color( startColor );
-            midColor.a=36.0 / 255.0;
-            var endColor=VG.Core.Color( 0, 0, 0, 0 );
-
-            var cp=8;
-
-            if ( rect.height < cp ) {
-                this.draw2DShape( VG.Canvas.Shape2D.HorizontalGradient, VG.Core.Rect( rect.x-7, rect.y, 7, rect.height ), endColor, startColor );
-                this.draw2DShape( VG.Canvas.Shape2D.HorizontalGradient, VG.Core.Rect( rect.right(), rect.y, 7, rect.height ), startColor, endColor );
-                this.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, VG.Core.Rect( rect.x, rect.bottom(), rect.width, 7 ), startColor, endColor );
-            } else
-            {
-                this.draw2DShape( VG.Canvas.Shape2D.HorizontalGradient, VG.Core.Rect( rect.x-7, rect.y, 7, rect.height-cp ), endColor, startColor );
-                this.draw2DShape( VG.Canvas.Shape2D.HorizontalGradient, VG.Core.Rect( rect.right(), rect.y, 7, rect.height-cp ), startColor, endColor );
-                this.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, VG.Core.Rect( rect.x+cp, rect.bottom(), rect.width-2*cp, 7 ), startColor, endColor );
-
-                this.addTriangle2D( rect.x+1, rect.bottom(), rect.x, rect.bottom() - cp, rect.x-7, rect.bottom()-cp, midColor, startColor, endColor );
-                this.addTriangle2D( rect.x-7, rect.bottom() - cp, rect.x-7, rect.bottom(), rect.x+1, rect.bottom(), endColor, endColor, midColor );
-
-                this.addTriangle2D( rect.x+cp, rect.bottom()+7, rect.x+cp, rect.bottom(), rect.x+1, rect.bottom(), endColor, startColor, midColor );
-                this.addTriangle2D( rect.x+1, rect.bottom(), rect.x, rect.bottom()+7, rect.x+cp, rect.bottom()+7, midColor, endColor, endColor );
-
-                this.addTriangle2D( rect.right()-1, rect.bottom(), rect.right()-cp, rect.bottom(), rect.right()-cp, rect.bottom()+7, midColor, startColor, endColor );
-                this.addTriangle2D( rect.right()-cp, rect.bottom()+7, rect.right(), rect.bottom()+7, rect.right()-1, rect.bottom(), endColor, endColor, midColor );
-
-                this.addTriangle2D( rect.right()+7, rect.bottom()-cp, rect.right(), rect.bottom()-cp, rect.right()-1, rect.bottom(), endColor, startColor, midColor );
-                this.addTriangle2D( rect.right()-1, rect.bottom(), rect.right()+7, rect.bottom(), rect.right()+7, rect.bottom()-cp, midColor, endColor, endColor );
+                this.drawLineGL(x1, y1, x2, y2, 1, col1 );
             }
 
         break;
     }
 };
 
+/**
+ * Draws a line using the 2D canvas layer.
+ * @param {Number} x1 - From X coordinate
+ * @param {Number} y1 - From Y coordinate
+ * @param {Number} x2 - To X coordinate
+ * @param {Number} y2 - To Y coordinate
+ * @param {Number} t - The thickness of the line
+ * @param {VG.Core.Color} color - The color of the line
+ */
+
 VG.Canvas.prototype.drawLine=function(x1, y1, x2, y2, t, color)
 {
-     /**Draws a line
-     * @param {Number} x1 - From X coordinate
-     * @param {Number} y1 - From Y coordinate
-     * @param {Number} x2 - To X coordinate
-     * @param {Number} y2 - To Y coordinate
-     * @param {Number} t - The thickness of the line
-     * @param {Number} color - The color of the line
-     */
+    this.ctx.strokeStyle = color.toCanvasStyle();
+    this.ctx.lineWidth = t;
 
-    var hT = t * 0.5;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x1+0.5, y1+0.5);
+    this.ctx.lineTo(x2-0.5, y2-0.5);
+    this.ctx.stroke();
+};
 
-    var p0 = this.cacheV2B;
+/** Draws a cubic bezier line using the 2D canvas layer.
+ *  @param {Number} x1 - The p1 x coordinate
+ *  @param {Number} y1 - The p1 y coordinate
+ *  @param {Number} x2 - The p2 x coordinate
+ *  @param {Number} y2 - The p2 y coordinate
+ *  @param {Number} x3 - The p3 x coordinate
+ *  @param {Number} y3 - The p3 y coordinate
+ *  @param {Number} x4 - The p4 x coordinate
+ *  @param {Number} y4 - The p4 y coordinate
+ *  @param {Number} t - Thickness of the curve
+ *  @param {Number} seg - Segment count the higher the better quality
+ *  @param {Number} color - The line color */
+
+VG.Canvas.prototype.drawCurve=function(x1, y1, x2, y2, x3, y3, x4, y4, thick, seg, color)
+{
+    let ctx = this.ctx;
+    ctx.strokeStyle = color.toCanvasStyle();
+    ctx.lineWidth = thick;
+
+    ctx.beginPath();
+    ctx.moveTo( x1, y1 );
+    ctx.bezierCurveTo( x2, y2, x3, y3, x4, y4 );
+    ctx.stroke();
+};
+
+/**
+ * Draws a line using the WegGL layer.
+ * @param {Number} x1 - From X coordinate
+ * @param {Number} y1 - From Y coordinate
+ * @param {Number} x2 - To X coordinate
+ * @param {Number} y2 - To Y coordinate
+ * @param {Number} t - The thickness of the line
+ * @param {VG.Core.Color} color - The color of the line
+ */
+
+VG.Canvas.prototype.drawLineGL=function(x1, y1, x2, y2, t, color)
+{
+    let hT = t * 0.5;
+
+    let p0 = this.cacheV2B;
     p0.set(x1, y1);
 
-    var p1 = this.cacheV2C;
+    let p1 = this.cacheV2C;
     p1.set(x2, y2);
 
     //direction
-    var vD = this.cacheV2A;
+    let vD = this.cacheV2A;
     vD.copy(p1);
     vD.sub(p0);
     //vD.normalize();
 
     //perpendicular direction
-    var pD = this.cacheV2D;
+    let pD = this.cacheV2D;
     pD.copy(vD);
     pD.setPerpendicular();
     pD.normalize();
@@ -684,27 +949,27 @@ VG.Canvas.prototype.drawLine=function(x1, y1, x2, y2, t, color)
                        p0.x + pD.x * -hT, p0.y + pD.y * -hT, color, color, color);
 };
 
-VG.Canvas.prototype.drawCurve=function(x1, y1, x2, y2, x3, y3, x4, y4, thick, seg, color)
-{
-    /** Draws a cubic bezier line
-     *  @param {Number} x1 - The p1 x coordinate
-     *  @param {Number} y1 - The p1 y coordinate
-     *  @param {Number} x2 - The p2 x coordinate
-     *  @param {Number} y2 - The p2 y coordinate
-     *  @param {Number} x3 - The p3 x coordinate
-     *  @param {Number} y3 - The p3 y coordinate
-     *  @param {Number} x4 - The p4 x coordinate
-     *  @param {Number} y4 - The p4 y coordinate
-     *  @param {Number} t - Thickness of the curve
-     *  @param {Number} seg - Segment count the higher the better quality
-     *  @param {Number} color - The line color */
+/** Draws a cubic bezier line using the WebGL layer.
+ *  @param {Number} x1 - The p1 x coordinate
+ *  @param {Number} y1 - The p1 y coordinate
+ *  @param {Number} x2 - The p2 x coordinate
+ *  @param {Number} y2 - The p2 y coordinate
+ *  @param {Number} x3 - The p3 x coordinate
+ *  @param {Number} y3 - The p3 y coordinate
+ *  @param {Number} x4 - The p4 x coordinate
+ *  @param {Number} y4 - The p4 y coordinate
+ *  @param {Number} t - Thickness of the curve
+ *  @param {Number} seg - Segment count the higher the better quality
+ *  @param {Number} color - The line color */
 
-    var oldX=x1, oldY=y1;
+VG.Canvas.prototype.drawCurveGL=function(x1, y1, x2, y2, x3, y3, x4, y4, thick, seg, color)
+{
+    let oldX=x1, oldY=y1;
     for (var j = 1; j <= seg; j++)
     {
-        var t = j / seg;
-        var tx = VG.Math.bezierCubic(t, x1, x2, x3, x4);
-        var ty = VG.Math.bezierCubic(t, y1, y2, y3, y4);
+        let t = j / seg;
+        let tx = VG.Math.bezierCubic(t, x1, x2, x3, x4);
+        let ty = VG.Math.bezierCubic(t, y1, y2, y3, y4);
 
         this.drawLine( oldX, oldY, tx, ty, thick, color);
         oldX=tx; oldY=ty;
@@ -811,23 +1076,12 @@ VG.Canvas.prototype.drawTiledImage=function( fillRect, image, horizontal, vertic
 
 VG.Canvas.prototype.getTextSize=function( text, size )
 {
-    var font=this.fonts[this.fontIndex];
-    var x=0;
-    var baseLine=0;
+    if ( !size ) size = VG.Core.Size();
 
-    if ( !size ) size=VG.Core.Size();
+    this.ctx.textBaseline = "hanging";
 
-    for (var i = 0; i < text.length; i++)
-    {
-        var g = VG.Font.Triangulator.getGlyph( font.triFont, text[i] );//font.triFont.glyphs[text[i]];
-
-        baseLine=Math.max(baseLine, g.baseLine * font.scale);
-
-        x+=g.width * font.scale;
-    }
-
-    size.width=Math.ceil( x );
-    size.height=Math.ceil( baseLine );
+    size.width = ( this.ctx.measureText( text ).width );
+    size.height = this.fontHeight;//this.getLineHeight();
 
     return size;
 };
@@ -836,25 +1090,23 @@ VG.Canvas.prototype.getTextSize=function( text, size )
 
 VG.Canvas.prototype.wordWrap=function( text, start, width, textLines, dontAppendBreakSymbol )
 {
-    var font=this.fonts[this.fontIndex];
-    var lineWidth=start;
-    var oneWordFit=false;
-    var newLine=false;
+    let font=this.fonts[this.fontIndex];
+    let lineWidth=start;
+    let oneWordFit=false;
+    let newLine=false;
 
     if( text === "" || text===undefined || width < 0 ) {
-
         textLines.push("");
         return { nextStart: start };
     }
 
     if( !textLines ) textLines=[];
 
-    var i=0;
-    while(text)
+    let i=0;
+    while( text )
     {
-        var g = VG.Font.Triangulator.getGlyph( font.triFont, text[i] );
-        var snipLocation;
-        lineWidth+=g.width * font.scale;
+        let snipLocation;
+        lineWidth += this.getTextSize( text[i] ).width;
 
         if(lineWidth >= width)
         {
@@ -920,7 +1172,6 @@ VG.Canvas.prototype.wordWrap=function( text, start, width, textLines, dontAppend
     return { nextStart: lineWidth, forceStartNewLine: !oneWordFit };
 };
 
-
 /**
  * Returns the height of one line of text using the current canvas font.
  * @returns {number}
@@ -928,12 +1179,13 @@ VG.Canvas.prototype.wordWrap=function( text, start, width, textLines, dontAppend
 
 VG.Canvas.prototype.getLineHeight=function()
 {
-    var font=this.fonts[this.fontIndex];
-    return font.triFont.height * font.scale;
+    // var font=this.fonts[this.fontIndex];
+    // return this.font.triFont.height * this.font.scale;
+    return Math.ceil( this.fontHeight * 1.4 );
 };
 
 /**
- * Draws one line of text using the current canvas font aligned inside the given rectangle. Optionally rotates the font.
+ * Draws one line of text using the current canvas font aligned inside the given rectangle using the 2D canvas layer. Optionally rotates the font.
  * @returns {string} text - The text to draw.
  * @returns {VG.Core.Rect} rect - The rectangle to align the text into
  * @returns {VG.Core.Color} col - The color to use for the text drawing
@@ -942,6 +1194,74 @@ VG.Canvas.prototype.getLineHeight=function()
  */
 
 VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angle, crX, crY)
+{
+    let ctx = this.ctx; ctx.globalAlpha = this.alpha;
+    let textSize = VG.Core.Size( ctx.measureText( text).width, this.getLineHeight() );
+
+    ctx.save();
+    ctx.rect( rect.x, rect.y, rect.width,  textSize.height > rect.height ? textSize.height : rect.height );
+    ctx.clip();
+
+    ctx.fillStyle = col.toCanvasStyle();
+    ctx.textBaseline = "top";
+    ctx.lineWidth = 1.0;
+
+    let startX = rect.x;
+    let y = rect.y;
+
+    if ( !angle ) angle = 0;
+
+    // --- Alignment
+
+    var xalign=1, yalign=1;
+    if ( arguments.length == 5 ) {
+        xalign=halign; yalign=valign;
+    }
+
+    if ( xalign === 1 ) {
+        if ( textSize.width > rect.width ) startX = rect.x;
+        else startX=rect.x + (rect.width - textSize.width) / 2;
+    } else
+    if ( xalign === 2 ) {
+        startX=rect.x + rect.width - textSize.width;
+    }
+
+    if ( yalign === 1 ) {
+        ctx.textBaseline = "middle";
+        y=rect.y + rect.height / 2;
+    } else
+    if ( yalign === 2 ) {
+        y=rect.y + rect.height - textSize.height;
+    } else
+    if ( yalign === 3 ) {
+        y=rect.y;
+    }
+
+    if ( angle !== 0 ) {
+        crX = crX ? crX : rect.x + rect.width / 2;
+        crY = crY ? crY : rect.y + rect.height / 2;
+
+        ctx.translate( crX, crY );
+        ctx.rotate( - VG.Math.rad( angle ) );
+        ctx.translate( -crX, -crY );
+    }
+
+    ctx.fillText( text, startX, y );
+    ctx.restore();
+
+    return textSize.width;
+};
+
+/**
+ * Draws one line of text using the current canvas font aligned inside the given rectangle using the WebGL layer. Optionally rotates the font.
+ * @returns {string} text - The text to draw.
+ * @returns {VG.Core.Rect} rect - The rectangle to align the text into
+ * @returns {VG.Core.Color} col - The color to use for the text drawing
+ * @returns {number} halign - The horizontal alignment method: 0 is left, 1 centered and 2 is right. TODO: Move into enum
+ * @returns {number} valign - The vertical alignment method: 0 is top (plus font descender), 1 centered, 2 is bottom and 3 is top without descender. TODO: Move into enum
+ */
+
+VG.Canvas.prototype.drawTextRectGL=function( text, rect, col, halign, valign, angle, crX, crY)
 {
     var font=this.fonts[this.fontIndex];
 
@@ -1023,8 +1343,6 @@ VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angl
     // fix rotation at center for now
     crX = crX ? crX : rect.x + rect.width / 2;
     crY = crY ? crY : rect.y + rect.height / 2;
-
-
 
     this.flush();
 
@@ -1200,9 +1518,23 @@ VG.Canvas.prototype.drawSVG=function( svg, svgGroup, rect, col, angle, crX, crY)
         b.drawBuffer(VG.Renderer.Primitive.Triangles, Math.round( group.triOffset/2 ), Math.round( group.triSize/2 ) );
 };
 
-// --------------------------------------------- VG.Canvas.prototype.update
+/**
+ * Make sure the UI gets repaint on the next tick.
+ **/
 
 VG.Canvas.prototype.update=function()
 {
     VG.update();
+};
+
+/**
+ * Clears the given rectangle on the GL layer.
+ * @param {VG.Core.Rectangle} rect - The rectangle to clear.
+ **/
+
+VG.Canvas.prototype.clearGLRect=function( rect )
+{
+    this.rt.setScissor( rect );
+    this.rt.clear( true );
+    this.rt.setScissor();
 };
