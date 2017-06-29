@@ -80,41 +80,48 @@ VG.Nodes.NodeMaterial=function()
             options.code += "  material.reflectance = " + varName + ";\n";
         } else options.code += "  material.reflectance = " + this.container.getParamValue("reflectance").toFixed(4) + ";\n";
 
-        if ( normalTerminal.isConnected() ) {
+        if ( normalTerminal.isConnected() && !options.physicalBumps ) {
             let varName = normalTerminal.first().onCall( options );
             // options.code += "  normal = normalize( " + varName + " );\n";
             options.code += "  normal = ( mix( normal, normalize(" + varName + "), " + this.container.getParamValue("normalWeight").toFixed(2) + " ) );\n";
         } else
         if ( bumpTerminal.isConnected() )
         {
-            options.override = true;
-            options.code += "  vec2 eps = vec2( 0.0001, 0.0 );\n";
+            if ( !options.physicalBumps ) {
+                // --- Use bumps to calculate normal
+                options.override = true;
+                options.code += "  vec2 eps = vec2( 0.0001, 0.0 );\n";
 
-            options.code += "  vec3 origPos = pos;\n";
+                options.code += "  vec3 origPos = pos;\n";
 
-            options.code += "  pos = origPos + eps.xyy;\n";
-            let varName = bumpTerminal.first().onCall( options );
-            options.code += "  float nor_1 = " + varName + ";\n";
-            options.code += "  pos = origPos - eps.xyy;\n";
-            varName = bumpTerminal.first().onCall( options );
-            options.code += "  float nor_2 =" + varName + ";\n";
+                options.code += "  pos = origPos + eps.xyy;\n";
+                let varName = bumpTerminal.first().onCall( options );
+                options.code += "  float nor_1 = " + varName + ";\n";
+                options.code += "  pos = origPos - eps.xyy;\n";
+                varName = bumpTerminal.first().onCall( options );
+                options.code += "  float nor_2 =" + varName + ";\n";
 
-            options.code += "  pos = origPos + eps.yxy;\n";
-            varName = bumpTerminal.first().onCall( options );
-            options.code += "  float nor_3 = " + varName + ";\n";
-            options.code += "  pos = origPos - eps.yxy;\n";
-            varName = bumpTerminal.first().onCall( options );
-            options.code += "  float nor_4 = " + varName + ";\n";
+                options.code += "  pos = origPos + eps.yxy;\n";
+                varName = bumpTerminal.first().onCall( options );
+                options.code += "  float nor_3 = " + varName + ";\n";
+                options.code += "  pos = origPos - eps.yxy;\n";
+                varName = bumpTerminal.first().onCall( options );
+                options.code += "  float nor_4 = " + varName + ";\n";
 
-            options.code += "  pos = origPos + eps.yyx;\n";
-            varName = bumpTerminal.first().onCall( options );
-            options.code += "  float nor_5 = " + varName + ";\n";
-            options.code += "  pos = origPos - eps.yyx;\n";
-            varName = bumpTerminal.first().onCall( options );
-            options.code += "  float nor_6 = " + varName + ";\n";
+                options.code += "  pos = origPos + eps.yyx;\n";
+                varName = bumpTerminal.first().onCall( options );
+                options.code += "  float nor_5 = " + varName + ";\n";
+                options.code += "  pos = origPos - eps.yyx;\n";
+                varName = bumpTerminal.first().onCall( options );
+                options.code += "  float nor_6 = " + varName + ";\n";
 
-            options.code += "  vec3 bumpNormal = normalize( vec3( nor_1 - nor_2, nor_3 - nor_4, nor_5 - nor_6 ) );\n";
-            options.code += "  normal = ( mix( normal, bumpNormal, " + this.container.getParamValue("normalWeight").toFixed(2) + " ) );\n";
+                options.code += "  vec3 bumpNormal = normalize( vec3( nor_1 - nor_2, nor_3 - nor_4, nor_5 - nor_6 ) );\n";
+                options.code += "  normal = ( mix( normal, bumpNormal, " + this.container.getParamValue("normalWeight").toFixed(2) + " ) );\n";
+            } else {
+                // --- Pass the physical bump, ignore normal
+                let varName = bumpTerminal.first().onCall( options );
+                options.code += "  material.bump = " + varName + ";\n"
+            }
         }
 
         options.code+="\n}\n";

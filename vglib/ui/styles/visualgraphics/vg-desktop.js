@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Markus Moenig <markusm@visualgraphics.tv>
+ * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv>
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -399,6 +399,9 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedQuickMenu=function( widget, can
         rect.height-=menu.items.length-1;
 
         menu.itemsRect.copy( rect );
+
+        if ( canvas.twoD )
+            canvas.clearGLRect( rect );
 
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, rect, style.skin.DecoratedQuickMenu.SubMenuBorderColor );
         rect1.copy( rect );

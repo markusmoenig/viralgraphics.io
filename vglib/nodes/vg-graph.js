@@ -332,7 +332,7 @@ VG.Nodes.Graph.prototype.collectGlobals=function( node, nodesProcessed )
  * @returns {object} The return object. The success member indicates success, code will contain the compiled material and globalCode the global code necessary for the material.
  */
 
-VG.Nodes.Graph.prototype.compileAsMaterial=function( { code = "", materialName = "material_1", generatePreview = function() {} } = {} )
+VG.Nodes.Graph.prototype.compileAsMaterial=function( { code = "", materialName = "material_1", generatePreview = function() {}, physicalBumps = false } = {} )
 {
     var rc={ success : false, error : "" };
 
@@ -362,6 +362,7 @@ VG.Nodes.Graph.prototype.compileAsMaterial=function( { code = "", materialName =
     options.globalCode = rc.globalCode;
     options.materialName = materialName;
     options.generatePreview = generatePreview;
+    options.physicalBumps = physicalBumps;
 
     let variables = {};
 
