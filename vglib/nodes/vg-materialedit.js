@@ -508,7 +508,7 @@ VG.Nodes.MaterialRenderer.prototype.build_path=function( { globalCode, code, typ
                 //`
                 "res=opU( res, vec3( p.y + 1.5, 0, 0 ) );"
             }
-            ${ code.indexOf( "_displacement" ) !== -1 ? "res.x += material_1_displacement( p );" : "" }
+            ${ code.indexOf( "_displacement" ) !== -1 ? "res.x -= material_1_displacement( p );" : "" }
 
             // res=opU( res, vec3( length( p ) - 1.0, 0, 0 ) );
             res=opU( res, vec3( length( p - LIGHT1_POS ) - 1.0, 2, 2 ) ); // Light #1
