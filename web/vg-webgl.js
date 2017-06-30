@@ -100,6 +100,8 @@ var VG;
         } else {
             // --- WebGL 2 extensions
             this.queryExt = VG.WebGL.gl.getExtension('EXT_disjoint_timer_query_webgl2');
+            if ( !this.queryExt )
+                this.queryExt = VG.WebGL.gl.getExtension('EXT_disjoint_timer_query');
             this.supportsFloatTextures = gl.getExtension("EXT_color_buffer_float");
         }
     };
