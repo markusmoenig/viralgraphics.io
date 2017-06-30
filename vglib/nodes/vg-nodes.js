@@ -165,12 +165,14 @@ VG.Nodes.NodeShapes2D.prototype.getGlobalCode=function( data )
     if ( this.strokeTerminal.isConnected() )
         global += this.strokeCode;
 
-    if ( shape === 0 ) {
-        // --- Box
-        global += this.boxD;
-        global += `
-            float NodeShapes2D_${this.token}( in vec3 pos, in vec3 normal )
-            {
+    // --- Axis Code
+
+    let self = this;
+    function getAxisCode() {
+        let axisParam = self.container.getParam( "axis" );
+
+        if ( axisParam.data.axis === 0 ) {
+            return `
                 vec2 uv;
                 vec3 n = abs(normal);
                 if(n.x > 0.57735) {
@@ -180,6 +182,21 @@ VG.Nodes.NodeShapes2D.prototype.getGlobalCode=function( data )
                 }else{
                     uv = pos.xy;
                 }
+            `;
+        } else
+            return `vec2 uv = pos.${axisParam.list[ axisParam.data.axis ].toLowerCase()};`;
+    }
+
+    // ---
+
+
+    if ( shape === 0 ) {
+        // --- Box
+        global += this.boxD;
+        global += `
+            float NodeShapes2D_${this.token}( in vec3 pos, in vec3 normal )
+            {
+                ${getAxisCode()}
 
                 // uv.x -= step(0.5, uv.y)*.5;
 
@@ -210,15 +227,7 @@ VG.Nodes.NodeShapes2D.prototype.getGlobalCode=function( data )
         global += `
             float NodeShapes2D_${this.token}( in vec3 pos, in vec3 normal )
             {
-                vec2 uv;
-                vec3 n = abs(normal);
-                if(n.x > 0.57735) {
-                    uv = pos.yz;
-                } else if (n.y>0.57735){
-                    uv = pos.xz;
-                }else{
-                    uv = pos.xy;
-                }
+                ${getAxisCode()}
 
                 uv /= ${scale};
                 uv += ${translate};
@@ -240,15 +249,7 @@ VG.Nodes.NodeShapes2D.prototype.getGlobalCode=function( data )
         global += `
             float NodeShapes2D_${this.token}( in vec3 pos, in vec3 normal )
             {
-                vec2 uv;
-                vec3 n = abs(normal);
-                if(n.x > 0.57735) {
-                    uv = pos.yz;
-                } else if (n.y>0.57735){
-                    uv = pos.xz;
-                }else{
-                    uv = pos.xy;
-                }
+                ${getAxisCode()}
 
                 uv /= ${scale};
                 uv += ${translate};
@@ -270,15 +271,7 @@ VG.Nodes.NodeShapes2D.prototype.getGlobalCode=function( data )
         global += `
             float NodeShapes2D_${this.token}( in vec3 pos, in vec3 normal )
             {
-                vec2 uv;
-                vec3 n = abs(normal);
-                if(n.x > 0.57735) {
-                    uv = pos.yz;
-                } else if (n.y>0.57735){
-                    uv = pos.xz;
-                }else{
-                    uv = pos.xy;
-                }
+                ${getAxisCode()}
 
                 uv /= ${scale};
                 uv += ${translate};
@@ -310,6 +303,7 @@ VG.Nodes.NodeShapes2D.prototype.createProperties=function( data )
     group.addParam( VG.Nodes.ParamSlider( data, "round", "Rounding", 0.2, 0.001, 2.00, 0.1, 3 ) );
     group.addParam( VG.Nodes.ParamSlider( data, "hard", "Hardness", 1.0, 0.001, 1.00, 0.1, 3 ) );
     group.addParam( VG.Nodes.ParamSlider( data, "stroke", "Stroke", 1.0, 0.001, 20.00, 0.1, 3 ) );
+    group.addParam( VG.Nodes.ParamList( data, "axis", "Pattern Axis", 0, ["Dynamic", "XY", "XZ", "YZ"] ) );
     group.addParam( VG.Nodes.ParamDivider( data, "divider", "Transform" ) );
     group.addParam( VG.Nodes.ParamSlider( data, "scale", "Scale", 1, 0.001, 10.00, 0.1, 3 ) );
     group.addParam( VG.Nodes.ParamSlider( data, "rotate", "Rotate", 0, 0.0, 359, 0.1, 2 ) );

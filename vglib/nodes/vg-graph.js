@@ -366,7 +366,7 @@ VG.Nodes.Graph.prototype.compileAsMaterial=function( { code = "", materialName =
 
     let variables = {};
 
-    options.getVar=function( node, terminal, type ) {
+    options.getVar = function( node, terminal, type ) {
         let rc={};
         rc.name = node.token + "_" + terminal;
         if ( variables[rc.name] ) {
@@ -377,6 +377,10 @@ VG.Nodes.Graph.prototype.compileAsMaterial=function( { code = "", materialName =
             rc.code = type + " " + rc.name;
         }
         return rc;
+    }.bind( this );
+
+    options.clearVars = function() {
+        variables = {};
     }.bind( this );
 
     let outTerminal=materialNode.getOutput( "out" );

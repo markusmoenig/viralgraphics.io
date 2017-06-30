@@ -1308,7 +1308,7 @@ var VG;
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-        if ( this.floatTexture )
+        if ( this.floatTexture && VG.WebGL.supportsFloatTextures )
             gl.texImage2D(gl.TEXTURE_2D, 0, VG.webgl2 ? gl.RGBA32F : gl.RGBA, this.width, this.height, 0, gl.RGBA, gl.FLOAT, null);
         else
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);

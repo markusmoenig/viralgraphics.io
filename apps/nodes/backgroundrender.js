@@ -39,7 +39,7 @@ function render( canvas )
             let item = materials[i];
             let rect=VG.Core.Rect( 0, 0, item.previewStripWidth, item.previewStripHeight );
 
-            if ( !item.previewStripImage || item.previewStripNeedsUpdate )
+            if ( /*!item.previewStripImage ||*/ item.previewStripNeedsUpdate )
             {
                 let graph = VG.context.rendererGraph, renderer = VG.context.renderer;
 

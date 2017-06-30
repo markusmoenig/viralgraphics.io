@@ -33,8 +33,6 @@ VG.Nodes.NodeMaterial=function()
     // --- Terminals
 
     let colorTerminal=this.addInput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector3, "color" ) );
-    this.colorTerminal = colorTerminal;
-
     let specularTerminal=this.addInput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector3, "specular" ) );
     let metallicTerminal=this.addInput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "metallic" ) );
     let smoothnessTerminal=this.addInput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "smoothness" ) );
@@ -80,14 +78,17 @@ VG.Nodes.NodeMaterial=function()
             options.code += "  material.reflectance = " + varName + ";\n";
         } else options.code += "  material.reflectance = " + this.container.getParamValue("reflectance").toFixed(4) + ";\n";
 
+        let displacement = this.container.getParamValue( "bumps" );
+
         if ( normalTerminal.isConnected() && !options.physicalBumps ) {
             let varName = normalTerminal.first().onCall( options );
             // options.code += "  normal = normalize( " + varName + " );\n";
             options.code += "  normal = ( mix( normal, normalize(" + varName + "), " + this.container.getParamValue("normalWeight").toFixed(2) + " ) );\n";
         } else
-        if ( bumpTerminal.isConnected() )
+        if ( bumpTerminal.isConnected() && !displacement )
         {
-            if ( !options.physicalBumps ) {
+            if ( !options.physicalBumps )
+            {
                 // --- Use bumps to calculate normal
                 options.override = true;
                 options.code += "  vec2 eps = vec2( 0.0001, 0.0 );\n";
@@ -120,14 +121,38 @@ VG.Nodes.NodeMaterial=function()
             } else {
                 // --- Pass the physical bump, ignore normal
                 let varName = bumpTerminal.first().onCall( options );
-                options.code += "  material.bump = " + varName + ";\n"
+                options.code += "  material.bump = " + varName + ";\n";
             }
         }
 
         options.code+="\n}\n";
+
+        // --- Displacement Code
+
+        if ( displacement && bumpTerminal.isConnected() && !options.physicalBumps ) {
+            options.clearVars();
+
+            let preview = options.generatePreview;
+            options.generatePreview = function() {};
+
+            options.code += "\nfloat " + options.materialName + "_displacement( in vec3 pos ) {\n";
+            options.code += "  vec3 normal = vec3( 0, 0, 1 );\n";
+            options.code += "  pos /= " + this.container.getParam("scale").toString() + ";\n";
+            let varName = bumpTerminal.first().onCall( options );
+            options.code += "  return " + varName + ";\n";
+            options.code+="\n}\n";
+
+            options.generatePreview = preview;
+        }
+
+        // ---
+
         this.category = this.container.getParamValue( "category" );
 
     }.bind( this ) ) );
+
+    this.colorTerminal = colorTerminal;
+    this.bumpTerminal = bumpTerminal;
 };
 
 VG.Nodes.NodeMaterial.prototype=VG.Nodes.Node();
@@ -137,19 +162,20 @@ VG.Nodes.NodeMaterial.prototype.createProperties=function( data )
     this.container=VG.Nodes.ParamContainer( this );
     var group=this.container.addGroupByName( "settings", "Material Settings" );
 
-    group.addParam( VG.Nodes.ParamColor( data, "color", "Diffuse", VG.Core.Color( "#000000" ) ) );
+    group.addParam( VG.Nodes.ParamColor( data, "color", "Diffuse", VG.Core.Color( 128, 128, 128 ) ) );
     group.addParam( VG.Nodes.ParamColor( data, "specular", "Specular", VG.Core.Color( "#ffffff" ) ) );
 
     group.addParam( VG.Nodes.ParamSlider( data, "specularWeight", "Spec. Weight", 0, 0, 1, 0.1, 2 ) );
     group.addParam( VG.Nodes.ParamSlider( data, "normalWeight", "Normal Weight", 0.2, 0, 1, 0.1, 2 ) );
     group.addParam( VG.Nodes.ParamSlider( data, "scale", "Global Scale", 1, 0, 10, 0.1, 2 ) );
 
-    group=this.container.addGroupByName( "PBR", "PBR" );
+    group=this.container.addGroupByName( "PBR", "PBR Properties / Bump Mapping" );
 
     group.addParam( VG.Nodes.ParamSlider( data, "metallic", "Metallic", 0, 0, 1, 0.1, 2 ) );
     group.addParam( VG.Nodes.ParamSlider( data, "smoothness", "Smoothness", 0, 0, 1, 0.1, 2 ) );
     group.addParam( VG.Nodes.ParamSlider( data, "reflectance", "Reflectance", 0.5, 0, 1, 0.1, 2 ) );
-    // group.addParam( VG.Nodes.ParamSlider( data, "bump", "Bump", 1, 0, 1, 0.1, 2 ) );
+
+    group.addParam( VG.Nodes.ParamList( data, "bumps", "Bumps", 0, ["Bump Mapping", "Displacement Mapping"] ) );
 
     group=this.container.addGroupByName( "emissive", "Emissive", false );
 

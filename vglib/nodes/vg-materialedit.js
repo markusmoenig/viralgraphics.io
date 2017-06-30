@@ -331,9 +331,9 @@ VG.Nodes.MaterialRenderer=function()
     // --- Setup Preview Widget
 
     this.rt = new VG.RenderTarget();
-    this.rt.floatTexture = true;
+    // this.rt.floatTexture = true;
     this.rt1 = new VG.RenderTarget();
-    this.rt1.floatTexture = true;
+    // this.rt1.floatTexture = true;
 
     this.iter = 0;
 
@@ -480,6 +480,13 @@ VG.Nodes.MaterialRenderer.prototype.build_path=function( { globalCode, code, typ
         {
             return max(-d2,d1);
         }
+    `;
+
+    this.shader.fSource += globalCode;
+    this.shader.fSource += code;
+
+    this.shader.fSource += `
+
 /*
    tp=p;
     gResult1=opU( gResult1, vec3( length( max( abs( tp) - vec3( 399.741, 399.741, 399.741 ), 0.0 ) ) - 0.259, 2, 0 ) );
@@ -501,6 +508,8 @@ VG.Nodes.MaterialRenderer.prototype.build_path=function( { globalCode, code, typ
                 //`
                 "res=opU( res, vec3( p.y + 1.5, 0, 0 ) );"
             }
+            ${ code.indexOf( "_displacement" ) !== -1 ? "res.x += material_1_displacement( p );" : "" }
+
             // res=opU( res, vec3( length( p ) - 1.0, 0, 0 ) );
             res=opU( res, vec3( length( p - LIGHT1_POS ) - 1.0, 2, 2 ) ); // Light #1
 
@@ -521,7 +530,7 @@ VG.Nodes.MaterialRenderer.prototype.build_path=function( { globalCode, code, typ
 
                 vec3 res = map( ro+rd*t );
                 if( t<precis || t>tmax ) break;
-                t += res.x;
+                t += res.x * 0.4;
                 m = res.y;
                 id = res.z;
             }
@@ -531,8 +540,6 @@ VG.Nodes.MaterialRenderer.prototype.build_path=function( { globalCode, code, typ
         }
     `;
 
-    this.shader.fSource += globalCode;
-    this.shader.fSource += code;
     this.shader.fSource += `
 
         struct Ray {
@@ -616,7 +623,7 @@ VG.Nodes.MaterialRenderer.prototype.build_path=function( { globalCode, code, typ
             float cosa = mix(cos_a_max, 1., random());
             vec3 l = jitter(l0, 2.*PI*random(), sqrt(1. - cosa*cosa), cosa);
 
-            vec3 lightHit = castRay( hitOrigin, l, 0.001, 10.0 );
+            vec3 lightHit = castRay( hitOrigin, l, 0.001, 20.0 );
 
             if ( lightHit.z == light.id )
             {
