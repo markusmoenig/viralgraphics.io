@@ -495,7 +495,7 @@ VG.Nodes.NodeTurbulence=function()
             }
 
             return tnVar.name;
-        } else return "vec3(0)";
+        } else return "vec4(0)";
 
     }.bind( this ) ) );
 

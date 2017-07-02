@@ -285,21 +285,21 @@ VG.Nodes.Graph.prototype.collectTerminalBranch=function( terminal, nodesProcesse
 
             let n = cTerminal.node;
 
-            // --- Add the node if not yet processed
-            if ( !nodesProcessed.includes( n.className ) && !nodesProcessed.includes( n.token ) )
-            {
-                if ( n.getGlobalCode !== undefined )
-                    globalCode = n.getGlobalCode() + globalCode;
-
-                if ( !n.modifiesGlobal ) nodesProcessed.push( n.className );
-                else nodesProcessed.push( n.token );
-            }
-
             // --- Parse the nodes inputs
             for ( i = 0; i < n.inputs.length; ++i )
             {
                 let iTerminal = n.inputs[i];
                 globalCode = this.collectTerminalBranch( iTerminal, nodesProcessed, globalCode );
+            }
+
+            // --- Add the node if not yet processed
+            if ( !nodesProcessed.includes( n.className ) && !nodesProcessed.includes( n.token ) )
+            {
+                if ( n.getGlobalCode !== undefined )
+                    globalCode += n.getGlobalCode();
+
+                if ( !n.modifiesGlobal ) nodesProcessed.push( n.className );
+                else nodesProcessed.push( n.token );
             }
         }
     }

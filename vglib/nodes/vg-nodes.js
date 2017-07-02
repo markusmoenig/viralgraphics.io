@@ -20,33 +20,58 @@
 
 // ----------------------------------------------------------------- VG.Nodes.NodeFloat
 
-VG.Nodes.NodeFloat=function()
+VG.Nodes.NodeFloat = class extends VG.Nodes.Node
 {
-    if ( !(this instanceof VG.Nodes.NodeFloat ) ) return new VG.Nodes.NodeFloat();
+    constructor() {
+        super();
+        this.name="Float Value";
+        this.className="NodeFloat";
+        this.noPreview=true;
 
-    this.name="Float Value";
-    this.className="NodeFloat";
-    this.noPreview=true;
+        // --- Terminals
 
-    VG.Nodes.Node.call( this );
+        this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "float", function( options ) {
+            let param = this.container.getParamValue( "float" );
+            this.customTitle = param.toFixed( 3 );
+            return param.toFixed( 3 );
+        }.bind( this ) ) );
+    }
 
-    // --- Terminals
+    createProperties( data ) {
+        this.container=VG.Nodes.ParamContainer( this );
+        var group=this.container.addGroupByName( "basics", "Float Settings" );
 
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "float", function( options ) {
-        let param = this.container.getParamValue( "float" );
-        this.customTitle = param.toFixed( 3 );
-        return param.toFixed( 3 );
-    }.bind( this ) ) );
+        group.addParam( VG.Nodes.ParamNumber( data, "float", "Float Value", 0.000, -10000.00, 10000.00, 3 ) );
+    }
 };
 
-VG.Nodes.NodeFloat.prototype=VG.Nodes.Node();
+VG.Nodes.availableNodes.set( "Generator.Color", "NodeColor" );
 
-VG.Nodes.NodeFloat.prototype.createProperties=function( data )
+// ----------------------------------------------------------------- VG.Nodes.Color
+
+VG.Nodes.NodeColor = class extends VG.Nodes.Node
 {
-    this.container=VG.Nodes.ParamContainer( this );
-    var group=this.container.addGroupByName( "basics", "Float Settings" );
+    constructor() {
+        super();
+        this.name="Color Value";
+        this.className="NodeColor";
+        this.noPreview=true;
 
-    group.addParam( VG.Nodes.ParamNumber( data, "float", "Float Value", 0.000, -10000.00, 10000.00, 3 ) );
+        // --- Terminals
+
+        this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Vector3, "color", function( options ) {
+            let param = this.container.getParam( "color" );
+            // this.customTitle = param.toFixed( 3 );
+            return `${param.toString()}.xyz`;
+        }.bind( this ) ) );
+    }
+
+    createProperties( data ) {
+        this.container=VG.Nodes.ParamContainer( this );
+        var group=this.container.addGroupByName( "basics", "Color Settings" );
+
+        group.addParam( VG.Nodes.ParamColor( data, "color", "Color", VG.Core.Color( "#ffffff" ) ) );
+    }
 };
 
 VG.Nodes.availableNodes.set( "Generator.Float", "NodeFloat" );
@@ -145,6 +170,10 @@ VG.Nodes.NodeShapes2D = function()
         return addVar.name;
 
     }.bind( this ) ) );
+
+    this.funcTerminal = this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Function, "function", function( options ) {
+        return `NodeShapes2D_func_${this.token}`;
+    }.bind( this ) ) );
 };
 
 VG.Nodes.NodeShapes2D.prototype=VG.Nodes.Node();
@@ -171,6 +200,10 @@ VG.Nodes.NodeShapes2D.prototype.getGlobalCode=function( data )
     function getAxisCode() {
         let axisParam = self.container.getParam( "axis" );
 
+        if ( self.funcTerminal.isConnected() )
+        {
+            return 'vec2 uv = pos.xy;';
+        } else
         if ( axisParam.data.axis === 0 ) {
             return `
                 vec2 uv;
@@ -288,6 +321,15 @@ VG.Nodes.NodeShapes2D.prototype.getGlobalCode=function( data )
         `;
     }
 
+    if ( this.funcTerminal.isConnected() ) {
+        global += `
+            vec4 NodeShapes2D_func_${this.token}( in vec3 pos, in vec3 normal )
+            {
+                return vec4( NodeShapes2D_${this.token}( pos, normal ) );
+            }
+        `;
+    }
+
     // console.log( global );
 
     return global;
@@ -296,7 +338,7 @@ VG.Nodes.NodeShapes2D.prototype.getGlobalCode=function( data )
 VG.Nodes.NodeShapes2D.prototype.createProperties=function( data )
 {
     this.container=VG.Nodes.ParamContainer( this );
-    var group=this.container.addGroupByName( "basics", "Shapes Settings" );
+    var group=this.container.addGroupByName( "basics", "Shapes 2D Settings" );
 
     group.addParam( VG.Nodes.ParamList( data, "shape", "Shape", 0, ["Cube", "Hex", "Sphere", "Triangle"] ) );
     group.addParam( VG.Nodes.ParamVector2( data, "size", "Size", 1.00, 1.00, 0, 100, 2 ) );
@@ -316,98 +358,456 @@ VG.Nodes.NodeShapes2D.prototype.createProperties=function( data )
 
 VG.Nodes.availableNodes.set( "Shapes 2D.Shapes 2D", "NodeShapes2D" );
 
-// ----------------------------------------------------------------- VG.Nodes.NodeShapes
+// ----------------------------------------------------------------- VG.Nodes.NodeShape3DMixer
 
-VG.Nodes.NodeShapes=function()
+VG.Nodes.NodeGrid2D = class extends VG.Nodes.Node
 {
-    if ( !(this instanceof VG.Nodes.NodeShapes ) ) return new VG.Nodes.NodeShapes();
+    constructor() {
+        super();
 
-    this.name="Shapes";
-    this.className="NodeShapes";
+        this.name="Grid";
+        this.className="NodeGrid2D";
 
-    this.global = `
-        float NodeShapes( in vec3 pos, in vec3 normal )
+        // --- Inputs
+
+        this.noiseTerminal = VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Function, "noise" );
+        this.addInput( this.noiseTerminal );
+
+        this.shapeTerminals = [];
+        this.shapeTerminals[0] = this.addInput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Function, "shape1" ) );
+        this.shapeTerminals[1] = this.addInput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Function, "shape2" ) );
+        this.shapeTerminals[2] = this.addInput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Function, "shape3" ) );
+
+
+        // --- Outputs
+
+        this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "dist", function( options ) {
+
+            let addVar = options.getVar( this, "dist", "float" );
+            if ( !addVar.exists || options.override )
+                options.code += "  " + addVar.code + " = " + `NodeGrid2D_${this.token}( pos, normal )` + ";\n";
+
+            if ( !this.rt ) {
+                let prevCode = options.globalCode + options.code + `  material.color = vec3( clamp( pow( ${addVar.name}, 0.4545 ), 0., 1.0 ) );\n}`;
+                options.generatePreview( self, prevCode );
+            }
+
+            return `${addVar.name}`;
+        }.bind( this ) ) );
+    }
+
+    getGlobalCode( data )
+    {
+        let gridSize = this.container.getParam( "gridSize" ).toString();
+        let scale = this.container.getParamValue( "scale" ).toFixed(3);
+        let hard = this.container.getParamValue( "hard" ).toFixed(3);
+        let round = this.container.getParamValue( "round" ).toFixed(3);
+        let randomX = this.container.getParamValue( "randomX" );
+        let randomY = this.container.getParamValue( "randomY" );
+        let tileSize = this.container.getParam( "tileSize" ).toString();
+
+        let global = "";
+
+        // --- Axis Code
+
+        let self = this;
+        function getAxisCode() {
+            let axisParam = self.container.getParam( "axis" );
+
+            if ( axisParam.data.axis === 0 ) {
+                return `
+                    vec2 grid;
+                    vec3 n = abs(normal);
+                    if(n.x > 0.57735) {
+                        grid = pos.yz;
+                    } else if (n.y>0.57735){
+                        grid = pos.xz;
+                    }else{
+                        grid = pos.xy;
+                    }
+                `;
+            } else
+                return `vec2 grid = pos.${axisParam.list[ axisParam.data.axis ].toLowerCase()};`;
+        }
+
+        global += `
+            float boxDist_${this.token}(vec2 p, vec2 size, float radius)
+            {
+                size -= vec2(radius);
+                vec2 d = abs(p) - size;
+                return min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - radius;
+            }
+        `;
+
+        // --- Noise Code
+
+        let noiseCode = "float rand = 0.0;";
+
+        if ( this.noiseTerminal.isConnected() ) {
+            let func = this.noiseTerminal.first().onCall( { generatePreview : function() {} } );
+            noiseCode = `
+                float rand = ${func}( vec3( gridCenter, 0 ) ).x;
+
+                ${randomX ? "gridCenter.x -= (0.3 + 0.5 * (rand - 0.5));" : "" }
+                ${randomY ? "gridCenter.y -= (0.3 + 0.5 * (rand - 0.5));" : "" }
+            `;
+        }
+
+        // --- Shape Code
+
+        let shapeCode = `float res = clamp( -boxDist_${this.token}( uv - gridCenter, tileSize, ${round} ) * 100.0 * ${hard}, 0., 1. );`;
+
+        let shapeCount = 0; this.shapeTerminals.forEach( function( t ) { if ( t.isConnected() ) ++shapeCount; } );
+
+        if ( shapeCount ) {
+            shapeCode = "float res = 0.0; rand += clamp( rand + 0.3, 0., 1. );";
+
+            let cCount = 0;
+            for ( let i = 0; i < 3; ++i ) {
+                let t = this.shapeTerminals[i];
+                if ( t.isConnected() )
+                {
+                    let func = t.first().onCall( { generatePreview : function() {} } );
+                    if ( shapeCount === 1 ) {
+                        shapeCode += `res = clamp( -${func}( vec3( uv - gridCenter, pos.z ), normal ).x, 0., 1. );`;
+                    } else
+                    {
+                        if ( cCount ) shapeCode += " else ";
+                        shapeCode += `if ( rand <= ${((cCount +1) * 1.0 / shapeCount).toFixed(3)} )
+                            res = clamp( -${func}( vec3( uv - gridCenter, pos.z ), normal ).x, 0., 1. );
+                        `;
+                    }
+
+                    ++cCount;
+                }
+            }
+        }
+
+        // ---
+
+        global += `
+            float NodeGrid2D_${this.token}( in vec3 pos, in vec3 normal )
+            {
+                pos /= vec3( ${gridSize}, ${gridSize}.x ) * ${scale};
+                ${getAxisCode()}
+
+                vec2 uv = grid;
+
+                grid = floor( grid );
+
+	            vec2 gridCenter = vec2(grid.x + 0.5, grid.y + 0.5 );
+                vec2 tileSize = ${tileSize} * 0.5;
+
+                ${noiseCode}
+                ${shapeCode}
+
+                return res;
+            }
+        `;
+
+        // console.log( global );
+
+        return global;
+    }
+
+    createProperties( data )
+    {
+        this.container=VG.Nodes.ParamContainer( this );
+        var group=this.container.addGroupByName( "basics", "Grid Settings" );
+
+        group.addParam( VG.Nodes.ParamVector2( data, "gridSize", "Grid Size", 1, 1, 0, 10, 3 ) );
+        group.addParam( VG.Nodes.ParamSlider( data, "scale", "Scale", 1, 0.001, 3.00, 0.1, 3, 1 ) );
+        group.addParam( VG.Nodes.ParamVector2( data, "tileSize", "Tile Size", 1, 1, 0, 10, 3 ) );
+
+        group.addParam( VG.Nodes.ParamSlider( data, "round", "Rounding", 0.2, 0.001, 2.00, 0.1, 3 ) );
+        group.addParam( VG.Nodes.ParamSlider( data, "hard", "Hardness", 1.0, 0.001, 1.00, 0.1, 3 ) );
+        group.addParam( VG.Nodes.ParamList( data, "axis", "Grid Axis", 0, ["Dynamic", "XY", "XZ", "YZ"] ) );
+
+        group.addParam( VG.Nodes.ParamDivider( data, "random", "Randomness" ) );
+
+        group.addParam( VG.Nodes.ParamBoolean( data, "randomX", "X Pos", false ) );
+        group.addParam( VG.Nodes.ParamBoolean( data, "randomY", "Y Pos", false ) );
+
+        this.createDefaultProperties( data );
+    }
+};
+
+VG.Nodes.availableNodes.set( "Shapes 2D.Grid", "NodeGrid2D" );
+
+// ----------------------------------------------------------------- VG.Nodes.NodeShapes3D
+
+VG.Nodes.NodeShapes3D = class extends VG.Nodes.Node
+{
+    constructor() {
+        super();
+
+        this.name="Shapes 3D";
+        this.className="NodeShapes3D";
+
+        this.boxD = `
+            float boxDist_${this.token}( vec3 p, vec3 b, float r )
+            {
+                // return length(max(abs(p)-b,0.0))-r;
+	            // vec3 dist = abs(p) - 0.5 * size;
+	            // return max(dist.x, max(dist.y, dist.z));
+
+                //vec3 d = abs(p) - b;
+                //return min(max(d.x,max(d.y,d.z)),0.0) + length(max(d,0.0));
+
+	            vec3 dist = abs(p) - 0.5 * b;
+	            return max(dist.x, max(dist.y, dist.z));
+            }
+        `;
+
+        // --- Outputs
+
+        this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Function, "dist", function( options ) {
+
+/*
+            let addVar = options.getVar( this, "dist", "float" );
+            if ( !addVar.exists || options.override )
+                options.code += "  " + addVar.code + " = " + `NodeShapes3D_${this.token}( pos, normal )` + ";\n";
+
+            if ( !this.rt ) {
+                let prevCode = options.globalCode + options.code + `  material.color = vec3( clamp( - ${addVar.name}, 0., 1.0 ) );\n}`;
+                options.generatePreview( self, prevCode );
+            }
+
+            return `${addVar.name}`;*/
+
+            return `NodeShapes3D_${this.token}`;
+
+        }.bind( this ) ) );
+    }
+
+    getGlobalCode( data )
+    {
+        let shape = this.container.getParamValue( "shape" );
+        let round = this.container.getParamValue( "round" ).toFixed(3);
+        let scale = this.container.getParamValue( "scale" ).toFixed(3);
+        let translate = this.container.getParam( "translate" ).toString();
+        let rotate = this.container.getParamValue( "rotate" ).toFixed(3);
+        let size= this.container.getParamValue( "size" );
+        let repeat = this.container.getParam( "repeat" ).toString();
+
+        let global = "";
+
+        // --- Axis Code
+
+        let self = this;
+        function getAxisCode() {
+            let axisParam = self.container.getParam( "axis" );
+/*
+            if ( axisParam.data.axis === 0 ) {
+                return `
+                    vec2 uv;
+                    vec3 n = abs(normal);
+                    if(n.x > 0.57735) {
+                        uv = pos.yz;
+                    } else if (n.y>0.57735){
+                        uv = pos.xz;
+                    }else{
+                        uv = pos.xy;
+                    }
+                `;
+            } else*/
+                return `vec2 uv = pos.${axisParam.list[ axisParam.data.axis ].toLowerCase()};`;
+        }
+
+        // ---
+
+        if ( shape === 0 ) {
+            // --- Box
+            global += this.boxD;
+            global += `
+                vec4 NodeShapes3D_${this.token}( in vec3 pos )
+                {
+                    vec4 rc = vec4( 0 );
+
+                    vec3 c = ${repeat};
+                    vec3 tp = mod( pos, c ) - 0.5 * c;
+
+                    rc.x = boxDist_${this.token}( tp, vec3( ${size.x.toFixed(3)}, ${size.y.toFixed(3)}, ${size.z.toFixed(3)} ), ${round} );
+                    return rc;
+                }
+            `;
+        }
+
+        console.log( global );
+
+        return global;
+    }
+
+    createProperties( data )
+    {
+        this.container=VG.Nodes.ParamContainer( this );
+        var group=this.container.addGroupByName( "basics", "Shapes 3D Settings" );
+
+        group.addParam( VG.Nodes.ParamList( data, "shape", "Shape", 0, ["Cube", "Hex", "Sphere", "Triangle"] ) );
+        group.addParam( VG.Nodes.ParamVector3( data, "size", "Size", 1.00, 1.00, 1.00, 0, 100, 2 ) );
+        group.addParam( VG.Nodes.ParamSlider( data, "round", "Rounding", 0.2, 0.001, 2.00, 0.1, 3 ) );
+        group.addParam( VG.Nodes.ParamList( data, "axis", "Pattern Axis", 0, ["Dynamic", "XY", "XZ", "YZ"] ) );
+        group.addParam( VG.Nodes.ParamDivider( data, "divider", "Transform" ) );
+        group.addParam( VG.Nodes.ParamSlider( data, "scale", "Scale", 1, 0.001, 10.00, 0.1, 3 ) );
+        group.addParam( VG.Nodes.ParamSlider( data, "rotate", "Rotate", 0, 0.0, 359, 0.1, 2 ) );
+        group.addParam( VG.Nodes.ParamVector2( data, "translate", "Translate", 0.00, 0.00, -100, 100, 2 ) );
+        group.addParam( VG.Nodes.ParamVector3( data, "repeat", "Repeat", 0.00, 0.00, 0.00, 0, 100, 2 ) );
+        // group.addParam( VG.Nodes.ParamNumber( data, "alternate", "Alternate", 0.00, 0, 100, 2 ) );
+
+        this.createDefaultProperties( data );
+    }
+};
+
+// VG.Nodes.availableNodes.set( "Shapes 3D.Shapes 3D", "NodeShapes3D" );
+
+// ----------------------------------------------------------------- VG.Nodes.NodeShape3DMixer
+
+VG.Nodes.NodeShape3DMixer = class extends VG.Nodes.Node
+{
+    constructor() {
+        super();
+
+        this.name="Mix - Shapes 3D";
+        this.className="NodeShape3DMixer";
+
+        // --- Inputs
+
+        this.terminals = [];
+        this.terminals[0] = VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Function, "A" );
+        this.terminals[1] = VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Function, "B" );
+        this.terminals[2] = VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Function, "C" );
+        this.terminals[3] = VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Function, "D" );
+
+        this.terminals.forEach( function( t ) { this.addInput( t ); }.bind( this ) );
+
+        // --- Outputs
+
+        this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "dist", function( options ) {
+
+            let addVar = options.getVar( this, "dist", "float" );
+            if ( !addVar.exists || options.override )
+                options.code += "  " + addVar.code + " = " + `NodeShape3DMixer_${this.token}( pos )` + ";\n";
+
+            if ( !this.rt ) {
+                let prevCode = options.globalCode + options.code + `  material.color = vec3( clamp( ${addVar.name}, 0., 1.0 ) );\n}`;
+                options.generatePreview( self, prevCode );
+            }
+
+            return `${addVar.name}`;
+        }.bind( this ) ) );
+    }
+
+    getGlobalCode( data )
+    {
+        /*
+        let shape = this.container.getParamValue( "shape" );
+        let round = this.container.getParamValue( "round" ).toFixed(3);
+        let scale = this.container.getParamValue( "scale" ).toFixed(3);
+        let translate = this.container.getParam( "translate" ).toString();
+        let rotate = this.container.getParamValue( "rotate" ).toFixed(3);
+        let size= this.container.getParamValue( "size" );
+        let repeat = this.container.getParam( "repeat" ).toString();*/
+
+        let global = "";
+
+        // --- Axis Code
+
+        let self = this;
+        function getAxisCode() {
+            let axisParam = self.container.getParam( "axis" );
+/*
+            if ( axisParam.data.axis === 0 ) {
+                return `
+                    vec2 uv;
+                    vec3 n = abs(normal);
+                    if(n.x > 0.57735) {
+                        uv = pos.yz;
+                    } else if (n.y>0.57735){
+                        uv = pos.xz;
+                    }else{
+                        uv = pos.xy;
+                    }
+                `;
+            } else*/
+                return `vec2 uv = pos.${axisParam.list[ axisParam.data.axis ].toLowerCase()};`;
+        }
+
+        // --- Distance Code, parse the inputs
+
+        let distCode = '';
+
+        for( let i = 0; i < 4; ++ i )
         {
-            pos /= <! SCALE !>;
+            let t = this.terminals[i];
 
-            // vec3 repeat = mix( <! REPEAT !>, vec3(0), step( vec3( 0.999999 ), normal ) );
-            //normal.z = mix( repeat.z, 0.0, step( 0.999999, normal.z ) );
-
-            vec3 repeat = <! REPEAT !>;
-            // if ( normal.x > 0.999999 ) repeat.x = 0.0;
-            // if ( normal.y > 0.999999 ) repeat.y = 0.0;
-            if ( normal.z > 0.999999 ) repeat.z = 0.0;
-
-            vec3 tp = mod( pos, repeat ) - 0.5 * repeat;
-            <! SHAPE !>
-
-            // vec3 d = abs(tp) - <! SIZE !>;
-            // float t = min(max(d.x,max(d.y,d.z)),0.0) + length(max(d,0.0));
-
-            return clamp( t, 0., 1. );
-        }
-    `;
-
-    VG.Nodes.Node.call( this );
-
-    // --- Terminals
-
-    this.addOutput( VG.Nodes.Terminal( VG.Nodes.Terminal.Type.Float, "float", function( options ) {
-        // let param = this.container.getParamValue( "float" );
-        // this.customTitle = param.toFixed( 3 );
-        // return param.toFixed( 3 );
-
-        if ( !this.rt ) {
-            let prevCode = options.globalCode + options.code + "  material.color = vec3( 1.0 - NodeShapes( pos, vec3(1,1,0) ) );\n}";
-            options.generatePreview( self, prevCode );
+            if ( t.isConnected() ) {
+                let funcName = t.first().onCall();
+                distCode += `
+                    temp = ${funcName}( pos - p ).x;
+                    if ( temp < dist ) dist = temp;
+                `;
+            }
         }
 
-        return "1.0 - NodeShapes( pos, normal )";
+        // ---
 
-    }.bind( this ) ) );
+        global += `
+            float NodeShape3DMixer_${this.token}( in vec3 p)
+            {
+                const float MAX_DEPTH = 50.0;
+                float depth = 0.0;
+
+                // p.z += 1.0;
+
+                vec3 startPos = p - mapDir * 3.0;
+                vec3 dir = mapDir;//vec3( 0, 0, -1 );//(startPos + vec3( 0, 0, 1 )) - startPos;
+
+                for (int i = 0; i < 64; i++) {
+                    vec3 pos = startPos + dir * depth;
+                    // float dist = SceneDistance(pos);
+
+                    float dist = MAX_DEPTH, temp;
+
+                    // dist = length(max(abs(pos)-vec3( 0.5, 0.5, 0.5 ), 0.0) ) - 0.1;
+                    ${distCode}
+
+                    if (dist < 0.005) {
+                        return depth;
+                    }
+                    depth += 0.99 * dist;
+                    if (depth >= MAX_DEPTH) {
+                        return MAX_DEPTH;
+                    }
+                }
+                return MAX_DEPTH;
+            }
+        `;
+
+        console.log( global );
+
+        return global;
+    }
+
+    createProperties( data )
+    {
+        this.container=VG.Nodes.ParamContainer( this );
+        var group=this.container.addGroupByName( "basics", "Shapes 3D Settings" );
+
+        // group.addParam( VG.Nodes.ParamList( data, "shape", "Shape", 0, ["Cube", "Hex", "Sphere", "Triangle"] ) );
+/*
+        group.addParam( VG.Nodes.ParamList( data, "shape", "Shape", 0, ["Cube", "Hex", "Sphere", "Triangle"] ) );
+        group.addParam( VG.Nodes.ParamVector3( data, "size", "Size", 1.00, 1.00, 0, 100, 2 ) );
+        group.addParam( VG.Nodes.ParamSlider( data, "round", "Rounding", 0.2, 0.001, 2.00, 0.1, 3 ) );
+        group.addParam( VG.Nodes.ParamList( data, "axis", "Pattern Axis", 0, ["Dynamic", "XY", "XZ", "YZ"] ) );
+        group.addParam( VG.Nodes.ParamDivider( data, "divider", "Transform" ) );
+        group.addParam( VG.Nodes.ParamSlider( data, "scale", "Scale", 1, 0.001, 10.00, 0.1, 3 ) );
+        group.addParam( VG.Nodes.ParamSlider( data, "rotate", "Rotate", 0, 0.0, 359, 0.1, 2 ) );
+        group.addParam( VG.Nodes.ParamVector2( data, "translate", "Translate", 0.00, 0.00, -100, 100, 2 ) );
+        group.addParam( VG.Nodes.ParamVector2( data, "repeat", "Repeat", 0.00, 0.00, 0, 100, 2 ) );
+        // group.addParam( VG.Nodes.ParamNumber( data, "alternate", "Alternate", 0.00, 0, 100, 2 ) );
+*/
+        this.createDefaultProperties( data );
+    }
 };
 
-VG.Nodes.NodeShapes.prototype=VG.Nodes.Node();
-
-VG.Nodes.NodeShapes.prototype.getGlobalCode=function( data )
-{
-    let global = this.global;
-
-    let shape = this.container.getParamValue( "shape" );
-    let round = this.container.getParamValue( "round" ).toFixed(3);
-    let scale = this.container.getParamValue( "scale" ).toFixed(3);
-    let size= this.container.getParam( "size" ).toString();
-    // let size= "vec3( " + this.container.getParamValue( "size" ).x.toFixed(3) + " - " + round +
-        // ", " + this.container.getParamValue( "size" ).y.toFixed(3) + " - " + round +
-        // ", " + this.container.getParamValue( "size" ).z.toFixed(3) + " - " + round + ")";
-    let repeat = this.container.getParam( "repeat" ).toString();
-
-    let t;
-    if ( shape === 0 ) t = "float t = length( max( abs( vec3( tp.x, tp.y, tp.z ) ) - <! SIZE !>, 0.0 ) ) - <! ROUND !> / 10.0;";
-    else t = "float t = length( tp - vec3( 0, 0, 0 ) ) - 0.001;//<! SIZE !>;";
-
-    global = global.replace( /<! SHAPE !>/g, t );
-    global = global.replace( /<! SCALE !>/g, scale );
-    global = global.replace( /<! ROUND !>/g, round );
-    global = global.replace( /<! SIZE !>/g, size );
-    global = global.replace( /<! REPEAT !>/g, repeat );
-
-    // console.log( global );
-
-    return global;
-};
-
-VG.Nodes.NodeShapes.prototype.createProperties=function( data )
-{
-    this.container=VG.Nodes.ParamContainer( this );
-    var group=this.container.addGroupByName( "basics", "Shapes Settings" );
-
-    group.addParam( VG.Nodes.ParamList( data, "shape", "Shape", 0, ["Cube", "Sphere"] ) );
-    group.addParam( VG.Nodes.ParamVector3( data, "size", "Size", 1.00, 0.50, 1.00, 0, 100, 2 ) );
-    group.addParam( VG.Nodes.ParamSlider( data, "round", "Rounding", 0.2, 0.001, 10.00, 0.1, 3 ) );
-    group.addParam( VG.Nodes.ParamDivider( data, "divider", "Transform" ) );
-    group.addParam( VG.Nodes.ParamSlider( data, "scale", "Scale", 1, 0.001, 3.00, 0.1, 3 ) );
-    group.addParam( VG.Nodes.ParamVector3( data, "repeat", "Repeat", 0.00, 0.00, 0.00, -100, 100, 2 ) );
-};
-
-// VG.Nodes.availableNodes.set( "Generator.Shapes", "NodeShapes" );
+// VG.Nodes.availableNodes.set( "Shapes 3D.Mix - Shapes 3D", "NodeShape3DMixer" );

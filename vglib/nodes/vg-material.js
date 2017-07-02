@@ -116,7 +116,7 @@ VG.Nodes.NodeMaterial=function()
                 varName = bumpTerminal.first().onCall( options );
                 options.code += "  float nor_6 = " + varName + ";\n";
 
-                options.code += "  vec3 bumpNormal = normalize( vec3( nor_1 - nor_2, nor_3 - nor_4, nor_5 - nor_6 ) );\n";
+                options.code += "  vec3 bumpNormal = normalize( vec3( nor_2 - nor_1, nor_4 - nor_3, nor_6 - nor_5 ) );\n";
                 options.code += "  normal = ( mix( normal, bumpNormal, " + this.container.getParamValue("normalWeight").toFixed(2) + " ) );\n";
             } else {
                 // --- Pass the physical bump, ignore normal
@@ -166,8 +166,8 @@ VG.Nodes.NodeMaterial.prototype.createProperties=function( data )
     group.addParam( VG.Nodes.ParamColor( data, "specular", "Specular", VG.Core.Color( "#ffffff" ) ) );
 
     group.addParam( VG.Nodes.ParamSlider( data, "specularWeight", "Spec. Weight", 0, 0, 1, 0.1, 2 ) );
+    group.addParam( VG.Nodes.ParamSlider( data, "scale", "Global Scale", 1, 0, 10, 0.1, 2, 1 ) );
     group.addParam( VG.Nodes.ParamSlider( data, "normalWeight", "Normal Weight", 0.2, 0, 1, 0.1, 2 ) );
-    group.addParam( VG.Nodes.ParamSlider( data, "scale", "Global Scale", 1, 0, 10, 0.1, 2 ) );
 
     group=this.container.addGroupByName( "PBR", "PBR Properties / Bump Mapping" );
 
