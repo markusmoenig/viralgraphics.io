@@ -3009,6 +3009,9 @@ VG.UI.ToolTipWidget.prototype.paintWidget=function( canvas )
     if ( this.rect.bottom() > rect.bottom() ) this.rect.y-=this.rect.height;
     if ( this.rect.right() > rect.right() ) this.rect.x-=this.rect.width;
 
+    if ( canvas.twoD )
+        canvas.clearGLRect( this.rect );
+
     canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, this.rect, canvas.style.skin.ToolTip.BorderColor );
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect.shrink( 1, 1, this.contentRect ), canvas.style.skin.ToolTip.BackColor );
 

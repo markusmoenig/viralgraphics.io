@@ -264,6 +264,9 @@ VG.UI.VisualGraphicsStyle.prototype.drawContextMenu=function( widget, canvas )
 {
     canvas.pushFont( this.skin.ContextMenu.Font );
 
+    if ( canvas.twoD )
+        canvas.clearGLRect( widget.rect );
+
     widget.rect.shrink( 1, 1, widget.contentRect );
 
     canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, widget.rect, this.skin.ContextMenu.BorderColor );

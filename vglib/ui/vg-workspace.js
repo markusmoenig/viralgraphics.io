@@ -1956,8 +1956,8 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
             }
 
             object.iconName="_undo.png";
-            object.toolTip="Undo the last user action in the Application.";
-            object.statusTip="Undo the last user action in the Application.";
+            object.toolTip="Undo the last user action in the application.";
+            object.statusTip="Undo the last user action in the application.";
 
             if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.addUndoWidget( object );
             else object.disabled=true;
