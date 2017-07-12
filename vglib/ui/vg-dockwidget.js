@@ -599,7 +599,17 @@ VG.UI.SectionToolBarButton=function( iconName, svgGroupName )
     this.horizontalExpanding=false;
     this.verticalExpanding=false;
 
-    if ( svgGroupName === undefined ) this.iconName=iconName;
+    if ( svgGroupName === undefined || typeof svgGroupName == 'number' ) {
+        if ( !iconName.includes( ".svg" ) )
+            this.iconName=iconName;
+        else {
+            let size = 24;
+            if ( typeof svgGroupName == 'number' ) size = svgGroupName;
+            VG.Utils.svgToImage( { data : VG.Utils.getTextByName( iconName ), width : size, height : size, callback : function( image ) {
+                this.image = image;
+            }.bind( this ) } );
+        }
+    }
     else
     {
         this.svgName=iconName;
