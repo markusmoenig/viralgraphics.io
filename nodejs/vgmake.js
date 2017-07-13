@@ -88,6 +88,24 @@ for ( var i=0; i < images.length; ++i )
     out.images[name]=image;
 }
 
+// --- ImageDirs
+
+var imageDirs=extractTokenList( lines, "imagesDir", "," );
+for ( var i=0; i < imageDirs.length; ++i )
+{
+    var imagePath=path.join( dir, imageDirs[i] );
+    var files=fs.readdirSync( imagePath );
+    for ( var p=0; p < files.length; ++p )
+    {
+        // var image=path.join( dir, imageDirs[i], files[p] );
+        var image=base64Image( path.join( dir, imageDirs[i], files[p] ) );
+        if ( !image || !image.length ) { console.log( "Error: image file \"" + files[p] + "\" not found." ); return; }
+
+        var name=path.basename( files[p] );
+        out.images[name]=image;
+    }
+}
+
 // --- SVGs
 
 out.svg={};

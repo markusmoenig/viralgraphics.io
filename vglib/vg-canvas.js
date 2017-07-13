@@ -1086,6 +1086,18 @@ VG.Canvas.prototype.getTextSize=function( text, size )
     return size;
 };
 
+/**
+ * Returns the height of one line of text using the current canvas font.
+ * @returns {number}
+ */
+
+VG.Canvas.prototype.getLineHeight=function()
+{
+    // var font=this.fonts[this.fontIndex];
+    // return this.font.triFont.height * this.font.scale;
+    return Math.ceil( this.fontHeight * 1.4 );
+};
+
 // --------------------------------------------- VG.Canvas.prototype.wordWrap
 
 VG.Canvas.prototype.wordWrap=function( text, start, width, textLines, dontAppendBreakSymbol )
@@ -1173,18 +1185,6 @@ VG.Canvas.prototype.wordWrap=function( text, start, width, textLines, dontAppend
 };
 
 /**
- * Returns the height of one line of text using the current canvas font.
- * @returns {number}
- */
-
-VG.Canvas.prototype.getLineHeight=function()
-{
-    // var font=this.fonts[this.fontIndex];
-    // return this.font.triFont.height * this.font.scale;
-    return Math.ceil( this.fontHeight * 1.4 );
-};
-
-/**
  * Draws one line of text using the current canvas font aligned inside the given rectangle using the 2D canvas layer. Optionally rotates the font.
  * @returns {string} text - The text to draw.
  * @returns {VG.Core.Rect} rect - The rectangle to align the text into
@@ -1228,7 +1228,7 @@ VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angl
 
     if ( yalign === 1 ) {
         ctx.textBaseline = "middle";
-        y=rect.y + rect.height / 2;
+        y=rect.y + Math.ceil( rect.height / 2 );
     } else
     if ( yalign === 2 ) {
         y=rect.y + rect.height - textSize.height;
