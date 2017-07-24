@@ -49,6 +49,8 @@
 ../vglib/ui/vg-workspace.js
 ../vglib/ui/vg-workspace_dialogs.js
 ../vglib/ui/vg-scroller.js
+../vglib/ui/richtext.js
+../vglib/ui/vg-richtext.js
 
 ../vglib/nodes/vg-controller.js
 ../vglib/nodes/vg-parameter.js

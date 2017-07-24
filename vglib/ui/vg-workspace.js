@@ -2291,5 +2291,16 @@ VG.UI.Workspace.prototype.canBeClosed=function()
     return canBeClosed;
 };
 
+/**
+ * Returns true if running inside Electron
+ * @returns {boolean} true if the application is running inside an Electron instance, false otherwise.
+ */
 
-
+VG.UI.Workspace.prototype.isElectron=function()
+{
+    if (typeof window !== 'undefined' && window.process && window.process.type === 'renderer')
+        return true;
+    if (typeof process !== 'undefined' && process.versions && !!process.versions.electron)
+        return true;
+    return false;
+};
