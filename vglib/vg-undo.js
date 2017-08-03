@@ -528,5 +528,11 @@ VG.Data.Undo.prototype.updateUndoRedoWidgets=function()
         }
     }
 
+    // --- Set the Electron State
+    if ( VG.context.workspace.isElectron() ) {
+        const win = require('electron').remote.getCurrentWindow();
+        win.setDocumentEdited( Boolean( this.undoIsAvailable ) );
+    }
+
     VG.setHostProperty( VG.HostProperty.ProjectChangedState, this.newIsAvailable );
 };

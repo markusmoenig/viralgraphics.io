@@ -177,17 +177,18 @@ function main()
     });
 
     window.addEventListener("beforeunload", function (e) {
-
-        let confirmationMessage;
-
-        if ( VG.context.workspace && !VG.context.workspace.canBeClosed() ) {
+        if ( !VG.context.workspace.isElectron() )
+        {
+            let confirmationMessage;
+            if ( VG.context.workspace && !VG.context.workspace.canBeClosed() ) {
                 confirmationMessage = 'You have unsaved changes. If you leave before saving, your changes will be lost.';
+            }
+
+            if ( !confirmationMessage ) return undefined;
+
+            (e || window.event).returnValue = confirmationMessage; //Gecko + IE
+            return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
         }
-
-        if ( !confirmationMessage ) return undefined;
-
-        (e || window.event).returnValue = confirmationMessage; //Gecko + IE
-        return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
     });
 
     window.addEventListener('focus', function ( event ) {

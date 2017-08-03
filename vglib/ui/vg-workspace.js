@@ -1295,10 +1295,15 @@ VG.UI.Workspace.prototype.modelPerformNew=function()
         VG.setWindowTitle( "", "" );
 };
 
+/**
+ * Called for displaying a file open dialog when running on the web. The dialog is passed a function pointer to modelOpen which
+ * will be called with the project data.
+ */
+
 VG.UI.Workspace.prototype.modelOpenCallback=function()
 {
-    if ( this.dataCollectionForLoadSave || this.callbackForOpen ) {
-
+    if ( this.dataCollectionForLoadSave || this.callbackForOpen )
+    {
         if ( !this.appId ) {
 
             // --- Show Error Message when no appId (either not logged in or app does not yet exist )
@@ -1321,9 +1326,36 @@ VG.UI.Workspace.prototype.modelOpenCallback=function()
     }
 };
 
+/**
+ * Called for displaying a file open dialog when running on the desktop using electron. The dialog is passed a function pointer to modelOpen which
+ * will be called with the project data.
+ */
+
+VG.UI.Workspace.prototype.modelOpenCallback_electron=function()
+{
+    if ( this.dataCollectionForLoadSave || this.callbackForOpen )
+    {
+        const ipc = require('electron').ipcRenderer;
+        ipc.send('open-file-dialog');
+
+        ipc.once( 'selected-project-file', function ( event, paths ) {
+            const fs = require( 'fs' );
+
+            let filePath = paths[0];
+            let data = fs.readFileSync( filePath ).toString();
+
+            VG.context.workspace.modelOpen( filePath, data );
+        });
+    }
+};
+
+/**
+ * Opens the given project data.
+ */
+
 VG.UI.Workspace.prototype.modelOpen=function( name, data )
 {
-    var path=name;
+    let path = name;
     this.projectName=VG.Utils.fileNameFromPath( path, true );
 
     if ( this.dataCollectionForLoadSave )
@@ -1349,50 +1381,35 @@ VG.UI.Workspace.prototype.modelOpen=function( name, data )
     // --- Update the model
     this.dataCollectionForUndoRedo.updateTopLevelBindings();
 
-    this.filePath=path;
+    this.setFilePath( path );
     VG.update();
 };
 
-VG.UI.Workspace.prototype.modelOpenLocalCallback=function()
+/**
+ * Sets the file path of the currently active project file.
+ */
+
+VG.UI.Workspace.prototype.setFilePath=function( filePath )
 {
-    var fileDialog=VG.OpenFileDialog( VG.UI.FileDialog.Project, function( path, data ) {
-        if ( this.dataCollectionForLoadSave )
-        {
-            data=VG.Utils.decompressFromBase64( data );
-
-            // --- Clear Undo History
-            this.dataCollectionForUndoRedo.clearUndo();
-
-            // --- Load the data into the dataCollection
-            var dc=this.dataCollectionForLoadSave;
-            var json=JSON.parse( data );
-
-            for (var key in json ) {
-                if ( dc.hasOwnProperty(key)) {
-                    dc[key]=json[key];
-                }
-            }
-        } else
-        if ( this.callbackForOpen )
-        {
-            this.callbackForOpen( path, data );
-        }
-
-        // --- Update the model
-        this.dataCollectionForUndoRedo.updateTopLevelBindings();
-
-        this.filePath=path;
-        if ( this.platform === VG.HostProperty.PlatformDesktop )
-            VG.setWindowTitle( VG.Utils.fileNameFromPath( this.filePath ), this.filePath );
-
-        VG.update();
-    }.bind( this ) );
+    this.filePath = filePath;
+    if ( this.isElectron() ) {
+        const win = require('electron').remote.getCurrentWindow();
+        win.setRepresentedFilename( filePath );
+    }
 };
+
+/**
+ * Called by the "Save" callback to actually save the provided data based on the given platform and last save operation.
+ * @param {object} data - The data to save
+ */
 
 VG.UI.Workspace.prototype.modelPerformSave=function( data )
 {
-    if ( this.lastSaveType === 2 || this.lastSaveType === undefined )
-    {
+    if ( this.isElectron() ) {
+        const fs = require( 'fs' );
+        fs.writeFile( this.filePath, data, (err) => { if ( err ) console.log( err ); } );
+    } else
+    if ( this.lastSaveType === 2 || this.lastSaveType === undefined ) {
         var params = {};
         params.filename = this.filePath;
         params.content = data;
@@ -1412,15 +1429,17 @@ VG.UI.Workspace.prototype.modelPerformSave=function( data )
     }
 };
 
+/**
+ * The main callback for the "Save" function for both the web and electron.
+ */
+
 VG.UI.Workspace.prototype.modelSaveCallback=function( callback )
 {
     if ( !this.filePath ) return;
 
-    var data;
-
     this.modelNotifyAboutToSaveCallbacks();
     if ( this.dataCollectionForLoadSave ) {
-        data=VG.Utils.compressToBase64( JSON.stringify( this.dataCollectionForLoadSave ) );
+        let data=VG.Utils.compressToBase64( JSON.stringify( this.dataCollectionForLoadSave ) );
         this.modelPerformSave( data );
     } else
     if ( this.callbackForSave ) this.callbackForSave( function( appEncodedData ) {
@@ -1428,109 +1447,87 @@ VG.UI.Workspace.prototype.modelSaveCallback=function( callback )
     }.bind( this ) );
 };
 
+/**
+ * The main callback for the "Save As" function for the web. Shows the web dialog and provides modelSaveAs() as success callback.
+ */
+
 VG.UI.Workspace.prototype.modelSaveAsCallback=function()
 {
     if ( this.dataCollectionForLoadSave || this.callbackForSave ) {
-
-/*
-        if ( !this.appId ) {//|| !this.userName ) {
-
-            // --- Show Error Message when no appId (either not logged in or app does not yet exist )
-
-            var message;
-
-            if ( !this.userName ) message="Please login to Visual Graphics first!";
-            else message="Application was not yet created @ Visual Graphics.\nPlease create the application first.";
-
-            var dialog=VG.UI.StatusDialog( VG.UI.StatusDialog.Type.Error, "Cannot Open File Dialog", message );
-            this.showWindow( dialog );
-            return;
-        }
-*/
-        var saveProject=VG.RemoteSaveProject( this, this.modelSaveAs.bind( this ) );
+        let saveProject = VG.RemoteSaveProject( this, this.modelSaveAs.bind( this ) );
         this.showWindow( saveProject );
     }
 };
 
+/**
+ * The main callback for the "Save As" function for electron. Shows the native dialog and calls modelSaveAs().
+ */
+
+VG.UI.Workspace.prototype.modelSaveAsCallback_electron=function()
+{
+    if ( this.dataCollectionForLoadSave || this.callbackForSave ) {
+        const ipc = require('electron').ipcRenderer;
+        ipc.send('save-project-dialog');
+
+        ipc.once( 'save-project-file', function ( event, filePath ) {
+            let object = { filePath : filePath };
+            VG.context.workspace.modelSaveAs( object );
+        });
+    }
+};
+
+/**
+ * Saves the file data for the "Save As" callback.
+ * @param {object} callbackObject - The object containing information about the destination path, most notably the filePath.
+ * @param {function} rcCallback - Optional callback for showing a success message, only used for cloud storage.
+ * @param {data} - The data to save.
+ */
+
 VG.UI.Workspace.prototype.modelPerformSaveAs=function( callbackObject, rcCallback, data )
 {
-    var path=callbackObject.filePath;
+    let path = callbackObject.filePath;
 
-    this.filePath=path;
-    this.projectName=VG.Utils.fileNameFromPath( path, true );
+    this.setFilePath( path );
+    this.projectName = VG.Utils.fileNameFromPath( path, true );
 
+    if ( this.isElectron() ) {
+        const fs = require( 'fs' );
+        fs.writeFile( path, data, (err) => { if ( err ) console.log( err ); } );
+        this.lastSaveType = 3;
+    } else
     if ( !callbackObject.download ) {
-        this.lastSaveType=1;
+        this.lastSaveType = 1;
         VG.remoteSaveFile( path, data, rcCallback );
-    }
-    else
-    {
+    } else {
         var params = {};
         params.filename = path;
         params.content = data;
 
         VG.downloadRequest("/api/download", params, "POST");
-
-        this.lastSaveType=2;
+        this.lastSaveType = 2;
     }
 };
 
+/**
+ * Generates the data to save and calls modelPerformSaveAs for the actual saving.
+ * @param {object} callbackObject - The object containing information about the destination path, most notably the filePath.
+ * @param {function} rcCallback - Optional callback for showing a success message, only used for cloud storage.
+ */
+
 VG.UI.Workspace.prototype.modelSaveAs=function( callbackObject, rcCallback )
 {
-    var path=callbackObject.filePath;
-
+    let path = callbackObject.filePath;
     if ( !path.length ) return;
 
     this.modelNotifyAboutToSaveCallbacks();
     if ( this.dataCollectionForLoadSave ) {
-        let data=VG.Utils.compressToBase64( JSON.stringify( this.dataCollectionForLoadSave ) );
+        let data = VG.Utils.compressToBase64( JSON.stringify( this.dataCollectionForLoadSave ) );
         this.modelPerformSaveAs( callbackObject, rcCallback, data );
         return data;
     } else if ( this.callbackForSave ) this.callbackForSave( function( data ) {
         this.modelPerformSaveAs( callbackObject, rcCallback, data );
         return data;
     }.bind( this ) );
-};
-
-VG.UI.Workspace.prototype.modelSaveLocalCallback=function()
-{
-    if ( !this.filePath ) return;
-
-    var data;
-
-    this.modelNotifyAboutToSaveCallbacks();
-    if ( this.dataCollectionForLoadSave ) data=VG.Utils.compressToBase64( JSON.stringify( this.dataCollectionForLoadSave ) );
-    else if ( this.callbackForSave ) data=this.callbackForSave();
-
-    var success=VG.saveFile( this.filePath, data );
-
-    if ( this.statusBar ) {
-        if ( success ) this.statusBar.message( VG.Utils.fileNameFromPath( this.filePath ) + " has been saved successfully.", 2000 );
-    }
-};
-
-VG.UI.Workspace.prototype.modelSaveAsLocalCallback=function()
-{
-    var data;
-
-    this.modelNotifyAboutToSaveCallbacks();
-    if ( this.dataCollectionForLoadSave ) data=VG.Utils.compressToBase64( JSON.stringify( this.dataCollectionForLoadSave ) );
-    else if ( this.callbackForSave ) data=this.callbackForSave();
-
-    var path=VG.SaveFileDialog( VG.UI.FileDialog.Project, "name", data );
-
-    if ( path && path.length )
-    {
-        this.filePath=path;
-
-        if ( this.statusBar )
-            this.statusBar.message( VG.Utils.fileNameFromPath( this.filePath ) + " has been saved successfully.", 2000 );
-
-        if ( this.platform === VG.HostProperty.PlatformDesktop )
-            VG.setWindowTitle( this.filePath.replace(/^.*(\\|\/|\:)/, ''), this.filePath );
-
-        if ( this.dataCollectionForUndoRedo.__vgUndo ) this.dataCollectionForUndoRedo.__vgUndo.updateUndoRedoWidgets();
-    }
 };
 
 VG.UI.Workspace.prototype.modelNotifyAboutToSaveCallbacks=function()
@@ -1872,16 +1869,11 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
             // object.svgGroupName="Open";
 
             object.iconName="_open.png";
-            object.statusTip="Open an existing project...";
-            object.toolTip="Open an existing project...";
+            object.statusTip="Open an existing project.";
+            object.toolTip="Open an existing project.";
 
-            if ( this.platform === VG.HostProperty.PlatformWeb ) {
-                object.clicked=this.modelOpenCallback.bind( this );
-                object.toolTip="Open an existing project.";
-            } else {
-                object.toolTip="Open an existing project.";
-                object.clicked=this.modelOpenLocalCallback.bind( this );
-            }
+            if ( !this.isElectron() ) object.clicked = this.modelOpenCallback.bind( this );
+            else object.clicked = this.modelOpenCallback_electron.bind( this );
 
             if ( parent instanceof VG.UI.Menu ) object.shortcut=this.shortcutManager.createDefault( VG.Shortcut.Defaults.Open );
             //else object.disabled=true;
@@ -1906,8 +1898,7 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
             object.statusTip="Save the project.";
             object.toolTip="Save the project.";
 
-            if ( this.platform === VG.HostProperty.PlatformWeb ) object.clicked=this.modelSaveCallback.bind( this );
-            else object.clicked=this.modelSaveLocalCallback.bind( this );
+            object.clicked = this.modelSaveCallback.bind( this );
 
             if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.addSaveWidget( object );
             else object.disabled=true;
@@ -1929,14 +1920,11 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
             // object.svgGroupName="SaveAs";
 
             object.iconName="_saveas.png";
-            object.statusTip="Save the project using a new file name.";
-            object.toolTip="Save the Project using a new file name.";
+            object.statusTip="Save the project under a new file name.";
+            object.toolTip="Save the project under a new file name.";
 
-            if ( this.platform === VG.HostProperty.PlatformWeb ) {
-                object.clicked=this.modelSaveAsCallback.bind( this );
-            } else {
-                object.clicked=this.modelSaveAsLocalCallback.bind( this );
-            }
+            if ( !this.isElectron() ) object.clicked = this.modelSaveAsCallback.bind( this );
+            else object.clicked = this.modelSaveAsCallback_electron.bind( this );
 
             if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.addSaveWidget( object );
             else object.disabled=true;

@@ -1335,7 +1335,6 @@ RichText.Editor = class {
                 }
 
                 this.mouseMove( pos );
-
                 return;
             }
             pos.y += this.vOffset;
@@ -1789,7 +1788,7 @@ RichText.Editor = class {
                             }
 
                             if ( this.selectionEnd.x <= rx + rw ) {
-                                let diff = rx + rw - this.selectionEnd.x;
+                                let diff = rx + rw - this.selectionEnd.x - startX;
                                 rw -= diff;
                             }
 
@@ -1813,7 +1812,7 @@ RichText.Editor = class {
                             let rx = startX + x, rw = textToDrawWidth;
 
                             if ( this.selectionEnd.x <= rx + rw ) {
-                                let diff = rx + rw - this.selectionEnd.x;
+                                let diff = rx + rw - this.selectionEnd.x - startX;
                                 rw -= diff;
                             }
 
