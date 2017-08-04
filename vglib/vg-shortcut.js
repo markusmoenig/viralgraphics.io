@@ -108,6 +108,7 @@ VG.Shortcut.Manager.prototype.createDefault=function( def )
 
         case VG.Shortcut.Defaults.Undo:
         {
+            if ( VG.context.workspace.isElectron() ) return;
             if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac  ) {
                 item.key="Z";
                 item.modifier=VG.Events.KeyCodes.AppleLeft;
@@ -120,6 +121,7 @@ VG.Shortcut.Manager.prototype.createDefault=function( def )
 
         case VG.Shortcut.Defaults.Redo:
         {
+            if ( VG.context.workspace.isElectron() ) return;
             if ( VG.context.workspace.operatingSystem === VG.HostProperty.OSMac ) {
                 item.key="Z";
                 item.modifier=VG.Events.KeyCodes.AppleLeft;

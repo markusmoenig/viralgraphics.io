@@ -1830,7 +1830,7 @@ RichText.Editor = class {
                     ctx.fillStyle = this.linkStyle;
                 }
 
-                if ( lWord.element.font.link && lWord.element === this.hoverElement )
+                if ( lWord.element.font.link && lWord.element === this.hoverElement && this.focus )
                 {
                     // if ( lWord.element.font.link.hoverStyle )
                     //ctx.fillStyle = lWord.element.font.link.hoverStyle;

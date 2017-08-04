@@ -498,7 +498,7 @@ VG.Data.Undo.prototype.addSaveWidget=function( widget )
 
 VG.Data.Undo.prototype.updateUndoRedoWidgets=function()
 {
-    this.undoIsAvailable=this.stepIndex;
+    this.undoIsAvailable = Boolean( this.stepIndex );
     for( var i=0; i < this.undoWidgets.length; ++i ) {
         this.undoWidgets[i].disabled=!this.undoIsAvailable;
     }
@@ -508,12 +508,12 @@ VG.Data.Undo.prototype.updateUndoRedoWidgets=function()
         this.redoWidgets[i].disabled=!this.redoIsAvailable;
     }
 
-    this.newIsAvailable=this.undoIsAvailable;
+    this.newIsAvailable = Boolean( this.undoIsAvailable );
     for( i=0; i < this.newWidgets.length; ++i ) {
         this.newWidgets[i].disabled=false;//!this.newIsAvailable;
     }
 
-    this.saveIsAvailable=this.newIsAvailable;
+    this.saveIsAvailable = this.newIsAvailable;
     for( i=0; i < this.saveWidgets.length; ++i ) {
         if ( this.saveWidgets[i].role === VG.UI.ActionItemRole.Save )
         {
@@ -531,7 +531,35 @@ VG.Data.Undo.prototype.updateUndoRedoWidgets=function()
     // --- Set the Electron State
     if ( VG.context.workspace.isElectron() ) {
         const win = require('electron').remote.getCurrentWindow();
-        win.setDocumentEdited( Boolean( this.undoIsAvailable ) );
+        const Menu = require('electron').remote.Menu;
+
+        // --- Set Document State
+        win.setDocumentEdited( this.undoIsAvailable );
+
+        // --- Set the Undo/Redo Menu Items disabled state
+        const menu = Menu.getApplicationMenu();
+        for( let i =0; i < menu.items.length; ++i ) {
+            let m = menu.items[i];
+
+            if ( m.label === "Edit" ) {
+                m = m.submenu;
+                for ( let k = 0; k < m.items.length; ++k ) {
+                    let item = m.items[k];
+                    if ( item.label === "Undo" ) item.enabled = this.undoIsAvailable;
+                    else
+                    if ( item.label === "Redo" ) item.enabled = this.redoIsAvailable;
+                }
+            } else
+            if ( m.label === "File" ) {
+                m = m.submenu;
+                for ( let k = 0; k < m.items.length; ++k ) {
+                    let item = m.items[k];
+                    if ( item.label === "Save" ) item.enabled = Boolean( this.saveIsAvailable && VG.context.workspace.filePath );
+                    else
+                    if ( item.label === "Save As..." ) item.enabled = Boolean( this.saveIsAvailable );
+                }
+            }
+        }
     }
 
     VG.setHostProperty( VG.HostProperty.ProjectChangedState, this.newIsAvailable );

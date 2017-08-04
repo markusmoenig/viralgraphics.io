@@ -164,6 +164,31 @@ VG.UI.Workspace=function()
     if ( this.operatingSystem === VG.HostProperty.OSMac )
         VG.Events.KeyCodes.CmdCtrl=VG.Events.KeyCodes.AppleLeft;
     else VG.Events.KeyCodes.CmdCtrl=VG.Events.KeyCodes.Ctrl;
+
+    // --- Electron Events
+
+    if ( this.isElectron() ) {
+        const ipc = require('electron').ipcRenderer;
+
+        ipc.on( 'workspace-open', ( event ) => {
+            this.modelOpenCallback_electron();
+        });
+        ipc.on( 'workspace-save', ( event ) => {
+            this.modelSaveCallback();
+        });
+        ipc.on( 'workspace-saveas', ( event ) => {
+            this.modelSaveAsCallback_electron();
+        });
+
+        ipc.on( 'workspace-undo', ( event ) => {
+            if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.undo();
+            VG.update();
+        });
+        ipc.on( 'workspace-redo', ( event ) => {
+            if ( this.dataCollectionForUndoRedo ) this.dataCollectionForUndoRedo.__vgUndo.redo();
+            VG.update();
+        });
+    }
 };
 
 VG.UI.Workspace.prototype=VG.UI.Widget();
@@ -981,6 +1006,9 @@ VG.UI.Workspace.prototype.keyUp=function( keyCode )
 
     if ( this.focusWidget && this.focusWidget.keyUp )
         this.focusWidget.keyUp( keyCode, this.keysDown );
+
+    if ( keyCode === 91 || keyCode === 17 || keyCode === 18 )
+        this.keysDown = [];
 };
 
 VG.UI.Workspace.prototype.textInput=function( text )
