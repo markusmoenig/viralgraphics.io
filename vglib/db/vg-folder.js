@@ -53,7 +53,7 @@ VG.DB.createFolder=function( appId, name, description, publicRead, publicWrite, 
 
 VG.DB.Folder=function( id, callback )
 {
-    /**Creates a new local Folder Object which can be used to read and write content to the remove Folder.
+    /**Creates a new local Folder Object which can be used to read and write content to the remote Folder.
      * @param {string} id - The id of the Folder in the Database.
      * @param {function} Callback - The callback to be called when the operation finishes. The first argument of the callback
      * will be a pointer to the Folder object.
@@ -81,6 +81,15 @@ VG.DB.Folder=function( id, callback )
     }
 };
 
+VG.DB.Folder.prototype.getIndex=function( callback )
+{
+    VG.sendBackendRequest( "/folder/" + this.id + "/content/index", "", function( responseText ) {
+        if ( !responseText ) return;
+        var response=JSON.parse( responseText );
+        if ( callback ) callback( response );
+    }.bind( this ), "GET" );
+};
+
 VG.DB.Folder.prototype.getAllContent=function( callback )
 {
     /**Downloads all content of the Folder.
@@ -92,6 +101,21 @@ VG.DB.Folder.prototype.getAllContent=function( callback )
         var response=JSON.parse( responseText );
         //console.log( responseText );
 
+        if ( response.status === "ok" ) {
+            if ( callback ) callback( response.content );
+        }
+    }.bind( this ), "GET" );
+};
+
+VG.DB.Folder.prototype.getContent=function( id, callback )
+{
+    /**Downloads all content of the Folder.
+     * @param {function} Callback - The callback to be called when the operation finishes. The first argument of the callback
+     * will contain an array of the content of the folder.
+     */
+    VG.sendBackendRequest( "/folder/" + this.id + "/content/" + id, "", function( responseText ) {
+        if ( !responseText ) return;
+        var response=JSON.parse( responseText );
         if ( response.status === "ok" ) {
             if ( callback ) callback( response.content );
         }

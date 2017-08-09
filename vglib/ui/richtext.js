@@ -554,6 +554,13 @@ RichText.ElementManager = class {
             obj.prefixMetrics = RichText.measureText( prefix, el.font.text );
             obj.wordMetrics = RichText.measureText( word, el.font.text );
 
+            if ( el.imageName ) {
+                obj.wordMetrics.width = el.imageWidth;
+                obj.wordMetrics.height = el.imageHeight;
+                obj.wordMetrics.ascent = el.imageHeight;
+                obj.wordMetrics.descent = 0;
+            }
+
             // --- Calculate offset into the elements text
             obj.offset = offset;
             if ( prefix.length ) obj.offset -= prefix.length;
@@ -645,6 +652,7 @@ RichText.Editor = class {
         this._contentChanged = () => {};
         this._gotoUrl = () => {};
         this._scrollBarFunc = () => {};
+        this._getImage = () => {};
 
         this.vOffset = 0;
         this.focus = true;
@@ -716,6 +724,15 @@ RichText.Editor = class {
     }
 
     /**
+     * Sets the callback for the get image event.
+     * @param {function} func - Called when an image needs to be displayed.
+     */
+
+    getImage( func ) {
+        this._getImage = func;
+    }
+
+    /**
      * Deletes the current selection (if any).
      */
 
@@ -783,6 +800,33 @@ RichText.Editor = class {
                 this.cursorLocation.offset = 0;
             }
         }
+    }
+
+    /**
+     * Sets the given image.
+     * @param {string} name - The name of the image.
+     * @param {string} image - The image.
+     */
+
+    setImage( { name, width, height }, sendNotification = true )
+    {
+        let el = this.elements.createElement();
+
+        this.elements.insertElementAt( el, this.cursorLocation );
+        this.elements.current = el;
+
+        el.imageName = name;
+        el.imageWidth = width;
+        el.imageHeight = height;
+        el.text = " ";
+
+        this.elements.rewordElement( el );
+        this.linalyze();
+
+        this.cursorLocation.element = el;
+        this.cursorLocation.offset = 0;
+
+        this._contentChanged( this, "Insert Image" );
     }
 
     /**
@@ -1616,6 +1660,7 @@ RichText.Editor = class {
 
         let d = JSON.parse( data );
         let elements = d.elements;
+        let images = d.images;
 
         for( let i = 0; i < elements.length; ++i )
         {
@@ -1648,7 +1693,6 @@ RichText.Editor = class {
     save( includeCursorLocation )
     {
         let out = {};
-
         out.elements = [];
 
         let saveString = ( string ) => {
@@ -1669,6 +1713,11 @@ RichText.Editor = class {
             let newEl = {};
             newEl.text = saveString( el.text );
             newEl.font = Object.assign( {}, el.font );
+            if ( el.imageName ) {
+                newEl.imageName = el.imageName;
+                newEl.imageWidth = el.imageWidth;
+                newEl.imageHeight = el.imageHeight;
+            }
             out.elements.push( newEl );
         }
 
@@ -1842,7 +1891,20 @@ RichText.Editor = class {
                     }
                 }
 
-                ctx.fillText( textToDraw, screenX, screenY + line.maxAscent );
+                if ( !lWord.element.imageName ) ctx.fillText( textToDraw, screenX, screenY + line.maxAscent );
+                else {
+                    if ( lWord.element.image )
+                        ctx.drawImage( lWord.element.image, screenX, screenY + line.maxAscent - lWord.wordMetrics.height + line.maxDescent );
+                    else {
+                        if ( !lWord.element.imageRequestSend ) this._getImage( lWord.element.imageName, ( image ) => {
+                            Object.defineProperty( lWord.element, "image", { enumerable: false, writable: true } );
+                            lWord.element.image = image;
+                            this._redraw();
+                        } );
+                        lWord.element.imageRequestSend = true;
+                    }
+                }
+
                 x += textToDrawWidth; screenX += textToDrawWidth;
             }
 

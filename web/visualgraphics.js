@@ -77,55 +77,65 @@ function main()
 
     window.addEventListener('cut', function ( event ) {
         VG.context.workspace.modelCutCallback.call( VG.context.workspace, true );
-        if ( event.clipboardData )
-            event.clipboardData.setData('text/plain',  VG.context.workspace.textClipboard );
+        if ( event.clipboardData ) {
+            if ( !VG.context.workspace.isElectron() ) {
+                event.clipboardData.setData('text/plain',  VG.context.workspace.textClipboard );
+            }
+        }
         event.preventDefault();
     });
 
     window.addEventListener('copy', function ( event ) {
         VG.context.workspace.modelCopyCallback.call( VG.context.workspace, true );
-        if ( event.clipboardData )
-            event.clipboardData.setData('text/plain',  VG.context.workspace.textClipboard );
+        if ( event.clipboardData ) {
+            if ( !VG.context.workspace.isElectron() ) {
+                if ( VG.context.workspace.imageClipboard ) {
+                    event.clipboardData.setData('image/png',  VG.compressImage( VG.context.workspace.imageClipboard ) );
+                } else
+                event.clipboardData.setData('text/plain',  VG.context.workspace.textClipboard );
+            }
+        }
         event.preventDefault();
     });
 
     window.addEventListener('paste', function ( event ) {
 
-        var pasteData;
-        if ( event.clipboardData ) {
+        if ( !VG.context.workspace.isElectron() ) {
+            let pasteData;
+            if ( event.clipboardData ) {
 
-            pasteData=event.clipboardData.getData( 'text/plain' );
-            if ( pasteData ) {
-                VG.copyToClipboard( "Text", pasteData );
-            }
-        }
-
-        if ( !pasteData )
-        {
-            var items = (event.clipboardData  || event.originalEvent.clipboardData).items;
-
-            // find pasted image among pasted items
-            var blob = null;
-            for (var i = 0; i < items.length; i++) {
-                if (items[i].type.indexOf("image") === 0) {
-                    blob = items[i].getAsFile();
+                pasteData=event.clipboardData.getData( 'text/plain' );
+                if ( pasteData ) {
+                    VG.copyToClipboard( "Text", pasteData );
                 }
             }
 
-            // load image if there is a pasted image
-            if (blob !== null) {
-                var reader = new FileReader();
-                reader.onload = function(event) {
-                    pasteData=event.target.result;
-                    VG.decompressImageData( pasteData, VG.Core.Image(), function( image ) {
-                        VG.copyToClipboard( "Image", image );
-                        VG.context.workspace.modelPasteCallback.call( VG.context.workspace, true );
-                    } );
-                };
-                reader.readAsDataURL(blob);
+            // if ( !pasteData )
+            {
+                let items = (event.clipboardData  || event.originalEvent.clipboardData).items;
+
+                // find pasted image among pasted items
+                let blob = null;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf("image") === 0) {
+                        blob = items[i].getAsFile();
+                    }
+                }
+
+                // load image if there is a pasted image
+                if (blob !== null) {
+                    let reader = new FileReader();
+                    reader.onload = function(event) {
+                        pasteData=event.target.result;
+                        VG.decompressImageData( pasteData, VG.Core.Image(), function( image ) {
+                            VG.copyToClipboard( "Image", image );
+                            VG.context.workspace.modelPasteCallback.call( VG.context.workspace, true );
+                        } );
+                    };
+                    reader.readAsDataURL(blob);
+                }
             }
         }
-
         VG.context.workspace.modelPasteCallback.call( VG.context.workspace, true );
         event.preventDefault();
     });

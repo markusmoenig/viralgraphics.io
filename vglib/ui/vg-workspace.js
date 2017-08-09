@@ -1576,6 +1576,10 @@ VG.UI.Workspace.prototype.modelCutCallback=function( hostCall )
         this.focusWidget.clipboardCut();
 };
 
+/**
+ * The main copy entry point. Called whenever the user initiates a copy operation.
+ */
+
 VG.UI.Workspace.prototype.modelCopyCallback=function( hostCall )
 {
     if ( hostCall ) this.shortCutHostCall=true;
@@ -1588,13 +1592,37 @@ VG.UI.Workspace.prototype.modelCopyCallback=function( hostCall )
         document.execCommand( "copy" );
 };
 
+/**
+ * The main paste entry point. Called whenever the user initiates a paste operation. When running on Electron, copy the image data from the system clipboard.
+ */
+
 VG.UI.Workspace.prototype.modelPasteCallback=function( hostCall )
 {
     if ( hostCall ) this.shortCutHostCall=true;
     else if ( this.shortCutHostCall ) { this.shortCutHostCall=undefined; return; }
 
-    if ( this.focusWidget && this.focusWidget.clipboardPaste )
-        this.focusWidget.clipboardPaste();
+    if ( this.isElectron() ) {
+        const { clipboard, nativeImage } = require('electron');
+        let formats = clipboard.availableFormats();
+
+        formats.forEach( ( text ) => {
+            if ( text.startsWith( "image/" ) ) {
+                let nativeImage = clipboard.readImage( text );
+                let dataURL = nativeImage.toDataURL();
+                let image = VG.decompressImageData( dataURL, new VG.Core.Image(), ( image ) => {
+                    this.imageClipboard = image;
+                    if ( this.focusWidget && this.focusWidget.clipboardPaste )
+                        this.focusWidget.clipboardPaste();
+                } );
+            } else
+            if ( text === "text/plain" ) {
+                this.textClipboard = clipboard.readText( text );
+            }
+        } );
+    } else {
+        if ( this.focusWidget && this.focusWidget.clipboardPaste )
+            this.focusWidget.clipboardPaste();
+    }
 };
 
 VG.UI.Workspace.prototype.modelDeleteCallback=function()

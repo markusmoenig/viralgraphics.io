@@ -22,7 +22,7 @@
  */
 
 /**
- * Creates an VG.UI.ListWidget. A list widget displays a flat (not nested) list of items.
+ * Creates an VG.UI.IconWidget. An icon widget displays a flat (not nested) list of items.
  *
  * A list widget has to be bound to a path inside a {@link VG.Data.Collection}.
  *

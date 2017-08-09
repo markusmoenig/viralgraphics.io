@@ -61,7 +61,7 @@ VG.UI.RichTextEditor = class extends VG.UI.Widget {
                 // console.trace( richText, type, richText.export( "text") );
                 if ( this.collection && this.path )
                     this.collection.storeDataForPath( { path : this.path, value : saveData, undoText : this.undoText } );
-            }, 2000 );
+            }, 1000 );
         } );
 
         richText.gotoUrl( ( url ) => VG.gotoUrl( url ) );
@@ -180,6 +180,31 @@ VG.UI.RichTextEditor = class extends VG.UI.Widget {
 
     focusOut() {
         this.richText.setFocus( false );
+    }
+
+    checkDragSourceItemId( pos, id ) {
+        if ( id === "Image" )
+        {
+            let p = { x : Math.max( pos.x - this.contentRect.x, 0), y : Math.max( pos.y - this.contentRect.y, 0 ) };
+            let rc = this.richText.getLocationForMousePos( p );
+
+            if ( rc ) {
+                this.richText.cursorLocation = rc;
+                this.richText.elements.current = rc.element;
+
+                this.richText.resetBlinkState();
+                this.richText.selection = false;
+                this.richText._redraw();
+            }
+
+            return true;
+        } else return false;
+    }
+
+    acceptDragSourceItem( pos, id, item ) {
+        if ( id === "Image" ) {
+            this.richText.setImage( { name: item.text, width: item.image.width, height: item.image.height } );
+        }
     }
 
     clipboardCopyIsAvailable()

@@ -867,8 +867,10 @@ VG.UI.VisualGraphicsStyle.prototype.drawIconWidget=function( widget, canvas )
                     this.rect1.shrink( 9 + 8, 9 + 8, this.rect1 );
                 }
 
-                if ( widget.paintItemCallback )
-                    widget.paintItemCallback( canvas, item, this.rect1, isSelected );
+                if ( widget.paintItemCallback ) widget.paintItemCallback( canvas, item, this.rect1, isSelected );
+                else {
+
+                }
 
                 this.rect1.copy( paintRect ); this.rect1.y+=97; //this.rect1.height;
                 canvas.drawTextRect( item.text, this.rect1, this.skin.IconWidget.TextColor, 1, 0 );

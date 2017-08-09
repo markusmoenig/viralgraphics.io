@@ -436,13 +436,25 @@ VG.loadStyleImage=function( style, imageName, callback )
 
 VG.copyToClipboard=function( type, data )
 {
-    if ( type === "Text" ) VG.context.workspace.textClipboard=data;
+    if ( type === "Text" ) VG.context.workspace.textClipboard = data;
     else
-    if ( type === "Image" ) VG.context.workspace.imageClipboard=data;
+    if ( type === "Image" ) VG.context.workspace.imageClipboard = data;
     else
-    if ( type === "Nodes" ) VG.context.workspace.nodesClipboard=data;
+    if ( type === "Nodes" ) VG.context.workspace.nodesClipboard = data;
     else
     VG.context.workspace.textClipboard = data;
+
+    if ( VG.context.workspace.isElectron() )
+    {
+        const { clipboard, nativeImage } = require('electron');
+
+        if ( type === "Image" ) {
+            let imageData = VG.compressImage( data );
+            let image = nativeImage.createFromDataURL( imageData );
+
+            clipboard.writeImage( image );
+        }
+    }
 };
 
 VG.clipboardPasteDataForType=function( type )
