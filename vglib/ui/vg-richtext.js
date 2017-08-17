@@ -186,6 +186,9 @@ VG.UI.RichTextEditor = class extends VG.UI.Widget {
         if ( id === "Image" )
         {
             let p = { x : Math.max( pos.x - this.contentRect.x, 0), y : Math.max( pos.y - this.contentRect.y, 0 ) };
+            if ( this.richText.needsScrollBar && this.richText.scrollBarWidth )
+                p.y += this.richText.vOffset;
+
             let rc = this.richText.getLocationForMousePos( p );
 
             if ( rc ) {

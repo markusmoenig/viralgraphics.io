@@ -111,7 +111,7 @@ VG.UI.Workspace=function()
 
     // --- Current Project Info
 
-    this.projectName="Unnamed";
+    this.projectName="Untitled";
     this.projectExtension=undefined;
 
     // --- Send an isLoggedIn request to the server to check if we are logged in or not.
@@ -217,6 +217,20 @@ Object.defineProperty( VG.UI.Workspace.prototype, "content",
 
             //this.layout.addChild( content, 100 );
             this.recalcLayoutPercentages();
+        }
+    }
+});
+
+Object.defineProperty( VG.UI.Workspace.prototype, "projectName",
+{
+    get: function() {
+        return this._projectName;
+    },
+    set: function( projectName ) {
+        this._projectName = projectName;
+        if ( this.isElectron() ) {
+            const win = require('electron').remote.getCurrentWindow();
+            win.setTitle( projectName );
         }
     }
 });

@@ -1087,7 +1087,6 @@ RichText.Editor = class {
         let remaining = width;
         let line = createLine();
         let lastEL;
-
         let formatTag;
 
         this.elements.clean();
@@ -1128,6 +1127,9 @@ RichText.Editor = class {
 
                 // --- line break
                 if ( word.lineBreak ) {
+
+                    // if ( lastEL.imageName ) line.offset = remaining / 2;
+
                     pushLine( el, line );
                     line = createLine();
                     remaining = width;
@@ -1137,6 +1139,7 @@ RichText.Editor = class {
                         remaining -= line.offset + el.font.formatting.margin[2];
                         line.symbol = "circle";
                     }
+
                     continue;
                 }
 
