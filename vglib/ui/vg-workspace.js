@@ -74,6 +74,7 @@ VG.UI.Workspace=function()
      */
     this.statusBar=null;
     this.layout=VG.UI.SplitLayout();
+    this.layout.name = "MainLayout";
     this.layout.margin.set( 0, 0, 0, 0 );
 
     this.loginButton=VG.UI.ToolBarButton( "Login" );

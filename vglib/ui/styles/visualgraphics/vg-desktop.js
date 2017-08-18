@@ -1892,9 +1892,9 @@ VG.UI.VisualGraphicsStyle.prototype.drawRoundSlider=function( widget, canvas )
     if ( !widget.noValue )
     {
         if ( !widget.editable )
-            canvas.drawTextRect( valueText, VG.Core.Rect( widget.sliderRect.right(), widget.contentRect.y, valueTextSize.width, widget.contentRect.height ), textColor, 2, 1 );
+            canvas.drawTextRect( valueText, VG.Core.Rect( widget.sliderRect.right(), widget.contentRect.y, valueTextSize.width, widget.contentRect.height ).round(), textColor, 2, 1 );
         else {
-            widget.edit.rect.set( widget.sliderRect.right()+10, widget.contentRect.y, valueTextSize.width-10, widget.contentRect.height );
+            widget.edit.rect.set( Math.ceil( widget.sliderRect.right()+10 ), widget.contentRect.y, Math.ceil( valueTextSize.width-10 ), widget.contentRect.height );
             widget.edit.paintWidget( canvas );
         }
     }

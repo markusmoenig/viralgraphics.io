@@ -476,5 +476,9 @@ VG.clipboardPasteDataForType=function( type )
 
 VG.gotoUrl=function( link )
 {
-    window.open( link );
+    if ( !VG.context.workspace.isElectron() ) window.open( link );
+    else {
+        const {shell} = require('electron')
+        shell.openExternal( link );
+    }
 };

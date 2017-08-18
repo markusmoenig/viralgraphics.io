@@ -64,7 +64,7 @@ VG.UI.RichTextEditor = class extends VG.UI.Widget {
             }, 1000 );
         } );
 
-        richText.gotoUrl( ( url ) => VG.gotoUrl( url ) );
+        richText.gotoUrl( ( url ) => { console.log( url ); VG.gotoUrl( url ); } );
 
         richText.setScrollBar( VG.UI.stylePool.current.skin.ScrollBar.Size, ( ctx, rect ) => {
             // ctx.fillStyle = 'darkGray';

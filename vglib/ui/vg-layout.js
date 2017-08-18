@@ -1289,11 +1289,14 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
                     primarySize=child.minimumSize[this.primarySize];
                 }
 
+                availableSpace -= primarySize;
+                if ( availableSpace < 0 ) primarySize += availableSpace;
+
                 primarySize+=item.offset + item.totalOffset;
                 child.rect[this.primarySize]=primarySize;
 
                 child.rect.round();
-                child.paintWidget( canvas );
+                if ( primarySize > 1 ) child.paintWidget( canvas );
                 childRect.set( child.rect );
             }
         } else
@@ -1314,12 +1317,15 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
                 primarySize=child.minimumSize[this.primarySize];
             }
 
+            availableSpace -= primarySize;
+            if ( availableSpace < 0 ) primarySize += availableSpace;
+
             primarySize+=item.offset + item.totalOffset;
             childRect[this.primarySize]=primarySize;
 
             child.rect.set( childRect );
             child.rect.round();
-            child.layout( canvas );
+            if ( primarySize > 1 ) child.layout( canvas );
         }
 
         var drawSplitbar=true;
