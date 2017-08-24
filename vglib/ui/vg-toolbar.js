@@ -943,6 +943,7 @@ VG.UI.ToolSettings=function( label, options )
     this.widget = VG.UI.Widget();
     this.widget.supportsFocus = true;
     this.widget.layout = this.options.layout;
+    this.widget.parent = this;
     this.widget.mouseDown=function( event ) {
         if ( this.open && this.closeButtonRect.contains( event.pos ) ) {
             this.open=false;
@@ -973,27 +974,39 @@ VG.UI.ToolSettings.prototype.mouseDown=function( event )
 {
     var oldOpenState=this.open;
 
+    let closeExisting = () => {
+        if ( VG.context.workspace.overlayWidget && VG.context.workspace.overlayWidget !== this.widget ) {
+            if ( VG.context.workspace.overlayWidget.parent ) {
+                VG.context.workspace.overlayWidget.parent.open = false;
+                VG.context.workspace.overlayWidget.parent.childWidgets = [];
+            }
+            VG.context.workspace.overlayWidget = undefined;
+        }
+    };
+
     if ( this.rect.contains( event.pos) )
     {
         this.mouseIsDown=true;
         this.open=!this.open;
 
-        if ( this.popupRect.contains( event.pos ) )
-            this.open=false;
+        // if ( this.popupRect.contains( event.pos ) )
+            // this.open=false;
     }
 
     if ( this.open && !oldOpenState )
     {
-        if (  this.aboutToShow)
+        if ( this.aboutToShow )
             this.aboutToShow();
 
         if ( this.widget.layout ) {
+            closeExisting();
             VG.context.workspace.overlayWidget = this.widget;
             this.setFocus( this.widget );
         }
     }
 
     if ( this.open ) {
+        closeExisting();
         VG.context.workspace.overlayWidget = this.widget;
         this.childWidgets = [this.widget];
     } else {
@@ -1014,7 +1027,7 @@ VG.UI.ToolSettings.prototype.mouseUp=function( event )
 
 VG.UI.ToolSettings.prototype.paintWidget=function( canvas )
 {
-    this.contentRect.set( this.rect );
+    this.contentRect.copy( this.rect );
 
     if ( this.open && canvas.delayedPaintWidgets.indexOf( this ) === -1 ) canvas.delayedPaintWidgets.unshift( this );
     else VG.UI.stylePool.current.drawToolSettings( this, canvas );

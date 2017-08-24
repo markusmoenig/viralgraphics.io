@@ -532,9 +532,11 @@ VG.Data.Undo.prototype.updateUndoRedoWidgets=function()
     if ( VG.context.workspace.isElectron() ) {
         const win = require('electron').remote.getCurrentWindow();
         const Menu = require('electron').remote.Menu;
+        const ipc = require('electron').ipcRenderer;
 
         // --- Set Document State
         win.setDocumentEdited( this.undoIsAvailable );
+        ipc.send( 'document-state-change', { id: win.id, state: this.undoIsAvailable } );
 
         // --- Set the Undo/Redo Menu Items disabled state
         const menu = Menu.getApplicationMenu();

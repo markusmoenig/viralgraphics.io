@@ -966,6 +966,10 @@ VG.Core.Material=function( color, m, s, r )
     if ( !(this instanceof VG.Core.Material ) ) return VG.Core.Material.creator( arguments );
 
     this.color=color || VG.Core.Color();
+    this.r = this.color.r;
+    this.g = this.color.g;
+    this.b = this.color.b;
+    this.a = this.color.a;
     this.metallic=m || 0;
     this.smoothness=s || 0;
     this.reflectance=r || 0.5;
@@ -981,6 +985,10 @@ VG.Core.Material.prototype.copy=function(material)
     if ( material instanceof VG.Core.Material )
     {
         this.color.copy( material.color );
+        this.r = this.color.r;
+        this.g = this.color.g;
+        this.b = this.color.b;
+        this.a = this.color.a;
         this.metallic = material.metallic;
         this.smoothness = material.smoothness;
         this.reflectance = material.reflectance;
@@ -994,6 +1002,10 @@ VG.Core.Material.prototype.copy=function(material)
 VG.Core.Material.prototype.set=function( color, metallic, smoothness, reflectance )
 {
     this.color.copy( color );
+    this.r = color.r;
+    this.g = color.g;
+    this.b = color.b;
+    this.a = color.a;
     this.metallic = metallic;
     this.smoothness = smoothness;
     this.reflectance = reflectance;

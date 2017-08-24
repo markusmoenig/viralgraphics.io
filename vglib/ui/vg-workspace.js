@@ -1383,10 +1383,12 @@ VG.UI.Workspace.prototype.modelOpenCallback_electron=function()
 
         ipc.once( 'selected-project-file', function ( event, paths ) {
             const fs = require( 'fs' );
+            const { app } = require('electron').remote;
 
             let filePath = paths[0];
             let data = fs.readFileSync( filePath ).toString();
 
+            app.addRecentDocument( filePath );
             VG.context.workspace.modelOpen( filePath, data );
         });
     }

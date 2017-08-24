@@ -1200,6 +1200,9 @@ VG.UI.Label=function( option1, option2 )
     } else {
         this.options = option1 || {};
         var opt = this.options;
+        if ( opt.color ) {
+            this.type = VG.UI.Label.Type.Color;
+        } else
         if ( opt.svgName ) {
             this.type = VG.UI.Label.Type.SVG;
         }
@@ -1217,7 +1220,7 @@ VG.UI.Label=function( option1, option2 )
 
 VG.UI.Label.prototype=VG.UI.Widget();
 
-VG.UI.Label.Type = { "Text" : 0, "Image" : 1, "SVG" : 2 };
+VG.UI.Label.Type = { "Text" : 0, "Image" : 1, "SVG" : 2, "Color" : 3 };
 
 Object.defineProperty( VG.UI.Label.prototype, "margin", {
     get: function() {
@@ -1260,7 +1263,7 @@ VG.UI.Label.prototype.verifySize = function()
     } else
     if ( this.type === VG.UI.Label.Type.SVG )
     {
-        var opt = this.options;
+        let opt = this.options;
         this.svg = VG.Utils.getSVGByName( opt.svgName );
         if ( this.svg ) {
             this.svgGroup = this.svg.getGroupByName( opt.svgGroupName );
@@ -1270,6 +1273,14 @@ VG.UI.Label.prototype.verifySize = function()
 
         this.preferredSize.width = opt.width || 24;
         this.preferredSize.height = opt.height || 24;
+        this.preferredSize.add( this._margin.width, this._margin.height, this.preferredSize );
+    } else
+    if ( this.type === VG.UI.Label.Type.Color )
+    {
+        let opt = this.options;
+        this.preferredSize.width = opt.width || 24;
+        this.preferredSize.height = opt.height || 24;
+        // this.colorFrame = new VG.Core.Color( 128, 128, 128 );
         this.preferredSize.add( this._margin.width, this._margin.height, this.preferredSize );
     }
 };
@@ -1347,6 +1358,14 @@ VG.UI.Label.prototype.paintWidget=function( canvas )
         this.contentRect.copy( this.rect );
         this.contentRect.shrink( this._margin.width, this._margin.height, this.contentRect );
         canvas.drawSVG( this.svg, this.svgGroup, this.contentRect, VG.UI.stylePool.current.skin.Widget.TextColor );
+    } else
+    if ( this.type === VG.UI.Label.Type.Color )
+    {
+        this.contentRect.copy( this.rect );
+        this.contentRect.shrink( this._margin.width, this._margin.height, this.contentRect );
+        // canvas.draw2DShapeGL( VG.Canvas.Shape2D.Rectangle, this.contentRect, this.colorFrame );
+        // this.contentRect.shrink( 1, 1, this.contentRect );
+        canvas.draw2DShapeGL( VG.Canvas.Shape2D.Rectangle, this.contentRect, this.options.color );
     }
     if ( this.disabled ) canvas.setAlpha( 1 );
 };

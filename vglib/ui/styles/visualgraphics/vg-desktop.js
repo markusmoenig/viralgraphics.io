@@ -1742,20 +1742,20 @@ VG.UI.VisualGraphicsStyle.prototype.drawSlider=function( widget, canvas )
     if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
     widget.sliderRect.set( widget.contentRect );
 
-    var leftSpace=Math.ceil( this.skin.Slider.HandleSize / 2 );
+    let leftSpace=Math.ceil( this.skin.Slider.HandleSize / 2 );
     widget.sliderRect.x+=leftSpace;
     widget.sliderRect.width-=leftSpace;
     widget.sliderRect.y=Math.floor( widget.sliderRect.y + (widget.sliderRect.height - this.skin.Slider.BarHeight)/2 );
     widget.sliderRect.height=1;
 
-    var textColor=this.skin.Widget.TextColor;
+    let textColor=this.skin.Widget.TextColor;
 
-    var valueText;
+    let valueText;
 
     if ( ( widget.step % 1 ) === 0 ) valueText=widget.value.toString();
     else valueText=widget.value.toFixed( 2 );
 
-    var valueTextSize;
+    let valueTextSize;
 
     if ( !widget.editable )
         valueTextSize=canvas.getTextSize( valueText );
@@ -1774,7 +1774,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawSlider=function( widget, canvas )
     valueTextSize.width+=10;
     widget.sliderRect.width-=valueTextSize.width;
 
-    var colorObject=this.skin.Slider.BarColors;
+    let colorObject=this.skin.Slider.BarColors;
     if ( widget.hasHoverState || widget.hasFocusState ) colorObject=this.skin.Slider.FocusHoverBarColors;
 
     widget.sliderRect.x+=1; widget.sliderRect.width-=2; widget.sliderRect.y+=1;
@@ -1796,7 +1796,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawSlider=function( widget, canvas )
 
     // --- Draw the handle
 
-    var offset;
+    let offset;
 
     if ( !widget.halfWidthValue )
     {
@@ -1834,12 +1834,12 @@ VG.UI.VisualGraphicsStyle.prototype.drawSlider=function( widget, canvas )
     widget.sliderHandleRect.width=this.skin.Slider.HandleSize;
     widget.sliderHandleRect.height=this.skin.Slider.HandleSize;
 
-    var imageName="slider";
+    let imageName="slider";
     //if ( widget.hasHoverState ) imageName+="_hover";
     if ( widget.hasFocusState ) imageName+="_focus";
     imageName+=".png";
 
-    var image=VG.context.imagePool.getImageByName( imageName );
+    let image=VG.context.imagePool.getImageByName( imageName );
 
     if ( image ) canvas.drawImage( widget.sliderHandleRect, image );
     if ( widget.disabled ) canvas.setAlpha( 1 );
@@ -1852,18 +1852,18 @@ VG.UI.VisualGraphicsStyle.prototype.drawRoundSlider=function( widget, canvas )
     if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
     widget.sliderRect.set( widget.contentRect );
 
-    var skin=this.skin.RoundSlider;
+    let skin=this.skin.RoundSlider;
 
-    var leftSpace=Math.ceil( skin.HandleSize / 2 );
+    let leftSpace=Math.ceil( skin.HandleSize / 2 );
     widget.sliderRect.x+=leftSpace;
     widget.sliderRect.width-=leftSpace;
     widget.sliderRect.y=Math.floor( widget.sliderRect.y + (widget.sliderRect.height - skin.BarHeight)/2 );
     widget.sliderRect.height=1;
 
-    var textColor=this.skin.Widget.TextColor;
+    let textColor=this.skin.Widget.TextColor;
 
-    var valueText;
-    var valueTextSize;
+    let valueText;
+    let valueTextSize;
 
     if ( !widget.noValue )
     {
@@ -1901,7 +1901,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawRoundSlider=function( widget, canvas )
 
     // --- Draw the handle
 
-    var offset;
+    let offset;
 
     if ( !widget.halfWidthValue )
     {
@@ -1934,7 +1934,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawRoundSlider=function( widget, canvas )
         }
     }
 
-    var leftColors=skin.LeftTrackColors, rightColors=skin.RightTrackColors;
+    let leftColors=skin.LeftTrackColors, rightColors=skin.RightTrackColors;
     // if ( widget.hasHoverState || widget.hasFocusState ) colorObject=this.skin.Slider.FocusHoverBarColors;
 
     this.rect1.copy( widget.sliderRect );
@@ -2517,8 +2517,17 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolSettings = function( widget, canvas 
         this.rect1.width = widget.options.width || 435;
         this.rect1.height = widget.options.height || 512;
 
-        if ( this.rect1.bottom() > VG.context.workspace.rect.height )
-            this.rect1.height = VG.context.workspace.rect.height - this.rect1.y - 20;
+        if ( this.rect1.bottom() > VG.context.workspace.rect.height ) {
+            // --- If not enough vertical space, check if widget is in toolbar (< 100 ) and if yes truncate its height, otherwise
+            // move the widget up.
+            if ( this.rect1.y < 100 ) this.rect1.height = VG.context.workspace.rect.height - this.rect1.y - 20;
+            else {
+                // --- If widget has header, just move it up, as it has its own close symbol
+                if ( !widget.options.noHeader ) this.rect1.y -= VG.context.workspace.rect.height - this.rect1.y;
+                else // Otherwise align it on top of the opening symbol
+                this.rect1.y = widget.parent.rect.y - this.rect1.height;// - widget.contentRect.height;
+            }
+        }
 
         if ( widget.options.left || this.rect1.right() > VG.context.workspace.rect.width )
             this.rect1.x -= this.rect1.width - widget.rect.width;
@@ -2529,51 +2538,55 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolSettings = function( widget, canvas 
         if ( canvas.twoD )
             canvas.clearGLRect( this.rect1 );
 
+        // --- Background
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, this.rect1, this.skin.ToolSettings.ContentBorderColor );
         this.rect1.shrink( 1, 1, this.rect1 );
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ToolSettings.ContentBackColor );
         this.rect1.shrink( 1, 1, this.rect1 );
 
-        if ( widget.options.text ) {
-            this.rect2.copy( this.rect1 );
-            this.rect2.y += 23;
-            this.rect2.x = this.rect1.x + 6;
+        if ( !widget.options.noHeader ) {
 
-            canvas.pushFont( this.skin.ToolSettings.HeaderFont );
-            canvas.drawTextRect( widget.options.text, this.rect2, this.skin.Widget.TextColor, 0, 0 );
-            canvas.popFont();
+            if ( widget.options.text ) {
+                this.rect2.copy( this.rect1 );
+                this.rect2.y += 23;
+                this.rect2.x = this.rect1.x + 6;
+
+                canvas.pushFont( this.skin.ToolSettings.HeaderFont );
+                canvas.drawTextRect( widget.options.text, this.rect2, this.skin.Widget.TextColor, 0, 0 );
+                canvas.popFont();
+            }
+
+            // --- Close Button
+
+            this.rect2.x=this.rect1.right() - 10 - 37;
+            this.rect2.y=this.rect1.y + 10;
+            this.rect2.width=this.rect2.height=37;
+
+            widget.closeButtonRect.copy( this.rect2 );
+
+            if ( this.rect2.contains( VG.context.workspace.mousePos ) ) {
+                canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect2, this.skin.ToolSettings.HoverBorderColor );
+                this.rect2.shrink( 1, 1, this.rect2 );
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, this.skin.ToolSettings.HoverBackColor );
+            } else {
+                canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect2, this.skin.ToolSettings.BorderColor );
+                this.rect2.shrink( 1, 1, this.rect2 );
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, this.skin.ToolSettings.BackColor );
+            }
+
+            var svg=VG.Utils.getSVGByName( "glyphs.svg" );
+            if ( svg ) {
+                this.rect2.shrink( 7, 7, this.rect2 );
+
+                svgGroup=svg.getGroupByName( "Close" );
+                canvas.drawSVG( svg, svgGroup, this.rect2, this.skin.Widget.TextColor );
+            }
+
+            // ---
+
+            this.rect1.y+=46;
+            this.rect1.height-=46;
         }
-
-        // --- Close Button
-
-        this.rect2.x=this.rect1.right() - 10 - 37;
-        this.rect2.y=this.rect1.y + 10;
-        this.rect2.width=this.rect2.height=37;
-
-        widget.closeButtonRect.copy( this.rect2 );
-
-        if ( this.rect2.contains( VG.context.workspace.mousePos ) ) {
-            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect2, this.skin.ToolSettings.HoverBorderColor );
-            this.rect2.shrink( 1, 1, this.rect2 );
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, this.skin.ToolSettings.HoverBackColor );
-        } else {
-            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect2, this.skin.ToolSettings.BorderColor );
-            this.rect2.shrink( 1, 1, this.rect2 );
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, this.skin.ToolSettings.BackColor );
-        }
-
-        var svg=VG.Utils.getSVGByName( "glyphs.svg" );
-        if ( svg ) {
-            this.rect2.shrink( 7, 7, this.rect2 );
-
-            svgGroup=svg.getGroupByName( "Close" );
-            canvas.drawSVG( svg, svgGroup, this.rect2, this.skin.Widget.TextColor );
-        }
-
-        // ---
-
-        this.rect1.y+=46;
-        this.rect1.height-=46;
 
         if ( widget.widget.layout ) {
             widget.widget.layout.rect.copy( this.rect1 );

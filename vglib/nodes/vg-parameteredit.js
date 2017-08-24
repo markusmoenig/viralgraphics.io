@@ -457,7 +457,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
             }  else
             if ( param instanceof VG.Nodes.ParamMaterial )
             {
-                param.widget=VG.UI.MaterialEdit();
+                param.widget = new VG.UI.MaterialEdit( { alpha: param.alpha } );
 
                 param.value.set( VG.Core.NormalizedColor( param.data[param.name].r, param.data[param.name].g, param.data[param.name].b, param.data[param.name].a ),
                     param.data[param.name].metallic, param.data[param.name].smoothness, param.data[param.name].reflectance );
@@ -466,18 +466,19 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
                 param.widget.name=param.name;
 
                 param.widget.changed=function( value, continuous, object ) {
-                    if ( continuous ) return;
 
                     var autoKey=this.container.node && this.container.node.graph && this.container.node.graph.autoKeying;
                     var param=this.container.getParam( object.name );
 
-                    if ( autoKey ) this.container.addKeyFrame( this.container.node.graph.time.frames - this.container.node.inTime.frames, param, value );
-                    else {
-                        // --- Send undo packet with old & new value
-                        if (  this.container.node && this.container.node.graph && this.container.node.graph.nodePropertyWillChange )  {
-                            object={ oldValue: { r : param.data[param.name].r, g : param.data[param.name].g, b : param.data[param.name].b, a : param.data[param.name].a },
-                                newValue: { r: value.r, g : value.g, b : value.b, a : value.a } };
-                            this.container.node.graph.nodePropertyWillChange( param, object );
+                    if ( !continuous ) {
+                        if ( autoKey ) this.container.addKeyFrame( this.container.node.graph.time.frames - this.container.node.inTime.frames, param, value );
+                        else {
+                            // --- Send undo packet with old & new value
+                            if (  this.container.node && this.container.node.graph && this.container.node.graph.nodePropertyWillChange )  {
+                                object={ oldValue: { r : param.data[param.name].r, g : param.data[param.name].g, b : param.data[param.name].b, a : param.data[param.name].a },
+                                    newValue: { r: value.r, g : value.g, b : value.b, a : value.a } };
+                                this.container.node.graph.nodePropertyWillChange( param, object );
+                            }
                         }
                     }
 

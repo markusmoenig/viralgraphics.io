@@ -1444,7 +1444,7 @@ VG.UI.LabelLayout.prototype.addChild=function( label, widget )
  * @param {object} child - The child object to add to the layout.
  */
 
-VG.UI.LabelLayout.prototype.addDivider=function( label )
+VG.UI.LabelLayout.prototype.addDivider=function( label = "" )
 {
     let widget = VG.UI.LayoutVSeparator();
     let item=VG.UI.LabelLayoutItem( label, widget );

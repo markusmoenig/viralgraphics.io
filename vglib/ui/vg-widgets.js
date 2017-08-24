@@ -2719,18 +2719,30 @@ VG.UI.ColorWheel.prototype.paintWidget=function(canvas)
 
 // ----------------------------------------------------------------- VG.UI.ColorEdit
 
-VG.UI.ColorEdit=function()
+VG.UI.ColorEdit=function( { alpha = false } = {} )
 {
-    if ( !(this instanceof VG.UI.ColorEdit) ) return new VG.UI.ColorEdit();
+    if ( !(this instanceof VG.UI.ColorEdit) ) return new VG.UI.ColorEdit( { alpha }  );
 
     VG.UI.Widget.call(this);
     this.name="ColorEdit";
 
     this.supportsFocus=true;
-
-    this.setFixedSize( 175, 80 );
-
     this._color=VG.Core.Color();
+
+    this.minimumSize.height = 26;
+    this.maximumSize.height = 26;
+    this.preferredSize.height = 26;
+
+    this.horizontalExpanding=true;
+    this.verticalExpanding=false;
+
+    this.colorEdit=VG.UI.TextLineEdit( this.color.toHex() );
+    this.colorEdit.maximumSize.width=80;
+    this.colorEdit.textChanged=function( value, continous ) {
+        this._color.setHex( value );
+        this.color=this._color;
+        if ( this.changed ) this.changed( this._color, false, this );
+    }.bind( this );
 
     this.colorWheel=VG.UI.ColorWheel();
     this.colorWheel.color=this._color;
@@ -2742,18 +2754,26 @@ VG.UI.ColorEdit=function()
         if ( this.changed ) this.changed( this._color, false, this );
     }.bind( this );
 
-    this.colorEdit=VG.UI.TextLineEdit( this.color.toHex() );
-    this.colorEdit.maximumSize.width=80;
-    this.colorEdit.textChanged=function( value, continous ) {
-        this._color.setHex( value );
-        this.color=this._color;
-        if ( this.changed ) this.changed( this._color, false, this );
-    }.bind( this );
+    if ( alpha ) {
+        this.alphaSlider = new VG.UI.Slider( { min : 0, max : 1, step: 0.01, editable : true, precision: 2 } );
+        this.alphaSlider.toolTip="Alpha (transparency) value of the color.";
+        this.alphaSlider.text="Alpha";
+        this.alphaSlider.changed=function( value, cont ) {
+            this._material.a = value;
+            this.material.color.a = value;
+            this.material=this._material;
+            if ( this.changed ) this.changed( this._material, cont, this );
+        }.bind( this );
+    }
 
-    this.layout=VG.UI.Layout( this.colorEdit, this.colorWheel );
-    this.layout.spacing=5;
-    this.layout.margin.bottom=2;
-    this.layout.margin.top=2;
+    this.colorLayout = VG.UI.LabelLayout( "Color", this.colorWheel );
+    if ( alpha ) this.colorLayout.addChild( this.alphaSlider );
+
+    this.toolSettings = new VG.UI.ToolSettings( VG.UI.Label( { svgName : "icons.svg", svgGroupName : "ToolSettings", color : this._color } ),
+        { layout : this.colorLayout, width: 150, height: 110, noHeader: true, text : "Color Settings" } );
+
+    this.layout = new VG.UI.Layout( this.colorEdit, this.toolSettings );
+    this.layout.margin.left = 0;
 };
 
 VG.UI.ColorEdit.prototype=VG.UI.Widget();
@@ -2800,8 +2820,8 @@ VG.UI.ColorEdit.prototype.bind=function( collection, path )
 {
     this.collection=collection;
     this.path=path;
-     this.colorWheel.bind( collection, path );
-     this.colorEdit.bind( collection, path );
+    this.colorWheel.bind( collection, path );
+    this.colorEdit.bind( collection, path );
 };
 
 VG.UI.ColorEdit.prototype.paintWidget=function(canvas)
@@ -2812,18 +2832,16 @@ VG.UI.ColorEdit.prototype.paintWidget=function(canvas)
 
 // ----------------------------------------------------------------- VG.UI.MaterialEdit
 
-VG.UI.MaterialEdit=function()
+VG.UI.MaterialEdit=function( { alpha = false } = {} )
 {
-    if ( !(this instanceof VG.UI.MaterialEdit) ) return new VG.UI.MaterialEdit();
+    if ( !(this instanceof VG.UI.MaterialEdit) ) return new VG.UI.MaterialEdit( { alpha } );
 
     VG.UI.Widget.call(this);
     this.name="MaterialEdit";
 
-    // this.minimumSize.height=this.maximumSize.height=
-
-    this.minimumSize.height=92;
-    this.preferredSize.height=92;
-
+    this.preferredSize.height = 26;
+    this.minimumSize.height = 26;
+    this.maximumSize.height = 26;
     this.supportsFocus=true;
 
     this.horizontalExpanding=true;
@@ -2834,10 +2852,9 @@ VG.UI.MaterialEdit=function()
     this.colorWheel=VG.UI.ColorWheel();
     this.colorWheel.color=this._material.color;
     this.colorWheel.changed=function( value, continous ) {
-        //if ( continous ) return;
         this._material.copy( value );
         this.material=this._material;
-        if ( this.changed ) this.changed( this._material, false, this );
+        if ( this.changed ) this.changed( this._material, continous, this );
     }.bind( this );
 
     this.colorEdit=VG.UI.TextLineEdit( this._material.color.toHex() );
@@ -2848,48 +2865,54 @@ VG.UI.MaterialEdit=function()
         if ( this.changed ) this.changed( this._material, false, this );
     }.bind( this );
 
-    this.metallicSlider=VG.UI.Slider( 0, 1, 0.01, true, 2 );
-    this.metallicSlider.value=VG.context.material ? VG.context.material.metallic : 0;
+    if ( alpha ) {
+        this.alphaSlider = new VG.UI.Slider( { min : 0, max : 1, step: 0.01, editable : true, precision: 2 } );
+        this.alphaSlider.toolTip="Alpha (transparency) value of the color.";
+        this.alphaSlider.text="Alpha";
+        this.alphaSlider.changed=function( value, cont ) {
+            this._material.a = value;
+            this.material.color.a = value;
+            this.material=this._material;
+            if ( this.changed ) this.changed( this._material, cont, this );
+        }.bind( this );
+    }
+
+    this.metallicSlider = new VG.UI.Slider( { min : 0, max : 1, step: 0.01, editable : true, precision: 2 } );
     this.metallicSlider.toolTip="Metallic property of the Material.";
     this.metallicSlider.text="Metallic";
     this.metallicSlider.changed=function( value, cont ) {
         this._material.metallic=value;
-        if ( this.changed ) this.changed( this._material, false, this );
+        if ( this.changed ) this.changed( this._material, cont, this );
     }.bind( this );
 
-    this.smoothnessSlider=VG.UI.Slider( 0, 1, 0.01, true, 2 );
-    this.smoothnessSlider.value=VG.context.material ? VG.context.material.smoothness : 0;
+    this.smoothnessSlider = new VG.UI.Slider( { min : 0, max : 1, step: 0.01, editable : true, precision: 2 } );
     this.smoothnessSlider.toolTip="Smoothness property of the Material.";
     this.smoothnessSlider.text="Smoothness";
     this.smoothnessSlider.changed=function( value, cont ) {
         this._material.smoothness=value;
-        if ( this.changed ) this.changed( this._material, false, this );
+        if ( this.changed ) this.changed( this._material, cont, this );
     }.bind( this );
 
-    this.reflectanceSlider=VG.UI.Slider( 0, 1, 0.01, true, 2 );
-    this.reflectanceSlider.value=VG.context.material ? VG.context.material.reflectance : 0.5;
+    this.reflectanceSlider = new VG.UI.Slider( { min : 0, max : 1, step: 0.01, editable : true, precision: 2 } );
     this.reflectanceSlider.toolTip="Reflectance property of the Material.";
     this.reflectanceSlider.text="Reflectance";
     this.reflectanceSlider.changed=function( value, cont ) {
         this._material.reflectance=value;
-        if ( this.changed ) this.changed( this._material, false, this );
+        if ( this.changed ) this.changed( this._material, cont, this );
     }.bind( this );
 
-    this.materialLayout=VG.UI.LabelLayout( "M", this.metallicSlider, "S", this.smoothnessSlider, "R", this.reflectanceSlider );
-    this.materialLayout.margin.clear();
-    this.materialLayout.margin.top=8;
-    this.materialLayout.labelAlignment=VG.UI.HAlignment.Centered;
+    this.materialLayout=VG.UI.LabelLayout( "Color", this.colorWheel );
+    if ( alpha ) this.materialLayout.addChild( "Alpha", this.alphaSlider );
+    this.materialLayout.addDivider();
+    this.materialLayout.addChild( "Metallic", this.metallicSlider );
+    this.materialLayout.addChild( "Smoothness", this.smoothnessSlider );
+    this.materialLayout.addChild( "Reflectance", this.reflectanceSlider );
 
+    this.toolSettings = new VG.UI.ToolSettings( VG.UI.Label( { svgName : "icons.svg", svgGroupName : "ToolSettings", color : this._material.color } ),
+        { layout : this.materialLayout, width: 260, height: 224, noHeader: true, text : "Material Settings" } );
 
-    this.colorLayout=VG.UI.Layout( this.colorEdit, this.colorWheel );
-    this.colorLayout.spacing=5;
-    this.colorLayout.margin.bottom=2;
-    this.colorLayout.margin.top=2;
-
-    this.layout=VG.UI.Layout( this.colorLayout, this.materialLayout );//, this.materialLayout );//this.colorEdit, this.colorWheel );
-    this.layout.spacing=5;
-    this.layout.margin.bottom=2;
-    this.layout.margin.top=2;
+    this.layout = new VG.UI.Layout( this.colorEdit, this.toolSettings );
+    this.layout.margin.left = 0;
 };
 
 VG.UI.MaterialEdit.prototype=VG.UI.Widget();
@@ -2903,8 +2926,13 @@ Object.defineProperty(VG.UI.MaterialEdit.prototype, "material",
 
         this._material.copy( material );
 
-        this.colorWheel.color=material.color;
-        this.colorEdit.text=material.color.toHex();
+        this.metallicSlider.value = material.metallic;
+        this.smoothnessSlider.value = material.smoothness;
+        this.reflectanceSlider.value = material.reflectance;
+
+        if ( this.alphaSlider ) this.alphaSlider.value = material.color.a;
+        this.colorWheel.color = material.color;
+        this.colorEdit.text = material.color.toHex();
     }
 });
 
@@ -2924,22 +2952,14 @@ VG.UI.MaterialEdit.prototype.bind=function( collection, path )
 {
     this.collection=collection;
     this.path=path;
-     this.colorWheel.bind( collection, path );
-     this.colorEdit.bind( collection, path );
+    this.colorWheel.bind( collection, path );
+    this.colorEdit.bind( collection, path );
 };
 
 VG.UI.MaterialEdit.prototype.paintWidget=function(canvas)
 {
     this.layout.rect.copy( this.rect );
-
-    this.colorLayout.rect.copy( this.rect );
-    this.colorLayout.width=175;
-    this.colorLayout.layout( canvas );
-
-    this.materialLayout.rect.copy( this.rect );
-    this.materialLayout.rect.x+=175+5;
-    this.materialLayout.rect.width=this.rect.width - 175 - 5;
-    this.materialLayout.layout( canvas );
+    this.layout.layout( canvas );
 };
 
 // ----------------------------------------------------------------- VG.UI.ToolTipWidget

@@ -1534,6 +1534,7 @@ VG.Canvas.prototype.update=function()
 
 VG.Canvas.prototype.clearGLRect=function( rect )
 {
+    this.flush();
     this.rt.setScissor( rect );
     this.rt.clear( true );
     this.rt.setScissor();

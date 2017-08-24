@@ -73,12 +73,12 @@ VG.Nodes.ParamContainer.prototype.addGroup=function( group )
 
 VG.Nodes.ParamContainer.prototype.getGroup=function( name )
 {
-    for( var i=0; i < this.groups.length; ++i )
+    for( let i=0; i < this.groups.length; ++i )
     {
-        var group=this.groups[i];
+        let group=this.groups[i];
 
         if ( group.name === name )
-            return;
+            return group;
     }
 };
 
@@ -458,6 +458,17 @@ VG.Nodes.ParamContainer.prototype.keyParamValue=function( param )
         value.b = prevValue.b + ( (nextValue.b - prevValue.b) / frameDur ) * frameOff;
         value.a = prevValue.a + ( (nextValue.a - prevValue.a) / frameDur ) * frameOff;
     } else
+    if ( param instanceof VG.Nodes.ParamMaterial )
+    {
+        value = {};
+        value.r = prevValue.r + ( (nextValue.r - prevValue.r) / frameDur ) * frameOff;
+        value.g = prevValue.g + ( (nextValue.g - prevValue.g) / frameDur ) * frameOff;
+        value.b = prevValue.b + ( (nextValue.b - prevValue.b) / frameDur ) * frameOff;
+        value.a = prevValue.a + ( (nextValue.a - prevValue.a) / frameDur ) * frameOff;
+        value.metallic = prevValue.metallic + ( (nextValue.metallic - prevValue.metallic) / frameDur ) * frameOff;
+        value.smoothness = prevValue.smoothness + ( (nextValue.smoothness - prevValue.smoothness) / frameDur ) * frameOff;
+        value.reflectance = prevValue.reflectance + ( (nextValue.reflectance - prevValue.reflectance) / frameDur ) * frameOff;
+    } else
     if ( param instanceof VG.Nodes.ParamBoolean )
     {
         value = prevValue;
@@ -596,7 +607,7 @@ VG.Nodes.ParamNumber=function( data, name, text, value, min, max, precision )
     this.precision=precision;
 
     this.data=data;
-    if ( !data[name] ) data[name]=value;
+    if ( data[name] === undefined ) data[name]=value;
 };
 
 VG.Nodes.ParamNumber.prototype=VG.Nodes.Param();
@@ -717,7 +728,7 @@ VG.Nodes.ParamSlider=function( data, name, text, value, min, max, step, precisio
     this.defaultValue=value;
 
     this.data=data;
-    if ( !data[name] ) data[name]=value;
+    if ( data[name] === undefined ) data[name]=value;
 };
 
 VG.Nodes.ParamSlider.prototype=VG.Nodes.Param();
@@ -748,7 +759,7 @@ VG.Nodes.ParamBoolean=function( data, name, text, value )
     this.text=text ? text : "Value";
 
     this.data=data;
-    if ( !data[name] ) data[name]=value;
+    if ( data[name] === undefined ) data[name]=value;
 };
 
 VG.Nodes.ParamBoolean.prototype=VG.Nodes.Param();
@@ -959,7 +970,7 @@ VG.Nodes.ParamVector4.prototype.toString=function()
 
 // ----------------------------------------------------------------- VG.Nodes.ParamColor
 
-VG.Nodes.ParamColor=function( data, name, text, value )
+VG.Nodes.ParamColor=function( data, name, text, value, alpha )
 {
     /**
      * Creates a Color Parameter.<br>
@@ -968,10 +979,11 @@ VG.Nodes.ParamColor=function( data, name, text, value )
      * @param {string} name - The name of the new parameter, the name is used to identify parameters inside a container or group and has to be unique.
      * @param {string} text - The text to display in the user interface for this parameter.
      * @param {string} value - The initial value of this parameter.
+     * @param {boolean} alpha - If the edit show an alpha slider for the color.
      * @constructor
     */
 
-    if ( !(this instanceof VG.Nodes.ParamColor ) ) return new VG.Nodes.ParamColor( data, name, text, value );
+    if ( !(this instanceof VG.Nodes.ParamColor ) ) return new VG.Nodes.ParamColor( data, name, text, value, alpha );
 
     this.name=name ? name : "value";
     this.text=text ? text : "Value";
@@ -988,6 +1000,7 @@ VG.Nodes.ParamColor=function( data, name, text, value )
     this.data=data;
     this.defaultValue=value;
     this.value=VG.Core.Color( value );
+    this.alpha=alpha;
 };
 
 VG.Nodes.ParamColor.prototype=VG.Nodes.Param();
@@ -1006,7 +1019,7 @@ VG.Nodes.ParamColor.prototype.toString3=function()
 
 // ----------------------------------------------------------------- VG.Nodes.ParamColor
 
-VG.Nodes.ParamMaterial=function( data, name, text, value )
+VG.Nodes.ParamMaterial=function( data, name, text, value, alpha )
 {
     /**
      * Creates a Material Parameter.<br>
@@ -1014,11 +1027,12 @@ VG.Nodes.ParamMaterial=function( data, name, text, value )
      * @param {object} data - The object which holds the low level representation of the parameters.
      * @param {string} name - The name of the new parameter, the name is used to identify parameters inside a container or group and has to be unique.
      * @param {string} text - The text to display in the user interface for this parameter.
-     * @param {string} value - The initial value of this parameter.
+     * @param {VG.Core.Material} value - The initial value of this parameter.
+     * @param {boolean} alpha - If the edit for this material should show an alpha slider for the color.
      * @constructor
     */
 
-    if ( !(this instanceof VG.Nodes.ParamMaterial ) ) return new VG.Nodes.ParamMaterial( data, name, text, value );
+    if ( !(this instanceof VG.Nodes.ParamMaterial ) ) return new VG.Nodes.ParamMaterial( data, name, text, value, alpha );
 
     this.name=name ? name : "value";
     this.text=text ? text : "Value";
@@ -1037,6 +1051,7 @@ VG.Nodes.ParamMaterial=function( data, name, text, value )
 
     this.data=data;
     this.value=VG.Core.Material( value.color, value.metallic, value.smoothness, value.reflectance );
+    this.alpha=alpha;
 };
 
 VG.Nodes.ParamColor.prototype=VG.Nodes.Param();
