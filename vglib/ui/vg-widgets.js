@@ -3926,5 +3926,5 @@ VG.UI.DropArea.prototype.paintWidget=function( canvas )
         }
     }
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.contentRect, VG.UI.stylePool.current.skin.TextEdit.BorderColor1 );
+    canvas.draw2DShapeGL( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.contentRect, VG.UI.stylePool.current.skin.TextEdit.BorderColor1 );
 };
