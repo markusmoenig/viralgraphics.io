@@ -1265,10 +1265,11 @@ var VG;
      * @param width {number} Width of <tt>Rendertarget</tt>.
      * @param height {number} Height of <tt>RT</tt>.
      * @param isMain {boolean} Is this main <tt>RT</tt>.
+     * @param amount {amount} Amount of textures to allocate. WebGL2 only. <tt>RT</tt>.
      * @constructor
      */
 
-    VG.RenderTarget = RenderTarget = function (width, height, isMain) {
+    VG.RenderTarget = RenderTarget = function (width, height, isMain, amount) {
         this.id = 0;
         this.renderbufferId = 0;
         this.autoResize = false;
@@ -1284,8 +1285,9 @@ var VG;
         this.floatTexture = false;
 
         this.isMain = (isMain && true) || false;
-        if (isMain)
-            this.autoResize = true;
+        if (isMain) this.autoResize = true;
+
+        this.amount = amount ? amount : 1;
         this.scissorRect = VG.Core.Rect();
         VG.Renderer().addResource(this);
     };
@@ -1303,17 +1305,26 @@ var VG;
         }
         this.id = gl.createFramebuffer();
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.id);
-        this.textureId = gl.createTexture(gl.TEXTURE_2D);
-        gl.bindTexture(gl.TEXTURE_2D, this.textureId);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-        if ( this.floatTexture && VG.WebGL.supportsFloatTextures )
-            gl.texImage2D(gl.TEXTURE_2D, 0, VG.webgl2 ? gl.RGBA32F : gl.RGBA, this.width, this.height, 0, gl.RGBA, gl.FLOAT, null);
-        else
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        this.textures = [];
+
+        for ( let i = 0; i < this.amount; ++i ) {
+            let texId = gl.createTexture( gl.TEXTURE_2D );
+
+            if ( !i ) this.textureId = texId;
+            this.textures[i] = texId;
+
+            gl.bindTexture(gl.TEXTURE_2D, texId);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+            if ( this.floatTexture && VG.WebGL.supportsFloatTextures )
+                gl.texImage2D(gl.TEXTURE_2D, 0, VG.webgl2 ? gl.RGBA32F : gl.RGBA, this.width, this.height, 0, gl.RGBA, gl.FLOAT, null);
+            else
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        }
 
         this.renderbufferId = gl.createRenderbuffer();
         gl.bindRenderbuffer(gl.RENDERBUFFER, this.renderbufferId);
@@ -1325,14 +1336,17 @@ var VG;
             gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, this.width, this.height);
         }
 
-        //attach the texture
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.textureId, 0);
-        if (!this.supportsStencil) {
+        //attach the texture(s)
+        for ( let i = 0; i < this.amount; ++i ) {
+            let texId = this.textures[i];
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl["COLOR_ATTACHMENT" + String( i )], gl.TEXTURE_2D, texId, 0);
+        }
+
+        if (!this.supportsStencil)
             gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.renderbufferId);
-        }
-        else {
+        else
             gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.renderbufferId);
-        }
+
         //revert to previous
         gl.bindRenderbuffer(gl.RENDERBUFFER, null);
         gl.bindTexture(gl.TEXTURE_2D, _state.WebGL.texture[_state.WebGL.activeTexture][gl.TEXTURE_2D] || null);
@@ -1386,7 +1400,10 @@ var VG;
 
         gl.deleteFramebuffer(this.id);
         gl.deleteRenderbuffer(this.rbid);
-        gl.deleteTexture(this.texid);
+
+        for ( let i = 0; i < this.textures.length; ++i ) {
+            gl.deleteTexture( this.textures[i] );
+        }
 
         this.id = 0;
         this.renderbufferId = 0;
