@@ -855,7 +855,7 @@ var VG;
      * @returns {VG.Shader}
      */
 
-    VG.Shader.prototype.setTexture = function (uniform, texture, slot) {
+    VG.Shader.prototype.setTexture = function( uniform, texture, slot, textureSlot ) {
         if (!(uniform instanceof WebGLUniformLocation))
             uniform = this.getUniform(uniform);
         if (slot === undefined)
@@ -865,7 +865,7 @@ var VG;
             _state.WebGL.activeTexture = slot;
         }
         if (texture instanceof VG.RenderTarget) {
-            texture.bindAsTexture();
+            texture.bindAsTexture( textureSlot );
         } else {
             texture.bind();
         }
@@ -1342,10 +1342,49 @@ var VG;
             gl.framebufferTexture2D(gl.FRAMEBUFFER, gl["COLOR_ATTACHMENT" + String( i )], gl.TEXTURE_2D, texId, 0);
         }
 
-        if (!this.supportsStencil)
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.renderbufferId);
-        else
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.renderbufferId);
+        if (!this.supportsStencil) gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.renderbufferId);
+        else gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.renderbufferId);
+
+        if ( this.amount === 2 ) {
+            gl.drawBuffers([
+                gl.COLOR_ATTACHMENT0,
+                gl.COLOR_ATTACHMENT1
+            ]);
+        } else
+        if ( this.amount === 3 ) {
+            gl.drawBuffers([
+                gl.COLOR_ATTACHMENT0,
+                gl.COLOR_ATTACHMENT1,
+                gl.COLOR_ATTACHMENT2
+            ]);
+        } else
+        if ( this.amount === 4 ) {
+            gl.drawBuffers([
+                gl.COLOR_ATTACHMENT0,
+                gl.COLOR_ATTACHMENT1,
+                gl.COLOR_ATTACHMENT2,
+                gl.COLOR_ATTACHMENT3
+            ]);
+        } else
+        if ( this.amount === 5 ) {
+            gl.drawBuffers([
+                gl.COLOR_ATTACHMENT0,
+                gl.COLOR_ATTACHMENT1,
+                gl.COLOR_ATTACHMENT2,
+                gl.COLOR_ATTACHMENT3,
+                gl.COLOR_ATTACHMENT4
+            ]);
+        } else
+        if ( this.amount === 6 ) {
+            gl.drawBuffers([
+                gl.COLOR_ATTACHMENT0,
+                gl.COLOR_ATTACHMENT1,
+                gl.COLOR_ATTACHMENT2,
+                gl.COLOR_ATTACHMENT3,
+                gl.COLOR_ATTACHMENT4,
+                gl.COLOR_ATTACHMENT5
+            ]);
+        }
 
         //revert to previous
         gl.bindRenderbuffer(gl.RENDERBUFFER, null);
@@ -1405,6 +1444,8 @@ var VG;
             gl.deleteTexture( this.textures[i] );
         }
 
+        this.textures = undefined;
+
         this.id = 0;
         this.renderbufferId = 0;
         this.textureId = 0;
@@ -1443,8 +1484,7 @@ var VG;
         if (this.isMain) {
             //force unbind if any
             this.unbind();
-        }
-        else {
+        } else {
             gl.bindFramebuffer(gl.FRAMEBUFFER, this.id);
         }
         return this;
@@ -1477,10 +1517,12 @@ var VG;
      * @returns {VG.RenderTarget}
      */
 
-    VG.RenderTarget.prototype.bindAsTexture = function () {
+    VG.RenderTarget.prototype.bindAsTexture = function ( slot = 0 ) {
         if (this.isMain) throw "You can't bind a main frame buffer as texture";
 
-        gl.bindTexture(gl.TEXTURE_2D, this.textureId);
+        if ( !slot ) gl.bindTexture(gl.TEXTURE_2D, this.textureId);
+        else gl.bindTexture(gl.TEXTURE_2D, this.textures[1] );
+
         return this;
     };
 

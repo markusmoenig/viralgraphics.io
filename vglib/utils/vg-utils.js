@@ -470,21 +470,21 @@ VG.Utils.renderTargetToImage=function( renderTarget, image, wait )
 };
 
 /**
- * Creates a 4 digit token consisting of alphanumeric characters.
+ * Creates a digit token consisting of alphanumeric characters.
  * @returns {string} The created token.
  */
 
-VG.Utils.createToken = function()
+VG.Utils.createToken = function( length = 4 )
 {
    let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
    let token = [], rnd = Math.random, r;
 
-   for (let i = 0; i < 4; i++) {
+   for (let i = 0; i < length; i++) {
         r = 0 | rnd()*chars.length;
         token[i] = chars[r];
    }
    this.token = token.join('');
-}
+};
 
 // --- Great and fast Polygon Triangulation, https://github.com/mapbox/earcut
 

@@ -201,8 +201,9 @@ function main()
         }
     });
 
-    window.addEventListener('focus', function ( event ) {
+    // --- FocusIn / Out
 
+    window.addEventListener('focus', function ( event ) {
         VG.context.workspace.focusIn();
     });
 
@@ -211,12 +212,39 @@ function main()
         VG.context.workspace.focusOut();
     });
 
+    // --- Mouse Events
+
+    VG.pointerEvents = false;
+    if ( window.PointerEvent )
+    {
+        VG.log( "supportsPointerEvents" );
+        VG.pointerEvents = true;
+
+        window.addEventListener('pointerdown', ( event ) => {
+            VG.penPressure = event.pressure;
+            let button = getMouseButton( event );
+            VG.context.workspace.mouseDown( button );
+        });
+
+        window.addEventListener('pointermove', ( event ) => {
+            VG.penPressure = event.pressure;
+            VG.context.workspace.mouseMove( event.clientX, event.clientY );
+        });
+
+        window.addEventListener('pointerup', ( event ) => {
+            VG.penPressure = event.pressure;
+            let button = getMouseButton( event );
+            VG.context.workspace.mouseUp( button );
+        });
+
+    } else {
+        document.onmousedown = mouseDownRelay;
+        document.onmouseup = mouseUpRelay;
+        document.onmousemove = mouseMoveRelay;
+    }
 
     // ---
 
-    canvas.onmousedown = mouseDownRelay;
-    document.onmouseup = mouseUpRelay;
-    document.onmousemove = mouseMoveRelay;
     document.ondblclick = mouseDoubleClickRelay;
     document.oncontextmenu = contextMenuRelay;
 
