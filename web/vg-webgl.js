@@ -1508,7 +1508,11 @@ var VG;
             height = rect.height;
         }
 
-        gl.readPixels(x, this.getRealHeight() - (y + height), width, height, gl.RGBA, gl.UNSIGNED_BYTE, typedArray);
+        if ( this.floatTexture && VG.WebGL.supportsFloatTextures )
+            gl.readPixels(x, this.getRealHeight() - (y + height), width, height, gl.RGBA, gl.FLOAT, typedArray);
+        else
+            gl.readPixels(x, this.getRealHeight() - (y + height), width, height, gl.RGBA, gl.UNSIGNED_BYTE, typedArray);
+
         return this;
     };
 
