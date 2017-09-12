@@ -328,10 +328,10 @@ VG.Nodes.ParamContainer.prototype.addKeyFrame=function( frame, param, value, noU
     // console.log( "addKeyFrame", frame, param, value, noUndo );
     this.node.open=true;
 
-    var data=param.data;
+    let data = param.data;
     if ( !data._keyFrames ) data._keyFrames=[];
 
-    let key=this.keyFrameAt( data, frame ), added=false, obj={};
+    let key = this.keyFrameAt( data, frame ), added=false, obj={};
     if ( !key ) {
         key = { _frame : frame };
 
@@ -348,8 +348,11 @@ VG.Nodes.ParamContainer.prototype.addKeyFrame=function( frame, param, value, noU
 
     if ( !added && !noUndo ) {
         // --- Prepare for Node Change Undo
-        obj.oldValue=JSON.stringify( key );
+        obj.oldValue = JSON.stringify( key );
     }
+
+    // --- If key did not yet exist at the position, make sure its added and not changed
+    if ( key[param.name] === undefined ) added = true;
 
     if ( value instanceof Object )
     {
@@ -366,8 +369,7 @@ VG.Nodes.ParamContainer.prototype.addKeyFrame=function( frame, param, value, noU
     if ( !noUndo ) {
         if ( this.node.graph.nodeKeyAddedCallback && added )
             this.node.graph.nodeKeyAddedCallback( param, data, key );
-        if ( this.node.graph.nodeKeyChangedCallback && !added )
-        {
+        if ( this.node.graph.nodeKeyChangedCallback && !added ) {
             obj.newValue=JSON.stringify( key );
             this.node.graph.nodeKeyChangedCallback( param, data, obj );
         }
@@ -376,26 +378,30 @@ VG.Nodes.ParamContainer.prototype.addKeyFrame=function( frame, param, value, noU
     VG.update();
 };
 
-VG.Nodes.ParamContainer.prototype.removeKeyFrameAt=function( frame, noUndo )
+VG.Nodes.ParamContainer.prototype.removeKeyFrameAt=function( frame, keyName, noUndo )
 {
-    // console.log( "removeKeyFrameAt", frame );
-    var data=this.groups[0].parameters[0].data;
-    let key=this.keyFrameAt( data, frame );
+    let data = this.groups[0].parameters[0].data;
+    let key = this.keyFrameAt( data, frame );
+    let newKey = {};
 
-    var name;
-    for ( var prop in key ) {
-        if ( prop !== "_frame" ) name=prop;
+    let count = 0;
+    for ( let prop in key ) {
+        if ( prop !== "_frame" ) count++;
+        if ( prop !== keyName && prop ) newKey[prop] = key[prop];
     }
 
-    var param=this.getParam( name );
+    let param = this.getParam( keyName );
+    let insertNewKey = count >=  2 ? true : false;
 
     if ( key ) {
+        let keyIndex = data._keyFrames.indexOf( key );
+        data._keyFrames.splice( keyIndex, 1 );
 
-        data._keyFrames.splice( data._keyFrames.indexOf( key ), 1 );
+        if ( insertNewKey ) data._keyFrames.splice( keyIndex, 0, newKey );
 
         if ( !noUndo ) {
             if ( this.node.graph.nodeKeyRemovedCallback )
-                this.node.graph.nodeKeyRemovedCallback( param, data, key );
+                this.node.graph.nodeKeyRemovedCallback( param, data, key, insertNewKey ? newKey : undefined, keyName );
         }
     }
 

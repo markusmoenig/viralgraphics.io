@@ -54,7 +54,7 @@ VG.Data.UndoItem.prototype.addSubItem=function( path, value )
 
 VG.Data.UndoItem.Type={ "ValueBased" : 0, "ControllerBased" : 1 };
 VG.Data.UndoItem.ControllerAction={ "Add" : 0, "Remove" : 1, "MultipleChanges" : 2 , "Move" : 3, "NodeProperty" : 4, "NodeConnect" : 5, "NodeDisconnect" : 6, "NodeKeyAdd" : 7, "NodeKeyRemove" : 8,
-     "NodeKeyChange" : 9, "NodeMarkInOutChange" : 10, "CustomUncompressed" : 101 };
+     "NodeKeyChange" : 9, "NodeKeyMove" : 10, "NodeMarkInOutChange" : 11, "CustomUncompressed" : 101 };
 
 VG.Data.Undo=function()
 {
@@ -301,7 +301,7 @@ VG.Data.Undo.prototype.undo=function()
             // --- Node KeyRemove action.
 
             item=JSON.parse( undo.stringifiedItem );
-            undo.controller.keyAdd( undo.index, undo.path, item, true );
+            undo.controller.keyAdd( undo.index, undo.path, item.key, true );
         } else
         if ( undo.action === VG.Data.UndoItem.ControllerAction.NodeKeyChange )
         {
@@ -309,6 +309,13 @@ VG.Data.Undo.prototype.undo=function()
 
             item=JSON.parse( undo.stringifiedItem );
             undo.controller.keyChange( undo.index, undo.path, JSON.parse( item.oldValue ), true );
+        } else
+        if ( undo.action === VG.Data.UndoItem.ControllerAction.NodeKeyMove )
+        {
+            // --- Node KeyMove action.
+
+            item = JSON.parse( undo.stringifiedItem );
+            undo.controller.keyMove( undo.index, undo.path, item.oldPos, item.newPos, item.name, item.value, true );
         } else
         if ( undo.action === VG.Data.UndoItem.ControllerAction.NodeInOutChange )
         {
@@ -417,10 +424,11 @@ VG.Data.Undo.prototype.redo=function()
         } else
         if ( undo.action === VG.Data.UndoItem.ControllerAction.NodeKeyRemove )
         {
-            // --- Node KeyAdd action.
+            // --- Node KeyRemove action.
 
             item=JSON.parse( undo.stringifiedItem );
-            undo.controller.keyRemove( undo.index, undo.path, item, true );
+            if ( !item.newKey ) undo.controller.keyRemove( undo.index, undo.path, item.key, true );
+            else undo.controller.keyRemove( undo.index, item.keyName, item.key, true );
         } else
         if ( undo.action === VG.Data.UndoItem.ControllerAction.NodeKeyChange )
         {
@@ -428,6 +436,13 @@ VG.Data.Undo.prototype.redo=function()
 
             item=JSON.parse( undo.stringifiedItem );
             undo.controller.keyChange( undo.index, undo.path, JSON.parse( item.newValue ), true );
+        } else
+        if ( undo.action === VG.Data.UndoItem.ControllerAction.NodeKeyMove )
+        {
+            // --- Node KeyMove action.
+
+            item = JSON.parse( undo.stringifiedItem );
+            undo.controller.keyMove( undo.index, undo.path, item.newPos, item.oldPos, item.name, item.value, true );
         } else
         if ( undo.action === VG.Data.UndoItem.ControllerAction.NodeInOutChange )
         {

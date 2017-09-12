@@ -1336,7 +1336,7 @@ VG.UI.DropDownMenu.prototype.valueFromModel=function( value )
     else this.index=value;
 
     if ( this.changed )
-        this.changed( this.index, this.items[this.index], this );
+        this.changed( this.index, this.items[this.index], this, true );
 };
 
 VG.UI.DropDownMenu.prototype.applyNewIndex=function( index )

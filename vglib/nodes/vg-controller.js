@@ -208,7 +208,7 @@ VG.Controller.Node.prototype.keyRemove=function( index, name, data, noUndo )
     var array=this.collection.dataForPath( this.path ).nodes;
     var item=array[index];
 
-    item.node.container.removeKeyFrameAt( data._frame, true );
+    item.node.container.removeKeyFrameAt( data._frame, name, true );
     this.notifyObservers( "changed" );
     return item;
 };
@@ -222,6 +222,21 @@ VG.Controller.Node.prototype.keyChange=function( index, name, data, noUndo )
     let key=item.node.container.keyFrameAt( param.data, data._frame );
 
     for( var prop in data ) key[prop]=data[prop];
+
+    VG.update();
+    this.notifyObservers( "changed" );
+    return item;
+};
+
+VG.Controller.Node.prototype.keyMove=function( index, name, newPos, oldPos, keyName, value, noUndo )
+{
+    let array = this.collection.dataForPath( this.path ).nodes;
+    let item = array[index];
+
+    let param=item.node.container.getParam( name );
+
+    item.node.container.removeKeyFrameAt( oldPos, keyName, true );
+    item.node.container.addKeyFrame( newPos, param, value, true );
 
     VG.update();
     this.notifyObservers( "changed" );
