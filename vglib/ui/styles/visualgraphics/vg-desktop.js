@@ -2051,12 +2051,12 @@ VG.UI.VisualGraphicsStyle.prototype.drawSplitHandle=function( canvas, layout, po
 {
     itemRect[layout.primaryCoord]=pos + childRect[layout.primarySize];
     itemRect[layout.secondaryCoord]=layout.margin[layout.secondaryLesserMargin] + layout.rect[layout.secondaryCoord];
-    itemRect[layout.primarySize]=this.skin.SplitLayout.Size;
+    itemRect[layout.primarySize]=layout.spacing;
     itemRect[layout.secondarySize]=layout.rect[layout.secondarySize] - layout.margin[layout.secondaryLesserMargin] - layout.margin[layout.secondaryGreaterMargin];
 
     this.rect1.copy( itemRect );
 
-    var backColor, borderColor;
+    let backColor, borderColor;
 
     if ( dragging ) {
         backColor=this.skin.SplitLayout.DragBackColor; borderColor=this.skin.SplitLayout.DragBorderColor;
@@ -2067,22 +2067,25 @@ VG.UI.VisualGraphicsStyle.prototype.drawSplitHandle=function( canvas, layout, po
         backColor=this.skin.SplitLayout.BackColor; borderColor=this.skin.SplitLayout.BorderColor;
     }
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, backColor );
-
-    if ( layout.vertical )
-    {
-        var lowerLine=this.rect1.y + this.rect1.height-1;
-        this.rect1.height=1;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, borderColor );
-        this.rect1.y=lowerLine;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, borderColor );
-    } else
-    {
-        var rightLine=this.rect1.x + this.rect1.width-1;
-        this.rect1.width=1;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, borderColor );
-        this.rect1.x=rightLine;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, borderColor );
+    if ( layout.spacing > 1 ) {
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, backColor );
+        if ( layout.vertical )
+        {
+            var lowerLine=this.rect1.y + this.rect1.height-1;
+            this.rect1.height=1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, borderColor );
+            this.rect1.y=lowerLine;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, borderColor );
+        } else
+        {
+            var rightLine=this.rect1.x + this.rect1.width-1;
+            this.rect1.width=1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, borderColor );
+            this.rect1.x=rightLine;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, borderColor );
+        }
+    } else {
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, itemRect, borderColor );//new VG.Core.Color( 93, 93, 93 ) );
     }
 };
 

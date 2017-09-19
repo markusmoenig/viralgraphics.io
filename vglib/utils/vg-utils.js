@@ -483,7 +483,7 @@ VG.Utils.createToken = function( length = 4 )
         r = 0 | rnd()*chars.length;
         token[i] = chars[r];
    }
-   this.token = token.join('');
+   return token.join('');
 };
 
 // --- Great and fast Polygon Triangulation, https://github.com/mapbox/earcut

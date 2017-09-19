@@ -319,7 +319,7 @@ VG.UI.ListWidget.prototype.selectionChanged=function()
 
 VG.UI.ListWidget.prototype.paintWidget=function( canvas )
 {
-    this.spacing=VG.UI.stylePool.current.skin.ListWidget.Spacing;
+    this.spacing = VG.UI.stylePool.current.skin.ListWidget.Spacing;
 
     if ( !this.rect.equals( this.previousRect ) ) this.verified=false;
     VG.UI.stylePool.current.drawListWidget( this, canvas );

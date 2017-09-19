@@ -311,6 +311,11 @@ VG.UI.Layout.prototype.addTitle=function( title )
     this.title=title;
 };
 
+VG.UI.Layout.prototype.clear=function()
+{
+    this.children = [];
+};
+
 /**
  * Inserts a child object at a specific index to this layout.
  * @param {number} index - The index position to insert the child at.
@@ -947,7 +952,7 @@ VG.UI.SplitLayout=function()
     this.dragOp=false;
 
     this.items=[];
-    this.spacing=VG.UI.stylePool.current.skin.SplitLayout.Size;
+    this.spacing = VG.UI.stylePool.current.skin.SplitLayout.Size;
 
     for( var i=0; i < arguments.length; i+=2 )
         this.addChild( arguments[i], arguments[i+1] );
@@ -1131,11 +1136,11 @@ VG.UI.SplitLayout.prototype.mouseMove=function( event )
             if ( (this.dragOpItemIndex + 1 ) < ( this.items.length - 1 ) ) {
                 // --- There is another item to the right / bottom, use it as the greater border.
                 var rightWidget=this.children[this.dragOpItemIndex + 2];
-                greaterBorder=rightWidget.rect[this.primaryCoord] - VG.UI.stylePool.current.skin.SplitLayout.Size - nextWidget.minimumSize[this.primarySize];
+                greaterBorder=rightWidget.rect[this.primaryCoord] - this.spacing - nextWidget.minimumSize[this.primarySize];
             } else {
                 // --- greater border is rect
                 greaterBorder=this.rect[this.primaryCoord] + this.rect[this.primarySize] - this.margin[this.primaryGreaterMargin] -
-                VG.UI.stylePool.current.skin.SplitLayout.Size - nextWidget.minimumSize[this.primarySize];
+                    this.spacing - nextWidget.minimumSize[this.primarySize];
             }
 
             if ( event.pos[this.primaryCoord] > greaterBorder ) {
@@ -1167,7 +1172,7 @@ VG.UI.SplitLayout.prototype.mouseDown=function( event )
 
     var widget=this.children[this.dragOpItemIndex];
 
-    if ( event.pos[this.primaryCoord] > ( widget.rect[this.primaryCoord] + widget.rect[this.primarySize] - VG.UI.stylePool.current.skin.SplitLayout.Size ) ) {
+    if ( event.pos[this.primaryCoord] > ( widget.rect[this.primaryCoord] + widget.rect[this.primarySize] - this.spacing ) ) {
 
         this.dragOp=true;
         this.dragOpStart.set( event.pos );
@@ -1196,13 +1201,13 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
     if ( !this.children.length ) return;
 
     this.rect.round();
-    var sepSize=VG.UI.stylePool.current.skin.SplitLayout.Size;
+    let sepSize = this.spacing;
     this.spacing=sepSize;
 
-    var rect=this.rect;
+    let rect=this.rect;
 
-    var availableSpace=rect[this.primarySize] - this.margin[this.primaryLesserMargin] - this.margin[this.primaryGreaterMargin];
-    var expandingChilds=0, i, child;
+    let availableSpace=rect[this.primarySize] - this.margin[this.primaryLesserMargin] - this.margin[this.primaryGreaterMargin];
+    let expandingChilds=0, i, child;
 
     for( i=0; i < this.children.length; ++i ) {
         child=this.children[i];
@@ -1213,27 +1218,27 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
             } else ++expandingChilds;
         } else
         if ( child.isLayout ) {
-            var childLayoutSize=child.calcSize( canvas );
+            let childLayoutSize=child.calcSize( canvas );
             /*if ( childLayoutSize[this.primarySize] < VG.UI.MaxLayoutSize ) {
                 availableSpace-=childLayoutSize[this.primarySize];
             } else*/ ++expandingChilds;
         }
     }
 
-    var totalSpacing=(expandingChilds-1) * sepSize;
+    let totalSpacing=(expandingChilds-1) * sepSize;
     availableSpace-=totalSpacing;
 
-    var expandingChildSpace=availableSpace;
-    var minAdjustmentCorrection=0;
-    var pos=rect[this.primaryCoord] + this.margin[this.primaryLesserMargin];
+    let expandingChildSpace=availableSpace;
+    let minAdjustmentCorrection=0;
+    let pos=rect[this.primaryCoord] + this.margin[this.primaryLesserMargin];
 
     for( i=0; i < this.children.length; ++i )
     {
         child=this.children[i];
-        var childRect=this.workRect;
+        let childRect=this.workRect;
 
-        var size, item, primarySize;
-        var secondaryCoord, secondarySize;
+        let size, item, primarySize;
+        let secondaryCoord, secondarySize;
 
         if ( child.isWidget )
         {
@@ -1328,7 +1333,7 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
             if ( primarySize > 1 ) child.layout( canvas );
         }
 
-        var drawSplitbar=true;
+        let drawSplitbar=true;
 
         if ( i < (this.children.length-1) ) {
             child=this.children[i];
