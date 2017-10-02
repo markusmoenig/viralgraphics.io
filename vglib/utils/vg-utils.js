@@ -396,7 +396,7 @@ VG.Utils.canvasToImage=function( ctx )
  * @returns An HTML5 image
  */
 
-VG.Utils.imageToHTML5Image=function( image )
+VG.Utils.imageToHTML5Image=function( image, callback )
 {
     let textureCanvas=document.getElementById( 'textureCanvas' );
     let ctx=textureCanvas.getContext('2d');
@@ -407,6 +407,7 @@ VG.Utils.imageToHTML5Image=function( image )
     ctx.putImageData( new ImageData( new Uint8ClampedArray( image.data ), image.width, image.height ), 0, 0);
 
     let imageEl = new Image();
+    if ( callback) imageEl.onload = () => callback( imageEl );
     imageEl.src = textureCanvas.toDataURL();
     return imageEl;
 };
@@ -417,10 +418,10 @@ VG.Utils.imageToHTML5Image=function( image )
  * @returns An HTML5 image
  */
 
-VG.Utils.renderTargetToHTML5Image=function( renderTarget )
+VG.Utils.renderTargetToHTML5Image=function( renderTarget, callback )
 {
     let image = VG.Utils.renderTargetToImage( renderTarget, undefined, true );
-    return VG.Utils.imageToHTML5Image( image );
+    return VG.Utils.imageToHTML5Image( image, callback );
 };
 
 VG.Utils.svgToImage=function( { data, width, height, callback } = {} )
@@ -456,8 +457,10 @@ VG.Utils.renderTargetToImage=function( renderTarget, image, wait )
     var frameW = renderTarget.getRealWidth();
     var frameH = renderTarget.getRealHeight();
 
-    if ( !image )
-        image = new VG.Core.Image( width, height );
+    if ( !image ) {
+        if ( !renderTarget.floatTexture ) image = new VG.Core.Image( width, height );
+        else image = new VG.Core.Float32Image( width, height );
+    }
 
     renderTarget.bind();
     renderTarget.fillPixelBuffer( { x : 0, y : 0, width : frameW, height : frameH }, image.data );

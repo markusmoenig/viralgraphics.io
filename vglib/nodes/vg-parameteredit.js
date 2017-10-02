@@ -46,10 +46,10 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
     for( var i=0; i < this.container.groups.length; ++i )
     {
         var group=this.container.groups[i];
-
         if ( !group.visible ) continue;
 
-        group.layout=VG.UI.LabelLayout();
+        group.layout = VG.UI.LabelLayout();
+        if ( group.disabled ) group.layout.disabled = true;
 
         if ( tabs ) this.containerWidget.addItem( group.text, group.layout );
         else this.containerWidget.addItem( group.text, group.layout, group.open );
