@@ -65,6 +65,7 @@ MZMaterialListWidget=function( { dc, startRender, materialEdit, editCallback } =
             material.name = data.name;
             material.category = data.category;
             material.layers = data.layers;
+            material.materialData = data.materialData;            
             material.connections = data.connections;
 
             this.listWidget.addItem( CommunityListWidget.ItemType.CommunityItem, material, true );
@@ -105,6 +106,7 @@ MZMaterialListWidget.prototype.addAdminSpecific=function()
                 material.name = data.name;
                 material.category = data.category;
                 material.layers = data.layers;
+                material.materialData = data.materialData;
                 material.connections = data.connections;
 
                 this.listWidget.addItem( CommunityListWidget.ItemType.UploadItem, material, true );
