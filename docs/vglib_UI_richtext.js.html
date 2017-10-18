@@ -1,0 +1,2186 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>ViralGraphics.io Source: vglib/UI/richtext.js</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.spacelab.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">ViralGraphics.io</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="namespaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Namespaces<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="VG.html">VG</a></li><li><a href="VG.context.html">VG.context</a></li><li><a href="VG.Controller.html">VG.Controller</a></li><li><a href="VG.Core.html">VG.Core</a></li><li><a href="VG.Data.html">VG.Data</a></li><li><a href="VG.Events.html">VG.Events</a></li><li><a href="VG.Font.html">VG.Font</a></li><li><a href="VG.Import.html">VG.Import</a></li><li><a href="VG.Math.html">VG.Math</a></li><li><a href="VG.Render.html">VG.Render</a></li><li><a href="VG.UI.html">VG.UI</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="RichText.Editor.html">RichText.Editor</a></li><li><a href="RichText.ElementManager.html">RichText.ElementManager</a></li><li><a href="VG.Canvas.html">VG.Canvas</a></li><li><a href="VG.Controller.Array.html">VG.Controller.Array</a></li><li><a href="VG.Controller.Base.html">VG.Controller.Base</a></li><li><a href="VG.Controller.Tree.html">VG.Controller.Tree</a></li><li><a href="VG.Core.Color.html">VG.Core.Color</a></li><li><a href="VG.Core.Image.html">VG.Core.Image</a></li><li><a href="VG.Core.ImagePool.html">VG.Core.ImagePool</a></li><li><a href="VG.Core.Margin.html">VG.Core.Margin</a></li><li><a href="VG.Core.Material.html">VG.Core.Material</a></li><li><a href="VG.Core.NormalizedColor.html">VG.Core.NormalizedColor</a></li><li><a href="VG.Core.Point.html">VG.Core.Point</a></li><li><a href="VG.Core.Rect.html">VG.Core.Rect</a></li><li><a href="VG.Core.Size.html">VG.Core.Size</a></li><li><a href="VG.Core.Timer.html">VG.Core.Timer</a></li><li><a href="VG.Core.TypedArray.html">VG.Core.TypedArray</a></li><li><a href="VG.Data.Base.html">VG.Data.Base</a></li><li><a href="VG.Data.Collection.html">VG.Data.Collection</a></li><li><a href="VG.Data.UndoItem.html">VG.Data.UndoItem</a></li><li><a href="VG.Events.MouseDownEvent.html">VG.Events.MouseDownEvent</a></li><li><a href="VG.Events.MouseMoveEvent.html">VG.Events.MouseMoveEvent</a></li><li><a href="VG.Events.MouseUpEvent.html">VG.Events.MouseUpEvent</a></li><li><a href="VG.Font.Font.html">VG.Font.Font</a></li><li><a href="VG.Font.Manager.html">VG.Font.Manager</a></li><li><a href="VG.GPUBuffer.html">VG.GPUBuffer</a></li><li><a href="VG.Math.Aabb.html">VG.Math.Aabb</a></li><li><a href="VG.Math.Matrix4.html">VG.Math.Matrix4</a></li><li><a href="VG.Math.Quat.html">VG.Math.Quat</a></li><li><a href="VG.Math.Vector2.html">VG.Math.Vector2</a></li><li><a href="VG.Math.Vector3.html">VG.Math.Vector3</a></li><li><a href="VG.Math.Vector4.html">VG.Math.Vector4</a></li><li><a href="VG.Render.BoxMesh.html">VG.Render.BoxMesh</a></li><li><a href="VG.Render.Camera.html">VG.Render.Camera</a></li><li><a href="VG.Render.Context.html">VG.Render.Context</a></li><li><a href="VG.Render.Material.html">VG.Render.Material</a></li><li><a href="VG.Render.Mesh.html">VG.Render.Mesh</a></li><li><a href="VG.Render.MtlMaterial.html">VG.Render.MtlMaterial</a></li><li><a href="VG.Render.OrbitCamera.html">VG.Render.OrbitCamera</a></li><li><a href="VG.Render.Pipeline.html">VG.Render.Pipeline</a></li><li><a href="VG.Render.SceneManager.html">VG.Render.SceneManager</a></li><li><a href="VG.Render.SceneNode.html">VG.Render.SceneNode</a></li><li><a href="VG.Render.SimpleMaterial.html">VG.Render.SimpleMaterial</a></li><li><a href="VG.Render.SphereMesh.html">VG.Render.SphereMesh</a></li><li><a href="VG.RenderTarget.html">VG.RenderTarget</a></li><li><a href="VG.Shader.html">VG.Shader</a></li><li><a href="VG.Texture.html">VG.Texture</a></li><li><a href="VG.UI.Button.html">VG.UI.Button</a></li><li><a href="VG.UI.CheckBox.html">VG.UI.CheckBox</a></li><li><a href="VG.UI.CodeEdit.html">VG.UI.CodeEdit</a></li><li><a href="VG.UI.ColorWheel.html">VG.UI.ColorWheel</a></li><li><a href="VG.UI.Dialog.html">VG.UI.Dialog</a></li><li><a href="VG.UI.DockWidget.html">VG.UI.DockWidget</a></li><li><a href="VG.UI.DropArea.html">VG.UI.DropArea</a></li><li><a href="VG.UI.DropDownMenu.html">VG.UI.DropDownMenu</a></li><li><a href="VG.UI.HtmlView.html">VG.UI.HtmlView</a></li><li><a href="VG.UI.HtmlWidget.html">VG.UI.HtmlWidget</a></li><li><a href="VG.UI.IconWidget.html">VG.UI.IconWidget</a></li><li><a href="VG.UI.Image.html">VG.UI.Image</a></li><li><a href="VG.UI.Label.html">VG.UI.Label</a></li><li><a href="VG.UI.LabelLayout.html">VG.UI.LabelLayout</a></li><li><a href="VG.UI.Layout.html">VG.UI.Layout</a></li><li><a href="VG.UI.ListWidget.html">VG.UI.ListWidget</a></li><li><a href="VG.UI.ProgressDialog.html">VG.UI.ProgressDialog</a></li><li><a href="VG.UI.RenderWidget.html">VG.UI.RenderWidget</a></li><li><a href="VG.UI.SectionBar.html">VG.UI.SectionBar</a></li><li><a href="VG.UI.SectionBarButton.html">VG.UI.SectionBarButton</a></li><li><a href="VG.UI.SectionBarSeparator.html">VG.UI.SectionBarSeparator</a></li><li><a href="VG.UI.SectionToolBar.html">VG.UI.SectionToolBar</a></li><li><a href="VG.UI.Slider.html">VG.UI.Slider</a></li><li><a href="VG.UI.SplitLayout.html">VG.UI.SplitLayout</a></li><li><a href="VG.UI.StackedLayout.html">VG.UI.StackedLayout</a></li><li><a href="VG.UI.StatusBar.html">VG.UI.StatusBar</a></li><li><a href="VG.UI.StatusDialog.html">VG.UI.StatusDialog</a></li><li><a href="VG.UI.TabWidget.html">VG.UI.TabWidget</a></li><li><a href="VG.UI.TextEdit.html">VG.UI.TextEdit</a></li><li><a href="VG.UI.TextLineEdit.html">VG.UI.TextLineEdit</a></li><li><a href="VG.UI.TreeWidget.html">VG.UI.TreeWidget</a></li><li><a href="VG.UI.Widget.html">VG.UI.Widget</a></li><li><a href="VG.UI.Window.html">VG.UI.Window</a></li><li><a href="VG.UI.Workspace.html">VG.UI.Workspace</a></li><li><a href="VG.WebGL.html">VG.WebGL</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="tutorial-Data Model.html">Data Model</a></li><li><a href="tutorial-Layouts.html">Layouts</a></li><li><a href="tutorial-Widget Basics.html">Widget Basics</a></li><li><a href="tutorial-Workspace.html">Workspace</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="global.html#false">false</a></li><li><a href="global.html#null">null</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			
+
+		<h1 class="page-title">Source: vglib/UI/richtext.js</h1>
+    
+<section>
+    <article>
+        <pre
+            class="sunlight-highlight-javascript linenums">/*
+ * Copyright (c) 2017 Markus Moenig &lt;markus@moenig.tv>
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+RichText = {};
+
+/**
+ * Measures the given text.
+ * @param {string} text
+ * @param {string} fontText - The font
+ * @returns {object} metrics
+ */
+
+RichText.measureText = function( text, fontText )
+{
+    // Based on https://github.com/ryansturmer/em.js/blob/master/em.js
+
+    let metrics = {};
+
+    this.ctx.font = fontText;
+    this.ctx.textBaseline = 'top';
+    metrics.width = this.ctx.measureText( text ).width;
+
+    let textSpan = document.createElement('span');
+    textSpan.innerHTML = text;
+    textSpan.style.font = fontText;
+
+    let block = document.createElement("div");
+    block.style.display = 'inline-block';
+    block.style.width = '1px';
+    block.style.height = '0px';
+
+    let div = document.createElement('div');
+    div.appendChild(textSpan);
+    div.appendChild(block);
+
+    let body = document.body;
+    body.appendChild(div);
+
+    metrics.ascent = -1;
+    metrics.descent = -1;
+    metrics.height = -1;
+
+    try {
+        block.style['vertical-align'] = 'baseline';
+        metrics.ascent = block.offsetTop - textSpan.offsetTop;
+        block.style['vertical-align'] = 'bottom';
+        metrics.height = block.offsetTop - textSpan.offsetTop;
+        metrics.descent = metrics.height - metrics.ascent;
+    } finally {
+        document.body.removeChild(div);
+    }
+
+    // if ( !text.includes('q') &amp;&amp; !text.includes('y') &amp;&amp; !text.includes('j') &amp;&amp; !text.includes('g') &amp;&amp; !text.includes('J') ) {
+        // metrics.height -= metrics.descent;
+        // metrics.descent = 0;
+    // }
+
+    return metrics;
+};
+
+/**
+ * Manages the list of elements for the document. Each element contains text for a specific font.
+ * @constructor
+ */
+
+RichText.ElementManager = class {
+
+    constructor( defaultFont ) {
+        this.elements = [];
+        this.defaultFont = defaultFont;
+    }
+
+    /**
+     * @returns {number} The length of the element array.
+     */
+
+    length() {
+        return this.elements.length;
+    }
+
+    /**
+     * Returns the element object at the given index.
+     * @param {number} index
+     * @returns {object} The elements at the given index.
+     */
+
+    at( index ) {
+        return this.elements[index];
+    }
+
+   /**
+     * Creates a new element;
+     */
+
+    createElement( font )
+    {
+        if ( !font ) font = this.defaultFont;
+        let el = { text : "", font : Object.assign( {}, font ) };
+        Object.defineProperty( el, "words", { enumerable: false, writable: true } );
+        return el;
+    }
+
+    /**
+     * Returns the current element.
+     */
+
+    getCurrentElement()
+    {
+        if ( !this.current ) {
+            this.current = this.createElement();
+            this.elements.push( this.current );
+        }
+
+        return this.current;
+    }
+
+    /**
+     * @returns the element before the given element.
+     */
+
+    getPreviousElement( el )
+    {
+        let index = this.elements.indexOf( el );
+        if ( index )
+            return this.elements[index-1];
+    }
+
+    /**
+     * @returns the element after the given element.
+     */
+
+    getNextElement( el )
+    {
+        let index = this.elements.indexOf( el );
+        if ( index &lt; this.elements.length )
+            return this.elements[index+1];
+    }
+
+
+    /**
+     * Removes the given element.
+     * @param {object} el - the element to remove
+     */
+
+    removeElement( el )
+    {
+        let index = this.elements.indexOf( el );
+        if ( index !== -1 ) this.elements.splice( index, 1 );
+    }
+
+    /**
+     * Splits the element at the given offset, inserts the new element and returns it.
+     * @param {*} el
+     * @param {*} offset
+     * @returns {object} The created element.
+     */
+
+    splitElement( el, offset ) {
+        let newEl = this.createElement();
+        newEl.font = Object.assign( {}, el.font );
+
+        let index = this.elements.indexOf( el );
+        this.elements.splice( index + 1, 0, newEl );
+
+        newEl.text = el.text.substr( offset );
+        el.text = el.text.substr( 0, offset );
+
+        this.rewordElement( el );
+        this.rewordElement( newEl );
+
+        return newEl;
+    }
+
+    /**
+     * Inserts the element at the given location.
+     * @param {*} el
+     * @param {*} loc
+     */
+
+    insertElementAt( el, loc )
+    {
+        // console.log( loc.element.text.length, loc.offset );
+        if ( loc.element.text.length === loc.offset ) {
+            // --- Insert it behind the location element
+            let index = this.elements.indexOf( loc.element );
+            this.elements.splice( index + 1, 0, el );
+        } else
+        if ( loc.offset === 0 ) {
+            // --- Insert it before the location element
+            let index = this.elements.indexOf( loc.element );
+            this.elements.splice( Math.min( index - 1, 0 ), 0, el );
+        } else {
+            this.splitElement( loc.element, loc.offset );
+            let index = this.elements.indexOf( loc.element );
+            this.elements.splice( index + 1, 0, el );
+        }
+    }
+
+    /**
+     *
+     * @param {*} el
+     * @param {*} fromElement
+     * @param {*} toElement
+     * @returns {bool} True if the given element is located between the from and to element, false otherwise.
+     */
+
+    isElementInsideRange( el, fromElement, toElement )
+    {
+        let fromIndex = this.elements.indexOf( fromElement ), toIndex = this.elements.indexOf( toElement );
+        if ( fromIndex === -1 || toIndex === -1 ) return false;
+
+        let index = this.elements.indexOf( el );
+
+        if ( index >= fromIndex &amp;&amp; index &lt;= toIndex ) return true;
+        else return false;
+    }
+
+    /**
+     * Deletes the given range between the two locations.
+     * @param {*} fromLoc
+     * @param {*} toLoc
+     * @returns {object} The new location.
+     */
+
+    deleteRange( fromLoc, toLoc )
+    {
+        let elements = [];
+        let newLoc = {};
+        for( let i = 0; i &lt; this.elements.length; ++i )
+        {
+            let el = this.elements[i];
+
+            if ( this.isElementInsideRange( el, fromLoc.element, toLoc.element ) )
+            {
+                if ( el !== fromLoc.element &amp;&amp; el !== toLoc.element )
+                    continue; // Delete if inside range
+                else
+                if ( el === fromLoc.element &amp;&amp; el === toLoc.element )
+                {
+                    let text = fromLoc.element.text;
+                    fromLoc.element.text = text.substr( 0, fromLoc.offset ) + text.substr( toLoc.offset, text.length - toLoc.offset );
+                    this.rewordElement( fromLoc.element );
+
+                    elements.push( fromLoc.element );
+                    newLoc.element = fromLoc.element;
+                    newLoc.offset = fromLoc.offset;
+                } else
+                if ( el === fromLoc.element )
+                {
+                    let text = fromLoc.element.text;
+                    fromLoc.element.text = text.substr( 0, fromLoc.offset );
+                    this.rewordElement( fromLoc.element );
+
+                    elements.push( fromLoc.element );
+                    newLoc.element = fromLoc.element;
+                    newLoc.offset = fromLoc.offset;
+                } else
+                if ( el === toLoc.element )
+                {
+                    let text = toLoc.element.text;
+                    toLoc.element.text = text.substr( toLoc.offset, text.length - toLoc.offset );
+                    this.rewordElement( toLoc.element );
+
+                    elements.push( toLoc.element );
+                }
+            } else elements.push( el );
+        }
+        this.elements = elements;
+        return newLoc;
+    }
+
+    /**
+     * Applies the font to the range between the two locations.
+     * @param {*} font
+     * @param {*} fromLoc
+     * @param {*} toLoc
+     * @returns {object} The new location.
+     */
+
+    applyFontToRange( font, fromLoc, toLoc )
+    {
+        let elements = [];
+        let newLoc = {};
+
+        let newFromElement, newFromOffset;
+        let newToElement, newToOffset;
+
+        for( let i = 0; i &lt; this.elements.length; ++i )
+        {
+            let el = this.elements[i];
+
+            if ( this.isElementInsideRange( el, fromLoc.element, toLoc.element ) )
+            {
+                if ( el !== fromLoc.element &amp;&amp; el !== toLoc.element )
+                {
+                    // --- If inside the range, apply font to the whole element
+                    el.font = Object.assign( {}, font );
+                    this.rewordElement( el );
+                    elements.push( el );
+                }
+                else
+                if ( el === fromLoc.element &amp;&amp; el === toLoc.element )
+                {
+                    if ( fromLoc.offset === 0 &amp;&amp; toLoc.offset === el.text.length )
+                    {
+                        // --- The whole element is selected
+                        el.font = Object.assign( {}, font );
+                        this.rewordElement( el );
+                        elements.push( el );
+
+                        newLoc.element = el;
+                        newLoc.offset = el.text.length;
+                    } else {
+                        let text = el.text;
+
+                        if ( fromLoc.offset ) {
+                            el.text = text.substr( 0, fromLoc.offset );
+                            this.rewordElement( el );
+                            elements.push( el );
+                        }
+
+                        let middleEl = this.createElement( font );
+                        middleEl.text = text.substr( fromLoc.offset, toLoc.offset - fromLoc.offset );
+                        this.rewordElement( middleEl );
+                        elements.push( middleEl );
+
+                        newFromOffset = 0;
+                        newFromElement = middleEl;
+
+                        if ( text.length - toLoc.offset ) {
+                            let endEl = this.createElement( toLoc.element.font );
+                            endEl.text = text.substr( toLoc.offset, text.length - toLoc.offset );
+                            this.rewordElement( endEl );
+                            elements.push( endEl );
+                        }
+
+                        newToOffset = middleEl.text.length;
+                        newToElement = middleEl;
+
+                        newLoc.element = middleEl;
+                        newLoc.offset = middleEl.text.length;
+                    }
+                } else
+                if ( el === fromLoc.element )
+                {
+                    let text = el.text;
+                    if ( fromLoc.offset === 0 ) el.font = Object.assign( {}, font );
+                    else if ( fromLoc.offset > 0 ) el.text = text.substr( 0, fromLoc.offset );
+                    this.rewordElement( el );
+                    elements.push( el );
+
+                    if ( fromLoc.offset > 0 ) {
+                        let middleEl = this.createElement( font );
+                        middleEl.text = text.substr( fromLoc.offset, text.length - fromLoc.offset );
+                        this.rewordElement( middleEl );
+                        elements.push( middleEl );
+
+                        newFromOffset = 0;
+                        newFromElement = middleEl;
+                    }
+                } else
+                if ( el === toLoc.element )
+                {
+                    let text = el.text;
+                    let oldFont = Object.assign( {}, el.font );
+                    el.text = text.substr( 0, toLoc.offset );
+                    el.font = Object.assign( {}, font );
+                    this.rewordElement( el );
+                    elements.push( el );
+
+                    newToOffset = el.text.length;
+                    newToElement = el;
+
+                    newLoc.offset = el.text.length;
+                    newLoc.element = el;
+
+                    if ( toLoc.offset &lt; text.length ) {
+                        let middleEl = this.createElement( oldFont );
+                        middleEl.text = text.substr( toLoc.offset, text.length - toLoc.offset );
+                        this.rewordElement( middleEl );
+                        elements.push( middleEl );
+                    }
+                }
+            } else elements.push( el );
+        }
+        this.elements = elements;
+
+        // --- Adjust the selection if necessary
+
+        if ( newFromElement ) {
+            fromLoc.element = newFromElement;
+            fromLoc.offset = newFromOffset;
+        }
+
+        if ( newToElement ) {
+            toLoc.element = newToElement;
+            toLoc.offset = newToOffset;
+        }
+
+        return newLoc;
+    }
+
+    /**
+     * Returns the elements inside the given range. The text of the elements is truncated to reflect the range.
+     * @param {*} fromLoc
+     * @param {*} toLoc
+     * @returns {array} The elements inside the range.
+     */
+
+    getRange( fromLoc, toLoc )
+    {
+        let elements = [];
+
+        for( let i = 0; i &lt; this.elements.length; ++i )
+        {
+            let el = this.elements[i];
+
+            if ( this.isElementInsideRange( el, fromLoc.element, toLoc.element ) )
+            {
+                if ( el !== fromLoc.element &amp;&amp; el !== toLoc.element )
+                {
+                    elements.push( el );
+                }
+                else
+                if ( el === fromLoc.element &amp;&amp; el === toLoc.element )
+                {
+                    if ( fromLoc.offset === 0 &amp;&amp; toLoc.offset === el.text.length )
+                    {
+                        // --- The whole element is selected
+                        elements.push( el );
+                    } else {
+                        let text = el.text;
+                        let element = this.createElement( el.font );
+                        element.text = text.substr( fromLoc.offset, toLoc.offset - fromLoc.offset );
+                        elements.push( element );
+                    }
+                } else
+                if ( el === fromLoc.element )
+                {
+                    let text = el.text;
+                    let element = this.createElement( el.font );
+                    element.text = text.substr( fromLoc.offset, text.length - fromLoc.offset );
+                    elements.push( element );
+                } else
+                if ( el === toLoc.element )
+                {
+                    let text = el.text;
+                    let element = this.createElement( el.font );
+                    element.text = text.substr( 0, toLoc.offset );
+                    elements.push( element );
+                }
+            }
+        }
+
+        return elements;
+    }
+
+    /**
+     *
+     * @param {object} fromLoc
+     * @param {object} toLoc
+     */
+
+    createFontForRange( fromLoc, toLoc ) {
+        let font = {
+            attributes : {},
+        };
+
+        let set = ( font, elFont, name ) => {
+            if ( !font[name] ) font[name] = elFont[name];
+            else if ( font[name] != elFont[name] ) font[name] = -1;
+        };
+
+        let setAttribute = ( font, elFont, name ) => {
+            if ( font.attributes[name] === undefined ) font.attributes[name] = elFont.attributes[name];
+            else if ( font.attributes[name] !== elFont.attributes[name] ) font.attributes[name] = -1;
+        };
+
+        for( let i = 0; i &lt; this.elements.length; ++i )
+        {
+            let el = this.elements[i];
+
+            if ( this.isElementInsideRange( el, fromLoc.element, toLoc.element ) )
+            {
+                let elFont = el.font;
+
+                set( font, elFont, "name" );
+                set( font, elFont, "text" );
+                set( font, elFont, "size" );
+                set( font, elFont, "style" );
+                if ( elFont.link ) {
+                    font.link = Object.assign( {}, elFont.link );
+                }
+                setAttribute( font, elFont, "bold" );
+                setAttribute( font, elFont, "italic" );
+            }
+        }
+        return font;
+    }
+
+    /**
+     * Clean
+     */
+
+    clean( )
+    {
+        let elements = [];
+        for( let i = 0; i &lt; this.elements.length; ++i )
+        {
+            let el = this.elements[i];
+
+            if ( el.words ) elements.push( el );
+        }
+        this.elements = elements;
+    }
+
+    /**
+     * Parses the given element and creates an array of words with their prefixes from the element's text.
+     */
+
+    rewordElement( el )
+    {
+        el.words = [];
+        el.maxWordHeight = 0;
+        el.maxAscent = 0;
+        el.maxDescent = 0;
+
+        let prefix = "";
+        let word = "";
+
+        let pushWord = ( prefix, word, offset ) => {
+            let obj = { prefix : prefix, word : word, lineBreak : false };
+
+            obj.prefixMetrics = RichText.measureText( prefix, el.font.text );
+            obj.wordMetrics = RichText.measureText( word, el.font.text );
+
+            if ( el.imageName ) {
+                obj.wordMetrics.width = el.imageWidth;
+                obj.wordMetrics.height = el.imageHeight;
+                obj.wordMetrics.ascent = el.imageHeight;
+                obj.wordMetrics.descent = 0;
+            }
+
+            // --- Calculate offset into the elements text
+            obj.offset = offset;
+            if ( prefix.length ) obj.offset -= prefix.length;
+            if ( word.length ) obj.offset -= word.length;
+            obj.endOffset = offset;
+
+            obj.width = obj.prefixMetrics.width + obj.wordMetrics.width;
+            obj.height = Math.max( obj.prefixMetrics.height, obj.wordMetrics.height );
+
+            el.maxAscent = Math.max( el.maxAscent, obj.wordMetrics.ascent );
+            el.maxDescent = Math.max( el.maxDescent, obj.wordMetrics.descent );
+
+            obj.text = prefix + word;
+
+            el.words.push( obj );
+        };
+
+        let pushLineBreak = () => {
+            el.words.push( { lineBreak : true } );
+        };
+
+        for ( let i = 0; i &lt; el.text.length; ++i )
+        {
+            let c = el.text.charAt( i );
+
+            if ( c === ' ' )
+            {
+                if ( word.length ) {
+                    pushWord( prefix, word, i );
+                    prefix = ""; word = "";
+                }
+                prefix += c;
+            } else
+            if ( c == '\n' )
+            {
+                if ( prefix.length || word.length )
+                    pushWord( prefix, word, i );
+
+                pushLineBreak();
+                prefix = ""; word = "";
+            }
+            else word += c;
+        }
+
+        if ( prefix.length || word.length )
+            pushWord( prefix, word, el.text.length );
+    }
+};
+
+/**
+ * The editor class.
+ * @constructor
+ */
+
+RichText.Editor = class {
+
+    constructor( { canvas, defaultFont, tagList, selectionStyle, linkStyle, readOnly = false } = {} ) {
+
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        RichText.ctx = this.ctx;
+
+        this.defaultFont = defaultFont;
+        this.tagList = tagList;
+        this.selectionStyle = selectionStyle ? selectionStyle : '#b2d0ee';
+        this.linkStyle = linkStyle ? linkStyle : 'blue';
+        this.readOnly = readOnly;
+
+        this.wordWrap = true;
+
+        this.blinkStateChanged = 0;
+
+        this.cursorLocation = {
+            x : 0,
+            y : 0,
+            offset : 0,
+        };
+
+        this.scrollBarWidth = 0;
+        this.needsScrollBar = false;
+
+        this.elements = new RichText.ElementManager( defaultFont );
+
+        this.handleOffset = 0;
+        this.handleDragOffset = 0;
+
+        this._redraw = () => this.draw();
+        this._fontChanged = () => {};
+        this._contentChanged = () => {};
+        this._gotoUrl = () => {};
+        this._scrollBarFunc = () => {};
+        this._getImage = () => {};
+
+        this.vOffset = 0;
+        this.focus = true;
+        this.clearBackground = true;
+
+        this.defaultFontHeight = RichText.measureText( "H", defaultFont.text ).height;
+    }
+
+    /**
+     * Sets the focus state of the editor. When the editor does not have focus, the cursor will not be animated.
+     * @param {boolean} focus
+     */
+
+    setFocus( focus ) {
+        this.focus = focus;
+        this.mouseIsDown = false;
+        if ( focus ) {
+            this.resetBlinkState();
+            this.updateBlinkState();
+            this._redraw();
+        } else {
+            this.blinkState = false;
+            this._redraw();
+        }
+    }
+
+    /**
+     * @returns {boolean} The focus state of the editor.
+     */
+
+    hasFocus() {
+        return this.focus;
+    }
+
+    /**
+     * Sets the redraw callback function. When the editor needs to be redrawn, it calls this function. The callback mostly just calls the draw() function.
+     * @param {function} func
+     */
+
+    needsRedraw( func ) {
+        this._redraw = func;
+    }
+
+    /**
+     * Sets the callback for the content changed event.
+     * @param {function} func - Called when the editor content changes.
+     */
+
+    contentChanged( func ) {
+        this._contentChanged = func;
+    }
+
+    /**
+     * Sets the callback for the link clicked event.
+     * @param {function} func - Called when a link is clicked in the editor.
+     */
+
+    gotoUrl( func ) {
+        this._gotoUrl = func;
+    }
+
+    /**
+     * Sets the callback for the font changed event.
+     * @param {function} func - Called when the font under the cursor changes.
+     */
+
+    fontChanged( func ) {
+        this._fontChanged = func;
+    }
+
+    /**
+     * Sets the callback for the get image event.
+     * @param {function} func - Called when an image needs to be displayed.
+     */
+
+    getImage( func ) {
+        this._getImage = func;
+    }
+
+    /**
+     * Deletes the current selection (if any).
+     */
+
+     deleteSelection() {
+         if ( this.selection )
+             this.keyDown( "Backspace" );
+     }
+
+    /**
+     * Set the scrollbar code for the vertical scrollbar.
+     * @param {object} width - Width of the scrollbar
+     * @param {function} func - Called when the scrollbar needs to be drawn
+     */
+
+     setScrollBar( width, func )
+     {
+        this.scrollBarWidth = width;
+        this._scrollBarFunc = func;
+     }
+
+    /**
+     * Sets the cursor at the specified text offset.
+     * @param {*} offset
+     */
+
+    setCursor( offset )
+    {
+        if ( this.elements.length() ) {
+            let loc = {};
+            loc.offset = offset;
+
+            this.elements.current = loc.element;
+            this.cursorLocation = loc;
+        }
+    }
+
+    /**
+     * Sets the given font.
+     * @param {object} font - The font to apply to the editor.
+     */
+
+    setFont( font )
+    {
+        if ( this.selection ) {
+            this.cursorLocation = this.elements.applyFontToRange( font, this.selectionStart, this.selectionEnd );
+            this.linalyze();
+            this.elements.current = this.cursorLocation.element;
+
+            this.getPositionForElementOffset( this.selectionEnd.element, this.selectionEnd.offset, this.selectionEnd );
+            this.getPositionForElementOffset( this.cursorLocation.element, this.cursorLocation.offset, this.cursorLocation );
+            this.resetBlinkState();
+            this._contentChanged( this, "Edit" );
+        } else {
+            if ( this.elements.current &amp;&amp; !this.elements.current.words ) {
+                this.elements.current.font = Object.assign( {}, font );
+            } else {
+                let el = this.elements.createElement( font );
+
+                if ( !this.cursorLocation.element )
+                    this.cursorLocation.element = el;
+
+                this.elements.insertElementAt( el, this.cursorLocation );
+                this.elements.current = el;
+
+                this.cursorLocation.offset = 0;
+            }
+        }
+    }
+
+    /**
+     * Sets the given image.
+     * @param {string} name - The name of the image.
+     * @param {string} image - The image.
+     */
+
+    setImage( { name, width, height }, sendNotification = true )
+    {
+        let el = this.elements.createElement();
+
+        this.elements.insertElementAt( el, this.cursorLocation );
+        this.elements.current = el;
+
+        el.imageName = name;
+        el.imageWidth = width;
+        el.imageHeight = height;
+        el.text = " ";
+
+        this.elements.rewordElement( el );
+        this.linalyze();
+
+        this.cursorLocation.element = el;
+        this.cursorLocation.offset = 0;
+
+        this._contentChanged( this, "Insert Image" );
+    }
+
+    /**
+     * Marks the cursor as visible, called after mouse or text events.
+     */
+
+    resetBlinkState()
+    {
+        this.blinkState = true;
+        this.blinkStateChanged = Date.now();
+    }
+
+    /**
+     * Updates the blink state. Calls setTimeout() for blink state animation.
+     */
+
+    updateBlinkState()
+    {
+        if ( this.readOnly ) return;
+        this.redrawAt = Date.now();
+        setTimeout( function() {
+            let time = Date.now();
+            if ( this.focus &amp;&amp; time - this.blinkStateChanged >= 600 ) {
+                this.blinkState = !this.blinkState;
+                this.blinkStateChanged = time;
+                this._redraw();
+            }
+        }.bind( this ), 600 );
+    }
+
+    /**
+     * Finds the x, y position for the text offset inside the given element and writes the position into the given object.
+     * @param {object} el - The element.
+     * @param {number} offset - The text offset inside the element.
+     * @param {object} object - The object to write the x, y coordinates into.
+     */
+
+    getPositionForElementOffset( el, offset, object )
+    {
+        let x, y = 0;
+        let off = 0;
+        let lastOffset;
+
+        object.x = 0;
+
+        for( let l = 0; l &lt; this.lines.length; ++l )
+        {
+            let line = this.lines[l];
+            x = line.offset;
+
+            for ( let w = 0; w &lt; line.words.length; ++w )
+            {
+                let lWord = line.words[w];
+
+                if ( lWord.element === el )
+                {
+                    let text = lWord.text;
+
+                    if ( lWord.wrapped ) x -= lWord.prefixMetrics.width;
+
+                    if ( lWord.offset &lt;= offset &amp;&amp; lWord.offset + text.length >= offset )
+                    {
+                        // --- Offset is in this word
+
+                        this.ctx.font = lWord.element.font.text;
+
+                        // --- Find the character
+                        for ( let i = 0; i &lt; text.length; ++i )
+                        {
+                            let c = text.charAt( i );
+                            x += this.ctx.measureText( c ).width;
+
+                            if ( lWord.offset + i + 1 === offset ) {
+                                object.x = x;
+                                object.y = y;
+                                object.line = line;
+                                return;
+                            }
+                        }
+                    }
+                    lastOffset = lWord.endOffset;
+                }
+
+                // if ( lWord.wrapped ) x += lWord.wordMetrics.width;
+                // else x += lWord.width;
+                x += lWord.width;
+            }
+
+            y += line.maxHeight;
+
+            // --- As linefeeds are not part of the words but new lines, need to check for them separately
+            if ( lastOffset ) ++lastOffset;
+            if ( lastOffset === offset ) {
+                object.x = line.offset;
+                object.y = y;
+                object.line = line;
+            }
+
+            // --- When no word at all is present, make sure object is initialized correctly
+            if ( lastOffset === undefined ) {
+                object.x = line.offset;
+                object.y = y - line.maxHeight;
+                object.line = line;
+            }
+        }
+    }
+
+    /**
+     * Finds the text location for the given x, y coordinate.
+     * @param {object} pos
+     * @returns {object} The location for the given coordinates
+     */
+
+    getLocationForMousePos( pos )
+    {
+        let x = 0, y = 0;
+
+        for( let l = 0; l &lt; this.lines.length; ++l )
+        {
+            let line = this.lines[l];
+            x = line.offset;
+
+            if ( pos.y >= y &amp;&amp; pos.y &lt;= ( y + line.maxHeight ) || ( l === this.lines.length - 1 ) )
+            {
+                // --- Mouse click was on this line
+                let rc = {};
+                rc.line = line;
+                rc.y = y;
+
+                for ( let w = 0; w &lt; line.words.length; ++w )
+                {
+                    let lWord = line.words[w];
+                    let d;
+
+                    if ( lWord.wrapped ) {
+                        // --- First word per line, only print word
+                        d = lWord.wordMetrics.width;
+                    } else {
+                        d = lWord.width;
+                    }
+
+                    if ( pos.x >= x &amp;&amp; pos.x &lt;= ( x + d ) )
+                    {
+                        // --- Hit inside this word
+                        rc.element = lWord.element;
+                        rc.offset = lWord.offset;
+
+                        let text = lWord.text;
+                        if ( lWord.wrapped ) x -= lWord.prefixMetrics.width;
+
+                        this.ctx.font = lWord.element.font.text;
+
+                        // --- Find the character
+                        for ( let i = 0; i &lt; text.length; ++i )
+                        {
+                            let c = text.charAt( i );
+                            let cw = this.ctx.measureText( c ).width;
+
+                            if ( pos.x &lt;= x + cw / 2 ) {
+                                rc.x = x;
+                                break;
+                            } else {
+                                x += cw;
+                                rc.offset++;
+                                if ( i === text.length - 1 )
+                                    rc.x = x;
+                            }
+                        }
+                    }
+
+                    x += d;
+                }
+
+                if ( !rc.element ) {
+                    // --- Not found, put the cursor at the end of the line
+
+                    if ( !line.words.length )
+                    {
+                        // --- This line is empty, go backward to search for the last word to get element and offset
+
+                        let prev = l - 1;
+                        let lastWord;
+                        let lineOffset = 1;
+
+                        while( prev >= 0 )
+                        {
+                            let prevLine = this.lines[prev];
+                            if ( prevLine.words.length ) {
+                                lastWord = prevLine.words[prevLine.words.length-1];
+                                break;
+                            }
+                            lineOffset += 1; --prev;
+                        }
+
+                        if ( lastWord ) {
+                            rc.element = lastWord.element;
+                            rc.offset = lastWord.endOffset + lineOffset;
+                        } else {
+                            rc.element = undefined;
+                            rc.offset = 0;
+                        }
+                    } else
+                    if ( line.words.length ) {
+                        let lastWord = line.words[line.words.length-1];
+                        rc.element = lastWord.element;
+                        rc.offset = lastWord.endOffset;
+                    }
+
+                    rc.x = line.offset + line.maxWidth;
+                }
+
+                return rc;
+            }
+
+            if ( l &lt; this.lines.length - 1 ) {
+                x = 0;
+                y += line.maxHeight;
+            }
+        }
+    }
+
+    /**
+     * Breaks the elements into lines.
+     */
+
+    linalyze() {
+        this.lines = [];
+        this.maxHeight = 0;
+        let width = this.needsScrollBar ? this.width - this.scrollBarWidth : this.width;
+
+        function createLine() {
+            let line = {
+                words : [],
+                maxHeight : 0,
+                maxAscent : 0,
+                maxDescent : 0,
+                maxWidth : 0, // For non word-wrap cases
+                offset : 0,
+                symbol : "",
+            };
+            return line;
+        }
+
+        let pushLine = ( el, line ) => {
+            if ( !line.maxAscent ) line.maxAscent = el.maxAscent;
+            if ( !line.maxDescent ) line.maxDescent = el.maxDescent;
+
+            if ( !line.maxHeight )
+                line.maxHeight =  el.maxWordHeight ? el.maxWordHeight : el.maxAscent;
+
+            if ( !line.maxAscent ) line.maxAscent = this.defaultFontHeight;
+            if ( !line.maxHeight ) line.maxHeight = this.defaultFontHeight;
+
+            this.maxHeight += line.maxHeight;
+            this.lines.push( line );
+        };
+
+        let remaining = width;
+        let line = createLine();
+        let lastEL;
+        let formatTag;
+
+        this.elements.clean();
+        for( let i = 0; i &lt; this.elements.length(); ++i ) {
+            let el = this.elements.at( i );
+            lastEL = el;
+
+            // --- Formatting
+            if ( el.font.formatting &amp;&amp; formatTag !== el.font.formatting.tag ) {
+                let formatting = el.font.formatting;
+                formatTag =  formatting.tag;
+
+                pushLine( el, line );
+                line = createLine();
+
+                remaining = width - formatting.margin[0] - formatting.margin[2];
+
+                line.offset = formatting.margin[0];
+                line.symbol = "circle";
+            }
+
+            // --- Close formatting
+            if ( !el.font.formatting &amp;&amp; formatTag ) {
+                formatTag = undefined;
+
+                pushLine( el, line );
+                line = createLine();
+                pushLine( el, line );
+                line = createLine();
+
+                remaining = width;
+            }
+
+            // --- Parse the words
+            for ( let w = 0; w &lt; el.words.length; ++w ) {
+                let word = el.words[w];
+                word.wrapped = false;
+
+                // --- line break
+                if ( word.lineBreak ) {
+
+                    // if ( lastEL.imageName ) line.offset = remaining / 2;
+
+                    pushLine( el, line );
+                    line = createLine();
+                    remaining = width;
+
+                    if ( el.font.formatting ) {
+                        line.offset = el.font.formatting.margin[0];
+                        remaining -= line.offset + el.font.formatting.margin[2];
+                        line.symbol = "circle";
+                    }
+
+                    continue;
+                }
+
+                // --- Word wrap
+                if ( this.wordWrap &amp;&amp; word.width > remaining  ) {
+                    this.lines.push( line );
+                    this.maxHeight += line.maxHeight;
+                    line = createLine();
+                    remaining = width;
+                    word.wrapped = true;
+                    if ( el.font.formatting ) {
+                        line.offset = el.font.formatting.margin[0];
+                        remaining -= line.offset + el.font.formatting.margin[2];
+                    }
+                }
+
+                // --- Insert word
+                if ( word.width &lt;= remaining ) {
+                    // --- Insert the original element for reference
+                    Object.defineProperty( word, "element", { enumerable: false, writable: true } );
+                    word.element = el;
+                    // ---
+                    line.words.push( word );
+
+                    line.maxHeight = Math.max( line.maxHeight, word.height );
+                    line.maxAscent = Math.max( line.maxAscent, el.maxAscent );
+                    line.maxDescent = Math.max( line.maxDescent, el.maxDescent );
+
+                    if ( word.wrapped ) {
+                        // --- Word was wrapped, no prefix
+                        remaining -= word.wordMetrics.width;
+                        line.maxWidth += word.wordMetrics.width;
+                    } else {
+                        remaining -= word.width;
+                        line.maxWidth += word.width;
+                    }
+                }
+            }
+        }
+
+        if ( lastEL ) {
+            if ( !line.maxAscent ) line.maxAscent = lastEL.maxAscent;
+            if ( !line.maxDescent ) line.maxDescent = lastEL.maxDescent;
+
+            if ( !line.maxHeight )
+                line.maxHeight =  lastEL.maxWordHeight ? lastEL.maxWordHeight : lastEL.maxAscent;
+        }
+
+        // --- If no element with words, get the line height from the default font
+        if ( !line.maxAscent ) line.maxAscent = this.defaultFontHeight;
+        if ( !line.maxHeight ) line.maxHeight = this.defaultFontHeight;
+
+        this.maxHeight += line.maxHeight;
+        this.lines.push( line );
+
+        // --- ScrollBar
+        this.needsScrollBar = this.maxHeight > this.height;
+
+        if ( this.needsScrollBar ) {
+            if ( this.scrollBarWidth )
+                if ( width === this.width )
+                    this.linalyze();
+        }
+    }
+
+    /**
+     * Receives plain text input.
+     * @param {string} text
+     */
+
+    textInput( text, sendNotification = true )
+    {
+        if ( this.readOnly ) return;
+
+        if ( this.selection ) {
+            this.cursorLocation = this.elements.deleteRange( this.selectionStart, this.selectionEnd );
+            this.linalyze();
+            this.selection = false;
+            this.elements.current = this.cursorLocation.element;
+        }
+        let el = this.elements.getCurrentElement();
+
+        let insert = ( str, index, value ) => {
+            return str.substr(0, index) + value + str.substr(index);
+        };
+
+        el.text = insert( el.text, this.cursorLocation.offset, text );
+
+        this.elements.rewordElement( el );
+        this.linalyze();
+        this.resetBlinkState();
+
+        this.cursorLocation.offset += text.length;
+        this.cursorLocation.element = el;
+        this.getPositionForElementOffset( el, this.cursorLocation.offset, this.cursorLocation );
+
+        if ( sendNotification ) this._contentChanged( this, "Edit" );
+    }
+
+    /**
+     * Processes a keyDown event. The key is in a human readable string format like "Enter".
+     * @param {string} key
+     */
+
+    keyDown( key )
+    {
+        if ( this.readOnly ) return;
+        if ( this.selection ) {
+            this.cursorLocation = this.elements.deleteRange( this.selectionStart, this.selectionEnd );
+            this.linalyze();
+            this.selection = false;
+            this.elements.current = this.cursorLocation.element;
+            if ( key === "Backspace" ) {
+                this.getPositionForElementOffset( this.cursorLocation.element, this.cursorLocation.offset, this.cursorLocation );
+                this.resetBlinkState();
+                this._contentChanged( this, "Edit" );
+                this._redraw();
+                return;
+            }
+        }
+        let el = this.elements.getCurrentElement();
+
+        let insert = ( str, index, value ) => {
+            return str.substr(0, index) + value + str.substr(index);
+        };
+
+        if ( key === "Enter" )
+        {
+            el.text = insert( el.text, this.cursorLocation.offset, "\n" );
+
+            this.elements.rewordElement( el );
+            this.linalyze();
+
+            this.cursorLocation.offset += 1;
+            this.cursorLocation.element = el;
+            this.getPositionForElementOffset( el, this.cursorLocation.offset, this.cursorLocation );
+            this._contentChanged( this, "Edit" );
+        } else
+        if ( key === "Backspace" )
+        {
+            let checkPrevious = () => {
+                // --- If at the front of the element, go to previous one.
+                if ( !this.cursorLocation.offset ) {
+                    let previous = this.elements.getPreviousElement( el );
+                    if ( !el.text.length &amp;&amp; this.elements.length() > 1 ) this.elements.removeElement( el );
+                    if ( previous ) {
+                        this.cursorLocation.offset = previous.text.length;
+                        this.cursorLocation.element = previous;
+                        this.elements.current = previous;
+
+                        el = previous;
+                        this.getPositionForElementOffset( el, this.cursorLocation.offset, this.cursorLocation );
+                    }
+                }
+            };
+
+            checkPrevious();
+
+            if ( this.cursorLocation.offset ) {
+                el.text = el.text.slice(0, this.cursorLocation.offset - 1 ) + el.text.slice( this.cursorLocation.offset );
+
+                this.elements.rewordElement( el );
+                this.linalyze();
+
+                this.cursorLocation.offset -= 1;
+                this.cursorLocation.element = el;
+                this.getPositionForElementOffset( el, this.cursorLocation.offset, this.cursorLocation );
+
+                this._contentChanged( this, "Edit" );
+            }
+
+            checkPrevious();
+        } else
+        if ( key === "ArrowLeft" )
+        {
+            if ( this.cursorLocation.offset ) --this.cursorLocation.offset;
+            else {
+                // --- Try to go to previous element
+                let element = this.elements.getPreviousElement( this.cursorLocation.element );
+                if ( element ) {
+                    this.cursorLocation.element = element;
+                    this.cursorLocation.offset = element.text.length;
+                }
+            }
+
+            this.getPositionForElementOffset( this.cursorLocation.element, this.cursorLocation.offset, this.cursorLocation );
+        } else
+        if ( key === "ArrowRight" )
+        {
+            if ( this.cursorLocation.offset &lt;= this.cursorLocation.element.text.length ) ++this.cursorLocation.offset;
+            else {
+                // --- Try to go to previous element
+                let element = this.elements.getNextElement( this.cursorLocation.element );
+                if ( element ) {
+                    this.cursorLocation.element = element;
+                    this.cursorLocation.offset = 0;
+                }
+            }
+
+            this.getPositionForElementOffset( this.cursorLocation.element, this.cursorLocation.offset, this.cursorLocation );
+        } else
+        if ( key === "ArrowUp" )
+        {
+            this.cursorLocation.y -= this.cursorLocation.line.maxHeight / 2;
+            this.cursorLocation.y = Math.max( this.cursorLocation.y, 0 );
+            this.cursorLocation = this.getLocationForMousePos( { x : this.cursorLocation.x, y : this.cursorLocation.y } );
+        } else
+        if ( key === "ArrowDown" )
+        {
+            this.cursorLocation.y += this.cursorLocation.line.maxHeight+1;
+            this.cursorLocation = this.getLocationForMousePos( { x : this.cursorLocation.x, y : this.cursorLocation.y } );
+        }
+
+        this.resetBlinkState();
+        this._redraw();
+    }
+
+    /**
+     * Processes a mouseDown event.
+     * @param {object} pos
+     */
+
+    mouseDown( pos )
+    {
+        if ( pos.x &lt; 0 || pos.y &lt; 0 ) return;
+
+        this.scrollAction = undefined;
+        this.handleDragOffset = 0;
+
+        if ( this.needsScrollBar &amp;&amp; this.scrollBarWidth ) {
+            // --- Check if pressed inside handle rect
+            if ( pos.x >= this.handleRect.x &amp;&amp; pos.x &lt;= this.handleRect.x + this.handleRect.width ){
+                // --- ScrollBar
+                if ( pos.y >= this.handleRect.y &amp;&amp; pos.y &lt;= this.handleRect.y + this.handleRect.height ) {
+                    // --- Handle
+                    this.scrollAction = "Vertical Handle Move";
+                    this.scrollStartX = pos.x;
+                    this.scrollStartY = pos.y;
+                    this.handleDragOffset = this.handleRect.y;
+                }
+
+                this.mouseMove( pos );
+                return;
+            }
+            pos.y += this.vOffset;
+        }
+
+        if ( this.hoverElement &amp;&amp; this.hoverElement.font.link )
+            this._gotoUrl( this.hoverElement.font.link.url );
+
+        let rc = this.getLocationForMousePos( pos );
+
+        if ( rc ) {
+            this.cursorLocation = rc;
+            this.elements.current = rc.element;
+
+            if ( rc.element ) {
+                if ( !this.selection ) this._fontChanged( rc.element.font );
+                else this._fontChanged( this.elements.createFontForRange( this.selectionStart, this.selectionEnd ) );
+            }
+        }
+
+        this.resetBlinkState();
+
+        this.mouseIsDown = true;
+        this.selection = false;
+        this._redraw();
+    }
+
+    /**
+     * Processes a mouseMove event.
+     * @param {object} pos
+     */
+
+    mouseMove( pos )
+    {
+        pos.x = Math.max( pos.x, 0 );
+        pos.y = Math.max( pos.y, 0 );
+
+        if ( this.scrollAction === "Vertical Handle Move" ) {
+            this.handleOffset = pos.y - this.scrollStartY;
+
+            if ( this.handleOffset + this.handleDragOffset &lt; 0 )
+                this.handleOffset = -this.handleDragOffset;
+
+            if ( this.handleOffset + this.handleDragOffset + this.handleRect.height > this.height )
+                this.handleOffset = this.height - this.handleRect.height - this.handleDragOffset;
+
+            this.vOffset = (this.handleOffset + this.handleDragOffset) * this.maxHeight / this.height;
+
+            this._redraw();
+            return;
+        }
+
+        if ( this.needsScrollBar &amp;&amp; this.scrollBarWidth ) {
+            // --- Adjust mouse position for vertical scrollbar offset
+            pos.y += this.vOffset;
+        }
+
+        let rc = this.getLocationForMousePos( pos );
+
+        if ( rc &amp;&amp; !this.mouseIsDown ) {
+            if ( this.hoverElement !== rc.element ) {
+                this.hoverElement = rc.element;
+                this._redraw();
+
+                if ( this.hoverElement ) {
+                    if ( this.hoverElement.font.link ) this.canvas.style.cursor = "pointer";
+                    else this.canvas.style.cursor = "default";
+                }
+            }
+            return;
+        }
+
+        if ( rc ) {
+            this.selection = true;
+
+            if ( rc.y &lt; this.cursorLocation.y ) {
+                this.selectionStart = rc;
+                this.selectionEnd = this.cursorLocation;
+            } else
+            if ( rc.y === this.cursorLocation.y )
+            {
+                if ( rc.x &lt;= this.cursorLocation.x ) {
+                    this.selectionStart = rc;
+                    this.selectionEnd = this.cursorLocation;
+                } else {
+                    this.selectionStart = this.cursorLocation;
+                    this.selectionEnd = rc;
+                }
+
+                if ( rc.x === this.cursorLocation.x )
+                    this.selection = false;
+            } else {
+                this.selectionStart = this.cursorLocation;
+                this.selectionEnd = rc;
+            }
+
+            this._fontChanged( this.elements.createFontForRange( this.selectionStart, this.selectionEnd ) );
+            this._redraw();
+        }
+    }
+
+    /**
+     * Processes a mouseUp event.
+     * @param {object} pos
+     */
+
+    mouseUp( pos )
+    {
+        this.mouseIsDown = false;
+        this.scrollAction = undefined;
+    }
+
+    mouseWheel( step) {
+        if ( this.needsScrollBar &amp;&amp; this.scrollBarWidth ) {
+
+            this.handleOffset = this.handleOffset - step * 5;
+
+            if ( this.handleOffset + this.handleDragOffset &lt; 0 )
+                this.handleOffset = -this.handleDragOffset;
+
+            if ( this.handleOffset + this.handleDragOffset + this.handleRect.height > this.height )
+                this.handleOffset = this.height - this.handleRect.height - this.handleDragOffset;
+
+            this.vOffset = (this.handleOffset + this.handleDragOffset) * this.maxHeight / this.height;
+            this._redraw();
+        }
+    }
+
+    /**
+     * Layouts the rich text area for the given width, height
+     * @param {number} width - The width of the canvas.
+     * @param {number} height - The height of the canvas.
+     */
+
+    layout( width, height ) {
+        this.width = width; this.height = height;
+        this.ctx.width = this.width; this.ctx.height = this.height;
+        this.linalyze();
+        if ( this.cursorLocation.element )
+            this.getPositionForElementOffset( this.cursorLocation.element, this.cursorLocation.offset, this.cursorLocation );
+        this._redraw();
+    }
+
+    /**
+     * Export to the given format.
+     * @param {*} type
+     */
+
+    export( format, selection )
+    {
+        let getTagForSize = ( size ) => {
+            let tags = this.tagList, diff = 10000, rc;
+
+            tags.forEach( function( tag ) {
+                let d = tag.size - size;
+                if ( Math.abs( d ) &lt; diff ) {
+                    rc = tag.name;
+                    diff = Math.abs( d );
+                }
+            } );
+            return rc;
+        };
+
+        let transformTextForTag = ( tag, formattingTag, text, attributes ) => {
+            let out="";
+            // --- Line breaks
+            if ( formattingTag === "ul" || formattingTag === "ol" ) {
+                out = text.replace(/(\r\n|\n|\r)/gm, "&lt;/li>&lt;li>" );
+            } else
+            if ( tag === 'p' ) {
+                out = text.replace(/(\r\n|\n|\r)/gm, "&lt;/p>&lt;p>" );
+            } else
+            {
+                if ( tag[0] === 'h' )
+                    out = text.replace(/(\r\n|\n|\r)/gm, "" );
+                else
+                    out = text.replace(/(\r\n|\n|\r)/gm, "&lt;/br>" );
+            }
+            // --- Attributes
+            let open = "", close = "";
+            if ( attributes.bold ) { open += "&lt;strong>"; close += "&lt;/strong>"; }
+            if ( attributes.italic ) { open += "&lt;i>"; close += "&lt;/i>"; }
+            out = open + out + close;
+            return out;
+        };
+
+        let rc = "";
+        let openTag = "", openFormattingTag = "";
+
+        let elements = this.elements.elements;
+        if ( selection ) {
+            if ( this.selection ) elements = this.elements.getRange( this.selectionStart, this.selectionEnd );
+            else return rc;
+        }
+
+        for( let i = 0; i &lt; elements.length; ++i ) {
+            let el = elements[i];
+
+            if ( el.font.formatting ) {
+
+                let formatting = el.font.formatting;
+                openFormattingTag = formatting.tag;
+
+                rc += "&lt;" + openFormattingTag + ">";
+                if ( openFormattingTag === "ul" || openFormattingTag === "ol" )
+                    rc += "&lt;li>";
+            }
+
+            if ( !el.font.formatting &amp;&amp; openFormattingTag ) {
+                if ( openFormattingTag === "ul" || openFormattingTag === "ol" )
+                    rc += "&lt;/li>";
+                rc += "&lt;/" + openFormattingTag + ">";
+                openFormattingTag = undefined;
+            }
+
+            if ( format === "text") rc += el.text;
+            else
+            if ( format === "html" )
+            {
+                let tag = getTagForSize( el.font.size );
+                let text = transformTextForTag( tag, openFormattingTag, el.text, el.font.attributes );
+
+                if ( !openTag ) {
+                    rc += `&lt;${tag}>${text}`;
+                    openTag = tag;
+                } else {
+                    if ( tag === openTag ) {
+                        rc += text;
+                    } else {
+                        rc += `&lt;/${openTag}>&lt;${tag}>${text}`;
+                        openTag = tag;
+                    }
+                }
+            }
+        }
+
+        if ( format === "html" &amp;&amp; openTag )
+            rc += `&lt;/${openTag}>`;
+
+        return rc;
+    }
+
+    /**
+     * Clears the document.
+     */
+
+    clear( sendNotification )
+    {
+        this.elements.elements = [];
+        this.elements.current = undefined;
+        this.cursorLocation = { offset : 0 };
+        this.selection = false;
+        this.vOffset = 0;
+        this.handleDragOffset = 0;
+        this.handleOffset = 0;
+        if ( sendNotification ) this._contentChanged( this, "Clear" );
+    }
+
+    /**
+     * Loads a previously saved data string.
+     * @param {*} data
+     */
+
+    load( data, { clear = true, sendNotification = true } = {} )
+    {
+        if ( clear ) this.clear();
+
+        let restoreString = ( string ) => {
+            let text = "";
+            for ( let i = 0; i &lt; string.length; ++i )
+            {
+                if ( string[i] === "\\" &amp;&amp; i &lt; string.length - 1 &amp;&amp; string[i+1] === "n" ) {
+                    text += '\n';
+                    i++;
+                } else text += string[i];
+            }
+            return text;
+        };
+
+        let d = JSON.parse( data );
+        let elements = d.elements;
+        let images = d.images;
+
+        for( let i = 0; i &lt; elements.length; ++i )
+        {
+            let el = elements[i];
+            el.text = restoreString( el.text );
+            this.elements.rewordElement( el );
+        }
+
+        this.elements.elements = elements;
+
+        this.cursorLocation = {
+            element : elements.length ? elements[0] : undefined,
+            offset : 0,
+        };
+
+        this.linalyze();
+        if ( sendNotification )
+            this._contentChanged( this, "Load" );
+        this._redraw();
+
+        this.getPositionForElementOffset( this.cursorLocation.element, this.cursorLocation.offset, this.cursorLocation );
+    }
+
+    /**
+     * Stores the current document into a string.
+     * @param {boolean} includeCursorLocation - If true includes the cursor location in the saved data (helpful for example for undo / redo).
+     * @returns {string} The data
+     */
+
+    save( includeCursorLocation )
+    {
+        let out = {};
+        out.elements = [];
+
+        let saveString = ( string ) => {
+            let text = "";
+            for ( let i = 0; i &lt; string.length; ++i )
+            {
+                if ( string[i] === '\n' )
+                    text += '\\n';
+                else text += string[i];
+            }
+            return text;
+        };
+
+        for( let i = 0; i &lt; this.elements.length(); ++i )
+        {
+            let el = this.elements.at( i );
+
+            let newEl = {};
+            newEl.text = saveString( el.text );
+            newEl.font = Object.assign( {}, el.font );
+            if ( el.imageName ) {
+                newEl.imageName = el.imageName;
+                newEl.imageWidth = el.imageWidth;
+                newEl.imageHeight = el.imageHeight;
+            }
+            out.elements.push( newEl );
+        }
+
+        return JSON.stringify( out );
+    }
+
+    /**
+     * Draws the text at the given screen coordinates. The screen coordinates are only necessary if you don't want to draw the text at 0, 0
+     * of your 2D canvas.
+     * @param {*} screenX The X offset inside the 2D canvas. 0 by default.
+     * @param {*} screenY The Y offset inside the 2D canvas. 0 by default.
+     */
+
+    draw( screenX = 0, screenY = 0 )
+    {
+        this.screenOffsetX = screenX; this.screenOffsetY = screenY;
+
+        // ---
+        let startX = screenX, startY = screenY;
+        let ctx = this.ctx;
+
+        let x = 0, y = 0;
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        if ( this.clearBackground )
+            ctx.clearRect( startX, startY, this.width, this.height );
+
+        // --- Clip the content
+
+        ctx.save();
+        ctx.rect( startX, startY, this.width, this.height );
+        ctx.clip();
+
+        screenY -= this.vOffset;
+
+        ctx.fillStyle = 'black';
+        ctx.textBaseline = 'alphabetic';
+
+        let formatTag;
+        for( let l = 0; l &lt; this.lines.length; ++l ) {
+            let line = this.lines[l];
+
+            // --- Dont draw line if below visible area
+            if ( y - this.vOffset > this.height )
+                continue;
+
+            x += line.offset;
+            screenX += line.offset;
+
+            if ( line.symbol ) {
+                if ( line.symbol === "circle" ) {
+                    ctx.beginPath();
+                    let radius = Math.min( line.maxHeight, 3 );
+                    let centerX = line.offset - 4 - radius;
+                    let centerY = Math.ceil( line.maxHeight / 2 );
+
+                    ctx.beginPath();
+                    ctx.arc( screenX - 14 - radius, screenY + centerY, 3, 0, 2 * Math.PI, false);
+                    ctx.fillStyle = this.defaultFont.style;
+                    ctx.strokeStyle = this.defaultFont.style;
+                    ctx.lineWidth = 1;
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.closePath();
+                }
+            }
+
+            if ( !line.words.length &amp;&amp; this.selection &amp;&amp; ( y >= this.selectionStart.y &amp;&amp; y &lt;= this.selectionEnd.y ) ) {
+                // --- If empty line, draw a selection rectangle
+                ctx.fillStyle = this.selectionStyle;
+                ctx.fillRect( startX + x, startY + y - this.vOffset, 5, line.maxHeight );
+            }
+
+            for ( let w = 0; w &lt; line.words.length; ++w ) {
+                let lWord = line.words[w];
+
+                ctx.font = lWord.element.font.text;
+
+                // --- Get the text and width to draw
+
+                let textToDraw, textToDrawWidth;
+
+                if ( lWord.wrapped ) {
+                    // --- Word wrap, only print word
+                    textToDraw = lWord.word;
+                    textToDrawWidth = lWord.wordMetrics.width;
+                } else {
+                    textToDraw = lWord.text;
+                    textToDrawWidth = lWord.width;
+                }
+
+                // --- Draw selection background if necessary
+
+                if ( this.selection )
+                {
+                    // console.log( y, this.selectionStart.x, this.selectionStart.y, this.selectionEnd.x, this.selectionEnd.y );
+
+                    if ( y >= this.selectionStart.y &amp;&amp; y &lt;= this.selectionEnd.y )
+                    {
+                        ctx.fillStyle = this.selectionStyle;
+
+                        let drawWholeText = false;
+
+                        if ( y > this.selectionStart.y &amp;&amp; y &lt; this.selectionEnd.y )
+                        {
+                            // --- This line is in the middle of the vertical selection somewhere, select everything
+                            ctx.fillRect( startX + x, startY + y - this.vOffset, textToDrawWidth, line.maxHeight );
+                        } else
+                        if ( y === this.selectionStart.y &amp;&amp; y === this.selectionEnd.y )
+                        {
+                            // --- This line is the start and end line of the selection
+                            let rx = startX + x, rw = textToDrawWidth;
+
+                            if ( this.selectionStart.x > x ) {
+                                let diff = x - this.selectionStart.x;
+                                rx -= diff; rw += diff;
+                            }
+
+                            if ( this.selectionEnd.x &lt;= rx + rw ) {
+                                let diff = rx + rw - this.selectionEnd.x - startX;
+                                rw -= diff;
+                            }
+
+                            if ( rw > 1 ) ctx.fillRect( rx, startY + y - this.vOffset, rw, line.maxHeight );
+                        } else
+                        if ( y === this.selectionStart.y )
+                        {
+                            // --- This line is the start line
+                            let rx = startX + x, rw = textToDrawWidth;
+
+                            if ( this.selectionStart.x > x ) {
+                                let diff = x - this.selectionStart.x;
+                                rx -= diff; rw += diff;
+                            }
+
+                            if ( rw > 1 ) ctx.fillRect( rx, startY + y - this.vOffset, rw, line.maxHeight );
+                        } else
+                        if ( y === this.selectionEnd.y )
+                        {
+                            // --- This line is end line
+                            let rx = startX + x, rw = textToDrawWidth;
+
+                            if ( this.selectionEnd.x &lt;= rx + rw ) {
+                                let diff = rx + rw - this.selectionEnd.x - startX;
+                                rw -= diff;
+                            }
+
+                            if ( rw > 1 ) ctx.fillRect( rx, startY + y - this.vOffset, rw, line.maxHeight );
+                        }
+                    }
+                }
+
+                // --- Draw the text
+
+                if ( lWord.element.font.style ) ctx.fillStyle = lWord.element.font.style;
+                else ctx.fillStyle = 'black';
+
+                if ( lWord.element.font.link ) {
+                    ctx.fillStyle = this.linkStyle;
+                }
+
+                if ( lWord.element.font.link &amp;&amp; lWord.element === this.hoverElement &amp;&amp; this.focus )
+                {
+                    // if ( lWord.element.font.link.hoverStyle )
+                    //ctx.fillStyle = lWord.element.font.link.hoverStyle;
+
+                    if ( lWord.element.font.link.hoverAttributes ) {
+                        let attributes = lWord.element.font.link.hoverAttributes;
+                        if ( attributes.includes( "underline") )
+                            ctx.fillRect( screenX, screenY + line.maxAscent + 1, textToDrawWidth, 1 );
+                    }
+                }
+
+                if ( !lWord.element.imageName ) ctx.fillText( textToDraw, screenX, screenY + line.maxAscent );
+                else {
+                    if ( lWord.element.image )
+                        ctx.drawImage( lWord.element.image, screenX, screenY + line.maxAscent - lWord.wordMetrics.height + line.maxDescent );
+                    else {
+                        if ( !lWord.element.imageRequestSend ) this._getImage( lWord.element.imageName, ( image ) => {
+                            Object.defineProperty( lWord.element, "image", { enumerable: false, writable: true } );
+                            lWord.element.image = image;
+                            this._redraw();
+                        } );
+                        lWord.element.imageRequestSend = true;
+                    }
+                }
+
+                x += textToDrawWidth; screenX += textToDrawWidth;
+            }
+
+            if ( l &lt; this.lines.length - 1 ) {
+                x = 0;
+                y += line.maxHeight;
+
+                screenX = startX;
+                screenY += line.maxHeight;
+            }
+        }
+
+        // --- Cursor / Blink State
+        if ( !this.selection &amp;&amp; !this.readOnly ) {
+            if ( this.blinkState &amp;&amp; this.cursorLocation ) {
+                let height = this.defaultFont.size;
+
+                if ( this.cursorLocation.line )
+                    height = this.cursorLocation.line.maxAscent;// - this.cursorLocation.line.maxDescent;
+
+                ctx.fillStyle = this.defaultFont.style;
+                ctx.fillRect( startX + this.cursorLocation.x, startY + this.cursorLocation.y - this.vOffset, 1, height );
+            }
+
+            this.updateBlinkState();
+        }
+
+        ctx.restore();
+
+        // --- Scrollbar
+        if ( this.needsScrollBar &amp;&amp; this.scrollBarWidth ) {
+            // --- Draw Scrollbar
+
+            let x = this.width - this.scrollBarWidth;
+            let y = Math.max( this.handleOffset + this.handleDragOffset, 0 );
+            let height = Math.min( this.height / this.maxHeight * this.height, this.height );
+
+            this.handleRect = { x : x, y : y, width : this.scrollBarWidth, height : height };
+            this._scrollBarFunc( ctx, this.handleRect );
+        }
+    }
+};
+
+if ( typeof module !== 'undefined' &amp;&amp; module.exports )
+    module.exports = RichText;
+
+</pre>
+    </article>
+</section>
+
+
+
+
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+
+<footer>
+
+
+	<span class="copyright">
+	ViralGraphics.io Copyright © 2014-2017 Markus Moenig
+	</span>
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a>
+	
+		on Wed Oct 11th 2017
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : true,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
+</body>
+</html>

@@ -1,7 +1,7 @@
-Visual Graphics JS
-==================
+ViralGraphics.io
+================
 
-Visual Graphics is an open source application framework written entirely in JavaScript and WebGL. It's main goal is to be able to create complex applications which can compete with native desktop implementations in 'look and feel' and performance.
+**ViralGraphics.io** is a new JavaScript / HTML5 application framework under the MIT license. It is specifically designed to enable Desktop like applications inside your browser and provides a wide range of widgets and layouts to generate complex and good looking user interfaces.
 
 It combines the best of the HMTL5 2D canvas and WebGL in an easy to use API.
 
@@ -14,28 +14,34 @@ Main Features:
 * An integrated nodes system. The node application (source code in apps/nodes) can be viewed [here](https://visualgraphics.tv/apps/nodes)
 * WebGL abstraction classes.
 
-## Applications using Visual Graphics
+ViralGraphics.io was previously named VisualGraphics.tv. There may stll be references and links to the old name in the documentation.
+
+## Applications using ViralGraphics.io
+
+The first major application based on ViralGraphics.io is [PaintSupreme 3D](https://www.paintsupreme3d.com). It is available on the Web, as well as in native Windows, Mac and Linux versions. It is also available inside the Mac and Windows App Stores. Native versions are possible via inbuild support of [Electron](https://electron.atom.io/).
+
+Applications using ViralGraphics.io
 
 1. [PaintSupreme 3D](https://www.paintsupreme3d.com)
 2. [RaySupreme DF](https://www.raysupreme.com) (Under Development)
 
 ## Status
 
-The current version is v0.4x with new features being implemented daily. Visual Graphics is already in a usable state, however APIs can change without notice and documentation is under development at the moment.
+The current version is v0.4x with new features being implemented daily. ViralGraphics.io is already in a usable state, however APIs can change without notice and documentation is under development at the moment.
 
-For more information please visit the Visual Graphics Homepage at http://www.visualgraphics.tv or contact me at markusm@visualgraphics.tv.
+For more information please visit the ViralGraphics.io Documentation at http://www.viralgraphics.io or contact me at markusm@ViralGraphics.io.
 
-# Developing for Visual Graphics
+# Developing for ViralGraphics.io
 
-Makefiles of Visual Graphics applications (they end with .vg) can be compiled into project files (.vide) using a node.js based program called vgmake. vgmake also allows the creation and publishing of applications on the Web.
+Makefiles of ViralGraphics.io applications (they end with .vg) can be compiled into project files (.vide) using a node.js based program called vgmake. vgmake also allows the creation and publishing of applications on the Web.
 
-The documentation of Visual Graphics is currently the weak link and work in progress, you can find the (not complete) documention in the docs folder. We are working on this and hope to have a full documentation as soon as possible. Please also look at the example applications for reference.
+The documentation of ViralGraphics.io is currently the weak link and work in progress, you can find the (not complete) documention in the docs folder. We are working on this and hope to have a full documentation as soon as possible. Please also look at the example applications for reference.
 
-V-IDE, the Visual Graphics IDE, has not yet catched up with the latest developments and has temporarily been taken out of the distribution. You can use vgmake to fully replace V-IDE for now.
+V-IDE, the ViralGraphics.io IDE, has not yet catched up with the latest developments and has temporarily been taken out of the distribution. You can use vgmake to fully replace V-IDE for now.
 
 ## vgmake.js
 
-vgmake is an node.js based script to compile a Visual Graphics makefile (.vg) into .vide project which can than be executed via the supplied .html files and published on the Web. vgmake.js is located inside the nodejs folder.
+vgmake is an node.js based script to compile a ViralGraphics.io makefile (.vg) into .vide project which can than be executed via the supplied .html files and published on the Web. vgmake.js is located inside the nodejs folder.
 
 
 The syntax of vgmake is pretty easy, you just supply the path and name of the .vg file and it will compile it and save it as a .vide file in the same directory as the source .vg file, e.g. "node vgmake.js ../examples/cornellbox/cornellbox.vg". The .html file will read the .vide file and launch it via the supplied visualgraphics.js script.
@@ -44,16 +50,16 @@ Additionally you can supply parameters to vgmake to create and publish an applic
 
 ## vgbuild.js
 
-This script builds vglib.min.js from the Visual Graphics sources and should only be used when you are actively developing Visual Graphics or need to insert debug info.
+This script builds vglib.min.js from the ViralGraphics.io sources and should only be used when you are actively developing ViralGraphics.io or need to insert debug info.
 
-vgbuild.js uses the Google Closure Compiler to compress the Visual Graphics sources. As this can take quite some time, vgbuild supports an -quick option which creates an uncompressed vglib.min.js file. Useful for Visual Graphics development.
+vgbuild.js uses the Google Closure Compiler to compress the ViralGraphics.io sources. As this can take quite some time, vgbuild supports an -debug option which creates an uncompressed vglib.min.js file, useful for ViralGraphics.io development.
 
 ## Syntax of .vg Makefiles
 
 ### Parameters
 
 
-* _name_ - Sets the name of the Application. Has to be defined when you want to create the application on the Visual Graphics server.
+* _name_ - Sets the name of the Application. Has to be defined when you want to create the application on the ViralGraphics.io server.
 * _url_ - Sets the Url the application will be available at inside the visualgraphics.tv/apps/ directory once published. Has to be defined when you want to create the application on the Visual Graphics server.
 * _version_ - Sets the version string of the application.
 * _author_ - Sets the author name of the application.

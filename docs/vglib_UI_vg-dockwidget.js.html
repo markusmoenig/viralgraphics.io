@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>ViralGraphics.io Source: vglib/UI/vg-dockwidget.js</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.spacelab.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">ViralGraphics.io</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="namespaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Namespaces<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="VG.html">VG</a></li><li><a href="VG.context.html">VG.context</a></li><li><a href="VG.Controller.html">VG.Controller</a></li><li><a href="VG.Core.html">VG.Core</a></li><li><a href="VG.Data.html">VG.Data</a></li><li><a href="VG.Events.html">VG.Events</a></li><li><a href="VG.Font.html">VG.Font</a></li><li><a href="VG.Import.html">VG.Import</a></li><li><a href="VG.Math.html">VG.Math</a></li><li><a href="VG.Render.html">VG.Render</a></li><li><a href="VG.UI.html">VG.UI</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="RichText.Editor.html">RichText.Editor</a></li><li><a href="RichText.ElementManager.html">RichText.ElementManager</a></li><li><a href="VG.Canvas.html">VG.Canvas</a></li><li><a href="VG.Controller.Array.html">VG.Controller.Array</a></li><li><a href="VG.Controller.Base.html">VG.Controller.Base</a></li><li><a href="VG.Controller.Tree.html">VG.Controller.Tree</a></li><li><a href="VG.Core.Color.html">VG.Core.Color</a></li><li><a href="VG.Core.Image.html">VG.Core.Image</a></li><li><a href="VG.Core.ImagePool.html">VG.Core.ImagePool</a></li><li><a href="VG.Core.Margin.html">VG.Core.Margin</a></li><li><a href="VG.Core.Material.html">VG.Core.Material</a></li><li><a href="VG.Core.NormalizedColor.html">VG.Core.NormalizedColor</a></li><li><a href="VG.Core.Point.html">VG.Core.Point</a></li><li><a href="VG.Core.Rect.html">VG.Core.Rect</a></li><li><a href="VG.Core.Size.html">VG.Core.Size</a></li><li><a href="VG.Core.Timer.html">VG.Core.Timer</a></li><li><a href="VG.Core.TypedArray.html">VG.Core.TypedArray</a></li><li><a href="VG.Data.Base.html">VG.Data.Base</a></li><li><a href="VG.Data.Collection.html">VG.Data.Collection</a></li><li><a href="VG.Data.UndoItem.html">VG.Data.UndoItem</a></li><li><a href="VG.Events.MouseDownEvent.html">VG.Events.MouseDownEvent</a></li><li><a href="VG.Events.MouseMoveEvent.html">VG.Events.MouseMoveEvent</a></li><li><a href="VG.Events.MouseUpEvent.html">VG.Events.MouseUpEvent</a></li><li><a href="VG.Font.Font.html">VG.Font.Font</a></li><li><a href="VG.Font.Manager.html">VG.Font.Manager</a></li><li><a href="VG.GPUBuffer.html">VG.GPUBuffer</a></li><li><a href="VG.Math.Aabb.html">VG.Math.Aabb</a></li><li><a href="VG.Math.Matrix4.html">VG.Math.Matrix4</a></li><li><a href="VG.Math.Quat.html">VG.Math.Quat</a></li><li><a href="VG.Math.Vector2.html">VG.Math.Vector2</a></li><li><a href="VG.Math.Vector3.html">VG.Math.Vector3</a></li><li><a href="VG.Math.Vector4.html">VG.Math.Vector4</a></li><li><a href="VG.Render.BoxMesh.html">VG.Render.BoxMesh</a></li><li><a href="VG.Render.Camera.html">VG.Render.Camera</a></li><li><a href="VG.Render.Context.html">VG.Render.Context</a></li><li><a href="VG.Render.Material.html">VG.Render.Material</a></li><li><a href="VG.Render.Mesh.html">VG.Render.Mesh</a></li><li><a href="VG.Render.MtlMaterial.html">VG.Render.MtlMaterial</a></li><li><a href="VG.Render.OrbitCamera.html">VG.Render.OrbitCamera</a></li><li><a href="VG.Render.Pipeline.html">VG.Render.Pipeline</a></li><li><a href="VG.Render.SceneManager.html">VG.Render.SceneManager</a></li><li><a href="VG.Render.SceneNode.html">VG.Render.SceneNode</a></li><li><a href="VG.Render.SimpleMaterial.html">VG.Render.SimpleMaterial</a></li><li><a href="VG.Render.SphereMesh.html">VG.Render.SphereMesh</a></li><li><a href="VG.RenderTarget.html">VG.RenderTarget</a></li><li><a href="VG.Shader.html">VG.Shader</a></li><li><a href="VG.Texture.html">VG.Texture</a></li><li><a href="VG.UI.Button.html">VG.UI.Button</a></li><li><a href="VG.UI.CheckBox.html">VG.UI.CheckBox</a></li><li><a href="VG.UI.CodeEdit.html">VG.UI.CodeEdit</a></li><li><a href="VG.UI.ColorWheel.html">VG.UI.ColorWheel</a></li><li><a href="VG.UI.Dialog.html">VG.UI.Dialog</a></li><li><a href="VG.UI.DockWidget.html">VG.UI.DockWidget</a></li><li><a href="VG.UI.DropArea.html">VG.UI.DropArea</a></li><li><a href="VG.UI.DropDownMenu.html">VG.UI.DropDownMenu</a></li><li><a href="VG.UI.HtmlView.html">VG.UI.HtmlView</a></li><li><a href="VG.UI.HtmlWidget.html">VG.UI.HtmlWidget</a></li><li><a href="VG.UI.IconWidget.html">VG.UI.IconWidget</a></li><li><a href="VG.UI.Image.html">VG.UI.Image</a></li><li><a href="VG.UI.Label.html">VG.UI.Label</a></li><li><a href="VG.UI.LabelLayout.html">VG.UI.LabelLayout</a></li><li><a href="VG.UI.Layout.html">VG.UI.Layout</a></li><li><a href="VG.UI.ListWidget.html">VG.UI.ListWidget</a></li><li><a href="VG.UI.ProgressDialog.html">VG.UI.ProgressDialog</a></li><li><a href="VG.UI.RenderWidget.html">VG.UI.RenderWidget</a></li><li><a href="VG.UI.SectionBar.html">VG.UI.SectionBar</a></li><li><a href="VG.UI.SectionBarButton.html">VG.UI.SectionBarButton</a></li><li><a href="VG.UI.SectionBarSeparator.html">VG.UI.SectionBarSeparator</a></li><li><a href="VG.UI.SectionToolBar.html">VG.UI.SectionToolBar</a></li><li><a href="VG.UI.Slider.html">VG.UI.Slider</a></li><li><a href="VG.UI.SplitLayout.html">VG.UI.SplitLayout</a></li><li><a href="VG.UI.StackedLayout.html">VG.UI.StackedLayout</a></li><li><a href="VG.UI.StatusBar.html">VG.UI.StatusBar</a></li><li><a href="VG.UI.StatusDialog.html">VG.UI.StatusDialog</a></li><li><a href="VG.UI.TabWidget.html">VG.UI.TabWidget</a></li><li><a href="VG.UI.TextEdit.html">VG.UI.TextEdit</a></li><li><a href="VG.UI.TextLineEdit.html">VG.UI.TextLineEdit</a></li><li><a href="VG.UI.TreeWidget.html">VG.UI.TreeWidget</a></li><li><a href="VG.UI.Widget.html">VG.UI.Widget</a></li><li><a href="VG.UI.Window.html">VG.UI.Window</a></li><li><a href="VG.UI.Workspace.html">VG.UI.Workspace</a></li><li><a href="VG.WebGL.html">VG.WebGL</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="tutorial-Data Model.html">Data Model</a></li><li><a href="tutorial-Layouts.html">Layouts</a></li><li><a href="tutorial-Widget Basics.html">Widget Basics</a></li><li><a href="tutorial-Workspace.html">Workspace</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="global.html#false">false</a></li><li><a href="global.html#null">null</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			
+
+		<h1 class="page-title">Source: vglib/UI/vg-dockwidget.js</h1>
+    
+<section>
+    <article>
+        <pre
+            class="sunlight-highlight-javascript linenums">/*
+ * Copyright (c) 2014-2017 Markus Moenig &lt;markusm@visualgraphics.tv> and Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+/**Creates an VG.UI.DockWidget.&lt;br>
+ * Dock widgets can be added to the left or right side of an {@link VG.UI.Workspace} and can contain a list of vertically stacked Widgets or Layouts. Dock Widgets can be resized. Use
+ * addItem() and addItems() to add items to the Dock widget.
+ * @param {string} title - The title of the Dock Widget.
+ * @constructor
+ */
+
+VG.UI.DockWidget=function( text )
+{
+    if ( !(this instanceof VG.UI.DockWidget) ) return new VG.UI.DockWidget( text );
+
+    VG.UI.Widget.call( this );
+    this.name="DockWidget";
+    this.text=text === undefined ? "" : text;
+
+    this.layout=VG.UI.Layout();
+    this.layout.vertical=true;
+    this.layout.margin.set( 0, 0, 0, 0 );
+    this.layout.spacing=0;
+    this.supportsFocus=true;
+
+    this.dragOpStart=VG.Core.Point();
+    this.dragOpPos=VG.Core.Point();
+
+    this.dragOp=false;
+};
+
+VG.UI.DockWidget.prototype=VG.UI.Widget();
+
+VG.UI.DockWidget.prototype.mouseMove=function( event )
+{
+    if ( !this.dragOp ) return;
+
+    this.dragOpMoved=true;
+
+    if ( this.location &lt; VG.UI.DockWidgetLocation.Floating )
+    {
+        var offset=Math.abs( event.pos.x - this.dragOpStart.x );
+
+        if ( offset > 10 ) {
+            VG.context.workspace.detachDockWidget( this );
+            VG.update();
+        }
+    } else
+    {
+        var offsetX=event.pos.x - this.dragOpStart.x;
+        var offsetY=event.pos.y - this.dragOpStart.y;
+
+        this.rect.x=this.dragOpPos.x + offsetX;
+        this.rect.y=this.dragOpPos.y + offsetY;
+        VG.update();
+    }
+};
+
+VG.UI.DockWidget.prototype.mouseDown=function( event )
+{
+    if ( event.pos.y >= this.rect.y &amp;&amp; event.pos.y &lt;= ( this.rect.y + VG.UI.stylePool.current.skin.DockWidget.HeaderHeight ) )
+    {
+        this.dragOp=true;
+        this.dragOpMoved=false;
+        this.dragOpStart.set( event.pos );
+        this.dragOpPos.x=this.rect.x;
+        this.dragOpPos.y=this.rect.y;
+
+        VG.context.workspace.mouseTrackerWidget=this;
+        VG.update();
+    }
+};
+
+VG.UI.DockWidget.prototype.mouseUp=function( event )
+{
+    VG.context.workspace.mouseTrackerWidget=0;
+
+    if ( this.dragOp &amp;&amp; this.dragOpMoved &amp;&amp; this.location === VG.UI.DockWidgetLocation.Floating ) {
+        VG.context.workspace.possiblyAttachDockWidget( this );
+    }
+
+    this.dragOp=false;
+    VG.update();
+};
+
+VG.UI.DockWidget.prototype.mouseDoubleClick=function( event )
+{
+    this.dragOp=false;
+
+    if ( this.rect.contains( event.pos ) )
+    {
+/*
+        if ( this.location &lt; VG.UI.DockWidgetLocation.Floating )
+        {
+            this.rect.x+=10;
+            this.rect.y+=10;
+            VG.context.workspace.detachDockWidget( this );
+        } else
+        {
+            VG.context.workspace.possiblyAttachDockWidget( this, true );
+        }
+*/
+    }
+};
+
+VG.UI.DockWidget.prototype.calcSize=function( canvas )
+{
+    var size=this.layout.calcSize( canvas );
+    this.minimumSize.set( this.layout.minimumSize );
+    return size;
+};
+
+/**Adds an item, either a Widget or a Layout, to the Dock widget.
+ * @param {widget} widget - Widget or layout to add
+ */
+
+VG.UI.DockWidget.prototype.addItem=function( item )
+{
+    this.layout.addChild( item );
+};
+
+/**Adds a list of items, either a Widget or a Layout, to the Dock widget.
+ * @param {widget} widgets - Widget or layout to add
+ * @param {widget} ...
+ */
+
+VG.UI.DockWidget.prototype.addItems=function( item )
+{
+    for( var i=0; i &lt; arguments.length; ++i )
+        this.layout.addChild( arguments[i] );
+};
+
+VG.UI.DockWidget.prototype.paintWidget=function( canvas )
+{
+    VG.UI.stylePool.current.drawDockWidget( this, canvas );
+
+    this.layout.rect.set( this.contentRect );
+    this.layout.layout( canvas );
+
+    this.minimumSize.set( this.layout.minimumSize );
+};
+
+/**Creates a VG.UI.SectionBar.&lt;br>
+ * SectionBars can be added to the left or right side of an {@link VG.UI.Workspace} and can contain a list of vertically stacked VG.UI.SectionBarButtons. SectionBars cannot be resized. Use
+ * addItem() and addItems() to add items to the SectionBar.
+ * @constructor
+ */
+
+VG.UI.SectionBar=function( text )
+{
+    if ( !(this instanceof VG.UI.SectionBar) ) return new VG.UI.SectionBar( text );
+
+    VG.UI.DockWidget.call( this );
+    this.name="SectionBar";
+
+    this.text=text ? text : "";
+
+    this.layout.margin.set( 9, 7, 9, 9 );
+    this.layout.spacing=6;
+
+    this.horizontalExpanding=false;
+    this.verticalExpanding=true;
+
+    this.activeButton=null;
+};
+
+VG.UI.SectionBar.prototype=VG.UI.DockWidget();
+
+VG.UI.SectionBar.prototype.calcSize=function( canvas )
+{
+    var size=this.layout.calcSize( canvas );
+    this.minimumSize.width=size.width;
+    this.maximumSize.width=size.width;
+    return size;
+};
+
+VG.UI.SectionBar.prototype.mouseMove=function( event )
+{
+};
+
+VG.UI.SectionBar.prototype.mouseDown=function( event )
+{
+};
+
+VG.UI.SectionBar.prototype.mouseUp=function( event )
+{
+};
+
+/**Adds an VG.UI.SectionBarButton to the SectionBar.
+ * @param {VG.UI.SectionBarButton} button - Button to add to the SectionBar
+ */
+
+VG.UI.SectionBar.prototype.addItem=function( item )
+{
+    this.layout.addChild( item );
+
+    if ( item instanceof VG.UI.SectionBarButton ) {
+        item.stripCallback=this.stripButtonSelectionCallback.bind( this );
+        item.stripWidget=this;
+        if ( !this.activeButton ) this.activeButton=item;
+    }
+};
+
+/**Adds a Button to the SectionBar.
+ * @param {string} text - The text of the button to add.
+ */
+
+VG.UI.SectionBar.prototype.addButton=function( text )
+{
+    var button=VG.UI.SectionBarButton( text );
+    this.addItem( button );
+    return button;
+};
+
+/**Adds a SwitchButton to the SectionBar.
+ * @param {string} text - The text of the button to add.
+ */
+
+VG.UI.SectionBar.prototype.addSwitch=function( text1, text2 )
+{
+    var switchButton=VG.UI.SectionBarSwitch( text1, text2 );
+    this.addItem( switchButton );
+    return switchButton;
+};
+
+/**Adds a separator to the SectionBar.
+ * @param {string} text - The text of the button to add.
+ */
+
+VG.UI.SectionBar.prototype.addSeparator=function( text )
+{
+    var sep=VG.UI.SectionBarSeparator();
+    this.addItem( sep );
+    return sep;
+};
+
+/**Adds a list of items to the SectionBar.
+ * @param {VG.UI.SectionBarButton} button - Button to add to the SectionBar
+ * @param {VG.UI.SectionBarSeparator} ...
+ */
+
+VG.UI.SectionBar.prototype.addItems=function( item )
+{
+    for( var i=0; i &lt; arguments.length; ++i )
+        this.addItem( arguments[i] );
+};
+
+VG.UI.SectionBar.prototype.stripButtonSelectionCallback=function( button )
+{
+    for( var i=0; i &lt; this.layout.children.length; ++i )
+    {
+        var widget=this.layout.children[i];
+
+        if ( widget instanceof VG.UI.SectionBarButton )
+        {
+            if ( widget === button ) widget.selected=true;
+            else widget.selected=false;
+        }
+    }
+
+    if ( this.selectionChanged ) this.selectionChanged( button );
+};
+
+VG.UI.SectionBar.prototype.paintWidget=function( canvas )
+{
+    VG.UI.stylePool.current.drawSectionBar( this, canvas );
+
+    this.layout.rect.set( this.contentRect );
+    this.layout.layout( canvas );
+};
+
+/**Creates an VG.UI.SectionBarButton.&lt;br>
+ * DockStripButtons can be added to VG.UI.SectionBars. They contain either text or images.
+ * @param {string} text - The text of the button.
+ * @constructor
+ */
+
+VG.UI.SectionBarButton=function( text )
+{
+    if ( !(this instanceof VG.UI.SectionBarButton) ) return new VG.UI.SectionBarButton( text );
+    this.text=arguments[0];
+
+    if ( text.indexOf( "\n" ) !== -1 )
+    {
+        this.textArray=text.split( "\n" );
+    }
+
+    VG.UI.Widget.call( this );
+    this.name="SectionBarButton";
+
+    this.horizontalExpanding=false;
+    this.verticalExpanding=false;
+
+    this.minimumSize.width=VG.UI.stylePool.current.skin.SectionBarButton.Size.Width;
+};
+
+VG.UI.SectionBarButton.prototype=VG.UI.Widget();
+
+VG.UI.SectionBarButton.prototype.calcSize=function( canvas )
+{
+    var size=this.preferredSize;
+
+    size.width=VG.UI.stylePool.current.skin.SectionBarButton.Size.width;
+    size.height=VG.UI.stylePool.current.skin.SectionBarButton.Size.height;
+
+    this.minimumSize.width=size.width;
+    this.minimumSize.height=size.height;
+
+    return size;
+};
+
+VG.UI.SectionBarButton.prototype.mouseDown=function( event )
+{
+    this.mouseIsDown=true;
+
+    //if ( this.stripCallback ) this.stripCallback( this );
+    //if ( this.clicked ) this.clicked( this );
+    this.stripWidget.activeButton=this;
+};
+
+VG.UI.SectionBarButton.prototype.mouseUp=function( event )
+{
+    this.mouseIsDown=false;
+};
+
+VG.UI.SectionBarButton.prototype.paintWidget=function( canvas )
+{
+    VG.UI.stylePool.current.drawSectionBarButton( this, canvas );
+};
+
+// ----------------------------------------------------------------- VG.UI.SectionBarSwitch
+
+VG.UI.SectionBarSwitch=function( text1, text2 )
+{
+    if ( !(this instanceof VG.UI.SectionBarSwitch) ) return new VG.UI.SectionBarSwitch( text1, text2 );
+    this.text=arguments[0];
+
+    VG.UI.Widget.call( this );
+    this.name="SectionBarSwitch";
+
+    this.text1=text1;
+    this.text2=text2;
+
+    this.horizontalExpanding=false;
+    this.verticalExpanding=false;
+    this.left=true;
+
+    this.customClick=true;
+    this.leftRect=VG.Core.Rect();
+    this.rightRect=VG.Core.Rect();
+
+    this.minimumSize.width=VG.UI.stylePool.current.skin.SectionBarSwitch.Size.Width;
+};
+
+VG.UI.SectionBarSwitch.prototype=VG.UI.Widget();
+
+VG.UI.SectionBarSwitch.prototype.calcSize=function( canvas )
+{
+    var size=this.preferredSize;
+
+    size.width=VG.UI.stylePool.current.skin.SectionBarSwitch.Size.width;
+    size.height=VG.UI.stylePool.current.skin.SectionBarSwitch.Size.height;
+
+    this.minimumSize.width=size.width;
+    this.minimumSize.height=size.height;
+
+    return size;
+};
+
+VG.UI.SectionBarSwitch.prototype.mouseDown=function( event )
+{
+    this.mouseIsDown=true;
+
+    if ( this.leftRect.contains( event.pos ) )
+        this.left=true;
+    else
+    if ( this.rightRect.contains( event.pos ) )
+        this.left=false;
+    else return;
+
+    if ( this.clicked ) this.clicked( this.left );
+    VG.update();
+};
+
+VG.UI.SectionBarSwitch.prototype.mouseUp=function( event )
+{
+    this.mouseIsDown=false;
+};
+
+VG.UI.SectionBarSwitch.prototype.paintWidget=function( canvas )
+{
+    VG.UI.stylePool.current.drawSectionBarSwitch( this, canvas );
+};
+
+
+/**Creates an VG.UI.SectionBarSeparator.&lt;br>
+ * A SectionBarSeparator can be added to VG.UI.SectionBar and draws a horizontal separator line.
+ * @constructor
+ */
+
+VG.UI.SectionBarSeparator=function()
+{
+    if ( !(this instanceof VG.UI.SectionBarSeparator )) return new VG.UI.SectionBarSeparator();
+
+    VG.UI.Widget.call( this );
+    this.name="SectionBarSeparator";
+
+    this.horizontalExpanding=false;
+    this.verticalExpanding=false;
+};
+
+VG.UI.SectionBarSeparator.prototype=VG.UI.Widget();
+
+VG.UI.SectionBarSeparator.prototype.calcSize=function()
+{
+    var size=VG.Core.Size( 81, VG.UI.stylePool.current.skin.SectionBar.Separator.Height );
+    return size;
+};
+
+VG.UI.SectionBarSeparator.prototype.paintWidget=function( canvas )
+{
+    var size=this.calcSize();
+    this.contentRect.set( this.rect );
+
+    if ( VG.UI.stylePool.current.skin.SectionBar.Separator.Height === 1 ) {
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y, this.rect.width, 1 ), VG.UI.stylePool.current.skin.SectionBar.Separator.Color1 );
+    } else
+    {
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y, this.rect.width, 1 ), VG.UI.stylePool.current.skin.SectionBar.Separator.Color1 );
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, VG.Core.Rect( this.rect.x, this.rect.y+1, this.rect.width, 1 ), VG.UI.stylePool.current.skin.SectionBar.Separator.Color2 );
+    }
+};
+
+/**Creates a VG.UI.SectionToolBar.&lt;br>
+ * SectionToolBars can be added to the left or right side of an {@link VG.UI.Workspace} and can contain a list of vertically stacked {@link VG.UI.SectionToolBarButton}s which are grouped into sections.
+ * SectionToolBars cannot be resized.
+ * @constructor
+ */
+
+VG.UI.SectionToolBar=function( text )
+{
+    if ( !(this instanceof VG.UI.SectionToolBar) ) return new VG.UI.SectionToolBar( text );
+
+    VG.UI.DockWidget.call( this );
+    this.name="SectionToolBar";
+
+    this.text=text ? text : "";
+
+    this.layout.margin.set( 9, 7, 9, 0 );
+    this.layout.spacing=6;
+
+    this.horizontalExpanding=false;
+    this.verticalExpanding=true;
+
+    this.activeButton=null;
+    this.childWidgets=[];
+};
+
+VG.UI.SectionToolBar.prototype=VG.UI.DockWidget();
+
+VG.UI.SectionToolBar.prototype.calcSize=function( canvas )
+{
+    var size=this.preferredSize;
+
+    size.width=54;
+    size.height=VG.UI.MaxLayoutSize;
+
+    this.minimumSize.width=size.width;
+    this.maximumSize.width=size.width;
+    return size;
+};
+
+VG.UI.SectionToolBar.prototype.mouseMove=function( event )
+{
+};
+
+VG.UI.SectionToolBar.prototype.mouseDown=function( event )
+{
+};
+
+VG.UI.SectionToolBar.prototype.mouseUp=function( event )
+{
+};
+
+/**Adds a new section to the to the SectionToolBar.
+ * @param {string} text - The text of the section to add
+ * @returns {VG.UI.Layout}
+ */
+
+VG.UI.SectionToolBar.prototype.addSection=function( text )
+{
+    var layout=VG.UI.Layout();
+    layout.vertical=true;
+    layout.margin.clear();
+    layout.spacing=1;
+    layout.text=text;
+
+    this.layout.addChild( layout );
+    return layout;
+};
+
+/**Adds an VG.UI.SectionToolBarButton to the given section.
+ * @param {VG.UI.Layout} section - The section to add thew new button to.
+ * @param {string} iconName - Name of the icon to add to the section.
+ * @returns {VG.UI.SectionToolBarButton}
+ */
+
+VG.UI.SectionToolBar.prototype.addButton=function( section, iconName )
+{
+    var button=VG.UI.SectionToolBarButton( iconName );
+    section.addChild( button );
+
+    if ( button instanceof VG.UI.SectionToolBarButton ) {
+        button.sectionBarCallback=this.buttonSelectionCallback.bind( this );
+        button.sectionBarWidget=this;
+        if ( !this.activeButton ) this.activeButton=button;
+    }
+
+    this.childWidgets.push( button );
+
+    return button;
+};
+
+/**Adds an VG.UI.SectionToolBarButton to the given section.
+ * @param {VG.UI.Layout} section - The section to add thew new button to.
+ * @param {string} group - Name of the svg group.
+ * @param {string} name- Name of the svg.
+ * @returns {VG.UI.SectionToolBarButton}
+ */
+
+VG.UI.SectionToolBar.prototype.addSVGButton=function( section, group, name )
+{
+    var button=VG.UI.SectionToolBarButton( group, name );
+    section.addChild( button );
+
+    if ( button instanceof VG.UI.SectionToolBarButton ) {
+        button.sectionBarCallback=this.buttonSelectionCallback.bind( this );
+        button.sectionBarWidget=this;
+        if ( !this.activeButton ) this.activeButton=button;
+    }
+
+    this.childWidgets.push( button );
+
+    return button;
+};
+
+VG.UI.SectionToolBar.prototype.buttonSelectionCallback=function( button )
+{
+    for( var i=0; i &lt; this.layout.children.length; ++i )
+    {
+        var widget=this.layout.children[i];
+
+        if ( widget instanceof VG.UI.SectionToolBarButton )
+        {
+            if ( widget === button ) widget.selected=true;
+            else widget.selected=false;
+        }
+    }
+
+    if ( this.selectionChanged ) this.selectionChanged( button );
+};
+
+VG.UI.SectionToolBar.prototype.paintWidget=function( canvas )
+{
+    VG.UI.stylePool.current.drawSectionToolBar( this, canvas );
+
+    //this.layout.rect.set( this.contentRect );
+    //this.layout.layout( canvas );
+};
+
+// ----------------------------------------------------------------- VG.UI.SectionToolBarButton
+
+VG.UI.SectionToolBarButton=function( iconName, svgGroupName )
+{
+    if ( !(this instanceof VG.UI.SectionToolBarButton) ) return new VG.UI.SectionToolBarButton( iconName, svgGroupName );
+
+    VG.UI.Widget.call( this );
+    this.name="SectionToolBarButton";
+
+    this.horizontalExpanding=false;
+    this.verticalExpanding=false;
+
+    if ( svgGroupName === undefined || typeof svgGroupName == 'number' ) {
+        if ( !iconName.includes( ".svg" ) )
+            this.iconName=iconName;
+        else {
+            let size = 24;
+            if ( typeof svgGroupName == 'number' ) size = svgGroupName;
+            VG.Utils.svgToImage( { data : VG.Utils.getTextByName( iconName ), width : size, height : size, callback : function( image ) {
+                this.image = image;
+            }.bind( this ) } );
+        }
+    }
+    else
+    {
+        this.svgName=iconName;
+        this.svgGroupName=svgGroupName;
+    }
+
+    this.minimumSize.width=VG.UI.stylePool.current.skin.SectionToolBarButton.Size.width;
+};
+
+VG.UI.SectionToolBarButton.prototype=VG.UI.Widget();
+
+VG.UI.SectionToolBarButton.prototype.calcSize=function( canvas )
+{
+    var size=this.preferredSize;
+
+    size.width=VG.UI.stylePool.current.skin.SectionToolBarButton.Size.width;
+    size.height=VG.UI.stylePool.current.skin.SectionToolBarButton.Size.height;
+
+    this.minimumSize.width=size.width;
+    this.minimumSize.height=size.height;
+
+    return size;
+};
+
+VG.UI.SectionToolBarButton.prototype.mouseDown=function( event )
+{
+    this.mouseIsDown=true;
+
+    if ( this.disabled )
+        return;
+
+    if ( this.sectionBarCallback ) this.sectionBarCallback( this );
+    if ( this.clicked ) this.clicked( this );
+    this.sectionBarWidget.activeButton=this;
+};
+
+VG.UI.SectionToolBarButton.prototype.mouseUp=function( event )
+{
+    this.mouseIsDown=false;
+};
+
+VG.UI.SectionToolBarButton.prototype.paintWidget=function( canvas )
+{
+    VG.UI.stylePool.current.drawSectionToolBarButton( this, canvas );
+};</pre>
+    </article>
+</section>
+
+
+
+
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+
+<footer>
+
+
+	<span class="copyright">
+	ViralGraphics.io Copyright © 2014-2017 Markus Moenig
+	</span>
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a>
+	
+		on Wed Oct 11th 2017
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : true,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
+</body>
+</html>

@@ -99,7 +99,6 @@ VG.DB.Folder.prototype.getAllContent=function( callback )
     VG.sendBackendRequest( "/folder/" + this.id + "/content", "", function( responseText ) {
         if ( !responseText ) return;
         var response=JSON.parse( responseText );
-        //console.log( responseText );
 
         if ( response.status === "ok" ) {
             if ( callback ) callback( response.content );

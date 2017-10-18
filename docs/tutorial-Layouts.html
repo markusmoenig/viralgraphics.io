@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width">
+	<title>ViralGraphics.io Tutorial: Layouts</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	<link type="text/css" rel="stylesheet" href="styles/site.spacelab.css">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<div class="container">
+	<div class="navbar-header">
+		<a class="navbar-brand" href="index.html">ViralGraphics.io</a>
+		<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#topNavigation">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+        </button>
+	</div>
+	<div class="navbar-collapse collapse" id="topNavigation">
+		<ul class="nav navbar-nav">
+			
+			<li class="dropdown">
+				<a href="namespaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Namespaces<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="VG.html">VG</a></li><li><a href="VG.context.html">VG.context</a></li><li><a href="VG.Controller.html">VG.Controller</a></li><li><a href="VG.Core.html">VG.Core</a></li><li><a href="VG.Data.html">VG.Data</a></li><li><a href="VG.Events.html">VG.Events</a></li><li><a href="VG.Font.html">VG.Font</a></li><li><a href="VG.Import.html">VG.Import</a></li><li><a href="VG.Math.html">VG.Math</a></li><li><a href="VG.Render.html">VG.Render</a></li><li><a href="VG.UI.html">VG.UI</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="RichText.Editor.html">RichText.Editor</a></li><li><a href="RichText.ElementManager.html">RichText.ElementManager</a></li><li><a href="VG.Canvas.html">VG.Canvas</a></li><li><a href="VG.Controller.Array.html">VG.Controller.Array</a></li><li><a href="VG.Controller.Base.html">VG.Controller.Base</a></li><li><a href="VG.Controller.Tree.html">VG.Controller.Tree</a></li><li><a href="VG.Core.Color.html">VG.Core.Color</a></li><li><a href="VG.Core.Image.html">VG.Core.Image</a></li><li><a href="VG.Core.ImagePool.html">VG.Core.ImagePool</a></li><li><a href="VG.Core.Margin.html">VG.Core.Margin</a></li><li><a href="VG.Core.Material.html">VG.Core.Material</a></li><li><a href="VG.Core.NormalizedColor.html">VG.Core.NormalizedColor</a></li><li><a href="VG.Core.Point.html">VG.Core.Point</a></li><li><a href="VG.Core.Rect.html">VG.Core.Rect</a></li><li><a href="VG.Core.Size.html">VG.Core.Size</a></li><li><a href="VG.Core.Timer.html">VG.Core.Timer</a></li><li><a href="VG.Core.TypedArray.html">VG.Core.TypedArray</a></li><li><a href="VG.Data.Base.html">VG.Data.Base</a></li><li><a href="VG.Data.Collection.html">VG.Data.Collection</a></li><li><a href="VG.Data.UndoItem.html">VG.Data.UndoItem</a></li><li><a href="VG.Events.MouseDownEvent.html">VG.Events.MouseDownEvent</a></li><li><a href="VG.Events.MouseMoveEvent.html">VG.Events.MouseMoveEvent</a></li><li><a href="VG.Events.MouseUpEvent.html">VG.Events.MouseUpEvent</a></li><li><a href="VG.Font.Font.html">VG.Font.Font</a></li><li><a href="VG.Font.Manager.html">VG.Font.Manager</a></li><li><a href="VG.GPUBuffer.html">VG.GPUBuffer</a></li><li><a href="VG.Math.Aabb.html">VG.Math.Aabb</a></li><li><a href="VG.Math.Matrix4.html">VG.Math.Matrix4</a></li><li><a href="VG.Math.Quat.html">VG.Math.Quat</a></li><li><a href="VG.Math.Vector2.html">VG.Math.Vector2</a></li><li><a href="VG.Math.Vector3.html">VG.Math.Vector3</a></li><li><a href="VG.Math.Vector4.html">VG.Math.Vector4</a></li><li><a href="VG.Render.BoxMesh.html">VG.Render.BoxMesh</a></li><li><a href="VG.Render.Camera.html">VG.Render.Camera</a></li><li><a href="VG.Render.Context.html">VG.Render.Context</a></li><li><a href="VG.Render.Material.html">VG.Render.Material</a></li><li><a href="VG.Render.Mesh.html">VG.Render.Mesh</a></li><li><a href="VG.Render.MtlMaterial.html">VG.Render.MtlMaterial</a></li><li><a href="VG.Render.OrbitCamera.html">VG.Render.OrbitCamera</a></li><li><a href="VG.Render.Pipeline.html">VG.Render.Pipeline</a></li><li><a href="VG.Render.SceneManager.html">VG.Render.SceneManager</a></li><li><a href="VG.Render.SceneNode.html">VG.Render.SceneNode</a></li><li><a href="VG.Render.SimpleMaterial.html">VG.Render.SimpleMaterial</a></li><li><a href="VG.Render.SphereMesh.html">VG.Render.SphereMesh</a></li><li><a href="VG.RenderTarget.html">VG.RenderTarget</a></li><li><a href="VG.Shader.html">VG.Shader</a></li><li><a href="VG.Texture.html">VG.Texture</a></li><li><a href="VG.UI.Button.html">VG.UI.Button</a></li><li><a href="VG.UI.CheckBox.html">VG.UI.CheckBox</a></li><li><a href="VG.UI.CodeEdit.html">VG.UI.CodeEdit</a></li><li><a href="VG.UI.ColorWheel.html">VG.UI.ColorWheel</a></li><li><a href="VG.UI.Dialog.html">VG.UI.Dialog</a></li><li><a href="VG.UI.DockWidget.html">VG.UI.DockWidget</a></li><li><a href="VG.UI.DropArea.html">VG.UI.DropArea</a></li><li><a href="VG.UI.DropDownMenu.html">VG.UI.DropDownMenu</a></li><li><a href="VG.UI.HtmlView.html">VG.UI.HtmlView</a></li><li><a href="VG.UI.HtmlWidget.html">VG.UI.HtmlWidget</a></li><li><a href="VG.UI.IconWidget.html">VG.UI.IconWidget</a></li><li><a href="VG.UI.Image.html">VG.UI.Image</a></li><li><a href="VG.UI.Label.html">VG.UI.Label</a></li><li><a href="VG.UI.LabelLayout.html">VG.UI.LabelLayout</a></li><li><a href="VG.UI.Layout.html">VG.UI.Layout</a></li><li><a href="VG.UI.ListWidget.html">VG.UI.ListWidget</a></li><li><a href="VG.UI.ProgressDialog.html">VG.UI.ProgressDialog</a></li><li><a href="VG.UI.RenderWidget.html">VG.UI.RenderWidget</a></li><li><a href="VG.UI.SectionBar.html">VG.UI.SectionBar</a></li><li><a href="VG.UI.SectionBarButton.html">VG.UI.SectionBarButton</a></li><li><a href="VG.UI.SectionBarSeparator.html">VG.UI.SectionBarSeparator</a></li><li><a href="VG.UI.SectionToolBar.html">VG.UI.SectionToolBar</a></li><li><a href="VG.UI.Slider.html">VG.UI.Slider</a></li><li><a href="VG.UI.SplitLayout.html">VG.UI.SplitLayout</a></li><li><a href="VG.UI.StackedLayout.html">VG.UI.StackedLayout</a></li><li><a href="VG.UI.StatusBar.html">VG.UI.StatusBar</a></li><li><a href="VG.UI.StatusDialog.html">VG.UI.StatusDialog</a></li><li><a href="VG.UI.TabWidget.html">VG.UI.TabWidget</a></li><li><a href="VG.UI.TextEdit.html">VG.UI.TextEdit</a></li><li><a href="VG.UI.TextLineEdit.html">VG.UI.TextLineEdit</a></li><li><a href="VG.UI.TreeWidget.html">VG.UI.TreeWidget</a></li><li><a href="VG.UI.Widget.html">VG.UI.Widget</a></li><li><a href="VG.UI.Window.html">VG.UI.Window</a></li><li><a href="VG.UI.Workspace.html">VG.UI.Workspace</a></li><li><a href="VG.WebGL.html">VG.WebGL</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="tutorial-Data Model.html">Data Model</a></li><li><a href="tutorial-Layouts.html">Layouts</a></li><li><a href="tutorial-Widget Basics.html">Widget Basics</a></li><li><a href="tutorial-Workspace.html">Workspace</a></li>
+				</ul>
+			</li>
+			
+			<li class="dropdown">
+				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
+				<ul class="dropdown-menu ">
+					<li><a href="global.html#false">false</a></li><li><a href="global.html#null">null</a></li>
+				</ul>
+			</li>
+			
+		</ul>
+        
+            <div class="col-sm-3 col-md-3">
+                <form class="navbar-form" role="search">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q" id="search-input">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" id="search-submit"><i class="glyphicon glyphicon-search"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+	</div>
+
+</div>
+</div>
+
+
+<div class="container" id="toc-content">
+<div class="row">
+
+	
+	<div class="col-md-12">
+	
+		<div id="main">
+			<section class="tutorial-section">
+
+<header>
+    
+
+    <h2>Layouts</h2>
+</header>
+
+<article>
+    <p>Every Application needs a Layout. Visual Graphics offers several different Layouts which we will introduce here, also Widgets have several properties which define their behavior in a Layout.</p>
+<h3>VG.UI.Layout</h3>
+
+<p>This is the most common layout, it displays its child widgets in either a horizontal (default) or vertical row. Let's have a look at an easy example, here we create three instances of a RectangleWidget, a very simple widget which just paints its rectangle black, and add them into an horizontal layout:</p>
+
+<pre class="prettyprint source"><code>function vgMain( workspace, argc, arg )
+{
+    var RectangleWidget=function() { VG.UI.Widget.call( this ); };
+    RectangleWidget.prototype=VG.UI.Widget();
+    RectangleWidget.prototype.paintWidget=function( canvas ) { canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, VG.Core.Color() ); };
+
+    workspace.content=new VG.UI.Layout( new RectangleWidget, new RectangleWidget, new RectangleWidget );
+};</code></pre><p>After starting this example you will see three large rectangles, the widgets, separated by grey areas, around the layout itself (this is the margin of the Layout) and between the widgets, this is the spacing of the Layout.</p>
+
+<p>The margin of a Layout is specified by an <i>VG.Core.Margin</i> class inside the <i>margin</i> property of the Layout. The margin class defines the left, top, right and bottom margin of the Layout. The spacing between Widgets is a defined by the <i>spacing</i> property of the Layout. If we clear the margin and set the spacing to 0, we will only see one big black area, i.e. the three rectangles:</p>
+
+<pre class="prettyprint source"><code>function vgMain( workspace, argc, arg )
+{
+    var RectangleWidget=function() { VG.UI.Widget.call( this ); };
+    RectangleWidget.prototype=VG.UI.Widget();
+    RectangleWidget.prototype.paintWidget=function( canvas ) { canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, VG.Core.Color() ); };
+
+    workspace.content=new VG.UI.Layout( new RectangleWidget, new RectangleWidget, new RectangleWidget );
+    workspace.content.margin.clear(); workspace.content.spacing=0;
+};</code></pre><p>We use the <i>clear</i> member function of the Layout to set all 4 properties of the margin (left, top, right, bottom) to 0, play around with the margin and spacing values and examine how that changes the characteristics of the Layout.</p>
+
+<p>The size of a Widget inside a Layout can be controlled by the minimumSize, maximumSize and preferredSize properties of a Widget. These are <i>VG.Core.Size</i> based objects which have width and height properties. Default values are 0 for the minimum sizes and 32768 for the maximum sizes and 100 for the preferred sizes. The preferred size gives the Layout an idea which size is best suited for the Widget. Let's try to reduce the width of the widgets by setting it's maximum width to 40 in the constructor:</p>
+
+<pre class="prettyprint source"><code>function vgMain( workspace, argc, arg )
+{
+    var RectangleWidget=function() { VG.UI.Widget.call( this ); this.maximumSize.width=40; };
+    RectangleWidget.prototype=VG.UI.Widget();
+    RectangleWidget.prototype.paintWidget=function( canvas ) { canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, VG.Core.Color() ); };
+
+    workspace.content=new VG.UI.Layout( new RectangleWidget, new RectangleWidget, new RectangleWidget );
+};</code></pre><p>Additionally to setting the minimum, maximum and preferred sizes, Widgets also support two properties called <i>horizontalExpanding</i> and <i>verticalExpanding</i> which indicate to the Layout if a Widget should expand horizontally and vertically at all, the default values for these properties are true. If you remember the 'Hello World' example from the vgMain section, we had to set the <i>horizontalExpanding</i> property of the Label to true, as the default behaviour of the label is to have a fixed, minimum size horizontally (otherwise the Label would expand which would add a lot of empty space to it's left and right, not a desired behavior in a toolbar for example).</p>
+
+<p>By default Layouts (except an VG.UI.LabelLayout which is always vertical) are horizontal, you can switch a Layout to be vertical by setting it's <i>vertical</i> property to true.</p>
+
+<h3>VG.UI.SplitLayout</h3>
+
+<p>Split Layouts split the available space into resizable areas. You can define the initial percentage each Widget occupies when you add the Widget to the Layout, just make sure the percentages sum up to 100 percent. Here is an example which adds 3 RectangleWidgets to a SplitLayout and the middle widget takes 3 times as much space as the other two Widgets. You can resize the Widgets by the handle in the middle. Normally you set a minimum size to the Widgets to make sure the resize operations stay inside a valid range for the Widget, here we set the minimum size for the Widgets to 20:</p>
+
+<pre class="prettyprint source"><code>function vgMain( workspace, argc, arg )    
+{
+    var RectangleWidget=function() { VG.UI.Widget.call( this ); this.minimumSize.width=20; };
+    RectangleWidget.prototype=VG.UI.Widget();
+    RectangleWidget.prototype.paintWidget=function( canvas ) { canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, VG.Core.Color() ); };
+
+    workspace.content=new VG.UI.SplitLayout( new RectangleWidget, 20, new RectangleWidget, 60, new RectangleWidget, 20 );
+};</code></pre><p>Up to now we always added Widgets to a Layout using the Layout's constructor, you could however also use it's <i>addChild( widget )</i> member function to add a child, <i>removeChild( widget )</i> to remove a child and <i>insertChild( index, widget )</i> to insert a Widget at a given index into the Layout.</p>
+
+<p>You can make a Widget invisible in a Layout by setting it's <i>visible</i> property to false. This will free up the space of the Widget inside the Layout until you set this property to true again.</p>
+
+<p>We only talk about Widgets here to keep things simple, but of course you can also add a Layout into another Layout, allowing for complex User Interfaces.</p>
+
+<h3>VG.UI.LabelLayout</h3>
+
+<p>A Label Layout is always vertical and displays a label before each child widget. Here is an easy example:</p> 
+
+<pre class="prettyprint source"><code>function vgMain( workspace, argc, arg )
+{
+    var RectangleWidget=function( color ) { VG.UI.Widget.call( this ); this.maximumSize.width=200; this.color=color; };
+    RectangleWidget.prototype=VG.UI.Widget();
+    RectangleWidget.prototype.paintWidget=function( canvas ) { canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, this.color ); };
+
+    workspace.content=new VG.UI.LabelLayout();
+    workspace.content.addChild( &quot;Red&quot;, new RectangleWidget( VG.Core.Color( 255, 0, 0 ) ) );
+    workspace.content.addChild( &quot;Green&quot;, new RectangleWidget( VG.Core.Color( 0, 255, 0 ) ) );
+};</code></pre><p>We did set the maximum width of the Rectangles to 200 to prevent them for being too wide.</p>
+
+<h3>VG.UI.StackedLayout</h3>
+
+<p>The last Layout we want to discuss here is a stacked layout, it behaves a bit different than other Layout's inside Visual Graphics, it only displays the <i>current</i> child and ignores all of it's other children. This is best explained by an example. Here we create a <i>VG.UI.DropDownMenu</i> (to be properly introduced in the UI Widgets section later on) with two items, changing the selection of the drop down menu will change the widget being displayed.</p> 
+
+<pre class="prettyprint source"><code>function vgMain( workspace, argc, arg )
+{
+    var RectangleWidget=function( color ) { VG.UI.Widget.call( this ); this.setFixedSize( 100, 100 ); this.color=color; };
+    RectangleWidget.prototype=VG.UI.Widget();
+    RectangleWidget.prototype.paintWidget=function( canvas ) { canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, this.color ); };
+
+    var stackedLayout=new VG.UI.StackedLayout( new RectangleWidget( VG.Core.Color( 255, 0, 0 ) ), new RectangleWidget( VG.Core.Color( 0, 255, 0 ) ) );
+    var dropDownMenu=new VG.UI.DropDownMenu( &quot;Red&quot;, &quot;Green&quot; );
+    dropDownMenu.changed=function( index ) { stackedLayout.current=stackedLayout.childAt( index ); }
+
+    workspace.content=new VG.UI.LabelLayout( &quot;Type&quot;, dropDownMenu, &quot;&quot;, stackedLayout );
+};</code></pre><p>Here we also call <i>setFixedSize( width, height )</i> on the rectangles, this convenience function sets the minimum, maximum and preferred sizes to the given size and disables horizontal and vertical expansion. Note how the displayed rectangle does not expand but stays fixed at 100, 100</p>
+</article>
+
+</section>
+
+		</div>
+	</div>
+
+	<div class="clearfix"></div>
+
+	
+
+</div>
+</div>
+
+
+    <div class="modal fade" id="searchResults">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Search results</h4>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div>
+
+
+<footer>
+
+
+	<span class="copyright">
+	ViralGraphics.io Copyright © 2014-2017 Markus Moenig
+	</span>
+
+<span class="jsdoc-message">
+	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a>
+	
+		on Wed Oct 11th 2017
+	
+	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
+</span>
+</footer>
+
+<script src="scripts/docstrap.lib.js"></script>
+<script src="scripts/toc.js"></script>
+
+    <script type="text/javascript" src="scripts/fulltext-search-ui.js"></script>
+
+
+<script>
+$( function () {
+	$( "[id*='$']" ).each( function () {
+		var $this = $( this );
+
+		$this.attr( "id", $this.attr( "id" ).replace( "$", "__" ) );
+	} );
+
+	$( ".tutorial-section pre, .readme-section pre, pre.prettyprint.source" ).each( function () {
+		var $this = $( this );
+
+		var example = $this.find( "code" );
+		exampleText = example.html();
+		var lang = /{@lang (.*?)}/.exec( exampleText );
+		if ( lang && lang[1] ) {
+			exampleText = exampleText.replace( lang[0], "" );
+			example.html( exampleText );
+			lang = lang[1];
+		} else {
+			var langClassMatch = example.parent()[0].className.match(/lang\-(\S+)/);
+			lang = langClassMatch ? langClassMatch[1] : "javascript";
+		}
+
+		if ( lang ) {
+
+			$this
+			.addClass( "sunlight-highlight-" + lang )
+			.addClass( "linenums" )
+			.html( example.html() );
+
+		}
+	} );
+
+	Sunlight.highlightAll( {
+		lineNumbers : true,
+		showMenu : true,
+		enableDoclinks : true
+	} );
+
+	$.catchAnchorLinks( {
+        navbarOffset: 10
+	} );
+	$( "#toc" ).toc( {
+		anchorName  : function ( i, heading, prefix ) {
+			return $( heading ).attr( "id" ) || ( prefix + i );
+		},
+		selectors   : "#toc-content h1,#toc-content h2,#toc-content h3,#toc-content h4",
+		showAndHide : false,
+		smoothScrolling: true
+	} );
+
+	$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+	$( '.dropdown-toggle' ).dropdown();
+
+    $( "table" ).each( function () {
+      var $this = $( this );
+      $this.addClass('table');
+    } );
+
+} );
+</script>
+
+
+
+<!--Navigation and Symbol Display-->
+
+
+<!--Google Analytics-->
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            SearcherDisplay.init();
+        });
+    </script>
+
+
+</body>
+</html>

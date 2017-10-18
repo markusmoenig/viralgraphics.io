@@ -1334,8 +1334,8 @@ VG.Nodes.MaterialRenderer.prototype.getTiming=function()
     } else
     {
         // ...at some point in the future, after returning control to the browser and being called again:
-        var available = this.queryExt.getQueryObjectEXT( this.query, this.queryExt.QUERY_RESULT_AVAILABLE_EXT);
-        var disjoint = VG.WebGL.gl.getParameter(this.queryExt.GPU_DISJOINT_EXT);
+        let available = this.queryExt.getQueryObjectEXT( this.query, this.queryExt.QUERY_RESULT_AVAILABLE_EXT);
+        let disjoint = VG.WebGL.gl.getParameter(this.queryExt.GPU_DISJOINT_EXT);
 
         if (available && !disjoint) {
             // See how much time the rendering of the object took in nanoseconds.
