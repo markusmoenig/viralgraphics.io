@@ -146,7 +146,7 @@ VG.UI.Workspace.prototype.showSignupDialog=function()
         widget.html.elements.body.margin.set( 0, 0, 0, 0 );
         widget.html.elements.body.bgColor=VG.context.workspace.canvas.style.skin.Window.BackColor;
         widget.html.elements.a.font=widget.html.elements.body.font;
-        widget.html.html="<b>Sign up</b> to Visual Graphics and sign in to all the applications using the Visual Graphics Application Framework.<br><a href='http://www.braindistrict.com'>Powered by BrainDistrict GmbH.</a>";
+        widget.html.html="<b>Sign up</b> to ViralGraphics.io and sign in to all the applications using the ViralGraphics.io Application Framework.<br><a href='http://www.braindistrict.com'>Powered by BrainDistrict GmbH.</a>";
         widget.paintWidget=function( canvas ) {
             var rect=VG.Core.Rect( this.rect.x + 20, this.rect.y, 93, 85 );
             var svgLogo=VG.Utils.getSVGByName( "vglogo.svg"  );

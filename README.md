@@ -31,7 +31,7 @@ Applications using ViralGraphics.io
 
 The current version is v0.4x with new features being implemented daily. ViralGraphics.io is already in a usable state, however APIs can change without notice and documentation is under development at the moment.
 
-For more information please visit the ViralGraphics.io Documentation at http://www.viralgraphics.io or contact me at markusm@ViralGraphics.io.
+For more information please visit the ViralGraphics.io Documentation at http://www.viralgraphics.io or contact me at markusm@viralgraphics.io.
 
 # Developing for ViralGraphics.io
 

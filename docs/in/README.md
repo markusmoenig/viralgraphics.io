@@ -6,7 +6,7 @@ ViralGraphics.io utilizes both the 2D and 3D canvas to draw it's widgets in the 
 
 The first major application based on ViralGraphics.io is [PaintSupreme 3D](https://www.paintsupreme3d.com). It is available on the Web, as well as in native Windows, Mac and Linux versions. It is also available inside the Mac and Windows App Stores. Native versions are possible via inbuild support of [Electron](https://electron.atom.io/).
 
-ViralGraphics.io is actively developed and maintained by Markus Moenig. The source is hosted on [GitHub](https://github.com/markusmoenig/visualgraphics). **Note that ViralGraphics.io was previously named VisualGraphics.tv, some links and names in the documentation may still refer to the old name.**
+ViralGraphics.io is actively developed and maintained by Markus Moenig. The source is hosted on [GitHub](https://github.com/markusmoenig/viralgraphics.io). **Note that ViralGraphics.io was previously named VisualGraphics.tv, some links and names in the documentation may still refer to the old name.**
 
 ![Spaceship Screenshot](https://s3-us-west-2.amazonaws.com/braindistrict/Spaceship.jpg "PaintSupreme 3D Screenshot")
 
