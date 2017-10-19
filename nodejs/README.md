@@ -1,12 +1,8 @@
 ## Using the Development Tools
 
-## vgmake.js
+## viralgraphics.io
 
-vgmake is an node.js based script to compile Visual Graphics applications into .vide project files which can than be executed via the supplied .html files and published on the Web.
-
-The syntax of vgmake is pretty easy, you just supply the path and name of the .vg file and it will compile it and save it as a .vide file in the same directory as the source .vg file, e.g. "node vgmake.js ../examples/cornellbox/cornellbox.vg". The .html file will read the .vide file and launch it via the supplied visualgraphics.js script.
-
-Additionally you can supply parameters to vgmake to create and publish an application on the Web, this is done by supplying your www.visualgraphics.tv account username and password via the -u and -p parameters and by using adding additional -create and -update parameters. The syntax of .vg files is described below.
+Please check the viralgraphics.io [nodejs module](https://www.npmjs.com/package/viralgraphics.io).
 
 ## vgbuild.js
 

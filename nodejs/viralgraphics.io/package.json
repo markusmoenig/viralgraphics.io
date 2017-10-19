@@ -1,0 +1,39 @@
+{
+  "name": "viralgraphics.io",
+  "version": "0.4.1",
+  "description": "Creating Competitive Desktop Applications for the Web",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/markusmoenig/viralgraphics.io.git"
+  },
+  "keywords": [
+    "javascript",
+    "framework",
+    "application",
+    "desktop",
+    "webgl",
+    "html5"
+  ],
+  "author": "Markus Moenig",
+  "license": "MIT",
+  "preferGlobal": true,
+  "bin": {
+    "viralgraphics.io": "index.js"
+  },
+  "bugs": {
+    "url": "https://github.com/markusmoenig/viralgraphics.io/issues"
+  },
+  "homepage": "https://www.viralgraphics.io",
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "jshint": "^2.9.5",
+    "lz-string": "^1.4.4",
+    "mime": "^2.0.3",
+    "path": "^0.12.7",
+    "request": "^2.83.0",
+    "util": "^0.10.3"
+  }
+}

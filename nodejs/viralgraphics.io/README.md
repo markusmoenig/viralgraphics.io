@@ -29,32 +29,32 @@ Applications using ViralGraphics.io
 
 ## Status
 
-The current version is v0.4x with new features being implemented daily. ViralGraphics.io is already in a usable state, however APIs can change without notice and documentation is under development at the moment.
+The current version is v0.40 with new features being implemented daily. ViralGraphics.io is already in a usable state, however APIs can change without notice and documentation is under development at the moment.
 
 For more information please visit the ViralGraphics.io Documentation at http://www.viralgraphics.io or contact me at markusm@viralgraphics.io.
 
 # Developing for ViralGraphics.io
 
-Makefiles of ViralGraphics.io applications (they end with .vg) can be compiled into project files (.vide) using a node.js based program called vgmake. vgmake also allows the creation and publishing of applications on the Web.
+Makefiles of ViralGraphics.io applications (they end with .vg) can be compiled into project files (.vide) using the node module viralgraphics.io. viralgraphics.io also allows the creation and publishing of applications on the Web.
+
+Note that viralgraphics.io only compiles .vg files, it does not (yet) create ready to use default projects for ViralGraphics.io applications. You currently have to do this youself using the examples supplied in the ViralGraphics.io Git.
 
 The documentation of ViralGraphics.io is currently the weak link and work in progress, you can find the (not complete) documention in the docs folder. We are working on this and hope to have a full documentation as soon as possible. Please also look at the example applications for reference.
 
 V-IDE, the ViralGraphics.io IDE, has not yet catched up with the latest developments and has temporarily been taken out of the distribution. You can use vgmake to fully replace V-IDE for now.
 
-## vgmake.js
+## viralgraphics.io
 
-vgmake is an node.js based script to compile a ViralGraphics.io makefile (.vg) into .vide project which can than be executed via the supplied .html files and published on the Web. vgmake.js is located inside the nodejs folder.
+viralgraphics.io is a nodejs module to compile a ViralGraphics.io makefile (.vg) into .vide project which can than be executed via the supplied .html files and published on the Web. To install viralgraphics.io
+
+```
+npm install viralgraphics.io -g
+```
 
 
-The syntax of vgmake is pretty easy, you just supply the path and name of the .vg file and it will compile it and save it as a .vide file in the same directory as the source .vg file, e.g. "node vgmake.js ../examples/cornellbox/cornellbox.vg". The .html file will read the .vide file and launch it via the supplied visualgraphics.js script.
+The syntax of viralgraphics.io is pretty easy, you just supply the path and name of the .vg file and it will compile it and save it as a .vide file in the same directory as the source .vg file, e.g. "viralgraphics.io paintsupreme.vg". The .html file will read the .vide file and launch it via the supplied visualgraphics.js script.
 
-Additionally you can supply parameters to vgmake to create and publish an application on the Web, this is done by supplying your www.visualgraphics.tv account username and password via the -u and -p parameters and by using additional -create and -update parameters. The syntax of .vg files is described below.
-
-## vgbuild.js
-
-This script builds vglib.min.js from the ViralGraphics.io sources and should only be used when you are actively developing ViralGraphics.io or need to insert debug info.
-
-vgbuild.js uses the Google Closure Compiler to compress the ViralGraphics.io sources. As this can take quite some time, vgbuild supports an -debug option which creates an uncompressed vglib.min.js file, useful for ViralGraphics.io development.
+Additionally you can supply parameters to viralgraphics.io to create and publish an application on the Web, this is done by supplying your www.viralgraphics.io account username and password via the -u and -p parameters and by using additional -create and -update parameters. The syntax of .vg files is described below.
 
 ## Syntax of .vg Makefiles
 
