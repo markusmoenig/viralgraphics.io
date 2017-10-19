@@ -14,7 +14,7 @@ ViralGraphics.io is actively developed and maintained by Markus Moenig. The sour
 
 Makefiles of ViralGraphics.io applications (they end with .vg) can be compiled into project files (.vide) using the node module viralgraphics.io. viralgraphics.io also allows the creation and publishing of applications to the Web.
 
-Note that viralgraphics.io only compiles .vg files, it does not (yet) create ready to use default projects for ViralGraphics.io applications. You currently have to do this youself using the examples supplied in the [ViralGraphics.io Git](https://github.com/markusmoenig/viralgraphics.io).
+Note that viralgraphics.io only compiles .vg files, it does not (yet) create ready to use default projects for ViralGraphics.io applications. You currently have to do this youself using the examples supplied in the [ViralGraphics.io git](https://github.com/markusmoenig/viralgraphics.io).
 
 Fore more information please check the viralgraphics.io [nodejs module](https://www.npmjs.com/package/viralgraphics.io).
 
