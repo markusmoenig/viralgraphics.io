@@ -854,7 +854,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawIconWidget=function( widget, canvas )
 
                     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.IconWidget.ItemBackColor );
                     // canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1.shrink( 15, 15, this.rect1 ), this.skin.IconWidget.ItemBackColor );
-                    this.rect1.shrink( 10 + 8, 10 + 8, this.rect1 );
+                    this.rect1.shrink( widget._margin.width + 1, widget._margin.height + 1, this.rect1 );
                 } else {
                     // canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect1, this.skin.IconWidget.ItemSelectedBorderColor );
                     //canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect1.shrink( 15, 15, this.rect1 ), this.skin.IconWidget.ItemSelectedBackColor );
@@ -864,7 +864,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawIconWidget=function( widget, canvas )
                     canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect1, this.skin.IconWidget.ItemSelectedBorderColor );
                     //canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect1.shrink( 15, 15, this.rect1 ), this.skin.IconWidget.ItemSelectedBackColor );
                     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1.shrink( 1, 1, this.rect1 ), this.skin.IconWidget.ItemSelectedBackColor );
-                    this.rect1.shrink( 9 + 8, 9 + 8, this.rect1 );
+                    this.rect1.shrink( widget._margin.width, widget._margin.height, this.rect1 );
                 }
 
                 if ( widget.paintItemCallback ) widget.paintItemCallback( canvas, item, this.rect1, isSelected );

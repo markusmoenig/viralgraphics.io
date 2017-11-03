@@ -57,6 +57,7 @@ VG.UI.IconWidget=function()
 
     this.offset=0;
 
+    this._margin = VG.Core.Size( 9 + 8, 9 + 8 );
     this.previousRect=VG.Core.Rect();
 
     this.minimumSize.set( 100, 100 );
@@ -128,6 +129,15 @@ Object.defineProperty( VG.UI.IconWidget.prototype, "itemSize",
     },
     set: function( itemSize ) {
         this._itemSize.copy( itemSize );
+    }
+});
+
+Object.defineProperty( VG.UI.IconWidget.prototype, "itemMargin", {
+    get: function() {
+        return this._margin;
+    },
+    set: function( newMargin ) {
+        this._margin.copy( newMargin );
     }
 });
 

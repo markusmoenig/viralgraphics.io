@@ -260,7 +260,7 @@ VG.UI.Layout.prototype.makeAllChildsLooseFocus=function( layout )
                 VG.context.workspace.widgetLostFocus( child );
         } else
         if ( child.isLayout ) {
-            makeAllChildsLooseFocus( child );
+            this.makeAllChildsLooseFocus( child );
         }
     }
 };
