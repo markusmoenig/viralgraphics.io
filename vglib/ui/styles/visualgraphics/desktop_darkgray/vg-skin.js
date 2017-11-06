@@ -483,7 +483,8 @@ VG.UI.VisualGraphicsDarkGraySkin=function()
 
     this.SectionToolBarButton={
 
-        Size : VG.Core.Size( 46, 43 ),
+        // Size : VG.Core.Size( 46, 43 ),
+        Size : VG.Core.Size( 46, 38 ),
 
         BorderColor : VG.Core.Color( 108, 108, 108 ),
         BorderHoverColor : VG.Core.Color( 179, 179, 179 ),

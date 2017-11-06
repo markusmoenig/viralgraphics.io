@@ -2038,9 +2038,9 @@ VG.UI.Slider.prototype.paintWidget=function( canvas )
  * @constructor
  */
 
-VG.UI.Slider=function( { min=0, max=100, step=1, editable=true, precision=0, noValue, value } = {} )
+VG.UI.Slider=function( { min=0, max=100, step=1, editable=true, precision=0, noValue, value, halfWidthValue } = {} )
 {
-    if ( !(this instanceof VG.UI.Slider) ) return new VG.UI.Slider( { min : min, max : max, step : step, editable : editable, precision : precision, noValue : noValue, value : value } );
+    if ( !(this instanceof VG.UI.Slider) ) return new VG.UI.Slider( { min : min, max : max, step : step, editable : editable, precision : precision, noValue : noValue, value : value, halfWidthValue: halfWidthValue } );
 
     VG.UI.Widget.call( this );
     this.name="Slider";
@@ -2056,6 +2056,7 @@ VG.UI.Slider=function( { min=0, max=100, step=1, editable=true, precision=0, noV
     this.step=step;
     this._value=value !== undefined ? value : min;
     this.noValue=noValue;
+    this.halfWidthValue=halfWidthValue;
 
     this.sliderRect=VG.Core.Rect();
     this.sliderHandleRect=VG.Core.Rect();
@@ -3021,16 +3022,12 @@ VG.UI.ToolTipWidget.prototype.paintWidget=function( canvas )
     if ( !this.rect.width || !this.rect.height ) return;
     this.rect.round();
 
-    if ( canvas.twoD )
-        canvas.clearGLRect( this.rect );
-
-    var rect=VG.context.workspace.getVisibleScreenRect( this.contentRect );
+    let rect = VG.context.workspace.getVisibleScreenRect( this.contentRect );
 
     if ( this.rect.bottom() > rect.bottom() ) this.rect.y-=this.rect.height;
     if ( this.rect.right() > rect.right() ) this.rect.x-=this.rect.width;
 
-    if ( canvas.twoD )
-        canvas.clearGLRect( this.rect );
+    if ( canvas.twoD ) canvas.clearGLRect( this.rect );
 
     canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, this.rect, canvas.style.skin.ToolTip.BorderColor );
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect.shrink( 1, 1, this.contentRect ), canvas.style.skin.ToolTip.BackColor );

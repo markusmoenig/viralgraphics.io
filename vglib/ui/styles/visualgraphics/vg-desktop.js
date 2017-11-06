@@ -1870,7 +1870,6 @@ VG.UI.VisualGraphicsStyle.prototype.drawRoundSlider=function( widget, canvas )
         if ( ( widget.step % 1 ) === 0 ) valueText=widget.value.toString();
         else valueText=widget.value.toFixed( 2 );
 
-
         if ( !widget.editable )
             valueTextSize=canvas.getTextSize( valueText );
         else {
@@ -1886,8 +1885,8 @@ VG.UI.VisualGraphicsStyle.prototype.drawRoundSlider=function( widget, canvas )
         }
 
         valueTextSize.width+=10;
-        widget.sliderRect.width-=valueTextSize.width;
-    }
+        widget.sliderRect.width -= valueTextSize.width;
+    } else widget.sliderRect.width -= 10;
 
     if ( !widget.noValue )
     {

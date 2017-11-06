@@ -466,6 +466,7 @@ VG.UI.SectionToolBar=function( text )
     this.text=text ? text : "";
 
     this.layout.margin.set( 9, 7, 9, 0 );
+    // this.layout.margin.set( 0, 0, 0, 0 );
     this.layout.spacing=6;
 
     this.horizontalExpanding=false;
