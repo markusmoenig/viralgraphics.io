@@ -47,7 +47,7 @@ V-IDE, the ViralGraphics.io IDE, has not yet catched up with the latest developm
 
 viralgraphics.io is a nodejs module to compile a ViralGraphics.io makefile (.vg) into .vide project which can than be executed via the supplied .html files and published on the Web. To install viralgraphics.io
 
-```
+```shell
 npm install viralgraphics.io -g
 ```
 

@@ -11,20 +11,88 @@ jshint = require('jshint');
 // --- Utils
 
 String.prototype.endsWith = function(suffix) {
-return this.indexOf(suffix, this.length - suffix.length) !== -1;
+    return this.indexOf(suffix, this.length - suffix.length) !== -1;
 };
+
+// --- Test for new command
+
+if ( process.argv.length > 3 && process.argv[2] === "new" )
+{
+    copyFile = (src, dest) => {
+        let readStream = fs.createReadStream(src);
+
+        readStream.once('error', (err) => {
+            // console.log(err);
+        });
+
+        readStream.once('end', () => {
+            // console.log('done copying');
+        });
+
+        readStream.pipe(fs.createWriteStream(dest));
+    };
+
+    var destDir = path.join( process.argv[3] );
+
+    copyFromPublic = ( fileName ) => {
+        var launcherSource = path.join( __dirname, "public", fileName ), launcherDest = path.join( destDir, fileName );
+        copyFile( launcherSource, launcherDest );
+    };
+
+    if ( !fs.existsSync( destDir ) ) fs.mkdirSync( destDir );
+
+    // --- Source Dir
+
+    let sourceDir = "helloworld";
+    if ( process.argv.length > 4 ) sourceDir = process.argv[4];
+    let sourceTemplateDir = path.join( __dirname, "public", sourceDir );
+    if ( !fs.existsSync( sourceTemplateDir ) ) {
+        console.log( "Template " + sourceDir + " not found." );
+        return;
+    }
+
+    // --- Copy Files
+
+    // copyFromPublic( "viralgraphics.js" );
+    // copyFromPublic( "vglib.min.js" );
+
+    let htmlFile = fs.readFileSync( path.join( __dirname, "public", "viralgraphics.html" ) ).toString();
+    htmlFile = htmlFile.replace( "sourcePath", path.join( __dirname, "public" ) + path.sep );
+    htmlFile = htmlFile.replace( "vglibpath", path.join( __dirname, "public", "vglib.min.js" ) );
+    htmlFile = htmlFile.replace( "launcherPath", path.join( __dirname, "public", "viralgraphics.js" ) );
+    htmlFile = htmlFile.replace( "destName", process.argv[3] );
+
+    fs.writeFileSync( path.join( destDir, process.argv[3] + ".html" ), htmlFile );
+
+    // --- Copy Template Files
+
+    var files = fs.readdirSync( sourceTemplateDir );
+    for (i=0; i < files.length; ++i ) {
+        var file=files[i];
+        var destName = file;
+        if ( file === "makefile.vg" ) destName = process.argv[3] + ".vg";
+
+        copyFile( path.join( sourceTemplateDir, file ), path.join( destDir, destName ) );
+    }
+
+    console.log( `Project \"${process.argv[3]}\" successfully created.` );
+    console.log( `To compile:\n  cd ${process.argv[3]}\n  viralgraphics.io ${destName}` );
+    console.log( `Than launch ${destName.replace(".vg", "")}.html.` );
+
+    return;
+}
 
 // --- Test if first argument is valid vgmakefile
 
-var vgPath=process.argv.length > 2 && process.argv[2].endsWith("vg") ? process.argv[2] : undefined;
+var vgPath = process.argv.length > 2 && process.argv[2].endsWith("vg") ? process.argv[2] : undefined;
 var vgMF, vgMFS;
 
 if ( vgPath ) {
-vgMF = fs.readFileSync( vgPath );
-vgMFS = vgMF.toString();
+    vgMF = fs.readFileSync( vgPath );
+    vgMFS = vgMF.toString();
 } else {
-printUsage();
-return;
+    printUsage();
+    return;
 }
 
 var dir=path.dirname( vgPath );
@@ -207,276 +275,271 @@ var loginActions=[];
 var i=2;
 while ( i < process.argv.length )
 {
-var text=process.argv[i];
+    var text=process.argv[i];
 
-if ( text === "-u" ) { userName=process.argv[i+1]; ++i; }
-else
-if ( text === "-p" ) { password=process.argv[i+1]; ++i; }
-else
-if ( text === "-create" ) loginActions.push( "create" );
-else
-if ( text === "-update" ) loginActions.push( "update" );
-else
-if ( text === "-build" ) loginActions.push( "build" );
-else
-if ( text === "-downloads" ) loginActions.push( "downloads" );
-else
-if ( text === "-icons" ) loginActions.push( "icons" );
+    if ( text === "-u" ) { userName=process.argv[i+1]; ++i; }
+    else
+    if ( text === "-p" ) { password=process.argv[i+1]; ++i; }
+    else
+    if ( text === "-create" ) loginActions.push( "create" );
+    else
+    if ( text === "-update" ) loginActions.push( "update" );
+    else
+    if ( text === "-build" ) loginActions.push( "build" );
+    else
+    if ( text === "-downloads" ) loginActions.push( "downloads" );
+    else
+    if ( text === "-icons" ) loginActions.push( "icons" );
 
-++i;
+    ++i;
 }
 
 if ( userName && password ) {
 
-var parameters={username : userName, password : password };
+    var parameters={username : userName, password : password };
+    sendBackendRequest( "/user/login", parameters, function( response ) {
 
-sendBackendRequest( "/user/login", parameters, function( response ) {
+        if ( response.status === "ok" && response.user.username && response.user.username.length )
+        {
+            console.log( "- Logged in successfully!" );
+            nextLoginAction();
+        }
 
-    if ( response.status === "ok" && response.user.username && response.user.username.length )
-    {
-        console.log( "- Logged in successfully!" );
-        nextLoginAction();
-    }
-
-}, "POST" );
+    }, "POST" );
 }
 
 function nextLoginAction()
 {
-if ( loginActions.length )
-{
-    var action=loginActions[0];
-    loginActions.splice( 0, 1 );
+    if ( loginActions.length )
+    {
+        var action=loginActions[0];
+        loginActions.splice( 0, 1 );
 
-    if ( action === "create" )
-        create();
-    else
-    if ( action === "update" )
-        update();
-    else
-    if ( action === "build" )
-        build();
-    else
-    if ( action === "downloads" )
-        downloads();
-    else
-    if ( action === "icons" )
-        icons();
-}
+        if ( action === "create" )
+            create();
+        else
+        if ( action === "update" )
+            update();
+        else
+        if ( action === "build" )
+            build();
+        else
+        if ( action === "downloads" )
+            downloads();
+        else
+        if ( action === "icons" )
+            icons();
+    }
 }
 
 function create()
 {
-var vide=outFile; var data=out;
+    var vide=outFile; var data=out;
 
-if ( !data.url ) {
-    console.log( "Error: \"url\" parameter is missing.");
-    return;
-}
-
-var parameters={};
-parameters.name=lzString.decompressFromBase64( data.name );
-parameters.version=lzString.decompressFromBase64( data.version );
-parameters.url=lzString.decompressFromBase64( data.url );
-parameters.title=lzString.decompressFromBase64( data.title );
-
-var domains=String( lzString.decompressFromBase64( data.domain ) );
-domains=domains.split( "," );
-for (var i = 0; i < domains.length; i++ )
-    domains[i] = domains[i].trim();
-
-parameters.domain=domains;
-parameters.file=vide;
-
-sendBackendRequest( "/app/create", parameters, function( response ) {
-    var type, message;
-
-    if ( response.status == "ok" )
-    {
-        console.log( "- Application created successfully." );
-        nextLoginAction();
+    if ( !data.url ) {
+        console.log( "Error: \"url\" parameter is missing.");
+        return;
     }
-    else
-    if ( response.status == "error" )
-        console.log( "- Application creation failed!" );
 
-}.bind(this), "POST" );
+    var parameters={};
+    parameters.name=lzString.decompressFromBase64( data.name );
+    parameters.version=lzString.decompressFromBase64( data.version );
+    parameters.url=lzString.decompressFromBase64( data.url );
+    parameters.title=lzString.decompressFromBase64( data.title );
+
+    var domains=String( lzString.decompressFromBase64( data.domain ) );
+    domains=domains.split( "," );
+    for (var i = 0; i < domains.length; i++ )
+        domains[i] = domains[i].trim();
+
+    parameters.domain=domains;
+    parameters.file=vide;
+
+    sendBackendRequest( "/app/create", parameters, function( response ) {
+        var type, message;
+
+        if ( response.status == "ok" )
+        {
+            console.log( "- Application created successfully." );
+            nextLoginAction();
+        }
+        else
+        if ( response.status == "error" )
+            console.log( "- Application creation failed!" );
+
+    }.bind(this), "POST" );
 }
 
 function update()
 {
-var vide=outFile; var data=out;
+    var vide=outFile; var data=out;
 
-console.log( "- Trying to acquire application ID from Server (" + lzString.decompressFromBase64( data.url ) + ")..." );
+    console.log( "- Trying to acquire application ID from Server (" + lzString.decompressFromBase64( data.url ) + ")..." );
 
-var url="/app/check/?url=" + lzString.decompressFromBase64( data.url );
-sendBackendRequest( url, {}, function( response ) {
-    var array=response.check;
-    var appId;
+    var url="/app/check/?url=" + lzString.decompressFromBase64( data.url );
+    sendBackendRequest( url, {}, function( response ) {
+        var array=response.check;
+        var appId;
 
-    // --- Check if url exists on the server
-    for( var i=0; i < array.length; ++i ) {
-        if ( array[i].name === "url" ) {
-            if ( array[i].exists ) appId=array[i].appid;
-        }
-    }
-
-    if ( appId )
-    {
-        console.log( "- Acquired the application ID successfully (" + appId + ")" );
-        console.log( "- Now trying to update application..." );
-
-        var parameters={};
-        parameters.name=lzString.decompressFromBase64( data.name );
-        parameters.version=lzString.decompressFromBase64( data.version );
-        parameters.url=lzString.decompressFromBase64( data.url );
-        parameters.title=lzString.decompressFromBase64( data.title );
-
-        var domains=String( lzString.decompressFromBase64( data.domain ) );
-        domains=domains.split( "," );
-        for (var i = 0; i < domains.length; i++ )
-            domains[i] = domains[i].trim();
-        parameters.domain=domains;
-
-        parameters.author=lzString.decompressFromBase64( data.author );
-        parameters.keywords=lzString.decompressFromBase64( data.keywords );
-        parameters.description=lzString.decompressFromBase64( data.description );
-        if ( data.googleAnalytics )
-            parameters.googleAnalytics=lzString.decompressFromBase64( data.googleAnalytics );
-        parameters.file=vide;
-
-        sendBackendRequest( "/app/update/" + appId, parameters, function( response ) {
-            var type, message;
-
-            if ( response.status == "ok" ) {
-                console.log( "- Application updated successfully." );
-                console.log( "- Now publishing the update..." );
-
-                var parameters={};
-                parameters.name=lzString.decompressFromBase64( data.name );
-
-                sendBackendRequest( "/app/publish/" + appId, parameters, function( response ) {
-                    var type, message;
-
-                    if ( response.status == "ok" ) {
-                        console.log( "Application published successfully!" );
-                        console.log( "Application is now Online at: " + "http://visualgraphics.tv/apps/" + lzString.decompressFromBase64( data.url ) );
-                        nextLoginAction();
-                    } else console.log( "Application could not be published!");
-
-                }.bind(this), "POST" );
-            } else
-            if ( response.status == "error" )    {
-                console.log( "Application could not be updated!");
+        // --- Check if url exists on the server
+        for( var i=0; i < array.length; ++i ) {
+            if ( array[i].name === "url" ) {
+                if ( array[i].exists ) appId=array[i].appid;
             }
-        }.bind(this), "POST" );
+        }
 
-    } else {
-        console.log( "Application ID could not be acquired!");
-    }
+        if ( appId )
+        {
+            console.log( "- Acquired the application ID successfully (" + appId + ")" );
+            console.log( "- Now trying to update application..." );
 
-}.bind( this ), "GET" );
+            var parameters={};
+            parameters.name=lzString.decompressFromBase64( data.name );
+            parameters.version=lzString.decompressFromBase64( data.version );
+            parameters.url=lzString.decompressFromBase64( data.url );
+            parameters.title=lzString.decompressFromBase64( data.title );
+
+            var domains=String( lzString.decompressFromBase64( data.domain ) );
+            domains=domains.split( "," );
+            for (var i = 0; i < domains.length; i++ )
+                domains[i] = domains[i].trim();
+            parameters.domain=domains;
+
+            parameters.author=lzString.decompressFromBase64( data.author );
+            parameters.keywords=lzString.decompressFromBase64( data.keywords );
+            parameters.description=lzString.decompressFromBase64( data.description );
+            if ( data.googleAnalytics )
+                parameters.googleAnalytics=lzString.decompressFromBase64( data.googleAnalytics );
+            parameters.file=vide;
+
+            sendBackendRequest( "/app/update/" + appId, parameters, function( response ) {
+                var type, message;
+
+                if ( response.status == "ok" ) {
+                    console.log( "- Application updated successfully." );
+                    console.log( "- Now publishing the update..." );
+
+                    var parameters={};
+                    parameters.name=lzString.decompressFromBase64( data.name );
+
+                    sendBackendRequest( "/app/publish/" + appId, parameters, function( response ) {
+                        var type, message;
+
+                        if ( response.status == "ok" ) {
+                            console.log( "Application published successfully!" );
+                            console.log( "Application is now Online at: " + "http://visualgraphics.tv/apps/" + lzString.decompressFromBase64( data.url ) );
+                            nextLoginAction();
+                        } else console.log( "Application could not be published!");
+
+                    }.bind(this), "POST" );
+                } else
+                if ( response.status == "error" )    {
+                    console.log( "Application could not be updated!");
+                }
+            }.bind(this), "POST" );
+
+        } else {
+            console.log( "Application ID could not be acquired!");
+        }
+    }.bind( this ), "GET" );
 }
 
 function icons()
 {
-var vide=outFile; var data=out;
+    var vide=outFile; var data=out;
 
-console.log( "- Trying to acquire application ID from Server (" + lzString.decompressFromBase64( data.url ) + ")..." );
+    console.log( "- Trying to acquire application ID from Server (" + lzString.decompressFromBase64( data.url ) + ")..." );
 
-var url="/app/check/?url=" + lzString.decompressFromBase64( data.url );
-sendBackendRequest( url, {}, function( response ) {
-    var array=response.check;
-    var appId;
+    var url="/app/check/?url=" + lzString.decompressFromBase64( data.url );
+    sendBackendRequest( url, {}, function( response ) {
+        var array=response.check;
+        var appId;
 
-    // --- Check if url exists on the server
-    for( var i=0; i < array.length; ++i ) {
-        if ( array[i].name === "url" ) {
-            if ( array[i].exists ) appId=array[i].appid;
-        }
-    }
-
-    if ( appId )
-    {
-        console.log( "- Acquired the application ID successfully (" + appId + ")." );
-
-        var parameters={};
-
-        if ( webIcon ) {
-            console.log( "- Preparing Web Favicon..." );
-            parameters["web-fav"]="data:image/ico;base64," + webIcon;
+        // --- Check if url exists on the server
+        for( var i=0; i < array.length; ++i ) {
+            if ( array[i].name === "url" ) {
+                if ( array[i].exists ) appId=array[i].appid;
+            }
         }
 
-        sendBackendRequest( "/app/" + appId + "/icons", parameters, function( response ) {
+        if ( appId )
+        {
+            console.log( "- Acquired the application ID successfully (" + appId + ")." );
 
-            if ( response.status == "ok" )
-                console.log( "- Icons uploaded successfully!" );
+            var parameters={};
 
-            nextLoginAction();
-        }.bind(this), "POST" );
+            if ( webIcon ) {
+                console.log( "- Preparing Web Favicon..." );
+                parameters["web-fav"]="data:image/ico;base64," + webIcon;
+            }
 
-    } else {
-        console.log( "Application ID could not be acquired!");
-    }
+            sendBackendRequest( "/app/" + appId + "/icons", parameters, function( response ) {
 
-}.bind( this ), "GET" );
+                if ( response.status == "ok" )
+                    console.log( "- Icons uploaded successfully!" );
+
+                nextLoginAction();
+            }.bind(this), "POST" );
+
+        } else {
+            console.log( "Application ID could not be acquired!");
+        }
+
+    }.bind( this ), "GET" );
 }
 
 // ----------------------------------------------------------------------- Helper Functions
 
 function base64Image(src) {
-var data = fs.readFileSync(src).toString("base64");
-return util.format("data:%s;base64,%s", mime.getType(src), data);
+    var data = fs.readFileSync(src).toString("base64");
+    return util.format("data:%s;base64,%s", mime.getType(src), data);
 }
 
 function addOptionalParams( out, lines ) {
-for( var i=2; i < arguments.length; ++i )
-{
-    var arg=arguments[i];
-    var rc=extractTokenList( lines, arg );
-    //console.log( arg, rc[0] );
-    if ( rc && rc.length )
-        out[arg]=lzString.compressToBase64( rc[0] );
-}
+    for( var i=2; i < arguments.length; ++i ) {
+        var arg=arguments[i];
+        var rc=extractTokenList( lines, arg );
+        //console.log( arg, rc[0] );
+        if ( rc && rc.length )
+            out[arg]=lzString.compressToBase64( rc[0] );
+    }
 }
 
 function extractTokenList( lines, token, splitToken )
 {
-var rc=[];
+    var rc=[];
+    for( var i=0; i < lines.length; ++i ) {
+        var line=String( lines[i] );
 
-for( var i=0; i < lines.length; ++i ) {
-    var line=String( lines[i] );
+        if ( line.indexOf( "=" ) !== -1 ) {
+            var arr=line.split("=");
 
-    if ( line.indexOf( "=" ) !== -1 ) {
-        var arr=line.split("=");
+            var left=arr[0].trim().toLowerCase();
+            if ( left === token.toLowerCase() ) {
 
-        var left=arr[0].trim().toLowerCase();
-        if ( left === token.toLowerCase() ) {
-
-            if ( splitToken )
-            {
-                var right=arr[1].split( splitToken );
-                for ( var s=0; s < right.length; ++s ) {
-                    var code=right[s].trim();
-                    if ( code && code.length ) rc.push( code );
-                }
-            } else rc.push( arr[1].trim() );
+                if ( splitToken )
+                {
+                    var right=arr[1].split( splitToken );
+                    for ( var s=0; s < right.length; ++s ) {
+                        var code=right[s].trim();
+                        if ( code && code.length ) rc.push( code );
+                    }
+                } else rc.push( arr[1].trim() );
+            }
         }
     }
-}
-
-return rc;
+    return rc;
 }
 
 function cleanArray( actual )
 {
-// http://stackoverflow.com/questions/281264/remove-empty-elements-from-an-array-in-javascript
-var newArray = [];
-for(var i = 0; i<actual.length; i++) {
-    if (actual[i])
-        newArray.push(actual[i]);
-}
-return newArray;
+    // http://stackoverflow.com/questions/281264/remove-empty-elements-from-an-array-in-javascript
+    var newArray = [];
+    for(var i = 0; i<actual.length; i++) {
+        if (actual[i])
+            newArray.push(actual[i]);
+    }
+    return newArray;
 }
 
 var cookieJar;
@@ -484,100 +547,99 @@ var headers;
 
 function sendBackendRequest( url, parameters, callback, type, error_callback )
 {
-if ( !cookieJar ) cookieJar=request.jar();
+    if ( !cookieJar ) cookieJar=request.jar();
 
-var options = {
-    method: type,
-    url: "https://visualgraphics.tv" + url,
-    json: true,
-    body: parameters,
-    jar: cookieJar
-};
+    var options = {
+        method: type,
+        url: "https://viralgraphics.io" + url,
+        json: true,
+        body: parameters,
+        jar: cookieJar
+    };
 
-if ( headers ) options.header=headers;
+    if ( headers ) options.header=headers;
 
-request( options, function( error, response, json ) {
+    request( options, function( error, response, json ) {
 
-    if (!error && response.statusCode == 200) {
-        if ( !headers ) headers=response.headers;
-        if ( callback ) callback( json );
-    } else {
-        console.log('Error:', json ? json.message : error );
-    }
-} );
+        if (!error && response.statusCode == 200) {
+            if ( !headers ) headers=response.headers;
+            if ( callback ) callback( json );
+        } else {
+            console.log('Error:', json ? json.message : error );
+        }
+    } );
 }
 
 // --- Read the docs from the directory and assemble them into hierarchical JSON
 
 function buildDocs( docDirName, project )
 {
-//var root={ items : [] };
+    //var root={ items : [] };
 
-//readDocs( root, path.join( docDirName.toString() ).toString() );
+    //readDocs( root, path.join( docDirName.toString() ).toString() );
 
-var docDir=path.join( docDirName.toString() ).toString();
-var indexPath=path.join( dir, docDir, "index" );
+    var docDir=path.join( docDirName.toString() ).toString();
+    var indexPath=path.join( dir, docDir, "index" );
 
-var indexJSON=fs.readFileSync( indexPath ).toString();
-var indexArray=JSON.parse( indexJSON );
+    var indexJSON=fs.readFileSync( indexPath ).toString();
+    var indexArray=JSON.parse( indexJSON );
 
-var rootArray=[];//{ title : "", items : [] };
+    var rootArray=[];//{ title : "", items : [] };
 
-readDocElement( docDir, indexArray, rootArray );
+    readDocElement( docDir, indexArray, rootArray );
 
-project.docs = rootArray;
+    project.docs = rootArray;
 
-// --- Read the images
+    // --- Read the images
 
-var imagesPath=path.join( dir, docDir, "images" );
+    var imagesPath=path.join( dir, docDir, "images" );
 
-var files=fs.readdirSync( imagesPath );
+    var files=fs.readdirSync( imagesPath );
 
-for (i=0; i < files.length; ++i ) {
-    var file=files[i];
-    var filePath=path.join( dir, docDir, "images", file );
+    for (i=0; i < files.length; ++i ) {
+        var file=files[i];
+        var filePath=path.join( dir, docDir, "images", file );
 
-    var image=base64Image( filePath );
-    var name=path.basename( file );
-    out.images[name]=image;
-}
+        var image=base64Image( filePath );
+        var name=path.basename( file );
+        out.images[name]=image;
+    }
 }
 
 function readDocElement( docDir, sourceArray, destArray )
 {
-for ( var i=0; i < sourceArray.length; ++i )
-{
-    var sourceItem = sourceArray[i];
-    var item = { title : "", items : [] };
+    for ( var i=0; i < sourceArray.length; ++i )
+    {
+        var sourceItem = sourceArray[i];
+        var item = { title : "", items : [] };
 
-    item.title = sourceItem.title;
-    item.tags = sourceItem.tags.split(',');
-    item.open = sourceItem.open;
+        item.title = sourceItem.title;
+        item.tags = sourceItem.tags.split(',');
+        item.open = sourceItem.open;
 
-    if ( sourceItem.content ) {
-        var contentPath = path.join( dir, docDir, sourceItem.content );
-        item.content = fs.readFileSync( contentPath ).toString()
+        if ( sourceItem.content ) {
+            var contentPath = path.join( dir, docDir, sourceItem.content );
+            item.content = fs.readFileSync( contentPath ).toString()
+        }
+
+        if ( sourceItem.items ) {
+            item.items = [];
+            readDocElement( docDir, sourceItem.items, item.items );
+        }
+        destArray.push( item );
     }
-
-    if ( sourceItem.items ) {
-        item.items = [];
-        readDocElement( docDir, sourceItem.items, item.items );
-    }
-
-    destArray.push( item );
-}
 }
 
 function printUsage()
 {
-console.log( "Usage: node.js makefile -u username -p password -create -update -build -downloads -quit" );
-console.log( "makefile: Full path to the makefile including the makefile itself" );
-console.log( "-u: Username for login, only needed if you want to create, update or build" );
-console.log( "-p: Password for login, only needed if you want to create, update or build" );
-console.log( "-create: Create the application on the Server" );
-console.log( "-update: Update and publish the application on the server (needs to be created first)" );
-//console.log( "-build: Builds the native version of the published application" );
-//console.log( "-downloads: Lists all valid download urls for the application (issue -build first)" );
-console.log( "-icons: Uploads the icons specified in the .vg file to the server." );
+    console.log( "Usage: node.js (makefile|new) -u username -p password -create -update -build -downloads -quit" );
+    console.log( "makefile: Full path to the makefile including the makefile itself" );
+    console.log( "-u: Username for login, only needed if you want to create, update or build" );
+    console.log( "-p: Password for login, only needed if you want to create, update or build" );
+    console.log( "-create: Create the application on the Server" );
+    console.log( "-update: Update and publish the application on the server (needs to be created first)" );
+    //console.log( "-build: Builds the native version of the published application" );
+    //console.log( "-downloads: Lists all valid download urls for the application (issue -build first)" );
+    console.log( "-icons: Uploads the icons specified in the .vg file to the server." );
 }
 

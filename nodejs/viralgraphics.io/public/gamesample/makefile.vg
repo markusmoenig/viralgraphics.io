@@ -1,0 +1,7 @@
+
+name = Game Sample
+version = 1.0
+url = gamesample
+author = Unknown
+
+sources = main.js
