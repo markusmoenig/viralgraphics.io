@@ -482,11 +482,11 @@ VG.UI.SectionToolBar.prototype.calcSize=function( canvas )
 {
     var size=this.preferredSize;
 
-    size.width=54;
+    size.width = this.small ? 44 : 54;
     size.height=VG.UI.MaxLayoutSize;
 
-    this.minimumSize.width=size.width;
-    this.maximumSize.width=size.width;
+    this.minimumSize.width = size.width;
+    this.maximumSize.width = size.width;
     return size;
 };
 
@@ -528,6 +528,7 @@ VG.UI.SectionToolBar.prototype.addSection=function( text )
 VG.UI.SectionToolBar.prototype.addButton=function( section, iconName )
 {
     var button=VG.UI.SectionToolBarButton( iconName );
+    button.small = this.small;
     section.addChild( button );
 
     if ( button instanceof VG.UI.SectionToolBarButton ) {
@@ -551,6 +552,7 @@ VG.UI.SectionToolBar.prototype.addButton=function( section, iconName )
 VG.UI.SectionToolBar.prototype.addSVGButton=function( section, group, name )
 {
     var button=VG.UI.SectionToolBarButton( group, name );
+    button.small = this.small;
     section.addChild( button );
 
     if ( button instanceof VG.UI.SectionToolBarButton ) {
@@ -617,20 +619,20 @@ VG.UI.SectionToolBarButton=function( iconName, svgGroupName )
         this.svgGroupName=svgGroupName;
     }
 
-    this.minimumSize.width=VG.UI.stylePool.current.skin.SectionToolBarButton.Size.width;
+    this.minimumSize.width = this.small ? VG.UI.stylePool.current.skin.SectionToolBarButton.SmallSize.width : VG.UI.stylePool.current.skin.SectionToolBarButton.Size.width;
 };
 
 VG.UI.SectionToolBarButton.prototype=VG.UI.Widget();
 
 VG.UI.SectionToolBarButton.prototype.calcSize=function( canvas )
 {
-    var size=this.preferredSize;
+    var size = this.preferredSize;
 
-    size.width=VG.UI.stylePool.current.skin.SectionToolBarButton.Size.width;
-    size.height=VG.UI.stylePool.current.skin.SectionToolBarButton.Size.height;
+    size.width = this.small ? VG.UI.stylePool.current.skin.SectionToolBarButton.SmallSize.width : VG.UI.stylePool.current.skin.SectionToolBarButton.Size.width;
+    size.height = this.small ? VG.UI.stylePool.current.skin.SectionToolBarButton.SmallSize.height : VG.UI.stylePool.current.skin.SectionToolBarButton.Size.height;
 
-    this.minimumSize.width=size.width;
-    this.minimumSize.height=size.height;
+    this.minimumSize.width = size.width;
+    this.minimumSize.height = size.height;
 
     return size;
 };

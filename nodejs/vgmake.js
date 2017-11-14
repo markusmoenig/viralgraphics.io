@@ -425,7 +425,7 @@ function icons()
 
 function base64Image(src) {
     var data = fs.readFileSync(src).toString("base64");
-    return util.format("data:%s;base64,%s", mime.lookup(src), data);
+    return util.format("data:%s;base64,%s", mime.getType(src), data);
 }
 
 function addOptionalParams( out, lines ) {

@@ -345,13 +345,13 @@ VG.UI.RenderWidget.prototype.render=function(delta)
 
 VG.UI.RenderWidget.prototype.paintWidget=function( canvas )
 {
-    canvas.pushClipRect( this.rect );
+    // canvas.pushClipRect( this.rect );
 
     var clearColor = this.clearColor || canvas.style.skin.Widget.BackgroundColor;
 
     //fakes a hardware clear by rendering a quad as background
     //if ( this.clearBackground ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect, clearColor );
-    if ( this.clearBackground ) this._mainRT.clear( clearColor, true );
+    // if ( this.clearBackground ) this._mainRT.clear( clearColor, true );
     canvas.flush();
 
     this._mainRT.setViewport(this.rect);
@@ -361,7 +361,7 @@ VG.UI.RenderWidget.prototype.paintWidget=function( canvas )
 
     if ( VG.context.workspace.mainRect ) this._mainRT.setViewport( VG.context.workspace.mainRect );
     else this._mainRT.setViewport(VG.context.workspace.rect);
-    canvas.popClipRect();
+    // canvas.popClipRect();
 };
 
 // ----------------------------------------------------------------- VG.UI.Frame
