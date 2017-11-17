@@ -225,19 +225,18 @@ VG.UI.ListWidget.prototype.mouseDown=function( event )
 
     if ( !this.rect.contains( event.pos ) ) return;
 
-    var selectedIndex=-1;
-    var y=this.contentRect.y - this.offset;
-    var item;
+    let selectedIndex=-1;
+    let y=this.contentRect.y - this.offset;
 
     for ( var i=0; i < this.controller.count(); ++i ) {
-        item=this.controller.at( i ) ;
+        let item=this.controller.at( i ) ;
         if ( !item.visible ) continue;
 
-        if ( y + this.itemHeight + this.spacing >= event.pos.y && y <= event.pos.y ) {
+        if ( y + (item.minimized ? this.itemMinHeight : this.itemHeight) + this.spacing >= event.pos.y && y <= event.pos.y ) {
             selectedIndex=i;
             break;
         }
-        y+=this.itemHeight + this.spacing;
+        y += (item.minimized ? this.itemMinHeight : this.itemHeight) + this.spacing;
     }
 
     if ( selectedIndex >=0 && selectedIndex < this.controller.count() )
@@ -277,19 +276,20 @@ VG.UI.ListWidget.prototype.vHandleMoved=function( offsetInScrollbarSpace )
     this.offset=offsetInScrollbarSpace * this.vScrollbar.totalSize / this.vScrollbar.visibleSize;
 };
 
-VG.UI.ListWidget.prototype.verifyScrollbar=function( text )
+VG.UI.ListWidget.prototype.verifyScrollbar=function()
 {
-    // --- Check if we have enough vertical space for all items
-
-    this.needsVScrollbar=false;
+    this.needsVScrollbar = false;
+    this.totalItemHeight = 0;
 
     this.visibleCount=0;
     for ( var i=0; i < this.controller.count(); ++i ) {
         var item=this.controller.at( i );
-        if ( item.visible ) this.visibleCount++;
+        if ( item.visible ) {
+            this.visibleCount++;
+            this.totalItemHeight += item.minimized ? this.itemMinHeight : this.itemHeight;
+        }
     }
-
-    this.totalItemHeight=this.visibleCount * this.itemHeight + (this.visibleCount-1) * this.spacing;
+    this.totalItemHeight += (this.visibleCount-1) * this.spacing;
     this.heightPerItem=this.totalItemHeight / this.visibleCount;
     this.visibleItems=this.contentRect.height / this.heightPerItem;
     this.lastTopItem=Math.ceil( this.controller.count() - this.visibleItems );
