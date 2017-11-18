@@ -165,6 +165,10 @@ VG.Canvas=function()
             if (fill || typeof(fill)=="undefined") this.fill();  // Default to fill
         };
     }
+
+    // --- Check for Firefox. Needed for correcting text aligning on the 2D canvas
+    if ( navigator && navigator.userAgent.indexOf("Firefox") > 0 )
+        this.fireFox = true;
 };
 
 /**
@@ -1198,6 +1202,13 @@ VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angl
     let ctx = this.ctx; ctx.globalAlpha = this.alpha;
     let textSize = VG.Core.Size( ctx.measureText( text).width, this.getLineHeight() );
 
+    // if ( valign === 0 )
+        // this.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, rect, VG.Core.Color( 255, 0, 0 ) );
+    // else if ( valign === 1 )
+        // this.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, rect, VG.Core.Color( 0, 255, 0 ) );
+    // else if ( valign === 2 )
+        // this.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, rect, VG.Core.Color( 0, 0, 255 ) );
+
     ctx.save();
     ctx.rect( rect.x, rect.y, rect.width,  textSize.height > rect.height ? textSize.height : rect.height );
     ctx.clip();
@@ -1228,13 +1239,16 @@ VG.Canvas.prototype.drawTextRect=function( text, rect, col, halign, valign, angl
 
     if ( yalign === 1 ) {
         ctx.textBaseline = "middle";
-        y=rect.y + Math.ceil( rect.height / 2 );
+        y = rect.y + Math.ceil( rect.height / 2 );
+        if ( this.fireFox ) ++y;
     } else
     if ( yalign === 2 ) {
-        y=rect.y + rect.height - textSize.height;
+        y = rect.y + rect.height - textSize.height;
+        if ( y < rect.y ) y = rect.y;
+        if ( this.fireFox ) ++y;
     } else
     if ( yalign === 3 ) {
-        y=rect.y;
+        y = rect.y;
     }
 
     if ( angle !== 0 ) {
