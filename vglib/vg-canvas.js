@@ -845,6 +845,8 @@ VG.Canvas.prototype.draw2DShapeGL=function( shape, rect, col1, col2, col3 )
 
             step = Math.floor(VG.Math.clamp(rW * rH, 8, 64));
 
+            let lineWidth = rect.lineWidth === undefined ? 1 : rect.lineWidth;
+
             theta = 0.0;
             pX = rect.x + rect.width / 2;
             pY = rect.y + rect.height / 2;
@@ -861,7 +863,7 @@ VG.Canvas.prototype.draw2DShapeGL=function( shape, rect, col1, col2, col3 )
                 x2 = pX + rW * Math.cos(inc * i);
                 y2 = pY - rH * Math.sin(inc * i);
 
-                this.drawLineGL(x1, y1, x2, y2, 1, col1 );
+                this.drawLineGL(x1, y1, x2, y2, lineWidth, col1 );
             }
 
         break;

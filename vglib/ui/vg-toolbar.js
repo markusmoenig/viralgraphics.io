@@ -329,13 +329,13 @@ VG.UI.ToolButton.prototype.calcSize=function( canvas )
 
 VG.UI.ToolButton.prototype.mouseDown=function( event )
 {
-    if ( this.rect.contains( event.pos) )
+    if ( !this.disabled && this.rect.contains( event.pos) )
         this.mouseIsDown=true;
 };
 
 VG.UI.ToolButton.prototype.mouseUp=function( event )
 {
-    if ( this.rect.contains( event.pos) )
+    if ( !this.disabled && this.rect.contains( event.pos) )
     {
         if ( this.checkable && this.mouseIsDown )
         {
