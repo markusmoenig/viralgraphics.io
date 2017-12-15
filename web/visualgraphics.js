@@ -414,16 +414,21 @@ function contextMenuRelay( event ) {
     event.preventDefault();
 }
 
-var lastWheelStep;
 function wheelRelay( e ) {
-    e = window.event || e;
-    var step = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
-    if ( step === 0 && lastWheelStep ) step=lastWheelStep;
+    let o = e || window.event;
+    let d = o.detail, w = o.wheelDelta, n = 225, n1 = n-1;
 
-    VG.context.workspace.mouseWheel( step );
+    if ( w === undefined ) w = -e.deltaY * 10; // --- Firefox fix
+
+    // Normalize delta
+    d = d ? w && (f = w/d) ? d/f : -d/1.35 : w/120;
+    // Quadratic scale if |d| > 1
+    d = d < 1 ? d < -1 ? (-Math.pow(d, 2) - n1) / n : d : (Math.pow(d, 2) + n1) / n;
+    // Delta *should* not be greater than 2...
+    let delta = Math.min(Math.max(d / 2, -1), 1);
+
+    VG.context.workspace.mouseWheel( delta );
     e.preventDefault();
-
-    lastWheelStep=step;
 }
 
 function keyPressRelay( event ) {

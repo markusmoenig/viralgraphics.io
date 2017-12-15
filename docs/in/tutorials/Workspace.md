@@ -80,9 +80,9 @@ function vgMain( workspace, argc, arg )
 
     var testMenu=menuBar.addMenu( "Test" );
 
-    var menuItem1=new VG.UI.MenuItem( "Test Item #1", null, function() { VG.log( "Menu Item #1 Clicked" ); }.bind( this ) );    
-    var menuItem2=new VG.UI.MenuItem( "Test Item #2", null, function() { VG.log( "Menu Item #2 Clicked" ); }.bind( this ) );    
-    var menuItem3=new VG.UI.MenuItem( "Test Item #3", null, function() { VG.log( "Menu Item #3 Clicked" ); }.bind( this ) );    
+    var menuItem1=new VG.UI.MenuItem( "Test Item #1", null, function() { VG.log( "Menu Item #1 Clicked" ); }.bind( this ) );
+    var menuItem2=new VG.UI.MenuItem( "Test Item #2", null, function() { VG.log( "Menu Item #2 Clicked" ); }.bind( this ) );
+    var menuItem3=new VG.UI.MenuItem( "Test Item #3", null, function() { VG.log( "Menu Item #3 Clicked" ); }.bind( this ) );
 
     testMenu.addMenuItem( menuItem1 ); testMenu.addMenuItem( menuItem2 );
     testMenu.addSeparator();

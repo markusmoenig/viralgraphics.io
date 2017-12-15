@@ -1082,7 +1082,7 @@ VG.Canvas.prototype.drawTiledImage=function( fillRect, image, horizontal, vertic
 
 VG.Canvas.prototype.getTextSize=function( text, size )
 {
-    if ( !size ) size = VG.Core.Size();
+    if ( !size ) size = new VG.Core.Size();
 
     this.ctx.textBaseline = "hanging";
 

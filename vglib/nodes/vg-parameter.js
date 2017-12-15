@@ -288,6 +288,12 @@ VG.Nodes.ParamContainer.prototype.setParamVector3=function( name, x, y, z )
     param.data[param.name].x=x;
     param.data[param.name].y=y;
     param.data[param.name].z=z;
+
+    if ( param.widget ) {
+        param.widget.value1Edit.value=x;
+        param.widget.value2Edit.value=y;
+        param.widget.value3Edit.value=z;
+    }
 };
 
 VG.Nodes.ParamContainer.prototype.setParamVector4=function( name, x, y, z, w )

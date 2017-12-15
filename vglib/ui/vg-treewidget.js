@@ -166,12 +166,12 @@ VG.UI.TreeWidget.prototype.mouseWheel=function( step )
 {
     if ( !this.needsVScrollbar ) return false;
 
-    if ( step > 0 ) {
-        this.offset-=this.itemHeight + this.spacing;
+    if ( step < 0 ) {
+        this.offset -= Math.round( step * (this.itemHeight + this.spacing) );
         this.vScrollbar.scrollTo( this.offset );
     } else
     {
-        this.offset+=this.itemHeight + this.spacing;
+        this.offset -= Math.round( step * (this.itemHeight + this.spacing) );
         this.vScrollbar.scrollTo( this.offset );
     }
 

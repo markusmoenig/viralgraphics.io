@@ -1616,25 +1616,25 @@ VG.UI.TabWidget.prototype.addItem=function( text, object )
 
 VG.UI.TabWidget.prototype.addItems=function()
 {
-    for( var i=0; i < arguments.length; i+=2 )
+    for( let i=0; i < arguments.length; i+=2 )
         this.addItem( arguments[i], arguments[i+1] );
 };
 
 VG.UI.TabWidget.prototype.mouseMove=function( event )
 {
-    var headerHeight = this.small ? VG.UI.stylePool.current.skin.TabWidgetSmallHeader.Height : VG.UI.stylePool.current.skin.TabWidgetHeader.Height;
+    let headerHeight = this.small ? VG.UI.stylePool.current.skin.TabWidgetSmallHeader.Height : VG.UI.stylePool.current.skin.TabWidgetHeader.Height;
     if ( event.pos.y >= this.rect.y && event.pos.y <= this.rect.y + headerHeight )
         VG.update();
 };
 
 VG.UI.TabWidget.prototype.mouseDown=function( event )
 {
-    var headerHeight = this.small ? VG.UI.stylePool.current.skin.TabWidgetSmallHeader.Height : VG.UI.stylePool.current.skin.TabWidgetHeader.Height;
+    let headerHeight = this.small ? VG.UI.stylePool.current.skin.TabWidgetSmallHeader.Height : VG.UI.stylePool.current.skin.TabWidgetHeader.Height;
     if ( event.pos.y >= this.rect.y && event.pos.y <= this.rect.y + headerHeight )
     {
-        for ( var i=0; i < this.items.length; ++i )
+        for ( let i=0; i < this.items.length; ++i )
         {
-            var item=this.items[i];
+            let item=this.items[i];
 
             if ( event.pos.x >= item.rect.x && event.pos.x <= item.rect.x + item.rect.width ) {
                 this.layout.current=item.object;
@@ -1665,30 +1665,40 @@ VG.UI.TabWidget.prototype.paintWidget=function( canvas )
 
 // ----------------------------------------------------------------- VG.UI.SnapperWidgetItem
 
-VG.UI.SnapperWidgetItem=function( text, object, open, enabler )
+VG.UI.SnapperWidgetItem=function( text, object, open, enabler, horizontal )
 {
     VG.UI.Widget.call( this );
 
-    this.text=text;
-    this.object=object;
-    this.open=open === undefined ? true : open;
-    this.object.visible=this.open;
-    this.rect=VG.Core.Rect();
+    this.text = text;
+    this.object = object;
+    this.open = open === undefined ? true : open;
+    this.object.visible = this.open;
+    this.rect = new VG.Core.Rect();
+    this.horizontal = horizontal;
 
-    this.horizontalExpanding=true;
-    this.verticalExpanding=false;
+    if ( !horizontal ) {
+        this.horizontalExpanding = true;
+        this.verticalExpanding = false;
 
-    this.minimumSize.height=VG.UI.stylePool.current.skin.SnapperWidgetItem.Height;
-    this.maximumSize.height=VG.UI.stylePool.current.skin.SnapperWidgetItem.Height;
-    this.preferredSize.height=VG.UI.stylePool.current.skin.SnapperWidgetItem.Height;
+        this.minimumSize.height = VG.UI.stylePool.current.skin.SnapperWidgetItem.Height;
+        this.maximumSize.height = VG.UI.stylePool.current.skin.SnapperWidgetItem.Height;
+        this.preferredSize.height = VG.UI.stylePool.current.skin.SnapperWidgetItem.Height;
+    } else {
+        this.horizontalExpanding = false;
+        this.verticalExpanding = true;
+
+        this.minimumSize.width = VG.UI.stylePool.current.skin.SnapperWidgetItem.Height;
+        this.maximumSize.width = VG.UI.stylePool.current.skin.SnapperWidgetItem.Height;
+        this.preferredSize.width = VG.UI.stylePool.current.skin.SnapperWidgetItem.Height;
+    }
 
     if ( enabler ) {
-        this.enablerCB=VG.UI.CheckBox();
-        this.enablerCB.undoText=enabler.undoText;
+        this.enablerCB = VG.UI.CheckBox();
+        this.enablerCB.undoText = enabler.undoText;
         this.enablerCB.bind( enabler.dc, enabler.path );
-        this.enablerCB.changed=enabler.changed;
+        this.enablerCB.changed = enabler.changed;
 
-        this.childWidgets=[ this.enablerCB ];
+        this.childWidgets = [ this.enablerCB ];
     }
 };
 
@@ -1705,35 +1715,38 @@ VG.UI.SnapperWidgetItem.prototype.mouseMove=function( event )
 
 VG.UI.SnapperWidgetItem.prototype.mouseDown=function( event )
 {
-    this.open=!this.open;
-    this.object.visible=this.open;
-    this.mouseIsDown=true;
+    this.open = !this.open;
+    this.object.visible = this.open;
+    this.mouseIsDown = true;
 
     VG.update();
 };
 
 VG.UI.SnapperWidgetItem.prototype.mouseUp=function( event )
 {
-    this.mouseIsDown=false;
+    this.mouseIsDown = false;
 };
 
 VG.UI.SnapperWidgetItem.prototype.paintWidget=function( canvas )
 {
-    VG.UI.stylePool.current.drawSnapperWidgetItem( this, canvas );
+    if ( !this.horizontal ) VG.UI.stylePool.current.drawSnapperWidgetItem( this, canvas );
+    else VG.UI.stylePool.current.drawHorizontalSnapperWidgetItem( this, canvas );
 };
 
 // ----------------------------------------------------------------- VG.UI.SnapperWidget
 
-VG.UI.SnapperWidget=function( text )
+VG.UI.SnapperWidget=function( { text, horizontal = false } = {} )
 {
-    if ( !(this instanceof VG.UI.SnapperWidget) ) return VG.UI.SnapperWidget.creator( arguments );
+    if ( !(this instanceof VG.UI.SnapperWidget) ) return new VG.UI.SnapperWidget( { text, horizontal } );
     VG.UI.Widget.call( this );
 
     this.name="SnapperWidget";
     this.text=text === undefined ? "" : text;
 
+    this._horizontal = horizontal;
+
     this.layout=VG.UI.Layout();
-    this.layout.vertical=true;
+    this.layout.vertical = !this._horizontal;
     this.layout.margin.set( 0, 0, 0, 0 );
     this.layout.spacing=0;
     this.layout.parent=this;
@@ -1742,7 +1755,7 @@ VG.UI.SnapperWidget=function( text )
 
     this.items=[];
 
-    for( var i=0; i < arguments.length; i+=2 )
+    for( var i=1; i < arguments.length; i+=2 )
         this.addItem( arguments[i], arguments[i+1] );
 };
 
@@ -1763,20 +1776,20 @@ Object.defineProperty( VG.UI.SnapperWidget.prototype, "disabled", {
 
 VG.UI.SnapperWidget.prototype.addItem=function( text, object, open, enabler )
 {
-    var item=new VG.UI.SnapperWidgetItem( text, object, open, enabler );
+    let item = new VG.UI.SnapperWidgetItem( text, object, open, enabler, this._horizontal );
+    item.widget = this;
 
     this.items.push( item );
     this.layout.addChild( item );
     this.layout.addChild( object );
 
     VG.update();
-
     return item;
 };
 
 VG.UI.SnapperWidget.prototype.addItems=function()
 {
-    for( var i=0; i < arguments.length; i+=2 )
+    for( let i=0; i < arguments.length; i+=2 )
         this.addItem( arguments[i], arguments[i+1] );
 };
 
@@ -1794,7 +1807,7 @@ VG.UI.SnapperWidget.prototype.mouseUp=function( event )
 
 VG.UI.SnapperWidget.prototype.calcSize=function( canvas )
 {
-    var size=this.layout.calcSize( canvas );
+    let size = this.layout.calcSize( canvas );
     this.minimumSize.set( this.layout.minimumSize );
     return size;
 };

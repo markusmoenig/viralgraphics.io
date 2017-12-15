@@ -50,7 +50,7 @@ After installing viralgraphics.io you can create a new project using the "new" c
 ```javascript
 function vgMain( workspace, argc, arg )
 {
-    let label = new VG.UI,Label( "Hello World!");
+    let label = new VG.UI.Label( "Hello World!");
     label.horizontalExpanding = true; // Center it horizontally
 
     workspace.content = new VG.UI.Layout( label );
@@ -99,5 +99,30 @@ Content
 
 * _sources_ - A comma separated list with links to the sources of the application. Several _sources_ lines can be specified.
 * _images_ - A comma separated list with links to the images used by the application. Several _images_ lines can be specified. An image can be requested inside an application with VG.Utils.getImageByName( Filename ).
-* _html_ - A comma separated list with links to the html or text files used by the application. Several _html_ lines can be specified. An html/text file can be requested inside an application with VG.Utils.getTextByName( Filename ). Filename has to be the basename without any endings.
+* _html_ - A comma separated list with links to the html or text files used by the application. Several _html_ lines can be specified. An html/text file can be requested inside an application with VG.Utils.getTextByName( Filename ).
 * _svg_ - A comma separated list with links to the scalable vector files of the application. Several vector file lines can be specified. An SVG can be requested inside an application with VG.Utils.getSVGByName( Filename ).
+
+# Fundamentals
+
+## The Workspace
+
+The workspace class ```VG.UI.Workspace``` provides all necessary information about the local environment to the application, like the available screenspace, it also provides various functions for customizations, like adding dock widgets. The workspace class is provided as the first argument in your vgMain() function. The ```content``` property of the workspace defines the main widget or layout of the application.
+
+### Dock Widgets
+
+Dock widgets can be attached to one of the sides of the Workspace.
+
+This example adds a dock widget called "Text Edit" to the right of the Workspace, the dock widget only contains one item, a ```VG.UI.TextEdit```, you can of course add many more items to the dock widget.
+
+```javascript
+function vgMain( workspace, argc, arg )
+{
+    // --- Add a dock widget to the right containing a text edit
+    let dockWidget = VG.UI.DockWidget( "Text Edit" );
+    dockWidget.addItem( VG.UI.TextEdit() );
+
+    workspace.addDockWidget( dockWidget, "Right" );
+    workspace.content = new VG.UI.Widget();
+};
+```
+

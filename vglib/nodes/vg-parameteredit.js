@@ -23,7 +23,7 @@
 
 // ----------------------------------------------------------------- VG.Nodes.ParamContainerEdit
 
-VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = false, callback } = {} )
+VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = false, callback, horizontal = false } = {} )
 {
     if ( !(this instanceof VG.Nodes.ParamContainerEdit ) ) return new VG.Nodes.ParamContainerEdit( container, { tabs, noContainer, callback } );
 
@@ -31,7 +31,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
     this.name="ParamContainerEdit";
     this.container=container;
 
-    if ( !tabs ) this.containerWidget=VG.UI.SnapperWidget();
+    if ( !tabs ) this.containerWidget=VG.UI.SnapperWidget( { horizontal: horizontal } );
     else {
         this.containerWidget=VG.UI.TabWidget();
         this.containerWidget.small=true;
@@ -43,20 +43,20 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
 
     if ( !container ) return;
 
-    for( var i=0; i < this.container.groups.length; ++i )
+    for( let i=0; i < this.container.groups.length; ++i )
     {
         var group=this.container.groups[i];
         if ( !group.visible ) continue;
 
-        group.layout = VG.UI.LabelLayout();
+        group.layout = new VG.UI.LabelLayout();
         if ( group.disabled ) group.layout.disabled = true;
 
         if ( tabs ) this.containerWidget.addItem( group.text, group.layout );
         else this.containerWidget.addItem( group.text, group.layout, group.open );
 
-        for( var p=0; p < group.parameters.length; ++p )
+        for( let p=0; p < group.parameters.length; ++p )
         {
-            var param=group.parameters[p], object;
+            let param=group.parameters[p], object;
 
             if ( param instanceof VG.Nodes.ParamText )
             {
@@ -121,6 +121,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
             {
                 param.widget=VG.UI.Slider( { min : param.min, max : param.max, step : param.step, editable : true, precision : param.precision } );
                 param.widget.halfWidthValue=param.halfWidthValue;
+                if ( horizontal ) param.widget.minimumSize.width=260;
                 param.widget.edit.minimumSize.width=55;
                 param.widget.value=param.data[param.name];
                 param.widget.name=param.name;

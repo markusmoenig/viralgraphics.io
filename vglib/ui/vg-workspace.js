@@ -2307,6 +2307,16 @@ VG.UI.Workspace.prototype.switchToStyle=function( style, skin )
     VG.update();*/
 };
 
+/**
+ * Returns the currently active style.
+ * @returns The currently active UI style.
+ */
+
+VG.UI.Workspace.prototype.getCurrentStyle=function()
+{
+    return VG.UI.stylePool.current;
+};
+
 VG.UI.Workspace.prototype.dragOperationStarted=function( source, itemId, item )
 {
     if ( !this.dndOperation ) {

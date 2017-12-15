@@ -1967,7 +1967,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawRoundSlider=function( widget, canvas )
     if ( widget.disabled ) canvas.setAlpha( 1 );
 };
 
-// --- VG.UI.SplitLayout --- SplitHandle
+// --- Vertical SnaperWidget (the default)
 
 VG.UI.VisualGraphicsStyle.prototype.drawSnapperWidgetItem=function( widget, canvas )
 {
@@ -2041,6 +2041,84 @@ VG.UI.VisualGraphicsStyle.prototype.drawSnapperWidgetItem=function( widget, canv
 
     canvas.pushFont( this.skin.SnapperWidgetItem.Font );
     canvas.drawTextRect( widget.text, this.rect1, this.skin.SnapperWidgetItem.TextColor, 0, 1 );
+    canvas.popFont();
+};
+
+// --- Horizontal SnaperWidget
+
+VG.UI.VisualGraphicsStyle.prototype.drawHorizontalSnapperWidgetItem=function( widget, canvas )
+{
+    // --- Background
+
+    this.rect1.copy( widget.rect );
+    this.rect1.shrink( 1, 1, this.rect1 );
+
+    if ( widget.mouseIsDown )
+    {
+        this.rect1.height=1;
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SnapperWidgetItem.SelectedTopBorderColor );
+        this.rect1.y+=widget.rect.height-1;
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SnapperWidgetItem.SelectedBottomBorderColor );
+
+        this.rect1.copy( widget.rect );
+        this.rect1.shrink( 0, 1, this.rect1 );
+        canvas.draw2DShape( VG.Canvas.Shape2D.HorizontalGradient, this.rect1, this.skin.SnapperWidgetItem.SelectedBackGradColor1, this.skin.SnapperWidgetItem.SelectedBackGradColor2 );
+    } else
+    if ( !widget.hasHoverState )
+    {
+        this.rect1.height=1;
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SnapperWidgetItem.TopBorderColor );
+        this.rect1.y+=widget.rect.height-1;
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SnapperWidgetItem.BottomBorderColor );
+
+        this.rect1.copy( widget.rect );
+        this.rect1.shrink( 0, 1, this.rect1 );
+        canvas.draw2DShape( VG.Canvas.Shape2D.HorizontalGradient, this.rect1, this.skin.SnapperWidgetItem.BackGradColor1, this.skin.SnapperWidgetItem.BackGradColor2 );
+    } else {
+        this.rect1.height=1;
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SnapperWidgetItem.HoverTopBorderColor );
+        this.rect1.y+=widget.rect.height-1;
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.SnapperWidgetItem.HoverBottomBorderColor );
+
+        this.rect1.copy( widget.rect );
+        this.rect1.shrink( 0, 1, this.rect1 );
+        canvas.draw2DShape( VG.Canvas.Shape2D.HorizontalGradient, this.rect1, this.skin.SnapperWidgetItem.HoverBackGradColor1, this.skin.SnapperWidgetItem.HoverBackGradColor2 );
+    }
+
+    // --- Arrow
+
+    this.rect2.copy( this.rect1 );
+
+    if ( !widget.open ) {
+        this.rect2.x+=6; this.rect2.y+=7;
+        this.rect2.width=10; this.rect2.height=5;
+        canvas.draw2DShape( VG.Canvas.Shape2D.FlippedTriangle, this.rect2, this.skin.SnapperWidgetItem.TextColor );
+    } else {
+        this.rect2.x+=9; this.rect2.y+=5;
+        this.rect2.width=5; this.rect2.height=10;
+        canvas.draw2DShape( VG.Canvas.Shape2D.ArrowRight, this.rect2, this.skin.SnapperWidgetItem.TextColor );
+    }
+
+    // --- Enabler
+
+    if ( widget.enablerCB )
+    {
+        widget.enablerCB.rect.copy( this.rect1 );
+        widget.enablerCB.rect.x+=(this.rect1.width - widget.enablerCB.minimumSize.width) - 10;
+        widget.enablerCB.rect.y+=(this.rect1.height - widget.enablerCB.minimumSize.height)/2;
+        widget.enablerCB.rect.width=widget.enablerCB.minimumSize.width;
+        widget.enablerCB.rect.height=widget.enablerCB.minimumSize.height;
+        widget.enablerCB.paintWidget( canvas );
+    }
+
+    // --- Text
+
+    canvas.pushFont( this.skin.SnapperWidgetItem.Font );
+
+    this.rect1.y += Math.round( this.rect1.height / 2 - canvas.getTextSize( widget.text ).width / 2 + 4 );
+    this.rect1.width -= 2;
+
+    canvas.drawTextRect( widget.text, this.rect1, this.skin.SnapperWidgetItem.TextColor, 0, 0, 90 );
     canvas.popFont();
 };
 

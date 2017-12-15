@@ -198,12 +198,12 @@ VG.UI.ListWidget.prototype.mouseWheel=function( step )
 {
     if ( !this.needsVScrollbar ) return;
 
-    if ( step > 0 ) {
-        this.offset-=this.itemHeight + this.spacing;
+    if ( step < 0 ) {
+        this.offset -= Math.round( step * (this.itemHeight + this.spacing) );
         this.vScrollbar.scrollTo( this.offset );
     } else
     {
-        this.offset+=this.itemHeight + this.spacing;
+        this.offset -= Math.round( step * (this.itemHeight + this.spacing) );
         this.vScrollbar.scrollTo( this.offset );
     }
 };
@@ -228,7 +228,7 @@ VG.UI.ListWidget.prototype.mouseDown=function( event )
     let selectedIndex=-1;
     let y=this.contentRect.y - this.offset;
 
-    for ( var i=0; i < this.controller.count(); ++i ) {
+    for ( let i=0; i < this.controller.count(); ++i ) {
         let item=this.controller.at( i ) ;
         if ( !item.visible ) continue;
 
