@@ -239,8 +239,9 @@ VG.UI.ListWidget.prototype.mouseDown=function( event )
         y += (item.minimized ? this.itemMinHeight : this.itemHeight) + this.spacing;
     }
 
+    let item;
     if ( selectedIndex >=0 && selectedIndex < this.controller.count() )
-        item=this.controller.at( selectedIndex );
+        item = this.controller.at( selectedIndex );
 
     if ( this.controller.multiSelection )
     {

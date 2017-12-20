@@ -263,10 +263,10 @@ VG.UI.Workspace.prototype.addDockWidget=function( dockWidget, location, percent 
 
     var contentIndex=this.layout.children.indexOf( this._content );
     if ( contentIndex > -1 ) {
-        if ( location === VG.UI.DockWidgetLocation.Left ) {
+        if ( location === VG.UI.DockWidgetLocation.Left || location === "Left" ) {
             this.layout.insertChild( contentIndex, dockWidget, percent );
         } else
-        if ( location === VG.UI.DockWidgetLocation.Right ) {
+        if ( location === VG.UI.DockWidgetLocation.Right || location === "Right" ) {
             this.layout.insertChild( contentIndex+1, dockWidget, percent );
         }
     } else this.layout.addChild( dockWidget, percent );
