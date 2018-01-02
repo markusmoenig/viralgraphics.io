@@ -1116,15 +1116,15 @@ VG.UI.SplitLayout.prototype.mouseMove=function( event )
 
     if ( this.dragOp )
     {
-        var item=this.items[this.dragOpItemIndex];
-        var nextItem=this.items[this.dragOpItemIndex + 1 ];
+        let item=this.items[this.dragOpItemIndex];
+        let nextItem=this.items[this.dragOpItemIndex + 1 ];
 
-        var widget=this.children[this.dragOpItemIndex ];
-        var nextWidget=this.children[this.dragOpItemIndex + 1];
+        let widget=this.children[this.dragOpItemIndex ];
+        let nextWidget=this.children[this.dragOpItemIndex + 1];
 
-        var oldItemOffset=item.offset;
-        var oldNextItemOffset=nextItem.offset;
-        var offset;
+        let oldItemOffset=item.offset;
+        let oldNextItemOffset=nextItem.offset;
+        let offset;
 
         if ( event.pos[this.primaryCoord] > this.dragOpStart[this.primaryCoord] )
         {
@@ -1154,7 +1154,7 @@ VG.UI.SplitLayout.prototype.mouseMove=function( event )
 
             offset=this.dragOpStart[this.primaryCoord] - event.pos[this.primaryCoord];
 
-            var lesserBorder=widget.rect[this.primaryCoord] + this.margin[this.primaryLesserMargin] + widget.minimumSize[this.primarySize];
+            let lesserBorder=widget.rect[this.primaryCoord] + this.margin[this.primaryLesserMargin] + widget.minimumSize[this.primarySize];
             if ( event.pos[this.primaryCoord] < lesserBorder ) offset-=lesserBorder - event.pos[this.primaryCoord];
 
             item.offset=-offset;
@@ -1186,14 +1186,24 @@ VG.UI.SplitLayout.prototype.mouseUp=function( event )
     this.dragOp=0;
     VG.context.workspace.mouseTrackerWidget=0;
 
-    for( var i=0; i < this.items.length; ++i ) {
-        var item=this.items[i];
+    for( let i=0; i < this.items.length; ++i ) {
+        let item=this.items[i];
 
         item.totalOffset+=item.offset;
         item.offset=0;
     }
 
     VG.update();
+};
+
+VG.UI.SplitLayout.prototype.recalcOffset=function()
+{
+    for( let i=0; i < this.items.length; ++i ) {
+        let item=this.items[i];
+
+        item.totalOffset+=item.offset;
+        item.offset=0;
+    }
 };
 
 VG.UI.SplitLayout.prototype.layout=function( canvas )

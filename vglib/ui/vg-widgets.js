@@ -909,7 +909,7 @@ VG.UI.ScrollBar.prototype.paintWidget=function( canvas, adjustAlpha )
     this.verifyHandleRect( this.handleOffset );
     if ( this.handleRect.width <= 0 || this.handleRect.height <= 0 ) return;
 
-    VG.UI.stylePool.current.drawScrollBar( this, canvas );
+    VG.UI.stylePool.current.drawScrollBar( this, canvas, adjustAlpha );
 };
 
 /**

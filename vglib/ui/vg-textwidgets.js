@@ -737,13 +737,12 @@ VG.UI.BaseText.prototype.mouseWheel=function( step )
 {
     if ( !this.needsVScrollbar ) return false;
 
-    if ( step > 0 )
-    {
-        this.textOffset.y-=this.itemHeight;
+    if ( step < 0 ) {
+        this.textOffset.y -= Math.round( step * this.itemHeight * 3 );
         this.vScrollbar.scrollTo( this.textOffset.y );
     } else
     {
-        this.textOffset.y+=this.itemHeight;
+        this.textOffset.y -= Math.round( step * this.itemHeight * 3 );
         this.vScrollbar.scrollTo( this.textOffset.y );
     }
 
@@ -2002,12 +2001,15 @@ VG.UI.CodeEdit=function( text )
         {
             name : "RaySL",
 
-            lineComment : "#",
+            lineComment : "//",
 
-            reserved : [ "float", "float2", "float3", "float4" ],
+            reserved : [ "const", "float", "vec2", "vec3", "vec4", "int", "bool", "true", "false",
 
-            builtIn : [ "gradientNoise", "mix", "sin" ],
-            globalVars : [ "inUV", "outColor", "outMetallic", "outSmoothness", "outReflectance", "outBump" ],
+            "if", "else", "break", "while" ],
+
+            builtIn : [ "mix", "sin", "fract", "cos", "floor" ],
+            globalVars : [ "inUV", "inPos", "inTerminal", "inInput1", "inInput2", "inInput3", "outColor", "outMetallic", "outSmoothness", "outReflectance", "outBump", "outName", "outCategory",
+            "ParameterGroup", "ParamHtml", "ParamSlider", "ParamVector3", "ParamVector2", "ParamList" ],
 
             /*
             this.codeSkin={ "Comment" : VG.Core.Color( 121, 124, 131 ), "Text" : VG.Core.Color( 91, 238, 167 ), "Reserved" : VG.Core.Color( 242, 102, 102 ),

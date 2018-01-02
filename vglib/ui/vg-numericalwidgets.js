@@ -183,7 +183,8 @@ VG.UI.Vector2Edit=function( x, y, min, max, fixedPrecision )
             this.value2Edit.value = this.value.y;
         } else
         this.value.x=value;
-
+        if ( this.collection && this.path )
+            this.collection.storeDataForPath( { path : this.path, value : [this.value.x, this.value.y], undoText : this.undoText } );
         if ( this.changed ) this.changed( this.value, cont, this );
     }.bind( this );
 
@@ -197,11 +198,14 @@ VG.UI.Vector2Edit=function( x, y, min, max, fixedPrecision )
             this.value1Edit.value = this.value.x;
         } else
         this.value.y=value;
-
+        if ( this.collection && this.path )
+            this.collection.storeDataForPath( { path : this.path, value : [this.value.x, this.value.y], undoText : this.undoText } );
         if ( this.changed ) this.changed( this.value, cont, this );
     }.bind( this );
 
     this.value=new VG.Math.Vector2( x, y );
+
+    this.minimumSize.height=10;
 
     this.layout=VG.UI.Layout( this.value1Edit, this.value2Edit );
     this.layout.margin.set( 0, 0, 0, 0 );
@@ -228,6 +232,16 @@ Object.defineProperty( VG.UI.Vector2Edit.prototype, "disabled", {
         this.value2Edit.disabled=value;
     }
 });
+
+VG.UI.Vector2Edit.prototype.bind=function( collection, path )
+{
+    this.collection=collection;
+    this.path=path;
+    collection.addValueBindingForPath( this, path );
+
+    if ( path.indexOf( "." ) === -1 )
+        this.valueFromModel( collection.dataForPath( path ) );
+};
 
 VG.UI.Vector2Edit.prototype.calcSize=function( canvas )
 {

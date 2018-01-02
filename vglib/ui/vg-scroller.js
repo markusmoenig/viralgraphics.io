@@ -27,18 +27,16 @@ VG.UI.ScrollerImageItem=function( image )
 {
     if ( !(this instanceof VG.UI.ScrollerImageItem) ) return new VG.UI.ScrollerImageItem( image );
 
-    VG.UI.Widget.call( this );
-
+    this.rect = new VG.Core.Rect();
+    this.contentRect = new VG.Core.Rect();
     this.image=image;
 };
-
-VG.UI.ScrollerImageItem.prototype=VG.UI.Widget();
 
 VG.UI.ScrollerImageItem.prototype.paintWidget=function( canvas )
 {
     if ( this.image.isValid() ) {
 
-        var rect1=this.contentRect;
+        let rect1=this.contentRect;
         rect1.copy( this.rect );
 
         if ( this.image.width < this.rect.width )
@@ -93,6 +91,20 @@ VG.UI.Scroller.prototype.addItem=function( item )
     if ( !this.current ) this.current=item;
 };
 
+VG.UI.Scroller.prototype.scrollLeft=function( canvas )
+{
+    this.nextAnimationEventAt = new Date().getTime();
+    this.animDirectionLeft = true;
+    VG.update();
+};
+
+VG.UI.Scroller.prototype.scrollRight=function( canvas )
+{
+    this.nextAnimationEventAt = new Date().getTime();
+    this.animDirectionLeft = false;
+    VG.update();
+};
+
 VG.UI.Scroller.prototype.paintWidget=function( canvas )
 {
     if ( !this.current ) return;
@@ -100,7 +112,7 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
     // --- Period Handling
 
     if ( this.items.length > 1 ) {
-        var time=new Date().getTime();
+        let time = new Date().getTime();
 
         if ( this.nextAnimationEventAt === 0 )
         {
@@ -125,12 +137,12 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
                 {
                     this.animActive=false;
                     this.animOffset=0;
-                    this.animDirectionLeft=true;
 
                     this.currentIndex++;
                     if ( this.currentIndex >= this.items.length )
                     this.currentIndex=0;
 
+                    this.animDirectionLeft=true;
                     this.nextAnimationEventAt=time + this.animPeriod;
                     VG.context.workspace.redrawList.push( this.nextAnimationEventAt );
                 }
@@ -142,110 +154,63 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
 
     this.current=this.items[this.currentIndex];
 
-    var rect=this.contentRect;
+    let rect=this.contentRect;
     rect.copy( this.rect );
 
-    if ( this.animActive )
-    {
-        this.animPixelOffset=this.animOffset * this.contentRect.width / this.animDuration;
+    if ( this.animActive ) {
+        this.animPixelOffset = this.animOffset * this.contentRect.width / this.animDuration;
 
-        rect.x-=this.animPixelOffset;
+        rect.x -= this.animDirectionLeft ? this.animPixelOffset : -this.animPixelOffset;
 
         this.current.rect.copy( rect );
         this.current.paintWidget( canvas );
 
-        var nextIndex=this.currentIndex + 1;
-        if ( nextIndex >= this.items.length ) nextIndex=0;
-        var nextItem=this.items[nextIndex];
+        let nextIndex;
+        if ( this.animDirectionLeft ) {
+            nextIndex = this.currentIndex + 1;
+            if ( nextIndex >= this.items.length ) nextIndex = 0;
+        } else {
+            nextIndex = this.currentIndex - 1;
+            if ( nextIndex < 0 ) nextIndex = this.items.length - 1;
+        }
+        let nextItem=this.items[nextIndex];
 
         rect.copy( this.rect );
-        rect.x=this.rect.right() - this.animPixelOffset;
+
+        if ( this.animDirectionLeft ) rect.x = this.rect.right() - this.animPixelOffset;
+        else rect.x -= this.contentRect.width - this.animPixelOffset;
 
         nextItem.rect.copy( rect );
         nextItem.paintWidget( canvas );
-
-          this.blurbAlpha=0;
-    } else
-    {
+    } else {
         this.current.rect.copy( rect );
         this.current.paintWidget( canvas );
 
         // --- Draw the Circles
 
-        var xOff=this.rect.right() - 13 - this.items.length * 10 - (this.items.length-1) * 6;
-        for ( var i=0; i < this.items.length; ++i )
-        {
-            rect.copy( this.rect );
-            rect.x=xOff; rect.y=rect.bottom() - 28;
-            rect.width=10; rect.height=10;
-
-            if ( this.currentIndex === i )
-                this.circleColor.a=1.0;
-            else this.circleColor.a=0.5;
-
-            canvas.draw2DShape( VG.Canvas.Shape2D.Circle, rect, this.circleColor );
-            this.items[i]._circleRect.copy( rect );
-
-            xOff+=10 + 6;
-        }
-
-        // --- Draw the blurb
-
-        if ( this.current.title )
-        {
-            canvas.setAlpha( this.blurbAlpha );
-
-            rect.copy( this.rect );
-
-            if ( !this.current.bottomBlurb ) {
-                rect.y+=35;
-                rect.height=120;
-            } else {
-                rect.y+=639 - 120 - 20;
-                rect.height=120;
-            }
-
-            if ( !this.current.rightBlurb ) {
-                rect.x+=20;
-                rect.width=385;
-            } else {
-                rect.x+=rect.width - 385 - 20;
-                rect.width=385;
-            }
-
-            canvas.draw2DShape( VG.Canvas.Shape2D.RoundedRectangle2px, rect, this.blurbBackColor );
-
-            rect.x+=16; rect.y+=10;
-            rect.width-=16; rect.height-=10;
-
-            canvas.pushFont( this.titleFont );
-            canvas.drawTextRect( this.current.title, rect, this.titleColor, 0, 0 );
-            canvas.popFont();
-
-            if ( !this.current.htmlView )
+        if ( this.items.length > 1 ) {
+            // let xOff = this.rect.right() - 13 - this.items.length * 10 - (this.items.length-1) * 6;
+            let xOff = this.rect.x + ( this.rect.width - this.items.length * 10 - (this.items.length-1) * 6) / 2;
+            for ( let i=0; i < this.items.length; ++i )
             {
-                this.htmlView=new VG.UI.HtmlView();
-                this.htmlView.html=this.current.html;
+                rect.copy( this.rect );
+                rect.x = xOff; rect.y = rect.bottom() - 28;
 
-                this.htmlView.elements.body.margin.left=0;
-                this.htmlView.elements.body.margin.top=0;
-                this.htmlView.elements.body.margin.bottom=0;
-                this.htmlView.elements.body.spacing=5;
+                if ( this.currentIndex === i ) {
+                    rect.width = 10; rect.height = 10;
+                    this.circleColor.a = 1.0;
+                }
+                else {
+                    rect.width = 6; rect.height = 6;
+                    rect.y += 2;
+                    this.circleColor.a = 0.5;
+                }
 
-                this.htmlView.elements.body.font.setSize( 14 );
-                //this.htmlView.elements.p.font.setSize( 11 );
+                canvas.draw2DShapeGL( VG.Canvas.Shape2D.Circle, rect, this.circleColor );
+                this.items[i]._circleRect.copy( rect );
+
+                xOff += 10 + 6;
             }
-
-            rect.y+=34; rect.height-=34;
-
-            this.htmlView.rect.copy( rect );
-            this.htmlView.paintWidget( canvas );
-
-            if ( this.blurbAlpha < 1.0 ) {
-                this.blurbAlpha+=0.05;
-                VG.context.workspace.redrawList.push( Date.now() );
-            }
-            canvas.setAlpha( 1.0 );
         }
     }
 };

@@ -1176,25 +1176,28 @@ VG.UI.VisualGraphicsStyle.prototype.drawMenuBar=function( widget, canvas )
 
 // --- ScrollBar
 
-VG.UI.VisualGraphicsStyle.prototype.drawScrollBar=function( widget, canvas )
+VG.UI.VisualGraphicsStyle.prototype.drawScrollBar=function( widget, canvas, adjustAlpha )
 {
     if ( widget.disabled ) canvas.setAlpha( this.skin.Widget.DisabledAlpha );
+    if ( adjustAlpha ) canvas.setAlpha( 0.5 );
 
     if ( VG.context.twoDOnTop ) {
         canvas.ctx.clearRect( widget.contentRect.x, widget.contentRect.y, widget.contentRect.width, widget.contentRect.height );
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleGL, widget.contentRect, this.skin.ScrollBar.BackColor );
     } else {
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.ScrollBar.BackColor );
+        if ( !adjustAlpha )
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.ScrollBar.BackColor );
     }
 
     if ( widget.direction === VG.UI.ScrollBar.Direction.Vertical )
     {
-        if ( widget.contentRect.height <= 10 ) return;
+        if ( widget.contentRect.height <= 10 ) { if ( adjustAlpha ) canvas.setAlpha( 1.0 ); return; }
 
         // --- Vertical
 
         this.rect1.copy( widget.rect ); this.rect1.width=1;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ScrollBar.BorderColor );
+        if ( !adjustAlpha )
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ScrollBar.BorderColor );
 
         seg1ImageName="scrollbar_vtop";
         seg2ImageName="scrollbar_vmiddle";
@@ -1231,12 +1234,13 @@ VG.UI.VisualGraphicsStyle.prototype.drawScrollBar=function( widget, canvas )
     } else
     if ( widget.direction === VG.UI.ScrollBar.Direction.Horizontal )
     {
-        if ( widget.contentRect.width <= 10 ) return;
+        if ( widget.contentRect.width <= 10 ) { if ( adjustAlpha ) canvas.setAlpha( 1.0 ); return; }
 
         // --- Horizontal
 
         this.rect1.copy( widget.rect ); this.rect1.height=1;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ScrollBar.BorderColor );
+        if ( !adjustAlpha )
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.ScrollBar.BorderColor );
 
         seg1ImageName="scrollbar_hleft";
         seg2ImageName="scrollbar_hmiddle";
@@ -1273,7 +1277,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawScrollBar=function( widget, canvas )
         } else if ( this.skin.ScrollBar[seg2ImageName] ) canvas.drawTiledImage( this.rect2, this.skin.ScrollBar[seg2ImageName], true, false );
     }
 
-    if ( widget.disabled ) canvas.setAlpha( 1 );
+    if ( widget.disabled || adjustAlpha ) canvas.setAlpha( 1 );
 };
 
 // --- SectionBar
