@@ -905,16 +905,16 @@ VG.UI.Workspace.prototype.mouseDoubleClick=function()
     this.canvas.update();
 };
 
-VG.UI.Workspace.prototype.mouseWheel=function( step )
+VG.UI.Workspace.prototype.mouseWheel=function( step, xStep )
 {
-    var rc, widget;
+    let rc, widget;
     if ( this.layoutUnderMouse && this.layoutUnderMouse.mouseWheel ) {
-        rc=this.layoutUnderMouse.mouseWheel( step );
+        rc=this.layoutUnderMouse.mouseWheel( step, xStep );
         if ( rc === true ) return true;
     }
 
     if ( this.widgetUnderMouse && !this.widgetUnderMouse.disabled && this.widgetUnderMouse.mouseWheel ) {
-        rc=this.widgetUnderMouse.mouseWheel( step );
+        rc=this.widgetUnderMouse.mouseWheel( step, xStep );
         if ( rc === true ) return true;
     }
 
@@ -925,7 +925,7 @@ VG.UI.Workspace.prototype.mouseWheel=function( step )
             //VG.log( "iter widget", widget.name );
             if ( widget && !widget.disabled && widget.mouseWheel )
             {
-                rc=widget.mouseWheel( step );
+                rc=widget.mouseWheel( step, xStep );
                 if ( rc === true ) return true;
             }
             widget=widget.parent;
@@ -939,7 +939,7 @@ VG.UI.Workspace.prototype.mouseWheel=function( step )
             //VG.log( "iter layout", widget.name );
             if ( widget && widget.mouseWheel )
             {
-                rc=widget.mouseWheel( step );
+                rc=widget.mouseWheel( step, xStep );
                 if ( rc === true ) return true;
             }
             widget=widget.parent;

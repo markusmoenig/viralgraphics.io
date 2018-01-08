@@ -418,6 +418,7 @@ function wheelRelay( e ) {
     let o = e || window.event;
     let d = o.detail, w = o.wheelDelta, n = 225, n1 = n-1;
 
+    if ( e.deltaY !== undefined ) w = -e.deltaY * 10;
     if ( w === undefined ) w = -e.deltaY * 10; // --- Firefox fix
 
     // Normalize delta
@@ -425,9 +426,22 @@ function wheelRelay( e ) {
     // Quadratic scale if |d| > 1
     d = d < 1 ? d < -1 ? (-Math.pow(d, 2) - n1) / n : d : (Math.pow(d, 2) + n1) / n;
     // Delta *should* not be greater than 2...
-    let delta = Math.min(Math.max(d / 2, -1), 1);
+    let deltaY = Math.min(Math.max(d / 2, -1), 1);
 
-    VG.context.workspace.mouseWheel( delta );
+    let deltaX;
+    if ( e.deltaX !== undefined ) {
+        d = o.detail;
+        w = -e.deltaX * 10;
+
+        // Normalize delta
+        d = d ? w && (f = w/d) ? d/f : -d/1.35 : w/120;
+        // Quadratic scale if |d| > 1
+        d = d < 1 ? d < -1 ? (-Math.pow(d, 2) - n1) / n : d : (Math.pow(d, 2) + n1) / n;
+        // Delta *should* not be greater than 2...
+        deltaX = Math.min(Math.max(d / 2, -1), 1);
+    }
+
+    VG.context.workspace.mouseWheel( deltaY, deltaX );
     e.preventDefault();
 }
 
