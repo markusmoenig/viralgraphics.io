@@ -1419,8 +1419,11 @@ VG.UI.LabelLayout=function()
 
     this.size=VG.Core.Size();
 
-    for( var i=0; i < arguments.length; i+=2 )
-        this.addChild( arguments[i], arguments[i+1] );
+    for( var i=0; i < arguments.length; i+=2 ) {
+        let widget = arguments[i+1];
+        if ( typeof widget === 'string' || widget instanceof String ) this.addDivider( widget );
+        else this.addChild( arguments[i], arguments[i+1] );
+    }
 
     this.hOffset=0; this.vOffset=0;
     this.allowScrollbars=true;

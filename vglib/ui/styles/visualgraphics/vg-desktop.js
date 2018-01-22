@@ -2440,43 +2440,45 @@ VG.UI.VisualGraphicsStyle.prototype.drawTextLineEdit=function( widget, canvas )
     // --- Border
 
     widget.contentRect.set( widget.rect );
-    if ( widget.hasFocusState ) {
-        widget.contentRect.shrink( 2, 2, this.rect1 );
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TextLineEdit.FocusBackgroundColor );
+    if ( !widget.embedded ) {
+        if ( widget.hasFocusState ) {
+            widget.contentRect.shrink( 2, 2, this.rect1 );
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TextLineEdit.FocusBackgroundColor );
 
-        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin2px, widget.contentRect, this.skin.TextLineEdit.FocusBorderColor1 );
-        widget.contentRect.shrink( 1, 1, widget.contentRect );
-        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleCorners, widget.contentRect, this.skin.TextLineEdit.FocusBorderColor1 );
-        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.TextLineEdit.FocusBorderColor2 );
-        widget.contentRect.shrink( 1, 1, widget.contentRect );
-        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleCorners, widget.contentRect, this.skin.TextLineEdit.FocusBorderColor2 );
+            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin2px, widget.contentRect, this.skin.TextLineEdit.FocusBorderColor1 );
+            widget.contentRect.shrink( 1, 1, widget.contentRect );
+            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleCorners, widget.contentRect, this.skin.TextLineEdit.FocusBorderColor1 );
+            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.TextLineEdit.FocusBorderColor2 );
+            widget.contentRect.shrink( 1, 1, widget.contentRect );
+            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleCorners, widget.contentRect, this.skin.TextLineEdit.FocusBorderColor2 );
 
-        widget.contentRect.shrink( 1, 0, this.rect1 );
-        this.rect1.height=1;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TextLineEdit.FocusBorderColor3 );
+            widget.contentRect.shrink( 1, 0, this.rect1 );
+            this.rect1.height=1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TextLineEdit.FocusBorderColor3 );
 
-        widget.contentRect.shrink( 0, 1, this.rect1 );
-        this.rect1.width=1;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TextLineEdit.FocusBorderColor3 );
+            widget.contentRect.shrink( 0, 1, this.rect1 );
+            this.rect1.width=1;
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TextLineEdit.FocusBorderColor3 );
 
-        widget.contentRect.shrink( 1, 1, widget.contentRect );
-    } else
-    {
-        widget.contentRect.shrink( 3, 3, this.rect1 );
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TextLineEdit.BackgroundColor );
+            widget.contentRect.shrink( 1, 1, widget.contentRect );
+        } else
+        {
+            widget.contentRect.shrink( 3, 3, this.rect1 );
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TextLineEdit.BackgroundColor );
 
-        widget.contentRect.shrink( 1, 1, widget.contentRect );
+            widget.contentRect.shrink( 1, 1, widget.contentRect );
 
-        if ( widget.customBorderColor ) canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, widget.customBorderColor );
-        else canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.TextLineEdit.BorderColor1 );
-        //canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.TextLineEdit.BorderColor1 );
-        widget.contentRect.shrink( 1, 1, widget.contentRect );
+            if ( widget.customBorderColor ) canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, widget.customBorderColor );
+            else canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.TextLineEdit.BorderColor1 );
+            //canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.TextLineEdit.BorderColor1 );
+            widget.contentRect.shrink( 1, 1, widget.contentRect );
 
-        //if ( widget.customBorderColor ) canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, widget.contentRect, widget.customBorderColor );
-        //else
-            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, widget.contentRect, this.skin.TextLineEdit.BorderColor2 );
+            //if ( widget.customBorderColor ) canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, widget.contentRect, widget.customBorderColor );
+            //else
+                canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, widget.contentRect, this.skin.TextLineEdit.BorderColor2 );
 
-        widget.contentRect.shrink( 1, 1, widget.contentRect );
+            widget.contentRect.shrink( 1, 1, widget.contentRect );
+        }
     }
 
     // ---

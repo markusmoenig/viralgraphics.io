@@ -1291,8 +1291,8 @@ VG.UI.DropDownMenu.prototype.addItems=function()
 
 VG.UI.DropDownMenu.prototype.calcSize=function( canvas )
 {
-    var size=this.preferredSize;
-    var minWidth=80;
+    let size = this.preferredSize;
+    let minWidth = 80;
 
     VG.context.workspace.canvas.pushFont( VG.UI.stylePool.current.skin.DropDownMenu.Font );
 
@@ -1304,6 +1304,9 @@ VG.UI.DropDownMenu.prototype.calcSize=function( canvas )
     size.set( minWidth, VG.context.workspace.canvas.getLineHeight() );
 
     size.add( 40, 3, size );
+
+    size.width = Math.min( size.width, this.maximumSize.width );
+
     //size.height=VG.UI.stylePool.current.skin.DropDownMenu.Height;
     this.minimumSize.set( size );
 

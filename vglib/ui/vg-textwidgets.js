@@ -660,7 +660,7 @@ VG.UI.BaseText.prototype.keyDown=function( keyCode, keysDown )
         // --- Delete Pressed
 
         if ( this.selectionIsValid )
-            this.deleteSelection();
+            this.deleteSelection( this.embedded );
         else
         if ( this.cursorPosition.x > 0 )
         {
@@ -718,6 +718,10 @@ VG.UI.BaseText.prototype.keyDown=function( keyCode, keysDown )
             this.ensureCursorIsVisible();
 
         recognized=true;
+    } else
+    if ( keyCode === VG.Events.KeyCodes.Esc && this.embedded ) {
+        this.focusOut();
+        if ( this.textChanged ) this.textChanged();
     }
 
     if ( recognized )
