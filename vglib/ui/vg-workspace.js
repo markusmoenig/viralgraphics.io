@@ -468,12 +468,11 @@ VG.UI.Workspace.prototype.paintWidget=function()
         this.contentRect.height-=toolbar.rect.height;
     }
 
-    // --- Draw Statusbar
+    // --- Setup Statusbar
 
     if ( this.statusBar )
     {
         this.statusBar.rect.set( this.rect.x, this.rect.y + this.rect.height - VG.UI.stylePool.current.skin.StatusBar.Height, this.rect.width, VG.UI.stylePool.current.skin.StatusBar.Height );
-        this.statusBar.paintWidget( this.canvas );
         this.contentRect=this.contentRect.add( 0, 0, 0, -VG.UI.stylePool.current.skin.StatusBar.Height );
     }
 
@@ -485,6 +484,11 @@ VG.UI.Workspace.prototype.paintWidget=function()
         this.layout.rect.set( this.contentRect );
         this.layout.layout( this.canvas );
     }
+
+    // --- Draw Statusbar
+
+    if ( this.statusBar )
+        this.statusBar.paintWidget( this.canvas );
 
     // --- Draw Windows
 

@@ -1274,6 +1274,7 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
                 }
 
                 child.rect.round();
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, child.rect, VG.UI.stylePool.current.skin.Widget.BackgroundColor );                                    
                 child.paintWidget( canvas );
                 childRect.set( child.rect );
             } else
@@ -1311,7 +1312,10 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
                 child.rect[this.primarySize]=primarySize;
 
                 child.rect.round();
-                if ( primarySize > 1 ) child.paintWidget( canvas );
+                if ( primarySize > 1 ) {
+                    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, child.rect, VG.UI.stylePool.current.skin.Widget.BackgroundColor );                    
+                    child.paintWidget( canvas );
+                }
                 childRect.set( child.rect );
             }
         } else
@@ -1340,7 +1344,10 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
 
             child.rect.set( childRect );
             child.rect.round();
-            if ( primarySize > 1 ) child.layout( canvas );
+            if ( primarySize > 1 ) {
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, child.rect, VG.UI.stylePool.current.skin.Widget.BackgroundColor );                                    
+                child.layout( canvas );
+            }
         }
 
         let drawSplitbar=true;
@@ -1426,7 +1433,7 @@ VG.UI.LabelLayout=function()
     }
 
     this.hOffset=0; this.vOffset=0;
-    this.allowScrollbars=true;
+    this.allowScrollbars=false;
 };
 
 VG.UI.LabelLayout.prototype=VG.UI.Layout();
