@@ -2083,6 +2083,7 @@ VG.UI.Slider=function( { min=0, max=100, step=1, editable=true, precision=0, noV
     if ( editable ) {
         this.editable=true;
         this.edit=VG.UI.NumberEdit( min, min, max, precision );
+        this.edit.value = this._value;
         this.edit.changed=function( value, cont, object, fromModel ) {
             this.value=value;
 

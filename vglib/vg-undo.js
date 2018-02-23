@@ -489,14 +489,18 @@ VG.Data.Undo.prototype.addUndoWidget=function( widget )
 {
     widget.disabled=!this.undoIsAvailable;
     widget.clicked=this.undo.bind( this );
-    this.undoWidgets.push( widget );
+
+    if ( this.undoWidgets.indexOf( widget ) == -1 )
+        this.undoWidgets.push( widget );
 };
 
 VG.Data.Undo.prototype.addRedoWidget=function( widget )
 {
     widget.disabled=!this.redoIsAvailable;
     widget.clicked=this.redo.bind( this );
-    this.redoWidgets.push( widget );
+
+    if ( this.redoWidgets.indexOf( widget ) == -1 )
+        this.redoWidgets.push( widget );
 };
 
 VG.Data.Undo.prototype.addNewWidget=function( widget )

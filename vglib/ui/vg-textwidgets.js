@@ -2011,8 +2011,8 @@ VG.UI.CodeEdit=function( text )
 
             "if", "else", "break", "while" ],
 
-            builtIn : [ "mix", "sin", "fract", "cos", "floor" ],
-            globalVars : [ "inUV", "inPos", "inTerminal", "inInput1", "inInput2", "inInput3", "outColor", "outMetallic", "outSmoothness", "outReflectance", "outBump", "outName", "outCategory",
+            builtIn : [ "mix", "sin", "fract", "cos", "floor", "InputFunc", "mix", "dot" ],
+            globalVars : [ "inUV", "inPos", "inTerminal", "inDefaultTerminal", "inInput1", "inInput2", "inInput3", "inTime", "inNormal", "outColor", "outMetallic", "outSmoothness", "outReflectance", "outBump", "outName", "outCategory",
             "ParameterGroup", "ParamHtml", "ParamSlider", "ParamVector3", "ParamVector2", "ParamList" ],
 
             /*

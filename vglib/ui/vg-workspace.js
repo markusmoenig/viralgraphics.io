@@ -1804,6 +1804,86 @@ VG.UI.Workspace.prototype.registerDataCollection=function( dataCollection, roles
 };
 
 /**
+ * Installs a temporary undo / redo collections.
+ */
+
+VG.UI.Workspace.prototype.registerTempUndoCollection=function( dataCollection )
+{
+    let button;
+
+    // --- Disable all non Undo / Redo Buttons
+
+    button = this.getToolButtonOfRole( VG.UI.ActionItemRole.New );
+    if ( button ) {
+        this._oldNewState = button.disabled;
+        button.disabled = true;
+    }
+
+    button = this.getToolButtonOfRole( VG.UI.ActionItemRole.Open );
+    if ( button ) {
+        this._oldOpenState = button.disabled;
+        button.disabled = true;
+    }
+
+    button = this.getToolButtonOfRole( VG.UI.ActionItemRole.Save );
+    if ( button ) {
+        this._oldSaveState = button.disabled;
+        button.disabled = true;
+    }
+
+    button = this.getToolButtonOfRole( VG.UI.ActionItemRole.SaveAs );
+    if ( button ) {
+        this._oldSaveAsState = button.disabled;
+        button.disabled = true;
+    }
+
+    // ---
+
+    this._dataCollectionForUndoRedo = this.dataCollectionForUndoRedo;
+
+    this.dataCollectionForUndoRedo = dataCollection;
+    let undo = new VG.Data.Undo();
+    dataCollection.__vgUndo = undo;
+
+    button = this.getToolButtonOfRole( VG.UI.ActionItemRole.Undo );
+    if ( button ) undo.addUndoWidget( button );
+    button = this.getToolButtonOfRole( VG.UI.ActionItemRole.Redo );
+    if ( button ) undo.addRedoWidget( button );
+
+    dataCollection.__vgUndo.updateUndoRedoWidgets();
+};
+
+/**
+ * Removes the previously installed undo / redo connection.
+ */
+
+VG.UI.Workspace.prototype.unregisterTempUndoCollection=function()
+{
+    this.dataCollectionForUndoRedo.clearUndo();
+
+    this.dataCollectionForUndoRedo = this._dataCollectionForUndoRedo;
+
+    // --- Reassign the undo / redo callbacks
+
+    let button;
+    let undo = this.dataCollectionForUndoRedo.__vgUndo;
+
+    button = this.getToolButtonOfRole( VG.UI.ActionItemRole.New );
+    if ( button ) button.disabled = this._oldNewState;
+    button = this.getToolButtonOfRole( VG.UI.ActionItemRole.Open );
+    if ( button ) button.disabled = this._oldOpenState;
+    button = this.getToolButtonOfRole( VG.UI.ActionItemRole.Save );
+    if ( button ) button.disabled = this._oldSaveState;
+    button = this.getToolButtonOfRole( VG.UI.ActionItemRole.SaveAs );
+    if ( button ) button.disabled = this._oldSaveAsState;
+
+    button = this.getToolButtonOfRole( VG.UI.ActionItemRole.Undo );
+    if ( button ) undo.addUndoWidget( button );
+    button = this.getToolButtonOfRole( VG.UI.ActionItemRole.Redo );
+    if ( button ) undo.addRedoWidget( button );
+};
+
+/**
  * Registers a callback for a specified callback type.
  * @param {VG.UI.CallbackType} type - The type of the callback
  * @param {function} func - The callback which gets invoked for the specified callback type

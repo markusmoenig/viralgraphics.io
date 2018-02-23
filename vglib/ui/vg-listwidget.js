@@ -252,12 +252,14 @@ VG.UI.ListWidget.prototype.mouseDown=function( event )
         } else
         if ( item ) {
             this.controller.setSelected( item );
-            this.possibleDnDSource=item;
+            if ( event.button === VG.Events.MouseButton.Left )
+                this.possibleDnDSource=item;
         }
     } else
     if ( item ) {
         this.controller.setSelected( item );
-        this.possibleDnDSource=item;
+        if ( event.button === VG.Events.MouseButton.Left )
+            this.possibleDnDSource=item;
     }
 
     this.mouseIsDown=true;

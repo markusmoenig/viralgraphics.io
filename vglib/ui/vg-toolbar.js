@@ -946,7 +946,13 @@ VG.UI.ToolSettings=function( label, options )
     this.widget.parent = this;
     this.widget.mouseDown=function( event ) {
         if ( this.open && this.closeButtonRect.contains( event.pos ) ) {
-            this.open=false;
+
+            if ( VG.context.workspace.overlayWidget.parent ) {
+                VG.context.workspace.overlayWidget.parent.open = false;
+                VG.context.workspace.overlayWidget.parent.childWidgets = [];
+            }
+
+            this.open = false;
             VG.context.workspace.overlayWidget = undefined;
         }
     }.bind( this );
@@ -964,7 +970,7 @@ VG.UI.ToolSettings.prototype.calcSize=function()
 
 VG.UI.ToolSettings.prototype.addItem=function( text, callback )
 {
-    var item=VG.UI.DecoratedQuickMenuItem( text, callback );
+    let item=VG.UI.DecoratedQuickMenuItem( text, callback );
     this.items.push( item );
 
     return item;
@@ -972,7 +978,7 @@ VG.UI.ToolSettings.prototype.addItem=function( text, callback )
 
 VG.UI.ToolSettings.prototype.mouseDown=function( event )
 {
-    var oldOpenState=this.open;
+    let oldOpenState=this.open;
 
     let closeExisting = () => {
         if ( VG.context.workspace.overlayWidget && VG.context.workspace.overlayWidget !== this.widget ) {
@@ -1019,7 +1025,7 @@ VG.UI.ToolSettings.prototype.mouseDown=function( event )
 
 VG.UI.ToolSettings.prototype.mouseUp=function( event )
 {
-    if ( this.rect.contains( event.pos) )
+    // if ( this.rect.contains( event.pos) )
     {
         this.mouseIsDown=false;
     }
