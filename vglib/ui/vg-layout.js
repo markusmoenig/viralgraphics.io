@@ -1274,7 +1274,7 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
                 }
 
                 child.rect.round();
-                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, child.rect, VG.UI.stylePool.current.skin.Widget.BackgroundColor );                                    
+                // canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, child.rect, VG.UI.stylePool.current.skin.Widget.BackgroundColor );
                 child.paintWidget( canvas );
                 childRect.set( child.rect );
             } else
@@ -1313,7 +1313,7 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
 
                 child.rect.round();
                 if ( primarySize > 1 ) {
-                    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, child.rect, VG.UI.stylePool.current.skin.Widget.BackgroundColor );                    
+                    // canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, child.rect, VG.UI.stylePool.current.skin.Widget.BackgroundColor );
                     child.paintWidget( canvas );
                 }
                 childRect.set( child.rect );
@@ -1345,7 +1345,7 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
             child.rect.set( childRect );
             child.rect.round();
             if ( primarySize > 1 ) {
-                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, child.rect, VG.UI.stylePool.current.skin.Widget.BackgroundColor );                                    
+                // canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, child.rect, VG.UI.stylePool.current.skin.Widget.BackgroundColor );
                 child.layout( canvas );
             }
         }
