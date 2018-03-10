@@ -284,7 +284,7 @@ VG.UI.BaseText.prototype.calcSize=function()
 
 VG.UI.BaseText.prototype.applyCursorPos=function( pos )
 {
-    if ( this.font ) VG.context.workspace.canvas.pushFont( this.font );
+    // if ( this.font ) VG.context.workspace.canvas.pushFont( this.font );
 
     var lineY=Math.floor( (this.textOffset.y + pos.y - this.contentRect.y ) / this.heightPerItem );
 
@@ -298,7 +298,7 @@ VG.UI.BaseText.prototype.applyCursorPos=function( pos )
     // --- Get the x cursor position
 
     var text=this.textArray[this.cursorPosition.y];
-    if ( !text ) { if ( this.font ) VG.context.workspace.canvas.popFont(); this.cursorPosition.x=0; return; }
+    if ( !text ) { /*if ( this.font ) VG.context.workspace.canvas.popFont();*/ this.cursorPosition.x=0; return; }
 
     var size=VG.Core.Size();
     var offset=0;
@@ -329,7 +329,7 @@ VG.UI.BaseText.prototype.applyCursorPos=function( pos )
     if ( this.cursorPosition.x < 0 ) this.cursorPosition.x=0;
     if ( this.cursorPosition.x >= text.length ) this.cursorPosition.x=text.length;
 
-    if ( this.font ) VG.context.workspace.canvas.popFont();
+    // if ( this.font ) VG.context.workspace.canvas.popFont();
 
     if ( this.cursorChanged ) this.cursorChanged( this.cursorPosition );
 };
@@ -2011,9 +2011,9 @@ VG.UI.CodeEdit=function( text )
 
             "if", "else", "break", "while" ],
 
-            builtIn : [ "mix", "sin", "fract", "cos", "floor", "InputFunc", "mix", "dot" ],
-            globalVars : [ "inUV", "inPos", "inTerminal", "inDefaultTerminal", "inInput1", "inInput2", "inInput3", "inTime", "inNormal", "outColor", "outMetallic", "outSmoothness", "outReflectance", "outBump", "outName", "outCategory",
-            "ParameterGroup", "ParamHtml", "ParamSlider", "ParamVector3", "ParamVector2", "ParamList" ],
+            builtIn : [ "mix", "sin", "fract", "cos", "floor", "InputFunc", "mix", "dot", "pow", "min", "max", "abs", "sign" ],
+            globalVars : [ "inUV", "inPos", "inTerminal", "inDefaultTerminal", "inInput1", "inInput2", "inInput3", "inTime", "inNormal", "inMaterial", "outColor", "outMaterial", "outMetallic", "outSmoothness", "outReflectance", "outBump", "outName", "outCategory",
+            "ParameterGroup", "ParamHtml", "ParamSlider", "ParamVector3", "ParamVector2", "ParamList", "ParamColor" ],
 
             /*
             this.codeSkin={ "Comment" : VG.Core.Color( 121, 124, 131 ), "Text" : VG.Core.Color( 91, 238, 167 ), "Reserved" : VG.Core.Color( 242, 102, 102 ),
@@ -2353,6 +2353,10 @@ VG.UI.CodeEdit.prototype.drawJSLine=function( canvas, textPixelOffset, text, rec
 {
     //console.log( "drawJSLine", textPixelOffset, text, rect.toString() );
 
+    function isLetter(c) {
+        return c.match(/[a-zA-Z]/i);
+    }
+
     var singleLineCommentIndex=text.indexOf( this.lineComment );
     var multiLineCommentIndex=-1;
 
@@ -2424,12 +2428,11 @@ VG.UI.CodeEdit.prototype.drawJSLine=function( canvas, textPixelOffset, text, rec
             // --- Last Check: Digit
 
             var digitIndex = text.search( /[-+]?([0-9]*\.[0-9]+|[0-9]+)/ );
-            if ( digitIndex !== -1 ) {
+            if ( digitIndex !== -1 && ( (digitIndex && !isLetter( text[digitIndex-1] ) ) || digitIndex === 0 ) ) {
 
                 if ( digitIndex ) textPixelOffset=this.drawJSLine( canvas, textPixelOffset, text.slice( 0, digitIndex ), rect );
                 textPixelOffset+=this.drawJSText( canvas, text.slice( digitIndex, digitIndex+1 ), rect.add( textPixelOffset, 0, -textPixelOffset, 0, this.workRect), this.codeSkin.Digit );
                 textPixelOffset=this.drawJSLine( canvas, textPixelOffset, text.slice( digitIndex+1 ), rect );
-
             } else
                 // --- Just plain text, no formatting
                 textPixelOffset+=this.drawJSText( canvas, text, rect.add( textPixelOffset, 0, -textPixelOffset, 0, this.workRect), VG.UI.stylePool.current.skin.CodeEdit.TextColor );
