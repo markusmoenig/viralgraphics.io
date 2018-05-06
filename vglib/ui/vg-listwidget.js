@@ -164,7 +164,17 @@ VG.UI.ListWidget.prototype.keyDown=function( keyCode )
 
     if ( keyCode === VG.Events.KeyCodes.ArrowUp && index > 0 )
     {
-        this.controller.selected=this.controller.at( index - 1 );
+        index -= 1;
+        this.controller.selected=this.controller.at( index );
+        while ( !this.controller.selected.visible && index > 0 ) {
+            index -= 1;
+            this.controller.selected = this.controller.at( index );
+        }
+
+        while ( this.controller.selected && !this.controller.selected.visible ) {
+            index += 1;
+            this.controller.selected = this.controller.at( index );
+        }
 
         if ( this.needsVScrollbar )
         {
@@ -179,12 +189,22 @@ VG.UI.ListWidget.prototype.keyDown=function( keyCode )
     } else
     if ( keyCode === VG.Events.KeyCodes.ArrowDown && index < this.controller.length-1 )
     {
-        this.controller.selected=this.controller.at( index + 1 );
+        index += 1;
+        this.controller.selected = this.controller.at( index );
+        while ( !this.controller.selected.visible && index < this.controller.length-1 ) {
+            index += 1;
+            this.controller.selected = this.controller.at( index );
+        }
+
+        while ( this.controller.selected && !this.controller.selected.visible ) {
+            index -= 1;
+            this.controller.selected = this.controller.at( index );
+        }
 
         if ( this.needsVScrollbar )
         {
             // --- Scroll one line down if necessary
-            y=this.contentRect.y - this.offset + (index+1) * (this.itemHeight + this.spacing);
+            y=this.contentRect.y - this.offset + index * (this.itemHeight + this.spacing);
 
             if ( y + this.itemHeight > this.contentRect.bottom() ) {
                 this.offset+=this.itemHeight + this.spacing;

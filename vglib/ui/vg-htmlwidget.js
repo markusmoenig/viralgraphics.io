@@ -111,7 +111,8 @@ VG.UI.HtmlWidget.prototype.parseHtml=function()
 
             ignoreFirstTopMargin=false;
         }
-        margin.left+=skinObject.Margin.left;
+
+        margin.left+=self.adjustToHeight && name === "p" ? 0 : skinObject.Margin.left;
         margin.top+=topMargin;
         margin.right+=skinObject.Margin.right;
 
@@ -325,17 +326,24 @@ VG.UI.HtmlWidget.prototype.parseHtml=function()
 
     this.totalHeight = rect.y - this.margin.top;
 
+    if ( this.adjustToHeight ) {
+        this.maximumSize.height = this.totalHeight ? this.totalHeight : 20;
+        this.minimumSize.height = this.totalHeight ? this.totalHeight : 20;
+    }
+
     this.dirty=false;
     this.lastRect.copy( this.rect );
 
-    this.needsVScrollbar=this.totalHeight > this.contentRect.height;
+    if ( !this.adjustToHeight ) {
+        this.needsVScrollbar=this.totalHeight > this.contentRect.height;
 
-    if ( this.needsVScrollbar && !this.vScrollbar ) {
-        this.vScrollbar=VG.UI.ScrollBar( "HtmlWidget Scrollbar" );
-        this.vScrollbar.callbackObject=this;
+        if ( this.needsVScrollbar && !this.vScrollbar ) {
+            this.vScrollbar=VG.UI.ScrollBar( "HtmlWidget Scrollbar" );
+            this.vScrollbar.callbackObject=this;
+        }
+
+        if ( !this.needsVScrollbar ) this.offset=0;
     }
-
-    if ( !this.needsVScrollbar ) this.offset=0;
 };
 
 VG.UI.HtmlWidget.prototype.focusIn=function()

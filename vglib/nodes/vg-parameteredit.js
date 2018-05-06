@@ -84,14 +84,17 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
             } else
             if ( param instanceof VG.Nodes.ParamHtml )
             {
-                param.widget=VG.UI.HtmlWidget( param.data[param.name] );
-                param.widget.minimumSize.height = 100;
+                param.widget=VG.UI.HtmlWidget();
+                param.widget.margin.set( 0, 0.5, 0, 0 );
+                param.widget.adjustToHeight = true;
+                param.widget.html = param.data[param.name];
+                param.widget.supportsAutoFocus = true;
                 param.widget.linkCallback=function( link ) {
                     VG.gotoUrl( link );
                 };
                 param.widget.name=param.name;
 
-                group.layout.addChild( "", param.widget );
+                group.layout.addChild( param.text !== "Html" ? param.text : "", param.widget );
             } else
             if ( param instanceof VG.Nodes.ParamNumber )
             {
@@ -245,7 +248,6 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
             {
                 param.widget=VG.UI.Vector2Edit( param.data[param.name].x, param.data[param.name].y, param.min, param.max );
                 param.widget.name=param.name;
-                param.widget.minimumSize.height=30;
                 param.widget.maximumSize.width = 320;
 
                 param.widget.changed=function( value, contineous, object ) {
@@ -359,7 +361,6 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
                 param.widget.name=param.name;
                 param.widget.fixedPrecision=3;
                 param.widget.enableXYZMode();
-                param.widget.minimumSize.height=30;
                 param.widget.maximumSize.width=320;
 
                 param.widget.changed=function( value, contineous, object ) {

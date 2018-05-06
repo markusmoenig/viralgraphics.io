@@ -2013,7 +2013,7 @@ VG.UI.CodeEdit=function( text )
 
             builtIn : [ "mix", "sin", "fract", "cos", "floor", "InputFunc", "mix", "dot", "pow", "min", "max", "abs", "sign" ],
             globalVars : [ "inUV", "inPos", "inTerminal", "inDefaultTerminal", "inInput1", "inInput2", "inInput3", "inTime", "inNormal", "inMaterial", "outColor", "outMaterial", "outMetallic", "outSmoothness", "outReflectance", "outBump", "outName", "outCategory",
-            "ParameterGroup", "ParamHtml", "ParamSlider", "ParamVector3", "ParamVector2", "ParamList", "ParamColor" ],
+            "ParameterGroup", "ParamHtml", "ParamSlider", "ParamVector3", "ParamVector2", "ParamList", "ParamColor", "ParamDescription", "ParamReferences", "ParamBoolean", "ParamImportant", "ParamToolTip" ],
 
             /*
             this.codeSkin={ "Comment" : VG.Core.Color( 121, 124, 131 ), "Text" : VG.Core.Color( 91, 238, 167 ), "Reserved" : VG.Core.Color( 242, 102, 102 ),

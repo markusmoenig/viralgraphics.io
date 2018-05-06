@@ -70,7 +70,7 @@ VG.UI.Scroller=function()
     this.animStartTime=-1;
     this.animDuration=600;
     this.animDirectionLeft=true;
-    this.animPeriod=8000;
+    this.animPeriod=8000*2;
 
     this.circleColor=VG.Core.Color( 255, 255, 255 );
     this.titleColor=VG.Core.Color( 255, 255, 255 );
@@ -194,7 +194,7 @@ VG.UI.Scroller.prototype.paintWidget=function( canvas )
             for ( let i=0; i < this.items.length; ++i )
             {
                 rect.copy( this.rect );
-                rect.x = xOff; rect.y = rect.bottom() - 28;
+                rect.x = xOff; rect.y = rect.bottom() - 20;
 
                 if ( this.currentIndex === i ) {
                     rect.width = 10; rect.height = 10;

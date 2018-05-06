@@ -911,6 +911,8 @@ VG.UI.Workspace.prototype.mouseDoubleClick=function()
 
 VG.UI.Workspace.prototype.mouseWheel=function( step, xStep )
 {
+    this.lastMouseMove=Date.now();
+
     let rc, widget;
     if ( this.layoutUnderMouse && this.layoutUnderMouse.mouseWheel ) {
         rc=this.layoutUnderMouse.mouseWheel( step, xStep );

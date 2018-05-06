@@ -119,7 +119,7 @@ VG.UI.VisualGraphicsDarkGraySkin=function()
 
     this.DecoratedToolBar={
         Height : 44,//66,
-        Spacing : 18,
+        Spacing : 12,
 
         LogoColor : VG.Core.Color( 255, 255, 255 ),
 

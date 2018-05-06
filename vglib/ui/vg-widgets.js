@@ -3008,7 +3008,7 @@ VG.UI.ToolTipWidget.prototype.setToolTip=function( canvas, widget )
     this.height=0;
     this.title=undefined;
 
-    if ( widget.text && widget.text.length ) {
+    if ( widget.text && widget.text.length && isNaN( widget.text ) ) {
 
         this.title=widget.text;
 

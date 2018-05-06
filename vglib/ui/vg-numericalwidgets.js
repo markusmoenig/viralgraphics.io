@@ -245,6 +245,7 @@ VG.UI.Vector2Edit.prototype.bind=function( collection, path )
 
 VG.UI.Vector2Edit.prototype.calcSize=function( canvas )
 {
+    this.minimumSize.height = this.value1Edit.minimumSize.height;
     return this.value1Edit.calcSize( canvas );
 };
 
@@ -367,6 +368,7 @@ VG.UI.Vector3Edit.prototype.valueFromModel=function( value )
 
 VG.UI.Vector3Edit.prototype.calcSize=function( canvas )
 {
+    this.minimumSize.height = this.value1Edit.minimumSize.height;
     return this.value1Edit.calcSize( canvas );
 };
 
@@ -457,6 +459,7 @@ Object.defineProperty( VG.UI.Vector4Edit.prototype, "fixedPrecision", {
 
 VG.UI.Vector4Edit.prototype.calcSize=function( canvas )
 {
+    this.minimumSize.height = this.value1Edit.minimumSize.height;
     return this.value1Edit.calcSize( canvas );
 };
 

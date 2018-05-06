@@ -1043,14 +1043,14 @@ var VG;
                 #extension GL_OES_standard_derivatives : enable
                 precision mediump float;
                 varying vec2 texCoord;
-                uniform vec2 uCanvasSize;
+                uniform vec2 inResolution;
             ` : `#version 300 es
                 precision mediump float;
 
                 out vec4 fragColor;
                 in vec2 texCoord;
 
-                uniform vec2 uCanvasSize;
+                uniform vec2 inResolution;
             `;
 
             this.fSource = header + (this.webgl2 ? fSource : fSource.replace( /fragColor/g, "gl_FragColor" ));
@@ -1079,7 +1079,7 @@ var VG;
             b.vertexAttrib( this.aPosition, 2, false, stride * 4, 0);
             b.vertexAttrib( this.aTexCoord, 2, false, stride * 4, stride * 2);
 
-            this.setFloat( "uCanvasSize", [ rt.width, rt.height ] );
+            this.setFloat( "inResolution", [ rt.width, rt.height ] );
 
             this.createFrame( 0, 0, rt.width, rt.height, b );
 
