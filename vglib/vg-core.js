@@ -704,6 +704,7 @@ VG.Core.Color=function()
         this.r=arguments[0]/255.0; this.g=arguments[1]/255.0; this.b=arguments[2]/255.0;
         this.a=arguments[3]/255.0;
     }
+    this.canvasStyle = this.toCanvasStyle();
 };
 
 /**
@@ -718,7 +719,7 @@ VG.Core.Color=function()
 
 VG.Core.NormalizedColor=function()
 {
-	var color = VG.Core.Color();
+	let color = VG.Core.Color();
     if ( arguments.length === 1 )
     {
         if ( arguments[0] instanceof VG.Core.Color ) {
@@ -734,6 +735,7 @@ VG.Core.NormalizedColor=function()
         color.r=arguments[0]; color.g=arguments[1]; color.b=arguments[2];
         color.a=arguments[3];
     }
+    color.canvasStyle = color.toCanvasStyle();
 	return color;
 };
 
@@ -748,6 +750,7 @@ VG.Core.Color.prototype.copy=function(color)
     this.g = color.g;
     this.b = color.b;
     this.a = color.a;
+    this.canvasStyle = this.toCanvasStyle();
 };
 
 /**
@@ -764,6 +767,7 @@ VG.Core.Color.prototype.set=function( r, g, b, a )
     this.g = g;
     this.b = b;
     if ( a !== undefined ) this.a = a;
+    this.canvasStyle = this.toCanvasStyle();
 };
 
 /**
@@ -777,6 +781,7 @@ VG.Core.Color.prototype.mul=function(d)
     this.g = VG.Math.clamp(this.g * d, 0.0, 1.0);
     this.b = VG.Math.clamp(this.b * d, 0.0, 1.0);
     this.a = VG.Math.clamp(this.a * d, 0.0, 1.0);
+    this.canvasStyle = this.toCanvasStyle();
 };
 
 /**
@@ -791,6 +796,7 @@ VG.Core.Color.prototype.setRGBA=function( r, g, b, a )
 {
     this.r=r/255.0; this.g=g/255.0; this.b=b/255.0;
     if ( a !== undefined ) this.a=a/255.0;
+    this.canvasStyle = this.toCanvasStyle();
 };
 
 /**
@@ -807,7 +813,8 @@ VG.Core.Color.prototype.setArray=function(value)
 	if (2 < value.length)
 		this.b = value[2];
 	if (3 < value.length)
-		this.a = value[3];
+        this.a = value[3];
+    this.canvasStyle = this.toCanvasStyle();
 };
 
 /**
@@ -903,6 +910,7 @@ VG.Core.Color.prototype.setHSL=function(h, s, l)
         this.g = hueAngle(hue        , x, y);
         this.b = hueAngle(hue - 1 / 3, x, y);
     }
+    this.canvasStyle = this.toCanvasStyle();
 };
 
 /**
@@ -915,7 +923,7 @@ VG.Core.Color.prototype.toHex=function()
     // Based on http://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
 
     function componentToHex(c) {
-        var hex = c.toString(16);
+        let hex = c.toString(16);
         return hex.length == 1 ? "0" + hex : hex;
     }
 
@@ -929,7 +937,7 @@ VG.Core.Color.prototype.toHex=function()
 
 VG.Core.Color.prototype.toCanvasStyle=function()
 {
-    var text="rgba( " + this.r * 255 + ", " + this.g * 255 + ", " + this.b * 255 + ", " + this.a + ")";
+    let text="rgba( " + this.r * 255 + ", " + this.g * 255 + ", " + this.b * 255 + ", " + this.a + ")";
     return text;
 };
 
@@ -954,6 +962,8 @@ VG.Core.Color.prototype.setHex=function( hex )
     this.r=result.length >= 2 ? parseInt(result[1], 16) / 255.0 : 0;
     this.g=result.length >= 3 ? parseInt(result[2], 16) / 255.0 : 0;
     this.b=result.length >= 4 ? parseInt(result[3], 16) / 255.0 : 0;
+
+    this.canvasStyle = this.toCanvasStyle();
 };
 
 /**
@@ -1222,7 +1232,7 @@ VG.Core.Image.prototype.dispose=function()
 VG.Core.Image.prototype.getPixel=function( x, y, color )
 {
     if ( !color ) color=VG.Core.Color();
-    var offset=y * this.modulo + x * 4;
+    let offset=y * this.modulo + x * 4;
     color.r=this.data[offset] / 255;
     color.g=this.data[offset+1] / 255;
     color.b=this.data[offset+2] / 255;

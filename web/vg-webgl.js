@@ -104,6 +104,7 @@ var VG;
             if ( !this.queryExt )
                 this.queryExt = VG.WebGL.gl.getExtension('EXT_disjoint_timer_query');
             this.supportsFloatTextures = gl.getExtension("EXT_color_buffer_float");
+            this.supportsFloatLinear = gl.getExtension("OES_texture_float_linear");
         }
     };
 
@@ -1279,13 +1280,14 @@ var VG;
             h = imH;
         gl.bindTexture(this.target, this.id);
 
+
         if (image.type === VG.Core.TypedArray.Type.Uint8)
             gl.texSubImage2D(this.target, 0, x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, image.data);
         else if (image.type === VG.Core.TypedArray.Type.Float) {
             if (image.elements === 4)
-                gl.texSubImage2D(this.target, 0, x, y, w, h, gl.RGBA, gl.FLOAT, image.data);
+                gl.texSubImage2D(this.target, 0, x, y, w, h, VG.webgl2 ? gl.RGBA32F : gl.RGBA, gl.FLOAT, image.data);
             else if (image.elements === 1)
-                gl.texSubImage2D(this.target, 0, x, y, w, h, gl.ALPHA, gl.FLOAT, image.data);
+                gl.texSubImage2D(this.target, 0, x, y, w, h, VG.webgl2 ? gl.RED : gl.ALPHA, gl.FLOAT, image.data);
         }
 
         return this;

@@ -45,11 +45,11 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
 
     for( let i=0; i < this.container.groups.length; ++i )
     {
-        var group=this.container.groups[i];
+        let group = this.container.groups[i];
         if ( !group.visible ) continue;
 
         group.layout = new VG.UI.LabelLayout();
-        if ( group.disabled ) group.layout.disabled = true;
+        if ( group.disabled || container.disabled ) group.layout.disabled = true;
 
         if ( tabs ) this.containerWidget.addItem( group.text, group.layout );
         else this.containerWidget.addItem( group.text, group.layout, group.open );
@@ -85,7 +85,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
             if ( param instanceof VG.Nodes.ParamHtml )
             {
                 param.widget=VG.UI.HtmlWidget();
-                param.widget.margin.set( 0, 0.5, 0, 0 );
+                param.widget.margin.set( 0, 0, 0, 0 );
                 param.widget.adjustToHeight = true;
                 param.widget.html = param.data[param.name];
                 param.widget.supportsAutoFocus = true;
@@ -246,7 +246,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
             } else
             if ( param instanceof VG.Nodes.ParamVector2 )
             {
-                param.widget=VG.UI.Vector2Edit( param.data[param.name].x, param.data[param.name].y, param.min, param.max );
+                param.widget=VG.UI.Vector2Edit( param.data[param.name].x, param.data[param.name].y, param.min, param.max, param.precision );
                 param.widget.name=param.name;
                 param.widget.maximumSize.width = 320;
 
@@ -353,6 +353,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
                     param.index = Number( controller.indexOf( selected ) );
                 }.bind( this ) );
 
+                param.widget.disabled=param.disabled;
                 group.layout.addChild( param.text, param.widget );
             } else
             if ( param instanceof VG.Nodes.ParamVector3 )
@@ -384,6 +385,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
                     if ( callback ) callback();
                 }.bind( this );
 
+                param.widget.disabled=param.disabled;
                 group.layout.addChild( param.text, param.widget );
             } else
             if ( param instanceof VG.Nodes.ParamVector4 )
@@ -415,6 +417,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
                     if ( callback ) callback();
                 }.bind( this );
 
+                param.widget.disabled=param.disabled;
                 group.layout.addChild( param.text, param.widget );
             } else
             if ( param instanceof VG.Nodes.ParamColor )
@@ -455,8 +458,16 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
                     if ( callback ) callback();
                 }.bind( this );
 
+                param.widget.disabled=param.disabled;
                 group.layout.addChild( param.text, param.widget );
             }  else
+            if ( param instanceof VG.Nodes.ParamCustom )
+            {
+                param.widget=param.cb( "CreateWidget" );
+
+                param.widget.disabled=param.disabled;
+                group.layout.addChild( param.text, param.widget );
+            } else
             if ( param instanceof VG.Nodes.ParamMaterial )
             {
                 param.widget = new VG.UI.MaterialEdit( { alpha: param.alpha } );

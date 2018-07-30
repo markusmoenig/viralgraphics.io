@@ -721,7 +721,7 @@ VG.Nodes.ParamSlider=function( data, name, text, value, min, max, step, precisio
      * @param {number} min - Optional, the minimum number allowed.
      * @param {number} max - Optional, the maximum number allowed.
      * @param {number} step - Optional, the step distance between possible values.
-     * @param {number} precision - Optiona, the fixed precision for the edit widget.
+     * @param {number} precision - Optional, the fixed precision for the edit widget.
      * @constructor
     */
 
@@ -776,6 +776,33 @@ VG.Nodes.ParamBoolean=function( data, name, text, value )
 
 VG.Nodes.ParamBoolean.prototype=VG.Nodes.Param();
 
+// ----------------------------------------------------------------- VG.Nodes.ParamBoolean
+
+VG.Nodes.ParamCustom=function( data, name, text, cb )
+{
+    /**
+     * Creates a Boolean (on/off) Parameter.<br>
+     *
+     * @param {object} data - The object which holds the low level representation of the parameters.
+     * @param {string} name - The name of the new parameter, the name is used to identify parameters inside a container or group and has to be unique.
+     * @param {string} text - The text to display in the user interface for this parameter.
+     * @param {number} value - The initial value of this parameter.
+     * @constructor
+    */
+
+    if ( !(this instanceof VG.Nodes.ParamCustom ) ) return new VG.Nodes.ParamCustom( data, name, text, cb );
+
+    this.name=name ? name : "value";
+    this.text=text !== undefined ? text : "";
+
+    this.data=data;
+    this.cb=cb;
+
+    if ( data[name] === undefined ) data[name]=cb( "DefaultValue" );
+};
+
+VG.Nodes.ParamCustom.prototype=VG.Nodes.Param();
+
 // ----------------------------------------------------------------- VG.Nodes.ParamList
 
 VG.Nodes.ParamList=function( data, name, text, value, array, callback )
@@ -807,7 +834,7 @@ VG.Nodes.ParamList.prototype=VG.Nodes.Param();
 
 // ----------------------------------------------------------------- VG.Nodes.ParamVector2
 
-VG.Nodes.ParamVector2=function( data, name, text, x, y, min, max )
+VG.Nodes.ParamVector2=function( data, name, text, x, y, min, max, precision )
 {
     /**
      * Creates a Vector 2 Parameter.<br>
@@ -819,16 +846,18 @@ VG.Nodes.ParamVector2=function( data, name, text, x, y, min, max )
      * @param {number} y - The initial y value.
      * @param {number} min - Optional, the minimum number allowed.
      * @param {number} max - Optional, the maximum number allowed.
+     * @param {number} precision - Optional, the fixed precision for the edit widget.*
      * @constructor
     */
 
-    if ( !(this instanceof VG.Nodes.ParamVector2 ) ) return new VG.Nodes.ParamVector2( data, name, text, x, y, min, max );
+    if ( !(this instanceof VG.Nodes.ParamVector2 ) ) return new VG.Nodes.ParamVector2( data, name, text, x, y, min, max, precision );
 
     this.name=name ? name : "value";
     this.text=text ? text : "Value";
 
     this.min=min;
     this.max=max;
+    this.precision=precision;
 
     if ( !data[name] )
     {

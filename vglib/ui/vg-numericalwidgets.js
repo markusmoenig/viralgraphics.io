@@ -33,8 +33,6 @@ VG.UI.NumberEdit=function( value, min, max, fixedPrecision )
     this.min=min;
     this.max=max;
 
-    this.value=value;
-
     this.inputFilter=function( input ) {
         var output=input;
         return output;
@@ -78,13 +76,17 @@ VG.UI.NumberEdit=function( value, min, max, fixedPrecision )
         return output;*/
     };
 
-    this.font=VG.Font.Font( VG.UI.stylePool.current.skin.TextEdit.Font );
+    this.font = VG.Font.Font( VG.UI.stylePool.current.skin.TextEdit.Font );
 
     this.supportsFocus=true;
     this.minimumSize.width=40;
 
-    this.fixedPrecision=fixedPrecision;
+    this.fixedPrecision = fixedPrecision;
     this.maxString=this.max ? this.max.toFixed( this.fixedPrecision ) : "0";
+    this.value = value;
+
+    if ( value ) this.text = this.checkValueRange( value ).toFixed( this.fixedPrecision === undefined ? 3 : this.fixedPrecision );
+    else this.text = "0";
 
     this.horizontalExpanding=true;
     this.verticalExpanding=false;
@@ -98,12 +100,11 @@ Object.defineProperty( VG.UI.NumberEdit.prototype, "value", {
     },
     set: function( value ) {
 
-        if ( !this.fixedPrecision )
-            this.text=String( this.checkValueRange( value ) );
-        else
-        {
-            this.text=String( this.checkValueRange( value.toFixed( this.fixedPrecision ) ) );
-        }
+        let fixedPrecision = this.fixedPrecision;
+        if ( fixedPrecision === undefined && value % 1 !== 0 ) fixedPrecision = 3;
+
+        if ( !fixedPrecision ) this.text = String( this.checkValueRange( value ) );
+        else this.text = this.checkValueRange( value ).toFixed( fixedPrecision );
     }
 });
 
@@ -139,7 +140,7 @@ VG.UI.NumberEdit.prototype.valueIsValid=function()
 
 VG.UI.NumberEdit.prototype.calcSize=function( canvas )
 {
-    var size=VG.Core.Size();
+    let size = this.preferredSize;
 
     canvas.pushFont( this.font );
 
@@ -311,9 +312,27 @@ VG.UI.Vector3Edit=function( x, y, z, min, max, fixedPrecision )
 
     this.layout=VG.UI.Layout( this.value1Edit, this.value2Edit, this.value3Edit );
     this.layout.margin.set( 0, 0, 0, 0 );
+    this.layout.parent = this;
+
+    Object.defineProperty( this.layout, "disabled", {
+        get: () => this.parent ? this.parent._disabled : this._disabled
+    } );
 };
 
 VG.UI.Vector3Edit.prototype=VG.UI.Widget();
+
+Object.defineProperty( VG.UI.Vector3Edit.prototype, "disabled", {
+    get: function() {
+        if ( !this.parent ) return this._disabled;
+        else return this._disabled | this.parent.disabled;
+    },
+    set: function( value ) {
+        this._disabled = value;
+        this.value1Edit.disabled=value;
+        this.value2Edit.disabled=value;
+        this.value3Edit.disabled=value;
+    }
+});
 
 Object.defineProperty( VG.UI.Vector3Edit.prototype, "fixedPrecision", {
     get: function() {
@@ -454,6 +473,18 @@ Object.defineProperty( VG.UI.Vector4Edit.prototype, "fixedPrecision", {
         this.value2Edit.fixedPrecision=value;
         this.value3Edit.fixedPrecision=value;
         this.value4Edit.fixedPrecision=value;
+    }
+});
+
+Object.defineProperty( VG.UI.Vector4Edit.prototype, "disabled", {
+    get: function() {
+        return this.value1Edit.disabled;
+    },
+    set: function( value ) {
+        this.value1Edit.disabled=value;
+        this.value2Edit.disabled=value;
+        this.value3Edit.disabled=value;
+        this.value4Edit.disabled=value;
     }
 });
 

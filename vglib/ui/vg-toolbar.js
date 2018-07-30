@@ -957,6 +957,44 @@ VG.UI.ToolSettings=function( label, options )
         }
     }.bind( this );
 
+    this.widget.mouseMove=function( event ) {
+        console.log("hehe")
+        if ( this.open && !this.widget.rect.contains( event.pos ) ) {
+
+            if ( VG.context.workspace.overlayWidget.parent ) {
+                VG.context.workspace.overlayWidget.parent.open = false;
+                VG.context.workspace.overlayWidget.parent.childWidgets = [];
+            }
+
+            this.open = false;
+            VG.context.workspace.overlayWidget = undefined;
+        }
+    }.bind( this );
+
+    this.widget.mouseLeave=function( event ) {
+
+        let closeExisting = () => {
+            if ( VG.context.workspace.overlayWidget && VG.context.workspace.overlayWidget === this.widget ) {
+                if ( VG.context.workspace.overlayWidget.parent ) {
+                    VG.context.workspace.overlayWidget.parent.open = false;
+                    VG.context.workspace.overlayWidget.parent.childWidgets = [];
+                }
+                VG.context.workspace.overlayWidget = undefined;
+            }
+        };
+
+        if ( this.options.autoClose && this.open )
+        {
+            if ( !this.rect.contains( event.pos ) && !this.widget.rect.contains( event.pos ) )
+            {
+                closeExisting();
+                this.open=false;
+
+                VG.update();
+            }
+        }
+    }.bind( this );
+
     this.childWidgets = [];
 };
 
@@ -974,6 +1012,30 @@ VG.UI.ToolSettings.prototype.addItem=function( text, callback )
     this.items.push( item );
 
     return item;
+};
+
+VG.UI.ToolSettings.prototype.mouseLeave=function( event )
+{
+    let closeExisting = () => {
+        if ( VG.context.workspace.overlayWidget && VG.context.workspace.overlayWidget === this.widget ) {
+            if ( VG.context.workspace.overlayWidget.parent ) {
+                VG.context.workspace.overlayWidget.parent.open = false;
+                VG.context.workspace.overlayWidget.parent.childWidgets = [];
+            }
+            VG.context.workspace.overlayWidget = undefined;
+        }
+    };
+
+    if ( this.options.autoClose && this.open )
+    {
+        if ( !this.rect.contains( event.pos ) && !this.widget.rect.contains( event.pos ) )
+        {
+            closeExisting();
+            this.open=false;
+
+            VG.update();
+        }
+    }
 };
 
 VG.UI.ToolSettings.prototype.mouseDown=function( event )

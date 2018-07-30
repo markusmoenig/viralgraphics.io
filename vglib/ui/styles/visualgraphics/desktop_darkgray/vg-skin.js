@@ -34,7 +34,7 @@ VG.UI.VisualGraphicsDarkGraySkin=function()
         DisabledTextColor : VG.Core.Color( 200, 200, 200 ),
         FocusColor : VG.Core.Color( 129, 197, 242 ),
 
-        DisabledAlpha : 0.5,
+        DisabledAlpha : 0.25,
     };
 
     this.Label={

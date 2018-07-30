@@ -274,7 +274,10 @@ VG.UI.HtmlWidget.prototype.parseHtml=function()
         // console.log( 'onclosetag', name, rect.y, currEl.rect.height, currEl.skinObject.Margin.bottom, currEl );
 
         if ( currEl ) {
-            margin.left-=currEl.skinObject.Margin.left;
+
+            margin.left-=self.adjustToHeight && name === "p" ? 0 : currEl.skinObject.Margin.left;
+
+            // margin.left-=currEl.skinObject.Margin.left;
             margin.top-=currEl.skinObject.Margin.top;
             margin.right-=currEl.skinObject.Margin.right;
 

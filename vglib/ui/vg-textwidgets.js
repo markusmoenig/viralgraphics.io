@@ -2544,3 +2544,94 @@ VG.UI.CodeEdit.prototype.setHScrollbarDimensions=function( canvas )
 
     this.hScrollbar.setScrollBarContentSize( this.maxTextLineSize.width, this.contentRect.width );
 };
+
+/**
+ * Creates a an JavaScript code editor. Supports JavaScript syntax-highlighting.
+ * @param {string} text - The text to edit.
+ * @property {string} text - The text to edit.
+ * @property {bool} readOnly - Indicates if this widget is read-only, default is false.
+ * @borrows VG.UI.ListWidget.bind as VG.UI.TextLineEdit.bind
+ * @constructor
+ */
+
+VG.UI.CodeEdit2=function( text )
+{
+    if ( !(this instanceof VG.UI.CodeEdit2) ) return new VG.UI.CodeEdit2( text );
+
+    VG.UI.Widget.call( this, text );
+    this.name="CodeEdit";
+
+    this.editor = ace.edit( "aceEditor" );
+    this.editor.setTheme("ace/theme/monokai");
+    this.editor.session.setMode("ace/mode/javascript");
+
+    // this.editor.setReadOnly( false );
+
+    // ---
+
+    this.displayed = false;
+    this.oldRect = new VG.Core.Rect();
+};
+
+VG.UI.CodeEdit2.prototype=VG.UI.Widget();
+
+/**
+ * Binds the widget to the data model. This widget has to be bound to a String value.
+ * @param {VG.Data.Collection} collection - The data collection to link this widget to.
+ * @param {string} path - The path inside the data collection to bind this widget to.
+ * @tutorial Data Model
+ */
+
+VG.UI.CodeEdit2.prototype.bind=function( collection, path )
+{
+    this.collection=collection;
+    this.path=path;
+    collection.addValueBindingForPath( this, path );
+
+    // VG.context.workspace.aboutToSaveCallbacks.push( function() {
+        // if ( this._textHasChanged ) this.focusOut();
+    // }.bind( this ) );
+};
+
+VG.UI.CodeEdit2.prototype.valueFromModel=function( value )
+{
+    //console.log( "CodeEdit.valueFromModel: " + value );
+
+    if ( value === null ) this.editor.setValue( "" );
+    else this.editor.setValue( value );
+};
+
+VG.UI.CodeEdit2.prototype.setLanguageIndex=function( index )
+{
+};
+
+VG.UI.CodeEdit2.prototype.focusIn=function( line )
+{
+    VG.embeddedWidget = true;
+};
+
+VG.UI.CodeEdit2.prototype.focusOut=function( line )
+{
+    VG.embeddedWidget = false;
+};
+
+VG.UI.CodeEdit2.prototype.paintWidget=function( canvas )
+{
+    this.contentRect.copy( this.rect );
+    // canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.contentRect, VG.Core.Color.Black );
+
+    if ( !this.displayed || !this.oldRect.equals( this.contentRect ) )
+    {
+
+        VG.editor.style.left = String( this.contentRect.x ) + "px";
+        VG.editor.style.top = String( this.contentRect.y ) + "px";
+        VG.editor.style.width = String( this.contentRect.width ) + "px";
+        VG.editor.style.height = String( this.contentRect.height ) + "px";
+
+        VG.editor.style.display = "inline";
+        this.editor.resize();
+
+        this.displayed = true;
+        this.oldRect.copy( this.contentRect );
+    }
+};

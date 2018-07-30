@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2017 Markus Moenig <markusm@visualgraphics.tv> and Contributors
+ * Copyright (c) 2014-2018 Markus Moenig <markusm@visualgraphics.tv> and Contributors
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -144,6 +144,26 @@ VG.UI.DockWidget.prototype.addItem=function( item )
  */
 
 VG.UI.DockWidget.prototype.addItems=function( item )
+{
+    for( var i=0; i < arguments.length; ++i )
+        this.layout.addChild( arguments[i] );
+};
+
+/**Adds an item, either a Widget or a Layout, to the Dock widget.
+ * @param {widget} widget - Widget or layout to add
+ */
+
+VG.UI.DockWidget.prototype.addChild=function( item )
+{
+    this.layout.addChild( item );
+};
+
+/**Adds a list of items, either a Widget or a Layout, to the Dock widget.
+ * @param {widget} widgets - Widget or layout to add
+ * @param {widget} ...
+ */
+
+VG.UI.DockWidget.prototype.addChildren=function( item )
 {
     for( var i=0; i < arguments.length; ++i )
         this.layout.addChild( arguments[i] );

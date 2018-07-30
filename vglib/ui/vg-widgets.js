@@ -2788,10 +2788,14 @@ VG.UI.ColorEdit=function( { alpha = false } = {} )
     if ( alpha ) this.colorLayout.addChild( this.alphaSlider );
 
     this.toolSettings = new VG.UI.ToolSettings( VG.UI.Label( { svgName : "icons.svg", svgGroupName : "ToolSettings", color : this._color } ),
-        { layout : this.colorLayout, width: 150, height: 110, noHeader: true, text : "Color Settings" } );
+        { layout : this.colorLayout, width: 150, height: 110, noHeader: true, text : "Color Settings", autoClose: true } );
 
     this.layout = new VG.UI.Layout( this.colorEdit, this.toolSettings );
     this.layout.margin.left = 0;
+
+    Object.defineProperty( this.layout, "disabled", {
+        get: () => this.parent ? this.parent._disabled : this._disabled
+    } );
 };
 
 VG.UI.ColorEdit.prototype=VG.UI.Widget();
@@ -2813,10 +2817,10 @@ Object.defineProperty(VG.UI.ColorEdit.prototype, "color",
 Object.defineProperty(VG.UI.ColorEdit.prototype, "disabled",
 {
     get: function() {
-        return this.colorEdit.disabled;
+        if ( !this.parent ) return this.colorEdit.disabled;
+        else  return this.colorEdit.disabled | this.parent.disabled;
     },
     set: function(disabled) {
-
         this.colorWheel.disabled=disabled;
         this.colorEdit.disabled=disabled;
     }

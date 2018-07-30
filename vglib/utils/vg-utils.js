@@ -365,21 +365,22 @@ VG.Utils.addSingleShotCallback=function( func )
     VG.context.workspace.singleShotCallbacks.push( func );
 };
 
-VG.Utils.canvasToImage=function( ctx )
+VG.Utils.canvasToImage=function( ctx, image )
 {
     var width=ctx.canvas.width, height=ctx.canvas.height;
 
-    var image = VG.Core.Image( { width : width, height : height, forcePowerOfTwo : false } );
-    var imageData = image.data;
-    var pixelData = ctx.getImageData( 0, 0, width, height );
-    var data = pixelData.data;
+    if ( !image ) image = new VG.Core.Image( { width : width, height : height, forcePowerOfTwo : false } );
 
-    for ( var h=0; h < height; ++h )
+    let imageData = image.data;
+    let pixelData = ctx.getImageData( 0, 0, width, height );
+    let data = pixelData.data;
+
+    for ( let h=0; h < height; ++h )
     {
-        var sourceOffset = h * pixelData.width * 4;
-        var destOffset = h * image.modulo;
+        let sourceOffset = h * pixelData.width * 4;
+        let destOffset = h * image.modulo;
 
-        for ( var w=0; w < width; ++w ) {
+        for ( let w=0; w < width; ++w ) {
             imageData[destOffset++] = data[sourceOffset++];
             imageData[destOffset++] = data[sourceOffset++];
             imageData[destOffset++] = data[sourceOffset++];

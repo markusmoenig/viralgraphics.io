@@ -643,6 +643,35 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
     }
 };
 
+VG.Canvas.prototype.drawShape=function( shape, rect, options, col1, col2, col3 )
+{
+    let ctx = this.ctx;
+    let drawRoundRect = ( x, y, w, h, r ) => {
+        ctx.beginPath();
+
+        ctx.lineTo(x + w -r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+
+        ctx.closePath();
+    };
+
+    if ( shape === "RoundedRect" ) {
+        ctx.fillStyle = options.fillStyle ? options.fillStyle : undefined;
+        ctx.strokeStyle = options.strokeStyle ? options.strokeStyle : undefined;
+        ctx.lineWidth = options.strokeWidth ? options.strokeWidth : 1.0;
+
+        drawRoundRect( rect.x, rect.y, rect.width, rect.height, options.radius !== undefined ? options.radius : 0 );
+        if ( options.strokeStyle ) ctx.stroke();
+        if ( options.fillStyle ) ctx.fill();
+    }
+};
+
 /**
  * Draws a 2D Shape using the specified rectangle and colors on the WebGL layer.
  * @param {VG.Canvas.Shape2D} shape - The shape as specified in the VG.Canvas.Shape2D enum

@@ -68,8 +68,10 @@ function main()
         }
     }
 
-    VG.dropZone=document.getElementById( 'dropZone' );
-    let canvas=document.getElementById( canvasName );
+    VG.dropZone = document.getElementById( 'dropZone' );
+    VG.editor = document.getElementById( 'aceEditor' );
+    VG.editor.style.display = "none";
+    let canvas = document.getElementById( canvasName );
 
     canvas.addEventListener('dragover', VG.defaultHandleDragOver, false);
 
@@ -204,12 +206,11 @@ function main()
     // --- FocusIn / Out
 
     window.addEventListener('focus', function ( event ) {
-        VG.context.workspace.focusIn();
+        // VG.context.workspace.focusIn();
     });
 
     window.addEventListener('blur', function ( event ) {
-
-        VG.context.workspace.focusOut();
+        // VG.context.workspace.focusOut();
     });
 
     // --- Mouse Events
@@ -455,7 +456,7 @@ function keyPressRelay( event ) {
          code != VG.Events.KeyCodes.Tab )
       VG.context.workspace.textInput( String.fromCharCode( code ) );
 
-    event.preventDefault();
+    // event.preventDefault();
 }
 
 function keyUpRelay( event ) {

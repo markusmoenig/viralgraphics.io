@@ -1035,3 +1035,18 @@ VG.Controller.Tree.prototype.modelChanged=function( forceRenew )
 
     this.notifyObservers( "changed" );
 };
+
+VG.Controller.Tree.prototype.iterator=function*( array )
+{
+    let index = 0;
+    let data = array ? array : this.collection.dataForPath( this.path );
+
+    while ( index < data.length ) {
+        let item = data[index];
+        yield( item );
+
+        if ( item.children )
+            yield *this.iterator( item.children );
+        ++index;
+    }
+};

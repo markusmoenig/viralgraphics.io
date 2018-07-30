@@ -643,7 +643,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDropDownMenu=function( widget, canvas )
     widget.contentRect.set( widget.rect );
 
     // --- Border
-
+/*
     if ( widget.hasFocusState ) {
         canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin2px, widget.contentRect, this.skin.DropDownMenu.FocusBorderColor );
         widget.contentRect.shrink( 1, 1, widget.contentRect );
@@ -668,6 +668,31 @@ VG.UI.VisualGraphicsStyle.prototype.drawDropDownMenu=function( widget, canvas )
         canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, widget.contentRect, this.skin.DropDownMenu.HoverBackGradColor1, this.skin.DropDownMenu.HoverBackGradColor2 );
     } else
     canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, widget.contentRect, this.skin.DropDownMenu.BackGradColor1, this.skin.DropDownMenu.BackGradColor2 );
+*/
+
+    widget.contentRect.shrink( 1, 1, widget.contentRect );
+
+    let lingrad = canvas.ctx.createLinearGradient( 0, widget.contentRect.y,0, widget.contentRect.bottom() );
+
+    if ( widget.popup || widget.mouseIsDown ) {
+        lingrad.addColorStop( 0, this.skin.DropDownMenu.BackGradColor2.canvasStyle );
+        lingrad.addColorStop( 1, this.skin.DropDownMenu.BackGradColor1.canvasStyle );
+    } else
+    if ( widget.hasHoverState ) {
+        lingrad.addColorStop( 0, this.skin.DropDownMenu.HoverBackGradColor1.canvasStyle );
+        lingrad.addColorStop( 1, this.skin.DropDownMenu.HoverBackGradColor2.canvasStyle );
+    } else {
+        lingrad.addColorStop( 0, this.skin.DropDownMenu.BackGradColor1.canvasStyle );
+        lingrad.addColorStop( 1, this.skin.DropDownMenu.BackGradColor2.canvasStyle );
+    }
+
+    canvas.drawShape( "RoundedRect", widget.contentRect, {
+        fillStyle: lingrad,
+        strokeStyle: widget.hasFocusState ?  this.skin.DropDownMenu.FocusBorderColor.canvasStyle : this.skin.DropDownMenu.BorderColor.canvasStyle,
+        strokeWidth : widget.hasFocusState ? 2 : 1,
+        radius: 3 } );
+
+    widget.contentRect.shrink( 2, 2, widget.contentRect );
 
     // --- Separator / Triangle
 
@@ -680,7 +705,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDropDownMenu=function( widget, canvas )
     // --- Triangle
 
     this.rect1.copy( widget.contentRect );
-    this.rect1.x+=this.rect1.width - 12; this.rect1.y+=6;
+    this.rect1.x+=this.rect1.width - 11; this.rect1.y+=6;
     this.rect1.width=9; this.rect1.height=6;
     canvas.draw2DShape( VG.Canvas.Shape2D.FlippedTriangle, this.rect1.round(), this.skin.DropDownMenu.TextColor );
 
@@ -2442,7 +2467,9 @@ VG.UI.VisualGraphicsStyle.prototype.drawTextLineEdit=function( widget, canvas )
     widget.contentRect.set( widget.rect );
     if ( !widget.embedded ) {
         if ( widget.hasFocusState ) {
-            widget.contentRect.shrink( 2, 2, this.rect1 );
+
+            /*
+            widget.contentRect.shrink( 2, 2, widget.contentRect );
             canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TextLineEdit.FocusBackgroundColor );
 
             canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin2px, widget.contentRect, this.skin.TextLineEdit.FocusBorderColor1 );
@@ -2461,8 +2488,19 @@ VG.UI.VisualGraphicsStyle.prototype.drawTextLineEdit=function( widget, canvas )
             canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TextLineEdit.FocusBorderColor3 );
 
             widget.contentRect.shrink( 1, 1, widget.contentRect );
+            */
+
+            widget.contentRect.shrink( 2, 2, widget.contentRect );
+
+            canvas.drawShape( "RoundedRect", widget.contentRect, {
+                fillStyle: this.skin.TextLineEdit.BackgroundColor.canvasStyle,
+                strokeStyle: this.skin.TextLineEdit.FocusBorderColor2.canvasStyle,
+                strokeWidth : 3,
+                radius: 3 } );
         } else
         {
+            widget.contentRect.shrink( 2, 2, widget.contentRect );
+            /*
             widget.contentRect.shrink( 3, 3, this.rect1 );
             canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.TextLineEdit.BackgroundColor );
 
@@ -2478,6 +2516,13 @@ VG.UI.VisualGraphicsStyle.prototype.drawTextLineEdit=function( widget, canvas )
                 canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, widget.contentRect, this.skin.TextLineEdit.BorderColor2 );
 
             widget.contentRect.shrink( 1, 1, widget.contentRect );
+            */
+
+            canvas.drawShape( "RoundedRect", widget.contentRect, {
+                fillStyle: this.skin.TextLineEdit.BackgroundColor.canvasStyle,
+                strokeStyle: widget.customBorderColor ? widget.customBorderColor.canvasStyle : this.skin.TextLineEdit.BorderColor1.canvasStyle,
+                strokeWidth : 2,
+                radius: 3 } );
         }
     }
 
