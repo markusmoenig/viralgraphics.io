@@ -314,7 +314,7 @@ function update()
         var appId;
 
         // --- Check if url exists on the server
-        for( var i=0; i < array.length; ++i ) {
+        for( let i=0; i < array.length; ++i ) {
             if ( array[i].name === "url" ) {
                 if ( array[i].exists ) appId=array[i].appid;
             }
@@ -333,7 +333,7 @@ function update()
 
             var domains=String( lzString.decompressFromBase64( data.domain ) );
             domains=domains.split( "," );
-            for (var i = 0; i < domains.length; i++ )
+            for (let i = 0; i < domains.length; i++ )
                 domains[i] = domains[i].trim();
             parameters.domain=domains;
 
@@ -555,7 +555,7 @@ function readDocElement( docDir, sourceArray, destArray )
 
         if ( sourceItem.content ) {
             var contentPath = path.join( dir, docDir, sourceItem.content );
-            item.content = fs.readFileSync( contentPath ).toString()
+            item.content = fs.readFileSync( contentPath ).toString();
         }
 
         if ( sourceItem.items ) {

@@ -111,17 +111,54 @@ VG.Nodes.ParamContainer.prototype.getParamValue=function( name )
      * @returns The found parameter value or null.
      */
 
-    for( var i=0; i < this.groups.length; ++i )
+    for( let i=0; i < this.groups.length; ++i )
     {
-        var group=this.groups[i];
+        let group=this.groups[i];
 
-        for( var p=0; p < group.parameters.length; ++p )
+        for( let p=0; p < group.parameters.length; ++p )
         {
-            var param=group.parameters[p];
+            let param=group.parameters[p];
 
             if ( param.name === name ) {
                 if ( !param.data._keyFrames ) return param.data[param.name];
                 else return this.keyParamValue( param );
+            }
+        }
+    }
+
+    return null;
+};
+
+VG.Nodes.ParamContainer.prototype.getAdjustedParamString=function( name, adjustCallback )
+{
+    /**Returns the value of the parameter identified by its name.
+     * @param {string} name - The name of the parameter to look up.
+     * @returns The found parameter value or null.
+     */
+
+    for( let i=0; i < this.groups.length; ++i )
+    {
+        let group=this.groups[i];
+
+        for( let p=0; p < group.parameters.length; ++p )
+        {
+            let param = group.parameters[p];
+
+            if ( param.name === name ) {
+                let value = param.data[param.name];
+                if ( adjustCallback ) value = adjustCallback( name, value, param );
+                if (typeof value === 'string' || value instanceof String) {
+
+                } else
+                if ( !isNaN( value ) && value.toFixed ) {
+                    value = value.toFixed( 3 );
+                } else
+                if ( param.type === "vec2" )
+                {
+                    value = `(${value.x},${value.y})`;
+                }
+
+                return value;
             }
         }
     }
@@ -613,6 +650,7 @@ VG.Nodes.ParamNumber=function( data, name, text, value, min, max, precision )
 
     this.name=name ? name : "value";
     this.text=text ? text : "Value";
+    this.type = "float";
 
     this.min=min;
     this.max=max;
@@ -738,9 +776,15 @@ VG.Nodes.ParamSlider=function( data, name, text, value, min, max, step, precisio
     this.precision=precision;
     this.halfWidthValue=halfWidthValue;
     this.defaultValue=value;
+    this.type = "float";
 
     this.data=data;
-    if ( data[name] === undefined ) data[name]=value;
+    if ( data[name] === undefined ) {
+        if ( !isNaN( value ) ) value = Number( value );
+        data[name]=value;
+    } else {
+        if ( !isNaN( data[name] ) ) data[name] = Number( data[name] );
+    }
 };
 
 VG.Nodes.ParamSlider.prototype=VG.Nodes.Param();
@@ -769,6 +813,7 @@ VG.Nodes.ParamBoolean=function( data, name, text, value )
 
     this.name=name ? name : "value";
     this.text=text ? text : "Value";
+    this.type = "bool";
 
     this.data=data;
     if ( data[name] === undefined ) data[name]=value;
@@ -822,6 +867,7 @@ VG.Nodes.ParamList=function( data, name, text, value, array, callback )
 
     this.name=name ? name : "value";
     this.text=text ? text : "Value";
+    this.type = "int";
 
     this.list=array;
     this.callback=callback;
@@ -854,6 +900,7 @@ VG.Nodes.ParamVector2=function( data, name, text, x, y, min, max, precision )
 
     this.name=name ? name : "value";
     this.text=text ? text : "Value";
+    this.type = "vec2";
 
     this.min=min;
     this.max=max;
@@ -934,6 +981,7 @@ VG.Nodes.ParamVector3=function( data, name, text, x, y, z, min, max )
 
     this.name=name ? name : "value";
     this.text=text ? text : "Value";
+    this.type = "vec3";
 
     this.min=min;
     this.max=max;
@@ -984,6 +1032,7 @@ VG.Nodes.ParamVector4=function( data, name, text, x, y, z, w, min, max )
 
     this.name=name ? name : "value";
     this.text=text ? text : "Value";
+    this.type = "vec4";
 
     this.min=min;
     this.max=max;
@@ -1028,6 +1077,7 @@ VG.Nodes.ParamColor=function( data, name, text, value, alpha )
 
     this.name=name ? name : "value";
     this.text=text ? text : "Value";
+    this.type = "vec3";
 
     if ( !data[name] )
     {

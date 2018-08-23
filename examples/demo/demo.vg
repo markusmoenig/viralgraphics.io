@@ -1,7 +1,10 @@
-
-name = Game Sample
+name = demo
 version = 1.0
-url = gamesample
+url = demo
 author = Markus Moenig
 
-sources = gamesample.js
+sources = main.js, dock.js, editor.js
+
+# Skin
+defaultSkin = Dark Gray
+webBorderColor = #747474

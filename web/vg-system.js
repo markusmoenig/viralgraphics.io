@@ -21,6 +21,14 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+VG.sendHost = function( name, param )
+{
+    if ( !VG.context.workspace.isElectron() ) return;
+
+    const ipc = require('electron').ipcRenderer;
+    return ipc.sendSync( name, param );
+};
+
 // Web specific Implementations
 
 VG.downloadRequest=function( url, parameters, method )

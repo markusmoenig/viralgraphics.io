@@ -1,7 +1,7 @@
 {
   "name": "viralgraphics.io",
-  "version": "0.4.1",
-  "description": "Creating Competitive Desktop Applications for the Web",
+  "version": "0.9.1",
+  "description": "Creating Competitive Desktop Applications for the Web and Desktops",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -421,6 +421,7 @@ VG.UI.Workspace.prototype.addQuickMenuItem=function( text, callback )
 VG.UI.Workspace.prototype.paintWidget=function()
 {
     this.contentRect.set( this.rect );
+    this.canvas.setActiveCanvas( "" );
 
     // --- Draw Menubar if any and if the menubar is painted by VG itself
 
@@ -489,6 +490,8 @@ VG.UI.Workspace.prototype.paintWidget=function()
 
     if ( this.statusBar )
         this.statusBar.paintWidget( this.canvas );
+
+    this.canvas.setActiveCanvas( "Overlay" );
 
     // --- Draw Windows
 
@@ -1220,6 +1223,12 @@ VG.UI.Workspace.prototype.tick=function( needsRedraw )
 
             this.canvas.canvas.width = VG.context.workspace.rect.width; this.canvas.canvas.height = VG.context.workspace.rect.height;
             this.canvas.ctx.clearRect( 0, 0, VG.context.workspace.rect.width, VG.context.workspace.rect.height );
+
+            this.canvas.canvasOverlay = document.getElementById( 'workspaceOverlay' );
+            this.canvas.ctxOverlay = this.canvas.canvasOverlay.getContext('2d');
+
+            this.canvas.canvasOverlay.width = VG.context.workspace.rect.width; this.canvas.canvasOverlay.height = VG.context.workspace.rect.height;
+            this.canvas.ctxOverlay.clearRect( 0, 0, VG.context.workspace.rect.width, VG.context.workspace.rect.height );
         }
 
         this.paintWidget();

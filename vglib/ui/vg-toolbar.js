@@ -958,7 +958,6 @@ VG.UI.ToolSettings=function( label, options )
     }.bind( this );
 
     this.widget.mouseMove=function( event ) {
-        console.log("hehe")
         if ( this.open && !this.widget.rect.contains( event.pos ) ) {
 
             if ( VG.context.workspace.overlayWidget.parent ) {

@@ -199,6 +199,18 @@ VG.Canvas.prototype.setTarget=function( rt )
     }
 };
 
+VG.Canvas.prototype.setActiveCanvas=function( canvasName )
+{
+    if ( canvasName === "Overlay" ) {
+        this.canvas = document.getElementById( 'workspaceOverlay' );
+        this.ctx = this.canvas.getContext('2d');
+    } else {
+        this.canvas = document.getElementById( 'workspace' );
+        this.ctx = this.canvas.getContext('2d');
+    }
+    this.canvasName = canvasName;
+};
+
 /**
  * Pushes the given VG.Font.Font to the canvas. It will be used until a popFont() call takes it off the top of the font stack. Every pushFont() call needs to have a matching popFont()
  * call.

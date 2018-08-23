@@ -21,6 +21,7 @@
 ../web/vg-system.js
 ../vglib/vg-events.js
 ../vglib/vg-shortcut.js
+../vglib/vg-fs.js
 
 ../vglib/utils/vg-compressor.js
 ../vglib/utils/vg-utils.js
@@ -32,6 +33,10 @@
 ../vglib/ui/styles/visualgraphics/vg-desktop.js
 ../vglib/ui/styles/visualgraphics/desktop_gray/vg-skin.js
 ../vglib/ui/styles/visualgraphics/desktop_darkgray/vg-skin.js
+../vglib/ui/ace/vg-ace.js
+../vglib/ui/ace/vg-ace_theme_monokai.js
+../vglib/ui/ace/vg-ace_mode_javascript.js
+../vglib/ui/ace/vg-ace_mode_glsl.js
 ../vglib/ui/vg-widgets.js
 ../vglib/ui/vg-menu.js
 ../vglib/ui/vg-listwidget.js

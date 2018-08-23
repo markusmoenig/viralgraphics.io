@@ -2561,9 +2561,12 @@ VG.UI.CodeEdit2=function( text )
     VG.UI.Widget.call( this, text );
     this.name="CodeEdit";
 
+    this.supportsFocus = true;
+
     this.editor = ace.edit( "aceEditor" );
     this.editor.setTheme("ace/theme/monokai");
     this.editor.session.setMode("ace/mode/javascript");
+    // this.editor.setOptions( { vScrollBarAlwaysVisible: true } );
 
     // this.editor.setReadOnly( false );
 
@@ -2587,10 +2590,6 @@ VG.UI.CodeEdit2.prototype.bind=function( collection, path )
     this.collection=collection;
     this.path=path;
     collection.addValueBindingForPath( this, path );
-
-    // VG.context.workspace.aboutToSaveCallbacks.push( function() {
-        // if ( this._textHasChanged ) this.focusOut();
-    // }.bind( this ) );
 };
 
 VG.UI.CodeEdit2.prototype.valueFromModel=function( value )
@@ -2599,30 +2598,64 @@ VG.UI.CodeEdit2.prototype.valueFromModel=function( value )
 
     if ( value === null ) this.editor.setValue( "" );
     else this.editor.setValue( value );
+
+    this.editor.clearSelection();
 };
 
-VG.UI.CodeEdit2.prototype.setLanguageIndex=function( index )
+Object.defineProperty( VG.UI.CodeEdit2.prototype, "text", {
+    get: function() {
+        //return this._text;
+        return this.editor.getValue();
+    },
+    set: function( newText ) {
+        this.editor.setValue( newText );
+        this.editor.clearSelection();
+    }
+});
+
+VG.UI.CodeEdit2.prototype.setMode=function( name )
 {
+    if ( name === "JavaScript" ) this.editor.session.setMode("ace/mode/javascript");
+    else if ( name === "GLSL" ) this.editor.session.setMode("ace/mode/glsl");
 };
 
 VG.UI.CodeEdit2.prototype.focusIn=function( line )
 {
-    VG.embeddedWidget = true;
+    VG.editor.style.zIndex = "4";
 };
 
 VG.UI.CodeEdit2.prototype.focusOut=function( line )
 {
-    VG.embeddedWidget = false;
+    VG.editor.style.zIndex = "1";
+};
+
+VG.UI.CodeEdit2.prototype.mouseEnter=function( line )
+{
+    VG.editor.style.zIndex = "4";
+};
+
+VG.UI.CodeEdit2.prototype.mouseLeave=function( line )
+{
+    VG.editor.style.zIndex = "1";
+};
+
+VG.UI.CodeEdit2.prototype.hide=function( line )
+{
+    VG.editor.style.display = "none";
+    this.hidden = true;
+};
+
+VG.UI.CodeEdit2.prototype.show=function( line )
+{
+    VG.editor.style.display = "inline";
+    this.hidden = false;
 };
 
 VG.UI.CodeEdit2.prototype.paintWidget=function( canvas )
 {
     this.contentRect.copy( this.rect );
-    // canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.contentRect, VG.Core.Color.Black );
-
-    if ( !this.displayed || !this.oldRect.equals( this.contentRect ) )
+    // if ( !this.displayed || !this.oldRect.equals( this.contentRect ) )
     {
-
         VG.editor.style.left = String( this.contentRect.x ) + "px";
         VG.editor.style.top = String( this.contentRect.y ) + "px";
         VG.editor.style.width = String( this.contentRect.width ) + "px";

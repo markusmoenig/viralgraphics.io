@@ -983,7 +983,9 @@ var VG;
         constructor( fSource, { forceWebGL2 = false } = {} )
         {
             super();
-            this.applyShader( fSource, { forceWebGL2 } );
+
+            if ( fSource )
+                this.applyShader( fSource, { forceWebGL2 } );
 
             this.bufferSize = 18;
 
@@ -1017,6 +1019,7 @@ var VG;
 
         applyShader( fSource, { forceWebGL2 = false, flipY = true } = {} )
         {
+            this.destroy();
             this.webgl2 = VG.webgl2 || forceWebGL2;
 
             this.vSource = !VG.webgl2 && !forceWebGL2 ? `#version 100

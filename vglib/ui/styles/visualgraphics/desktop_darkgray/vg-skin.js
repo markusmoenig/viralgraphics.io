@@ -813,6 +813,7 @@ VG.UI.VisualGraphicsDarkGraySkin=function()
 
         Header : {
             Height : 22,
+            ContentColumns: true,
             BorderColor : VG.Core.Color( 82, 82, 82 ),
             BackColor1 : VG.Core.Color( 134, 134, 134 ),
             BackColor2 : VG.Core.Color( 118, 118, 118 ),
@@ -832,6 +833,10 @@ VG.UI.VisualGraphicsDarkGraySkin=function()
         Spacing : 3,
         Margin : VG.Core.Margin( 2, 2, 2, 2 ),
 
+        UseTriangles: false,
+        HasBorder: true,
+
+        ItemOutline: true,
         ItemBackColor : VG.Core.Color( 177, 177, 177 ),
         ItemSelectedBorderColor : VG.Core.Color( 207, 128, 231 ),
         ItemSelectedBackColor : VG.Core.Color( 194, 135, 212 ),

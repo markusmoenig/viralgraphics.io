@@ -73,7 +73,7 @@ VG.UI.TreeWidget=function()
     if ( !(this instanceof VG.UI.TreeWidget) ) return new VG.UI.TreeWidget();
 
     VG.UI.Widget.call( this );
-    this.name="TreeWidget";
+    this.name = "TreeWidget";
 
     this.offset=0;
     this._itemHeight=-1;
@@ -340,7 +340,7 @@ VG.UI.TreeWidget.prototype.selectionChanged=function()
 
 VG.UI.TreeWidget.prototype.paintWidget=function( canvas )
 {
-    this.spacing=VG.UI.stylePool.current.skin.TreeWidget.Spacing;
+    this.spacing = this.customSkin ? this.customSkin.Spacing : VG.UI.stylePool.current.skin.TreeWidget.Spacing;
 
     if ( !this.rect.equals( this.previousRect ) ) this.verified=false;
     VG.UI.stylePool.current.drawTreeWidget( this, canvas );

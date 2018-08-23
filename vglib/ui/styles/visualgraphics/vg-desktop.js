@@ -46,6 +46,37 @@ VG.UI.VisualGraphicsStyle.prototype.addSkin=function( skin )
     skin.activate();
 };
 
+VG.UI.VisualGraphicsStyle.prototype.copySkinObject=function( name, skin )
+{
+    function copy(source, deep) {
+        var o, prop, type;
+
+        if (typeof source != 'object' || source === null) {
+            o = source;
+            return o;
+        }
+
+        o = new source.constructor();
+
+        for (prop in source) {
+
+            if (source.hasOwnProperty(prop)) {
+                type = typeof source[prop];
+
+                if (deep && type == 'object' && source[prop] !== null && !(source[prop] instanceof VG.Font.Font) ) {
+                    o[prop] = copy(source[prop]);
+                } else {
+                    o[prop] = source[prop];
+                }
+            }
+       }
+       return o;
+    }
+
+    return copy( this.skin[name], true );
+    // return Object.assign( {}, this.skin[name] );
+};
+
 // --- Button
 
 VG.UI.VisualGraphicsStyle.prototype.drawButton=function( widget, canvas )
@@ -2876,7 +2907,8 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolSeparator=function( widget, canvas )
 
 VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
 {
-    var itemHeight=widget.itemHeight;
+    let itemHeight=widget.itemHeight;
+    let skin = widget.customSkin ? widget.customSkin : this.skin.TreeWidget;
 
     // --- drawItemChildren
 
@@ -2884,17 +2916,17 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
     {
         if ( item.children && item.open )
         {
-            var oldXOffset=paintRect.x;
-            var oldWidth=paintRect.width;
+            let oldXOffset = paintRect.x;
+            let oldWidth = paintRect.width;
 
-            paintRect.x+=2*style.skin.TreeWidget.ChildIndent;
-            paintRect.width-=2*style.skin.TreeWidget.ChildIndent;
+            paintRect.x+=2*skin.ChildIndent;
+            paintRect.width-=2*skin.ChildIndent;
 
             // --- Draw all childs
 
-            for ( var i=0; i < item.children.length; ++i )
+            for ( let i=0; i < item.children.length; ++i )
             {
-                var child=item.children[i];
+                let child=item.children[i];
 
                 ++widget._itemsCount;
 
@@ -2926,50 +2958,66 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
 
         style.rect3.copy( rect );
 
+
         if ( item.children )
         {
-            style.rect3.add( style.skin.TreeWidget.ChildIndent, 0, -style.skin.TreeWidget.ChildIndent, 0, style.rect3 );
+            style.rect3.add( skin.ChildIndent, 0, -skin.ChildIndent, 0, style.rect3 );
 
             if ( item.open ) {
-                style.rect4.x=rect.x + 5; style.rect4.width=11;
-                style.rect4.y=rect.y + Math.floor( (itemHeight-2)/2); style.rect4.height=2;
-                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect4, style.skin.TreeWidget.ChildControlColor );
+                if ( !skin.UseTriangles ) {
+                    style.rect4.x=rect.x + 5; style.rect4.width=11;
+                    style.rect4.y=rect.y + Math.floor( (itemHeight-2)/2); style.rect4.height=2;
+                    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect4, skin.ChildControlColor );
+                } else {
+                    style.rect4.x=rect.x + 5; style.rect4.width=10;
+                    style.rect4.y=rect.y + Math.floor( (itemHeight-2)/2); style.rect4.height=5;
+                    canvas.draw2DShape( VG.Canvas.Shape2D.FlippedTriangle, style.rect4, skin.ChildControlColor );
+                }
             } else {
-                style.rect4.x=rect.x + 5; style.rect4.width=10;
-                style.rect4.y=rect.y + Math.floor( (itemHeight-2)/2); style.rect4.height=2;
-                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect4, style.skin.TreeWidget.ChildControlColor );
+                if ( !skin.UseTriangles ) {
+                    style.rect4.x=rect.x + 5; style.rect4.width=10;
+                    style.rect4.y=rect.y + Math.floor( (itemHeight-2)/2); style.rect4.height=2;
+                    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect4, skin.ChildControlColor );
 
-                style.rect4.x=rect.x + 9; style.rect4.width=2;
-                style.rect4.y=rect.y + Math.floor( (itemHeight-10)/2); style.rect4.height=10;
-                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect4, style.skin.TreeWidget.ChildControlColor );
+                    style.rect4.x=rect.x + 9; style.rect4.width=2;
+                    style.rect4.y=rect.y + Math.floor( (itemHeight-10)/2); style.rect4.height=10;
+                    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect4, skin.ChildControlColor );
+                } else {
+                    style.rect4.x=rect.x + 5; style.rect4.width=5;
+                    style.rect4.y=rect.y + Math.floor( (itemHeight-10)/2); style.rect4.height=10;
+                    canvas.draw2DShape( VG.Canvas.Shape2D.ArrowRight, style.rect4, skin.ChildControlColor );
+                }
             }
         } else {
-            if ( indentTop ) style.rect3.add( style.skin.TreeWidget.ChildIndent, 0, -style.skin.TreeWidget.ChildIndent, 0, style.rect3 );
+            if ( indentTop ) style.rect3.add( skin.ChildIndent, 0, -skin.ChildIndent, 0, style.rect3 );
         }
 
-        if ( !isSelected ) {
-            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, style.rect3, style.skin.TreeWidget.ItemBackColor );
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect3.shrink( 1, 1, style.rect3 ), style.skin.TreeWidget.ItemBackColor );
-        } else {
-            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, style.rect3, style.skin.TreeWidget.ItemSelectedBorderColor );
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect3.shrink( 1, 1, style.rect3 ), style.skin.TreeWidget.ItemSelectedBackColor );
+        if ( skin.ItemOutline )
+        {
+            if ( !isSelected ) {
+                canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, style.rect3, skin.ItemBackColor );
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect3.shrink( 1, 1, style.rect3 ), skin.ItemBackColor );
+            } else {
+                canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, style.rect3, skin.ItemSelectedBorderColor );
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect3.shrink( 1, 1, style.rect3 ), skin.ItemSelectedBackColor );
+            }
         }
 
         // --- Insert Potential Child Widgets of Items
         if ( item.childWidgets ) {
-            for ( var c=0; c < item.childWidgets.length; ++c ) {
+            for ( let c=0; c < item.childWidgets.length; ++c ) {
                 widget.childWidgets.push( item.childWidgets[c] );
             }
         }
         // ---
 
         if ( widget.paintItemCallback ) {
-            widget.paintItemCallback( canvas, item, style.rect3, isSelected );
+            widget.paintItemCallback( canvas, item, style.rect3, isSelected, rect );
         } else
         {
             if ( !widget.columns.length ) {
                 style.rect3.x+=7; style.rect3.width-=7;
-                canvas.drawTextRect( item.text, style.rect3, style.skin.TreeWidget.TextColor, 0, 1 );
+                canvas.drawTextRect( item.text, style.rect3, skin.TextColor, 0, 1 );
             } else
             {
                 let offset = 0;
@@ -2988,10 +3036,45 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
                     style.rect3.x = rect.x + offset + 7;
                     style.rect3.width = width - 7;
 
-                    canvas.drawTextRect( item[column.itemName], style.rect3, style.skin.TreeWidget.TextColor, i === 0 ? 0 : 1, 1 );
+                    canvas.drawTextRect( item[column.itemName], style.rect3, skin.TextColor, i === 0 ? 0 : 1, 1 );
                     offset += width;
                 }
             }
+        }
+
+        style.rect3.copy( rect );
+
+        if ( item.children )
+        {
+            style.rect3.add( skin.ChildIndent, 0, -skin.ChildIndent, 0, style.rect3 );
+
+            if ( item.open ) {
+                if ( !skin.UseTriangles ) {
+                    style.rect4.x=rect.x + 5; style.rect4.width=11;
+                    style.rect4.y=rect.y + Math.floor( (itemHeight-2)/2); style.rect4.height=2;
+                    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect4, skin.ChildControlColor );
+                } else {
+                    style.rect4.x=rect.x + 5; style.rect4.width=10;
+                    style.rect4.y=rect.y + Math.floor( (itemHeight-2)/2); style.rect4.height=5;
+                    canvas.draw2DShape( VG.Canvas.Shape2D.FlippedTriangle, style.rect4, skin.ChildControlColor );
+                }
+            } else {
+                if ( !skin.UseTriangles ) {
+                    style.rect4.x=rect.x + 5; style.rect4.width=10;
+                    style.rect4.y=rect.y + Math.floor( (itemHeight-2)/2); style.rect4.height=2;
+                    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect4, skin.ChildControlColor );
+
+                    style.rect4.x=rect.x + 9; style.rect4.width=2;
+                    style.rect4.y=rect.y + Math.floor( (itemHeight-10)/2); style.rect4.height=10;
+                    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, style.rect4, skin.ChildControlColor );
+                } else {
+                    style.rect4.x=rect.x + 5; style.rect4.width=5;
+                    style.rect4.y=rect.y + Math.floor( (itemHeight-10)/2); style.rect4.height=10;
+                    canvas.draw2DShape( VG.Canvas.Shape2D.ArrowRight, style.rect4, skin.ChildControlColor );
+                }
+            }
+        } else {
+            if ( indentTop ) style.rect3.add( skin.ChildIndent, 0, -skin.ChildIndent, 0, style.rect3 );
         }
     }
 
@@ -3002,14 +3085,17 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
 
     // --- Header
 
-    let headerHeight = this.skin.TreeWidget.Header.Height;
+    let headerHeight = skin.Header.Height;
     if ( widget.columns.length ) {
 
         this.rect3.copy( widget.rect );
         this.rect3.height = headerHeight;
 
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect3, this.skin.TreeWidget.Header.BorderColor );
-        canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect3.shrink(1,1), this.skin.TreeWidget.Header.BackColor1, this.skin.TreeWidget.Header.BackColor2 );
+        if ( widget.paintHeaderCallback ) widget.paintHeaderCallback( canvas, this.rect3 );
+        else {
+            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect3, skin.Header.BorderColor );
+            canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect3.shrink(1,1), skin.Header.BackColor1, skin.Header.BackColor2 );
+        }
 
         widget.contentRect.y += headerHeight;
         widget.contentRect.height -= headerHeight;
@@ -3017,22 +3103,25 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
 
     // --- Border
 
-    if ( widget.hasFocusState ) {
-        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin2px, widget.contentRect, this.skin.TreeWidget.FocusBorderColor );
-        widget.contentRect.shrink( 1, 1, widget.contentRect );
-        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleCorners, widget.contentRect, this.skin.TreeWidget.FocusBorderColor );
-
-        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.TreeWidget.BorderColor );
-        widget.contentRect.shrink( 1, 1, widget.contentRect );
-    } else
+    if ( skin.HasBorder )
     {
-        widget.contentRect.shrink( 1, 1, widget.contentRect );
-        if ( widget.hasHoverState ) canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.TreeWidget.HoverBorderColor );
-        else canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.TreeWidget.BorderColor );
-        widget.contentRect.shrink( 1, 1, widget.contentRect );
+        if ( widget.hasFocusState ) {
+            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin2px, widget.contentRect, skin.FocusBorderColor );
+            widget.contentRect.shrink( 1, 1, widget.contentRect );
+            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleCorners, widget.contentRect, skin.FocusBorderColor );
+
+            canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, skin.BorderColor );
+            widget.contentRect.shrink( 1, 1, widget.contentRect );
+        } else
+        {
+            widget.contentRect.shrink( 1, 1, widget.contentRect );
+            if ( widget.hasHoverState ) canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, skin.HoverBorderColor );
+            else canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, skin.BorderColor );
+            widget.contentRect.shrink( 1, 1, widget.contentRect );
+        }
     }
 
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.TreeWidget.BackColor );
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, skin.BackColor );
 
     // ---
 
@@ -3084,7 +3173,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
         if ( item.children ) { indentTop=true; break; }
     }
 
-    canvas.pushFont( this.skin.TreeWidget.Font );
+    canvas.pushFont( skin.Font );
 
     // --- Calc Column Dimensions
 
@@ -3096,7 +3185,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
         if ( offset > paintRect.width )
             break;
 
-        let width = Math.floor( paintRect.width *  column.width / 100 );
+        let width = column.fixedWidth ? column.width : (Math.floor( paintRect.width *  column.width / 100 ));
 
         if ( offset + width > paintRect.width )
             width -= (offset + width) - paintRect.width;
@@ -3157,7 +3246,8 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
             this.rect3.width -= 7;
         }
 
-        canvas.drawTextRect( column.name, this.rect3, this.skin.TreeWidget.Header.TextColor, column.hAlign, 1 );
+        if ( !widget.paintHeaderCallback )
+            canvas.drawTextRect( column.name, this.rect3, skin.Header.TextColor, column.hAlign, 1 );
 
         if ( i > 0 ) {
             this.rect3.x = paintRect.x + offset;
@@ -3165,12 +3255,14 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
             this.rect3.width = 1;
             this.rect3.height = widget.contentRect.height;
 
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect3, this.skin.TreeWidget.Header.BorderColor );
+            if ( skin.Header.ContentColumns )
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect3, skin.Header.BorderColor );
 
             this.rect3.y = widget.rect.y;
             this.rect3.height = headerHeight;
 
-            canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect3, this.skin.TreeWidget.Header.BorderColor );
+            if ( !widget.paintHeaderCallback )
+                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect3, skin.Header.BorderColor );
         }
         offset += width;
     }

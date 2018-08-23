@@ -141,7 +141,7 @@ ShaderTunnel.prototype.draw = function (dt) {
     this.vb.bind();
     this.vb.vertexAttrib(this.shader.getAttrib('aPos'), 2, false, stride * 2, 0);
 
-    var db = this.vb.getDataBuffer();    
+    var db = this.vb.getDataBuffer();
     this.vb.drawBuffer(VG.Renderer.Primitive.Lines, 0, db.getSize()/2);
 };
 
