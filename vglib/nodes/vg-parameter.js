@@ -155,7 +155,11 @@ VG.Nodes.ParamContainer.prototype.getAdjustedParamString=function( name, adjustC
                 } else
                 if ( param.type === "vec2" )
                 {
-                    value = `(${value.x},${value.y})`;
+                    value = `vec2(${value.x},${value.y})`;
+                } else
+                if ( param.type === "vec3" )
+                {
+                    value = `vec3(${value.x},${value.y},${value.z})`;
                 }
 
                 return value;
