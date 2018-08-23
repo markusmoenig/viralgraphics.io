@@ -129,7 +129,7 @@ VG.Nodes.ParamContainer.prototype.getParamValue=function( name )
     return null;
 };
 
-VG.Nodes.ParamContainer.prototype.getAdjustedParamString=function( name, adjustCallback )
+VG.Nodes.ParamContainer.prototype.getAdjustedParamString=function( name, adjustCallback, scale )
 {
     /**Returns the value of the parameter identified by its name.
      * @param {string} name - The name of the parameter to look up.
@@ -146,7 +146,7 @@ VG.Nodes.ParamContainer.prototype.getAdjustedParamString=function( name, adjustC
 
             if ( param.name === name ) {
                 let value = param.data[param.name];
-                if ( adjustCallback ) value = adjustCallback( name, value, param );
+                if ( adjustCallback ) value = adjustCallback( name, param, scale );
                 if (typeof value === 'string' || value instanceof String) {
 
                 } else
