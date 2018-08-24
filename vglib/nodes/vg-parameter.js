@@ -150,6 +150,14 @@ VG.Nodes.ParamContainer.prototype.getAdjustedParamString=function( name, adjustC
                 if (typeof value === 'string' || value instanceof String) {
 
                 } else
+                if ( param.type === "bool" )
+                {
+                    value = `${Boolean( value )}`;
+                } else
+                if ( param.type === "int" )
+                {
+                    value = `${Math.round( value )}`;
+                } else
                 if ( !isNaN( value ) && value.toFixed ) {
                     value = value.toFixed( 3 );
                 } else
