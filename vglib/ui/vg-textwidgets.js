@@ -1822,15 +1822,7 @@ VG.UI.TextEdit.prototype.setHScrollbarDimensions=function( canvas )
     this.hScrollbar.setScrollBarContentSize( this.maxTextLineSize.width, this.contentRect.width );
 };
 
-/**
- * Creates a an JavaScript code editor. Supports JavaScript syntax-highlighting.
- * @param {string} text - The text to edit.
- * @property {string} text - The text to edit.
- * @property {bool} readOnly - Indicates if this widget is read-only, default is false.
- * @borrows VG.UI.ListWidget.bind as VG.UI.TextLineEdit.bind
- * @constructor
- */
-
+/*
 VG.UI.CodeEdit=function( text )
 {
     if ( !(this instanceof VG.UI.CodeEdit) ) return new VG.UI.CodeEdit( text );
@@ -1979,8 +1971,6 @@ VG.UI.CodeEdit=function( text )
             name : "JavaScript",
 
             lineComment : "//",
-            multiLineCommentOpen : "/*",
-            multiLineCommentClose : "*/",
 
             reserved : [ "abstract"    , "arguments", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue",
                 "debugger", "default", "delete", "do", "double", "else", "enum", "eval", "export", "extends", "false", "final", "finally", "float", "for",
@@ -1993,10 +1983,6 @@ VG.UI.CodeEdit=function( text )
             builtIn : [ "Array", "Date", "eval", "function", "hasOwnProperty", "Infinity", "isFinite", "isNaN", "isPrototypeOf", "length", "Math",
                 "NaN", "name", "Number", "Object", "prototype", "String", "toString", "undefined", "valueOf" ],
 
-            /*
-            this.codeSkin={ "Comment" : VG.Core.Color( 121, 124, 131 ), "Text" : VG.Core.Color( 91, 238, 167 ), "Reserved" : VG.Core.Color( 242, 102, 102 ),
-            "BuiltIn" : VG.Core.Color( 220, 92, 179 ), "ThisAndParameter" : VG.Core.Color( 156, 165, 230 ), "VG" : VG.Core.Color( 212, 179, 77 ),
-            "Digit" : VG.Core.Color( 189, 152, 240 ) }*/
 
             codeSkin : { "Comment" : VG.Core.Color( 108, 123, 129 ), "Text" : VG.Core.Color( 252, 124, 34 ), "Reserved" : VG.Core.Color( 156, 211, 102 ),
             "BuiltIn" : VG.Core.Color( 181, 144, 215 ), "ThisAndParameter" : VG.Core.Color( 108, 150, 190 ), "VG" : VG.Core.Color( 212, 179, 77 ),
@@ -2015,10 +2001,6 @@ VG.UI.CodeEdit=function( text )
             globalVars : [ "inUV", "inPos", "inTerminal", "inDefaultTerminal", "inInput1", "inInput2", "inInput3", "inTime", "inNormal", "inMaterial", "outColor", "outMaterial", "outMetallic", "outSmoothness", "outReflectance", "outBump", "outName", "outCategory",
             "ParameterGroup", "ParamHtml", "ParamSlider", "ParamVector3", "ParamVector2", "ParamList", "ParamColor", "ParamDescription", "ParamReferences", "ParamBoolean", "ParamImportant", "ParamToolTip" ],
 
-            /*
-            this.codeSkin={ "Comment" : VG.Core.Color( 121, 124, 131 ), "Text" : VG.Core.Color( 91, 238, 167 ), "Reserved" : VG.Core.Color( 242, 102, 102 ),
-            "BuiltIn" : VG.Core.Color( 220, 92, 179 ), "ThisAndParameter" : VG.Core.Color( 156, 165, 230 ), "VG" : VG.Core.Color( 212, 179, 77 ),
-            "Digit" : VG.Core.Color( 189, 152, 240 ) }*/
 
             codeSkin : { "Comment" : VG.Core.Color( 108, 123, 129 ), "Text" : VG.Core.Color( 146, 204, 153 ), "Reserved" : VG.Core.Color( 242, 119, 122 ),
             "BuiltIn" : VG.Core.Color( 102, 148, 198 ), "ThisAndParameter" : VG.Core.Color( 108, 150, 190 ), "VG" : VG.Core.Color( 255, 204, 102 ),
@@ -2032,13 +2014,6 @@ VG.UI.CodeEdit=function( text )
 };
 
 VG.UI.CodeEdit.prototype=VG.UI.BaseText();
-
-/**
- * Binds the widget to the data model. This widget has to be bound to a String value.
- * @param {VG.Data.Collection} collection - The data collection to link this widget to.
- * @param {string} path - The path inside the data collection to bind this widget to.
- * @tutorial Data Model
- */
 
 VG.UI.CodeEdit.prototype.bind=function( collection, path )
 {
@@ -2322,8 +2297,6 @@ VG.UI.CodeEdit.prototype.paintWidget=function( canvas )
             }
             if ( this.multiLineComment === true )
             {
-                if ( text.indexOf( "*/" ) !== -1 )
-                    this.multiLineComment=false;
             }
         }
 
@@ -2444,7 +2417,7 @@ VG.UI.CodeEdit.prototype.drawJSLine=function( canvas, textPixelOffset, text, rec
         if ( this.multiLineComment )
         {
             // --- Line is inside a multi line comment
-            var multiLineCommentEndIndex=text.indexOf( "*/" );
+            var multiLineCommentEndIndex="";
             if ( multiLineCommentEndIndex !== -1 )
             {
                 // --- Line is inside a multi line comment and has a multi line comment end token
@@ -2543,7 +2516,7 @@ VG.UI.CodeEdit.prototype.setHScrollbarDimensions=function( canvas )
     // this.contentRect.height == Height of the available area for the list items
 
     this.hScrollbar.setScrollBarContentSize( this.maxTextLineSize.width, this.contentRect.width );
-};
+};*/
 
 /**
  * Creates a an JavaScript code editor. Supports JavaScript syntax-highlighting.
@@ -2554,21 +2527,27 @@ VG.UI.CodeEdit.prototype.setHScrollbarDimensions=function( canvas )
  * @constructor
  */
 
-VG.UI.CodeEdit2=function( text )
+VG.UI.CodeEdit=function( text )
 {
-    if ( !(this instanceof VG.UI.CodeEdit2) ) return new VG.UI.CodeEdit2( text );
+    if ( !(this instanceof VG.UI.CodeEdit) ) return new VG.UI.CodeEdit( text );
 
     VG.UI.Widget.call( this, text );
     this.name="CodeEdit";
 
     this.supportsFocus = true;
+    this.domWidget = true;
 
     this.editor = ace.edit( "aceEditor" );
+
+    let workerPath;
+    if ( VG.localVGLibPrefix ) workerPath = VG.localVGLibPrefix + "web";
+    else workerPath = "/web";
+
+    ace.config.set( "workerPath", workerPath );
+
     this.editor.setTheme("ace/theme/monokai");
     this.editor.session.setMode("ace/mode/javascript");
     // this.editor.setOptions( { vScrollBarAlwaysVisible: true } );
-
-    // this.editor.setReadOnly( false );
 
     // ---
 
@@ -2576,7 +2555,7 @@ VG.UI.CodeEdit2=function( text )
     this.oldRect = new VG.Core.Rect();
 };
 
-VG.UI.CodeEdit2.prototype=VG.UI.Widget();
+VG.UI.CodeEdit.prototype=VG.UI.Widget();
 
 /**
  * Binds the widget to the data model. This widget has to be bound to a String value.
@@ -2585,14 +2564,14 @@ VG.UI.CodeEdit2.prototype=VG.UI.Widget();
  * @tutorial Data Model
  */
 
-VG.UI.CodeEdit2.prototype.bind=function( collection, path )
+VG.UI.CodeEdit.prototype.bind=function( collection, path )
 {
     this.collection=collection;
     this.path=path;
     collection.addValueBindingForPath( this, path );
 };
 
-VG.UI.CodeEdit2.prototype.valueFromModel=function( value )
+VG.UI.CodeEdit.prototype.valueFromModel=function( value )
 {
     //console.log( "CodeEdit.valueFromModel: " + value );
 
@@ -2602,7 +2581,7 @@ VG.UI.CodeEdit2.prototype.valueFromModel=function( value )
     this.editor.clearSelection();
 };
 
-Object.defineProperty( VG.UI.CodeEdit2.prototype, "text", {
+Object.defineProperty( VG.UI.CodeEdit.prototype, "text", {
     get: function() {
         //return this._text;
         return this.editor.getValue();
@@ -2613,48 +2592,70 @@ Object.defineProperty( VG.UI.CodeEdit2.prototype, "text", {
     }
 });
 
-VG.UI.CodeEdit2.prototype.setMode=function( name )
+VG.UI.CodeEdit.prototype.setMode=function( name, session )
 {
-    if ( name === "JavaScript" ) this.editor.session.setMode("ace/mode/javascript");
-    else if ( name === "GLSL" ) this.editor.session.setMode("ace/mode/glsl");
+    if ( name === "JavaScript" ) {
+        if ( !session ) this.editor.session.setMode("ace/mode/javascript");
+        else session.setMode("ace/mode/javascript");
+    }
+    else if ( name === "GLSL" ) {
+        if ( !session ) this.editor.session.setMode("ace/mode/glsl");
+        else session.setMode("ace/mode/glsl");
+    }
 };
 
-VG.UI.CodeEdit2.prototype.focusIn=function( line )
+VG.UI.CodeEdit.prototype.newSession=function( code )
+{
+    let EditSession = ace.EditSession;
+    let session = new EditSession( code );
+    session.setUndoManager(new ace.UndoManager());
+
+    return session;
+};
+
+VG.UI.CodeEdit.prototype.setSession=function( session )
+{
+    this.editor.setSession( session );
+};
+
+VG.UI.CodeEdit.prototype.focusIn=function( line )
 {
     VG.editor.style.zIndex = "4";
 };
 
-VG.UI.CodeEdit2.prototype.focusOut=function( line )
+VG.UI.CodeEdit.prototype.focusOut=function( line )
 {
     VG.editor.style.zIndex = "1";
 };
 
-VG.UI.CodeEdit2.prototype.mouseEnter=function( line )
+VG.UI.CodeEdit.prototype.mouseEnter=function( line )
 {
     VG.editor.style.zIndex = "4";
 };
 
-VG.UI.CodeEdit2.prototype.mouseLeave=function( line )
+VG.UI.CodeEdit.prototype.mouseLeave=function( line )
 {
     VG.editor.style.zIndex = "1";
 };
 
-VG.UI.CodeEdit2.prototype.hide=function( line )
+VG.UI.CodeEdit.prototype.hide=function( line )
 {
     VG.editor.style.display = "none";
     this.hidden = true;
+    this.displayed = false;
 };
 
-VG.UI.CodeEdit2.prototype.show=function( line )
+VG.UI.CodeEdit.prototype.show=function( line )
 {
     VG.editor.style.display = "inline";
     this.hidden = false;
 };
 
-VG.UI.CodeEdit2.prototype.paintWidget=function( canvas )
+VG.UI.CodeEdit.prototype.paintWidget=function( canvas )
 {
     this.contentRect.copy( this.rect );
-    // if ( !this.displayed || !this.oldRect.equals( this.contentRect ) )
+    VG.context.workspace.activeDOMWidgets.push( this );
+    if ( !this.displayed || !this.oldRect.equals( this.contentRect ) )
     {
         VG.editor.style.left = String( this.contentRect.x ) + "px";
         VG.editor.style.top = String( this.contentRect.y ) + "px";

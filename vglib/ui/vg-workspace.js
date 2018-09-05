@@ -115,6 +115,8 @@ VG.UI.Workspace=function()
     this.projectName="Untitled";
     this.projectExtension=undefined;
 
+    this.activeDOMWidgets = [];
+
     // --- Send an isLoggedIn request to the server to check if we are logged in or not.
 
     VG.sendBackendRequest( "/user/isLoggedIn", "", function( responseText ) {
@@ -422,6 +424,8 @@ VG.UI.Workspace.prototype.paintWidget=function()
 {
     this.contentRect.set( this.rect );
     this.canvas.setActiveCanvas( "" );
+    this.lastActiveDOMWidgets = this.activeDOMWidgets;
+    this.activeDOMWidgets = [];
 
     // --- Draw Menubar if any and if the menubar is painted by VG itself
 
@@ -525,6 +529,16 @@ VG.UI.Workspace.prototype.paintWidget=function()
     // ---
 
     this.canvas.hasBeenResized=false;
+
+    // --- Hide widgets in the DOM canvas if they are not visible anymore
+
+    for ( let i = 0; i < this.lastActiveDOMWidgets.length; ++i )
+    {
+        let widget = this.lastActiveDOMWidgets[i];
+
+        if ( !this.activeDOMWidgets.includes( widget ) )
+            widget.hide();
+    }
 };
 
 VG.UI.Workspace.prototype.mouseMove=function( x, y )
@@ -993,7 +1007,7 @@ VG.UI.Workspace.prototype.keyDown=function( keyCode )
 {
     // --- Test for Keyboard Shortcuts
 
-    var shortCutFound=false;
+    let shortCutFound=false;
     if ( this.decoratedToolBar )  {
         if ( this.shortcutManager.verifyToolBar( String.fromCharCode( keyCode ), this.keysDown, this.decoratedToolBar ) ) {
             shortCutFound=true;
@@ -1004,12 +1018,6 @@ VG.UI.Workspace.prototype.keyDown=function( keyCode )
             VG.update();
         }
     }
-
-    // if ( !shortCutFound && this.keysDown.length && this.focusWidget && this.focusWidget.contextMenu ) {
-        // this.ignoreTextInput=this.shortcutManager.verifyMenu( String.fromCharCode( keyCode ), this.keysDown, this.focusWidget.contextMenu );
-
-        //if ( this.ignoreTextInput ) VG.log( "ignored key input", keyCode, this.keysDown.toString(), 1 );
-    // }
 
     // ---
 

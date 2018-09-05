@@ -78,6 +78,9 @@ function main()
     // ---- Plug into browser cut / copy paste
 
     window.addEventListener('cut', function ( event ) {
+        let workspace = VG.context.workspace;
+        if ( workspace.focusWidget && workspace.focusWidget.domWidget ) return;
+
         VG.context.workspace.modelCutCallback.call( VG.context.workspace, true );
         if ( event.clipboardData ) {
             if ( !VG.context.workspace.isElectron() ) {
@@ -88,6 +91,9 @@ function main()
     });
 
     window.addEventListener('copy', function ( event ) {
+        let workspace = VG.context.workspace;
+        if ( workspace.focusWidget && workspace.focusWidget.domWidget ) return;
+
         VG.context.workspace.modelCopyCallback.call( VG.context.workspace, true );
         if ( event.clipboardData ) {
             if ( !VG.context.workspace.isElectron() ) {
@@ -101,6 +107,8 @@ function main()
     });
 
     window.addEventListener('paste', function ( event ) {
+        let workspace = VG.context.workspace;
+        if ( workspace.focusWidget && workspace.focusWidget.domWidget ) return;
 
         if ( !VG.context.workspace.isElectron() ) {
             let pasteData;
@@ -206,11 +214,11 @@ function main()
     // --- FocusIn / Out
 
     window.addEventListener('focus', function ( event ) {
-        // VG.context.workspace.focusIn();
+        VG.context.workspace.focusIn();
     });
 
     window.addEventListener('blur', function ( event ) {
-        // VG.context.workspace.focusOut();
+        VG.context.workspace.focusOut();
     });
 
     // --- Mouse Events
