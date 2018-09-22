@@ -1057,6 +1057,7 @@ var VG;
                 uniform vec2 inResolution;
             `;
 
+            this.headerOffset = header.split(/\r\n|\r|\n/).length;
             this.fSource = header + (this.webgl2 ? fSource : fSource.replace( /fragColor/g, "gl_FragColor" ));
             if ( !this.webgl2 ) this.fSource = this.fSource.replace( /texture/g, "texture2D" );
             this.create();

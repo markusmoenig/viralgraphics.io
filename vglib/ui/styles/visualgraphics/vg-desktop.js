@@ -1577,7 +1577,12 @@ VG.UI.VisualGraphicsStyle.prototype.drawSectionToolBar=function( widget, canvas 
         layout.rect.copy( this.rect1 );
         layout.layout( canvas );
 
-        var layoutHeight=layout.length * (widget.small ? this.skin.SectionToolBarButton.SmallSize.height : this.skin.SectionToolBarButton.Size.height) + 4;
+        let visibleItems = 0;
+
+        for ( let v = 0; v < layout.children.length; ++v )
+            if ( layout.children[v].visible ) visibleItems++;
+
+        let layoutHeight = visibleItems * (widget.small ? this.skin.SectionToolBarButton.SmallSize.height : this.skin.SectionToolBarButton.Size.height) + 4;
         if ( layout.length ) layoutHeight+=layout.length-1;
 
         yOffset+=24 + layoutHeight;

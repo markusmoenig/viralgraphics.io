@@ -362,8 +362,8 @@ VG.UI.Vector3Edit.prototype.bind=function( collection, path )
     this.path=path;
     collection.addValueBindingForPath( this, path );
 
-    if ( path.indexOf( "." ) === -1 )
-        this.valueFromModel( collection.dataForPath( path ) );
+    // if ( path.indexOf( "." ) === -1 )
+        // this.valueFromModel( collection.dataForPath( path ) );
 };
 
 VG.UI.Vector3Edit.prototype.valueFromModel=function( value )

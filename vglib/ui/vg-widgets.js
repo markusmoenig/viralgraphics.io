@@ -3831,29 +3831,29 @@ VG.UI.DropArea=function( typeName, paintCallback, droppedCallback )
         this.makeVisible=true;
 
         this.button=VG.UI.Button( "Select " + typeName + " ...");
-        var self = this;
-        this.button.clicked=function() {
+        this.button.clicked = () => {
 
-            function chooseFile(name) {
-                var chooser = document.querySelector(name);
-                chooser.addEventListener("change", function(evt) {
+            let chooseFile = (name) => {
+                let chooser = document.querySelector( name );
+                let changeEvent = ( evt ) => {
+                    chooser.removeEventListener( "change", changeEvent );
 
-                    var reader=new FileReader();
-                    var file=evt.target.files[0];
+                    let reader = new FileReader();
+                    let file = evt.target.files[0];
 
-                    reader.onload = function( e ) {
-                        self.fileDropped( file.name, reader.result );
+                    reader.onload = ( e ) => {
+                        this.fileDropped( file.name, reader.result );
                     };
 
                     if ( typeName === "Image" ) reader.readAsDataURL( file );
                     else reader.readAsText( file );
 
-                }, false);
-
+                };
+                chooser.addEventListener( "change", changeEvent, false );
                 chooser.click();
-            }
+            };
             chooseFile('#fileDialog');
-        }.bind( this );
+        };
     } else
     {
         this.button=VG.UI.Button( "Import " + typeName + " ...");

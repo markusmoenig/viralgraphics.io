@@ -773,11 +773,15 @@ VG.UI.VisualGraphicsGraySkin=function()
         Spacing : 3,
         Margin : VG.Core.Margin( 2, 2, 2, 2 ),
 
+        UseTriangles: false,
+        HasBorder: true,
+
+        ItemOutline: true,
         ItemBackColor : VG.Core.Color( 192, 192, 192 ),
         ItemSelectedBorderColor : VG.Core.Color( 126, 197, 243 ),
         ItemSelectedBackColor : VG.Core.Color( 168, 211, 245 ),
 
-        ToolLayoutHeight : 32,
+        ToolLayoutHeight : 28,
 
         ToolTopBorderColor : VG.Core.Color( 191, 191, 191 ),
         ToolBottomBorderColor : VG.Core.Color( 111, 111, 111 ),
