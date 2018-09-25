@@ -2192,12 +2192,12 @@ VG.UI.VisualGraphicsStyle.prototype.drawHorizontalSnapperWidgetItem=function( wi
 
 // --- VG.UI.SplitLayout --- SplitHandle
 
-VG.UI.VisualGraphicsStyle.prototype.drawSplitHandle=function( canvas, layout, pos, itemRect, childRect, dragging, hover )
+VG.UI.VisualGraphicsStyle.prototype.drawSplitHandle=function( canvas, layout, pos, itemRect, childRect, dragging, hover, adjustY )
 {
     itemRect[layout.primaryCoord]=pos + childRect[layout.primarySize];
-    itemRect[layout.secondaryCoord]=layout.margin[layout.secondaryLesserMargin] + layout.rect[layout.secondaryCoord];
+    itemRect[layout.secondaryCoord]=layout.margin[layout.secondaryLesserMargin] + layout.rect[layout.secondaryCoord] - adjustY;
     itemRect[layout.primarySize]=layout.spacing;
-    itemRect[layout.secondarySize]=layout.rect[layout.secondarySize] - layout.margin[layout.secondaryLesserMargin] - layout.margin[layout.secondaryGreaterMargin];
+    itemRect[layout.secondarySize]=layout.rect[layout.secondarySize] - layout.margin[layout.secondaryLesserMargin] - layout.margin[layout.secondaryGreaterMargin] + adjustY;
 
     this.rect1.copy( itemRect );
 

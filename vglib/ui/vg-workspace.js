@@ -269,9 +269,12 @@ VG.UI.Workspace.prototype.addDockWidget=function( dockWidget, location, percent 
             this.layout.insertChild( contentIndex, dockWidget, percent );
         } else
         if ( location === VG.UI.DockWidgetLocation.Right || location === "Right" ) {
-            this.layout.insertChild( contentIndex+1, dockWidget, percent );
+            this.layout.insertChild( contentIndex+1, dockWidget, percent, "Right" );
         }
     } else this.layout.addChild( dockWidget, percent );
+
+    if ( location === VG.UI.DockWidgetLocation.Right || location === "Right" )
+        dockWidget.__rightDock = true;
 
     dockWidget.location=location;
     this.recalcLayoutPercentages();
@@ -466,10 +469,21 @@ VG.UI.Workspace.prototype.paintWidget=function()
         if ( this.decoratedWidget )
         {
             this.decoratedWidget.rect.copy( this.decoratedToolBar.rect );
-            // this.decoratedWidget.rect.x += this.appLogo.rect.width;
-            // this.decoratedWidget.rect.width -= this.appLogo.rect.width;
             this.decoratedWidget.rect.y += VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
             this.decoratedWidget.rect.height = this.appLogo.rect.height - VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
+
+            if ( this.layout && this.layout.children )
+            {
+                for ( let i = 0; i < this.layout.children.length; ++i )
+                {
+                    let child = this.layout.children[i];
+                    if ( child && child.__rightDock && i > 0 ) {
+                        let totalX = this.layout.children[i-1].rect.x + this.layout.children[i-1].rect.width;
+                        this.decoratedWidget.rect.width -= (this.decoratedWidget.rect.x + this.decoratedWidget.rect.width) - totalX;
+                        break;
+                    }
+                }
+            }
 
             this.decoratedWidget.paintWidget( this.canvas );
         }
@@ -562,9 +576,9 @@ VG.UI.Workspace.prototype.paintWidget=function()
 
 VG.UI.Workspace.prototype.mouseMove=function( x, y )
 {
-    var event=this.mainMoveEvent;
+    let event = this.mainMoveEvent;
     event.pos.set( x, y );
-    var i, found;
+    let found;
 
     // --- If a widget is tracking the mouse, this has priority
 
@@ -577,15 +591,15 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
 
     // ---
 
-    var windowUnderMouse=0;
-    var widgetUnderMouse=0;
-    var layoutUnderMouse=0;
+    let windowUnderMouse = 0;
+    let widgetUnderMouse = 0;
+    let layoutUnderMouse = 0;
 
-    this.modalDialog=0;
+    this.modalDialog = 0;
 
     // --- Search for a window under the mouse
 
-    for( i=0; i < this.windows.length; ++i ) {
+    for( let i=0; i < this.windows.length; ++i ) {
         let window=this.windows[i];
 
         if ( window.visible && window.rect.contains( event.pos ) ) {
@@ -639,7 +653,7 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
     // --- Draw Menubar if any and if the menubar is painted by VG itself
 
     if ( this.paintMenubar && !windowUnderMouse  ) {
-        for ( i=0; i < this.menubars.length; ++i)
+        for ( let i=0; i < this.menubars.length; ++i)
         {
             var menubar=this.menubars[i];
             if ( menubar.rect.contains( event.pos ) )
@@ -681,19 +695,17 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
 
     if ( !windowUnderMouse && !widgetUnderMouse ) {
 
-        if ( y < this.contentRect.y ) {
-            for ( i=0; i < this.toolbars.length; ++i)
-            {
-                var toolbar=this.toolbars[i];
-                found=this.findLayoutItemAtMousePos( toolbar.layout, event.pos );
-                if ( found && found.isWidget ) {
-                    widgetUnderMouse=found;
-                }
+        for ( let i=0; i < this.toolbars.length; ++i) {
+            var toolbar=this.toolbars[i];
+            found=this.findLayoutItemAtMousePos( toolbar.layout, event.pos );
+            if ( found && found.isWidget ) {
+                widgetUnderMouse=found;
             }
-        } else
+        }
+
+        if ( !widgetUnderMouse )
         {
             // --- Search the main layout
-
             found=this.findLayoutItemAtMousePos( this.layout, event.pos );
 
             if ( found ) {
@@ -1280,7 +1292,7 @@ VG.UI.Workspace.prototype.tick=function( needsRedraw )
 
 VG.UI.Workspace.prototype.findLayoutItemAtMousePos=function( layout, pos )
 {
-    //console.log( "findLayoutItemAtMousePos: " + layout.name );
+    // console.log( "findLayoutItemAtMousePos: " + layout.name );
 
     // --- Check if top layout is a StackedWidget and if yes do the proper forwarding
     if ( layout instanceof VG.UI.StackedLayout ) {

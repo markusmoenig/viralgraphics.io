@@ -1003,7 +1003,7 @@ VG.UI.SplitLayout.prototype.insertChildAt=function( index, child, percent )
     child.parent=this;
     this.children.splice( index, 0, child );
 
-    var item=VG.UI.SplitLayoutItem();
+    let item = VG.UI.SplitLayoutItem();
 
     if ( arguments.length == 3 )
         item.percent=percent;
@@ -1244,105 +1244,109 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
 
     for( i=0; i < this.children.length; ++i )
     {
-        child=this.children[i];
+        child = this.children[i];
         let childRect=this.workRect;
 
         let size, item, primarySize;
         let secondaryCoord, secondarySize;
 
+        let adjustY = 0;
+        if ( VG.context.workspace.layout === this && VG.context.workspace.decoratedToolBar && child.__rightDock )
+            adjustY = VG.context.workspace.appLogo.rect.height - VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
+
         if ( child.isWidget )
         {
             // --- The Child is a Widget
 
-            size=child.calcSize( canvas );
+            size = child.calcSize( canvas );
 
             if ( child[this.primaryLayoutExpanding] === false )
             {
-                child.rect[this.primaryCoord]=pos;
-                child.rect[this.secondaryCoord]=rect[this.secondaryCoord] + this.margin[this.secondaryLesserMargin];
+                child.rect[this.primaryCoord] = pos;
+                child.rect[this.secondaryCoord] = rect[this.secondaryCoord] + this.margin[this.secondaryLesserMargin] - adjustY;
 
-                secondaryCoord=rect[this.secondaryCoord] + this.margin[this.secondaryLesserMargin] + ( rect[this.secondarySize] -
-                    this.margin[this.secondaryLesserMargin] - this.margin[this.secondaryGreaterMargin] - size[this.secondarySize] ) / 2;
+                secondaryCoord = rect[this.secondaryCoord] + this.margin[this.secondaryLesserMargin] + ( rect[this.secondarySize] -
+                    this.margin[this.secondaryLesserMargin] - this.margin[this.secondaryGreaterMargin] - size[this.secondarySize] ) / 2 - adjustY;
 
                 if ( child[this.secondaryLayoutExpanding] === false ) {
                     child.rect.setSize( size.width, size.height );
                 } else
                 if ( child[this.secondaryLayoutExpanding] ) {
 
-                    child.rect[this.primarySize]=size[this.primarySize];
-                    child.rect[this.secondarySize]=rect[this.secondarySize];
+                    child.rect[this.primarySize] = size[this.primarySize];
+                    child.rect[this.secondarySize] = rect[this.secondarySize] + adjustY;
                 }
 
                 child.rect.round();
                 // canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, child.rect, VG.UI.stylePool.current.skin.Widget.BackgroundColor );
                 child.paintWidget( canvas );
-                childRect.set( child.rect );
+                childRect.copy( child.rect );
             } else
             if ( child[this.primaryLayoutExpanding] )
             {
                 if ( child[this.secondaryLayoutExpanding] === false ) {
-                    size=child.calcSize( canvas );
+                    size = child.calcSize( canvas );
 
-                    secondaryCoord=rect[this.secondaryCoord] + this.margin[this.secondaryLesserMargin] +  (rect[this.secondarySize] -
-                        this.margin[this.secondaryLesserMargin] - this.margin[this.secondaryGreaterMargin] - size[this.secondarySize])/2;
-                    secondarySize=size[this.secondarySize];
+                    secondaryCoord = rect[this.secondaryCoord] + this.margin[this.secondaryLesserMargin] +  (rect[this.secondarySize] -
+                        this.margin[this.secondaryLesserMargin] - this.margin[this.secondaryGreaterMargin] - size[this.secondarySize])/2 - adjustY;
+                    secondarySize = size[this.secondarySize] + adjustY;
                 } else
                 if ( child[this.secondaryLayoutExpanding] ) {
-                    secondaryCoord=rect[this.secondaryCoord] + this.margin[this.secondaryLesserMargin];
-                    secondarySize=rect[this.secondarySize] - this.margin[this.secondaryLesserMargin] - this.margin[this.secondaryGreaterMargin];
+                    secondaryCoord = rect[this.secondaryCoord] + this.margin[this.secondaryLesserMargin] - adjustY;
+                    secondarySize = rect[this.secondarySize] - this.margin[this.secondaryLesserMargin] - this.margin[this.secondaryGreaterMargin] + adjustY;
                 }
 
-                child.rect[this.primaryCoord]=pos;
-                child.rect[this.secondaryCoord]=secondaryCoord;
-                child.rect[this.secondarySize]=secondarySize;
+                child.rect[this.primaryCoord] = pos;
+                child.rect[this.secondaryCoord] = secondaryCoord;
+                child.rect[this.secondarySize] = secondarySize;
 
-                item=this.items[i];
+                item = this.items[i];
                 primarySize=(expandingChildSpace*item.percent) / 100.0 - minAdjustmentCorrection;
                 if ( primarySize < child.minimumSize[this.primarySize] )
                 {
                     // --- Propagate the correction when a minimumSize conflicts with the assigned percentage
-                    minAdjustmentCorrection+=child.minimumSize[this.primarySize] - primarySize;
-                    primarySize=child.minimumSize[this.primarySize];
+                    minAdjustmentCorrection += child.minimumSize[this.primarySize] - primarySize;
+                    primarySize = child.minimumSize[this.primarySize];
                 }
 
                 availableSpace -= primarySize;
                 if ( availableSpace < 0 ) primarySize += availableSpace;
 
                 primarySize+=item.offset + item.totalOffset;
-                child.rect[this.primarySize]=primarySize;
+                child.rect[this.primarySize] = primarySize;
 
                 child.rect.round();
                 if ( primarySize > 1 ) {
                     // canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, child.rect, VG.UI.stylePool.current.skin.Widget.BackgroundColor );
                     child.paintWidget( canvas );
                 }
-                childRect.set( child.rect );
+                childRect.copy( child.rect );
             }
         } else
         {
             // --- Child is a Layout
 
-            childRect[this.primaryCoord]=pos;
-            childRect[this.secondaryCoord]=rect[this.secondaryCoord] + this.margin[this.secondaryLesserMargin];
-            childRect[this.secondarySize]=rect[this.secondarySize] - this.margin[this.secondaryLesserMargin] - this.margin[this.secondaryGreaterMargin];
+            childRect[this.primaryCoord] = pos;
+            childRect[this.secondaryCoord] = rect[this.secondaryCoord] + this.margin[this.secondaryLesserMargin] - adjustY;
+            childRect[this.secondarySize] = rect[this.secondarySize] - this.margin[this.secondaryLesserMargin] - this.margin[this.secondaryGreaterMargin] + adjustY;
 
-            item=this.items[i];
-            primarySize=(expandingChildSpace*item.percent) / 100.0 - minAdjustmentCorrection;
+            item = this.items[i];
+            primarySize = (expandingChildSpace*item.percent) / 100.0 - minAdjustmentCorrection;
 
             if ( primarySize < child.minimumSize[this.primarySize] )
             {
                 // --- Propagate the correction when a minimumSize conflicts with the assigned percentage
-                minAdjustmentCorrection+=child.minimumSize[this.primarySize] - primarySize;
-                primarySize=child.minimumSize[this.primarySize];
+                minAdjustmentCorrection += child.minimumSize[this.primarySize] - primarySize;
+                primarySize = child.minimumSize[this.primarySize];
             }
 
             availableSpace -= primarySize;
             if ( availableSpace < 0 ) primarySize += availableSpace;
 
-            primarySize+=item.offset + item.totalOffset;
-            childRect[this.primarySize]=primarySize;
+            primarySize += item.offset + item.totalOffset;
+            childRect[this.primarySize] = primarySize;
 
-            child.rect.set( childRect );
+            child.rect.copy( childRect );
             child.rect.round();
             if ( primarySize > 1 ) {
                 // canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, child.rect, VG.UI.stylePool.current.skin.Widget.BackgroundColor );
@@ -1350,11 +1354,15 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
             }
         }
 
-        let drawSplitbar=true;
+        let drawSplitbar = true;
 
         if ( i < (this.children.length-1) ) {
-            child=this.children[i];
-            item=this.items[i];
+            child = this.children[i];
+            item = this.items[i];
+
+            adjustY = 0;
+            if ( VG.context.workspace.layout === this && VG.context.workspace.decoratedToolBar && this.children[i+1].__rightDock )
+                adjustY = VG.context.workspace.appLogo.rect.height - VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
 
             if ( child.isWidget && child[this.primaryLayoutExpanding] === false )
                 drawSplitbar=false;
@@ -1364,20 +1372,17 @@ VG.UI.SplitLayout.prototype.layout=function( canvas )
 
             if ( drawSplitbar ) {
 
-                VG.UI.stylePool.current.drawSplitHandle( canvas, this, pos, item.rect, childRect, this.dragOp && this.dragOpItemIndex === i, this.hasHoverState && this.dragOpItemIndex === i );
+                VG.UI.stylePool.current.drawSplitHandle( canvas, this, pos, item.rect, childRect, this.dragOp && this.dragOpItemIndex === i, this.hasHoverState && this.dragOpItemIndex === i, adjustY );
 
                 item.rect[this.primaryCoord]=pos + childRect[this.primarySize];
-                item.rect[this.secondaryCoord]=this.margin[this.secondaryLesserMargin] + rect[this.secondaryCoord];
+                item.rect[this.secondaryCoord]=this.margin[this.secondaryLesserMargin] + rect[this.secondaryCoord] - adjustY;
                 item.rect[this.primarySize]=sepSize;
-                item.rect[this.secondarySize]=rect[this.secondarySize] - this.margin[this.secondaryLesserMargin] - this.margin[this.secondaryGreaterMargin];
+                item.rect[this.secondarySize]=rect[this.secondarySize] - this.margin[this.secondaryLesserMargin] - this.margin[this.secondaryGreaterMargin] + adjustY;
                 item.canDrag=true;
-            } else
-            {
-                item.canDrag=false;
-            }
+            } else item.canDrag=false;
         }
 
-        pos+=childRect[this.primarySize];
+        pos += childRect[this.primarySize];
         if ( drawSplitbar ) pos+=sepSize;
     }
 };
