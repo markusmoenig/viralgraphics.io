@@ -376,17 +376,20 @@ VG.UI.Workspace.prototype.addMenuBar=function( menubar )
  * Adds a decorated ToolBar (VG.UI.DecoratedToolBar) to the application.
  */
 
-VG.UI.Workspace.prototype.createDecoratedToolBar=function()
+VG.UI.Workspace.prototype.createDecoratedToolBar=function( { logo, logoRect = { width: 83, height: 83 } } = {} )
 {
-    this.decoratedToolBar=VG.UI.DecoratedToolBar();
+    if ( !logo )
+        logo = VG.Utils.getImageByName( "vg_logo.png" );
+
+    this.appLogo = {
+        image: logo,
+        rect: logoRect,
+    };
+
+    this.decoratedToolBar = VG.UI.DecoratedToolBar();
 
     this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.QuickMenu );
-    // var spacer30px=VG.UI.LayoutHSpacer();
-    // spacer30px.maximumSize.width=1;
-    // this.decoratedToolBar.addItem( spacer30px );
-    this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
-    //this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
-    //this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
+
     this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Undo );
     this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Redo );
     this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
@@ -418,6 +421,11 @@ VG.UI.Workspace.prototype.addQuickMenuItem=function( text, callback )
     return undefined;
 };
 
+VG.UI.Workspace.prototype.setDecoratedWidget=function( widget )
+{
+    this.decoratedWidget = widget;
+};
+
 // --- paintWidget
 
 VG.UI.Workspace.prototype.paintWidget=function()
@@ -429,11 +437,10 @@ VG.UI.Workspace.prototype.paintWidget=function()
 
     // --- Draw Menubar if any and if the menubar is painted by VG itself
 
-    var i;
     if ( this.menubars.length && this.paintMenubar ) {
-        for ( i=0; i < this.menubars.length; ++i)
+        for ( let i=0; i < this.menubars.length; ++i)
         {
-            var menubar=this.menubars[i];
+            let menubar=this.menubars[i];
 
             menubar.rect.x=this.contentRect.x; menubar.rect.y=this.contentRect.y;
             menubar.rect.setSize( this.rect.width, VG.UI.stylePool.current.skin.MenuBar.Height );
@@ -450,20 +457,32 @@ VG.UI.Workspace.prototype.paintWidget=function()
     if ( this.decoratedToolBar )
     {
         this.decoratedToolBar.rect.copy( this.contentRect );
-        this.decoratedToolBar.rect.height=VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
+        this.decoratedToolBar.rect.x += this.appLogo.rect.width;
+        this.decoratedToolBar.rect.width -= this.appLogo.rect.width;
+        this.decoratedToolBar.rect.height = VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
+
         this.decoratedToolBar.paintWidget( this.canvas );
 
-        //this.contentRect.shrink( 0, VG.context.style.skin.DecoratedToolbar.Height, this.contentRect );
+        if ( this.decoratedWidget )
+        {
+            this.decoratedWidget.rect.copy( this.decoratedToolBar.rect );
+            // this.decoratedWidget.rect.x += this.appLogo.rect.width;
+            // this.decoratedWidget.rect.width -= this.appLogo.rect.width;
+            this.decoratedWidget.rect.y += VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
+            this.decoratedWidget.rect.height = this.appLogo.rect.height - VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
 
-        this.contentRect.y+=VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
-        this.contentRect.height-=VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
+            this.decoratedWidget.paintWidget( this.canvas );
+        }
+
+        this.contentRect.y += this.appLogo.rect.height;
+        this.contentRect.height -= this.appLogo.rect.height;
     }
 
     // --- Draw Toolbar
 
-    for ( i=0; i < this.toolbars.length; ++i)
+    for ( let i=0; i < this.toolbars.length; ++i)
     {
-        var toolbar=this.toolbars[i];
+        let toolbar=this.toolbars[i];
 
         toolbar.rect.x=this.contentRect.x; toolbar.rect.y=this.contentRect.y;
         toolbar.rect.setSize( this.rect.width, VG.UI.stylePool.current.skin.ToolBar.Height );
@@ -499,7 +518,7 @@ VG.UI.Workspace.prototype.paintWidget=function()
 
     // --- Draw Windows
 
-    for ( i=0; i < this.windows.length; ++i)
+    for ( let i=0; i < this.windows.length; ++i)
     {
         let window=this.windows[i];
 
@@ -567,7 +586,7 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
     // --- Search for a window under the mouse
 
     for( i=0; i < this.windows.length; ++i ) {
-        var window=this.windows[i];
+        let window=this.windows[i];
 
         if ( window.visible && window.rect.contains( event.pos ) ) {
 
@@ -635,6 +654,14 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
         found=this.findLayoutItemAtMousePos( this.decoratedToolBar.layout, event.pos );
         if ( found && found.isWidget )
             widgetUnderMouse=found;
+
+        if ( !widgetUnderMouse && this.decoratedWidget && this.decoratedWidget.rect.contains( event.pos ) ) {
+            if ( this.decoratedWidget.layout ) {
+                found = this.findLayoutItemAtMousePos( this.decoratedWidget.layout, event.pos );
+                if ( found && found.isWidget )
+                    widgetUnderMouse = found;
+            } else widgetUnderMouse = this.decoratedWidget;
+        }
     }
 
     // --- Search the overlay layout
@@ -1958,7 +1985,7 @@ VG.UI.Workspace.prototype.addToolButtonRole=function( toolbar, role )
      * @param {VG.UI.Toolbar} toolbar - The toolbar to add the new VG.UI.ToolButton to.
      * @param {VG.UI.ActionItemRole} role - The role to apply
      */
-    var button;
+    let button;
 
     if ( role === VG.UI.ActionItemRole.QuickMenu )
         button=VG.UI.DecoratedQuickMenu( "" );
@@ -1976,7 +2003,9 @@ VG.UI.Workspace.prototype.addToolButtonRole=function( toolbar, role )
 
     this.modelToolButtonRoles.push( button );
 
-    toolbar.addItem( button );
+    if ( role !== VG.UI.ActionItemRole.QuickMenu )
+        toolbar.addItem( button );
+
     return button;
 };
 

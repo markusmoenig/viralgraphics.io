@@ -876,7 +876,7 @@ VG.UI.VisualGraphicsGraySkin.prototype.activate=function()
 {
 	this.prefix=this.style.prefix + "gray_";
 
-	var path=this.style.path + "/" + this.path;
+	let path=this.style.path + "/" + this.path;
 
     // --- ScrollBar
 
@@ -945,8 +945,6 @@ VG.UI.VisualGraphicsGraySkin.prototype.activate=function()
     // --- Glyps
 
     VG.loadStyleSVG( path, this.prefix + "glyphs.svg" );
-    VG.loadStyleSVG( path, this.prefix + "vglogo_text.svg" );
-    VG.loadStyleSVG( path, this.prefix + "vglogo.svg" );
 
     // --- Window Close
 
@@ -964,6 +962,8 @@ VG.UI.VisualGraphicsGraySkin.prototype.activate=function()
     VG.loadStyleImage( path, this.prefix + "status_question.png" );
     VG.loadStyleImage( path, this.prefix + "status_success.png" );
     VG.loadStyleImage( path, this.prefix + "status_warning.png" );
+
+    VG.loadStyleImage( path, "vg_logo.png" );
 };
 
 VG.UI.stylePool.getStyleByName( "Visual Graphics" ).addSkin( new VG.UI.VisualGraphicsGraySkin() );

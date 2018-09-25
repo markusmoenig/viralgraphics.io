@@ -368,8 +368,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedToolBar=function( widget, canva
     // --- Background
     this.rect1.copy( widget.rect ); this.rect1.height=1;
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedToolBar.TopBorderColor );
-    //this.rect1.y+=1;
-    //canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedToolBar.TopBorderColor2 );
+
     this.rect1.y+=widget.rect.height-1;
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedToolBar.BottomBorderColor );
 
@@ -383,24 +382,28 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedToolBar=function( widget, canva
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedToolBar.BackGradColor2 );
 
     // --- Logo
-    var logoName="vglogo_text.svg";
-    //if ( this.workRect1.width < 400 ) logoName="vg_logo.svg"
 
-    this.rect1.copy( widget.rect );
+    let appLogo = VG.context.workspace.appLogo;
 
-    var svgLogo=VG.Utils.getSVGByName( logoName );
-    if ( svgLogo )
-    {
-        var group=svgLogo.groups[0];
+    this.rect1.x = 0; this.rect1.y = appLogo.rect.height - 1;
+    this.rect1.width = appLogo.rect.width; this.rect1.height = 1;
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedToolBar.BottomBorderColor );
 
-        this.rect1.x+=10; this.rect1.width=180;//250;
-        this.rect1.y+=4; this.rect1.height-=8;
+    this.rect1.x = appLogo.rect.width - 1; this.rect1.y = 0;
+    this.rect1.width = 1; this.rect1.height = appLogo.rect.height;
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedToolBar.BottomBorderColor );
 
-        canvas.drawSVG( svgLogo, undefined, this.rect1, this.skin.DecoratedToolBar.LogoColor );
+    if ( appLogo.image.isValid() ) {
+        let x = Math.round( ( appLogo.rect.width - appLogo.image.width ) / 2 ), y = Math.round( ( appLogo.rect.height - appLogo.image.height ) / 2 );
+        if ( !appLogo.canvasImage ) {
+            canvas.drawImage( { x: x, y: y }, appLogo.image );
+            VG.Utils.imageToHTML5Image( appLogo.image, ( image ) => {
+                appLogo.canvasImage = image;
+            } );
+        } else {
+            canvas.ctx.drawImage( appLogo.canvasImage, x, y );
+        }
     }
-
-    widget.contentRect.x+=265;//300;
-    widget.contentRect.width-=265;//300;
 };
 
 // --- DecoratedToolSeparator
