@@ -520,9 +520,9 @@ VG.UI.ToolButtonGroup=function( noneExclusiv )
     this.horizontalExpanding=false;
     this.verticalExpanding=false;
 
-    this.layout=VG.UI.Layout();
+    this.layout = VG.UI.Layout();
     this.layout.margin.clear();
-    this.layout.spacing=1;
+    this.layout.spacing = 1;
 
     this._index=-1;
 
@@ -680,8 +680,8 @@ VG.UI.DecoratedQuickMenu=function()
     this.horizontalExpanding=false;
     this.verticalExpanding=false;
 
-    this.minimumSize.set( VG.UI.stylePool.current.skin.DecoratedQuickMenu.Size.width, VG.UI.stylePool.current.skin.DecoratedQuickMenu.Size.height );
-    this.maximumSize.set( VG.UI.stylePool.current.skin.DecoratedQuickMenu.Size.width, VG.UI.stylePool.current.skin.DecoratedQuickMenu.Size.height );
+    this.minimumSize.set( VG.context.workspace.appLogo.rect.width, VG.context.workspace.appLogo.rect.height );
+    this.maximumSize.set( VG.context.workspace.appLogo.rect.width, VG.context.workspace.appLogo.rect.height );
 
     this.role=VG.UI.ActionItemRole.None;
     this._icon=0;
@@ -827,6 +827,7 @@ VG.UI.DecoratedQuickMenu.prototype.mouseMove=function( event )
 
 VG.UI.DecoratedQuickMenu.prototype.paintWidget=function( canvas )
 {
+    this.rect.height = VG.context.workspace.appLogo.rect.height;
     this.contentRect.set( this.rect );
 
     if ( this.open && canvas.delayedPaintWidgets.indexOf( this ) === -1 ) canvas.delayedPaintWidgets.push( this );
@@ -844,15 +845,16 @@ VG.UI.DecoratedToolBar=function()
 
     // ---
 
-    this.layout=VG.UI.Layout();
+    this.layout = VG.UI.Layout();
     this.layout.decorated=true;
-    this.layout.spacing=VG.UI.stylePool.current.skin.DecoratedToolBar.Spacing;
-    this.layout.margin.right=12;
+    this.layout.spacing = VG.UI.stylePool.current.skin.DecoratedToolBar.Spacing;
+    this.layout.margin.right = 12;
+    this.layout.noClipping = true;
 
     for( var i=0; i < arguments.length; ++i )
         this.addItem( arguments[i] );
 
-    this.maximumSize.height=VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
+    this.maximumSize.height = VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
 };
 
 VG.UI.DecoratedToolBar.prototype=VG.UI.Widget();

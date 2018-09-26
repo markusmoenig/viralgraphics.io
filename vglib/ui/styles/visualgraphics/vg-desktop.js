@@ -380,30 +380,6 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedToolBar=function( widget, canva
     canvas.draw2DShape( VG.Canvas.Shape2D.VerticalGradient, this.rect1, this.skin.DecoratedToolBar.BackGradColor1, this.skin.DecoratedToolBar.BackGradColor2 );
     this.rect1.y+=this.rect1.height;
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedToolBar.BackGradColor2 );
-
-    // --- Logo
-
-    let appLogo = VG.context.workspace.appLogo;
-
-    this.rect1.x = 0; this.rect1.y = appLogo.rect.height - 1;
-    this.rect1.width = appLogo.rect.width; this.rect1.height = 1;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedToolBar.BottomBorderColor );
-
-    this.rect1.x = appLogo.rect.width - 1; this.rect1.y = 0;
-    this.rect1.width = 1; this.rect1.height = appLogo.rect.height;
-    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedToolBar.BottomBorderColor );
-
-    if ( appLogo.image.isValid() ) {
-        let x = Math.round( ( appLogo.rect.width - appLogo.image.width ) / 2 ), y = Math.round( ( appLogo.rect.height - appLogo.image.height ) / 2 );
-        if ( !appLogo.canvasImage ) {
-            canvas.drawImage( { x: x, y: y }, appLogo.image );
-            VG.Utils.imageToHTML5Image( appLogo.image, ( image ) => {
-                appLogo.canvasImage = image;
-            } );
-        } else {
-            canvas.ctx.drawImage( appLogo.canvasImage, x, y );
-        }
-    }
 };
 
 // --- DecoratedToolSeparator
@@ -498,75 +474,65 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedQuickMenu=function( widget, can
 
     contentHeight-=widget.items.length-1;
 
-    // ---
+    // --- Logo
 
-    if ( widget.open )
-    {
-        this.rect2.copy( widget.contentRect );
-        this.rect2.y+=10;
-        this.rect2.height=this.skin.DecoratedToolBar.Height - widget.rect.y + VG.context.workspace.decoratedToolBar.rect.y - 10;
+    let appLogo = VG.context.workspace.appLogo, mousePos = VG.context.workspace.mousePos;
 
-        if ( canvas.twoD )
-            canvas.clearGLRect( this.rect2 );
+    this.rect1.x = 0; this.rect1.y = 0;
+    this.rect1.width = appLogo.rect.width; this.rect1.height = appLogo.rect.height;
 
-        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, this.rect2, this.skin.DecoratedQuickMenu.BorderColor );
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2.add( 1, 1, -2, 0, this.rect2), this.skin.DecoratedQuickMenu.BackgroundColor );
-    }
+    if ( widget.open ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedQuickMenu.ButtonBackgroundSelectedColor );
+    else if ( mousePos.x < appLogo.rect.width && mousePos.y < appLogo.rect.height ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedQuickMenu.ButtonBackgroundHoverColor );
+    else canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedQuickMenu.ButtonBackgroundColor );
 
-    if ( widget.iconName )
-    {
-        this.rect1.copy( widget.contentRect );
-        this.rect1.shrink( 20, 20, this.rect1 );
+    this.rect1.x = 0; this.rect1.y = appLogo.rect.height - 1;
+    this.rect1.width = appLogo.rect.width; this.rect1.height = 1;
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedToolBar.BottomBorderColor );
 
-        // --- Icon
-        if ( !widget.icon ) widget.icon=VG.context.imagePool.getImageByName( widget.iconName );
-        if ( widget.icon && widget.icon.isValid() )
-        {
-            let x=Math.round( widget.contentRect.x + (widget.contentRect.width - widget.icon.width)/2 );
-            let y=Math.round( widget.contentRect.y + (widget.contentRect.height - widget.icon.height)/2);
+    this.rect1.x = appLogo.rect.width - 1; this.rect1.y = 0;
+    this.rect1.width = 1; this.rect1.height = appLogo.rect.height;
+    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedToolBar.BottomBorderColor );
 
-            canvas.drawImage( { x : x, y : y }, widget.icon );
+    if ( appLogo.image.isValid() ) {
+        let x = Math.round( ( appLogo.rect.width - appLogo.image.width ) / 2 ), y = Math.round( ( appLogo.rect.height - appLogo.image.height ) / 2 );
+        if ( !appLogo.canvasImage ) {
+            canvas.drawImage( { x: x, y: y }, appLogo.image );
+            VG.Utils.imageToHTML5Image( appLogo.image, ( image ) => {
+                appLogo.canvasImage = image;
+            } );
+        } else {
+            canvas.ctx.drawImage( appLogo.canvasImage, x, y );
         }
-
-/*
-        var svg=VG.Utils.getSVGByName( widget.svgName );
-        if ( svg )
-        {
-            svgGroup=svg.getGroupByName( widget.svgGroupName );
-
-            if ( widget.visualState === VG.UI.Widget.VisualState.Hover || widget.mouseIsDown || widget.open )
-                canvas.drawSVG( svg, svgGroup, this.rect1, this.skin.DecoratedQuickMenu.HoverColor );
-            else
-                canvas.drawSVG( svg, svgGroup, this.rect1, this.skin.DecoratedQuickMenu.Color );
-        }*/
     }
+
+    // --- Stripes
+
+    this.rect1.x = appLogo.rect.width - 14;
+    this.rect1.y = appLogo.rect.height - 11;
+    this.rect1.width = 10;
+    this.rect1.height = 1;
+
+    for ( let i = 0; i < 3; ++i ) {
+        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedQuickMenu.StripeColor );
+        this.rect1.y += 3;
+    }
+
+    // --- Menu
 
     if ( widget.open )
     {
         canvas.pushFont( this.skin.DecoratedQuickMenu.Items.Font );
 
-        this.rect1.x=0; this.rect1.y=VG.context.workspace.decoratedToolBar.rect.bottom();
-        this.rect1.width=widget.rect.x+1; this.rect1.height=1;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedQuickMenu.BorderColor );
+        this.rect2.x = 0; this.rect2.y = appLogo.rect.height;
+        this.rect2.width = this.skin.DecoratedQuickMenu.Items.Size.width; this.rect2.height = contentHeight;
 
-        this.rect2.x=VG.context.workspace.rect.x; this.rect2.y=VG.context.workspace.decoratedToolBar.rect.bottom();
-        this.rect2.width=widget.rect.right() - VG.context.workspace.rect.x; this.rect2.height=contentHeight;
         widget.popupRect.copy( this.rect2 );
-
-        this.rect1.copy( this.rect2 );
 
         if ( canvas.twoD )
             canvas.clearGLRect( this.rect2 );
 
-        this.rect1.width=1;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedQuickMenu.BorderColor );
-        this.rect1.x+=this.rect2.width-1;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedQuickMenu.BorderColor );
         this.rect1.copy( this.rect2 );
-        this.rect1.y+=this.rect2.height-1; this.rect1.height=1;
-        canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedQuickMenu.BorderColor );
-
-        this.rect1.copy( this.rect2 );
+        canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutline, this.rect2, this.skin.DecoratedQuickMenu.BorderColor );
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2.add( 1, 1, -2, -2 ), this.skin.DecoratedQuickMenu.BackgroundColor );
 
         this.rect1.add( this.skin.DecoratedQuickMenu.ContentMargin.left, this.skin.DecoratedQuickMenu.ContentMargin.top,

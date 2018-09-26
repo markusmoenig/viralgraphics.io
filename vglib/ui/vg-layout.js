@@ -559,7 +559,8 @@ VG.UI.Layout.prototype.layout=function( canvas, dontDraw )
         this.contentRect.height-=VG.UI.stylePool.current.skin.TitleBar.Height;
     }
 
-    canvas.pushClipRect( this.contentRect );
+    if ( !this.noClipping )
+        canvas.pushClipRect( this.contentRect );
 /*
     if ( this.children.length === 1 && this.children[0].isLayout )
     {
@@ -764,7 +765,8 @@ VG.UI.Layout.prototype.layout=function( canvas, dontDraw )
         this.vScrollbar.paintWidget( canvas );
     }
 
-    canvas.popClipRect();
+    if ( !this.noClipping )
+        canvas.popClipRect();
 };
 
 VG.UI.Layout.prototype.setHScrollbarDimensions=function( canvas )

@@ -140,6 +140,12 @@ VG.UI.VisualGraphicsDarkGraySkin=function()
 
     this.DecoratedQuickMenu={
 
+        ButtonBackgroundColor : VG.Core.Color( 120, 120, 120 ),
+        ButtonBackgroundHoverColor : VG.Core.Color( 157, 157, 157 ),
+        ButtonBackgroundSelectedColor : VG.Core.Color( 111, 107, 107 ),
+
+        StripeColor : VG.Core.Color( 55, 55, 55 ),
+
         HoverColor : VG.Core.Color( 255, 255, 255 ),
         Color : VG.Core.Color( 180, 180, 180 ),
         BorderColor : VG.Core.Color( 255, 255, 255 ),

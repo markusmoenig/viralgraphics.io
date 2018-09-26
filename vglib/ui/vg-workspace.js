@@ -460,16 +460,17 @@ VG.UI.Workspace.prototype.paintWidget=function()
     if ( this.decoratedToolBar )
     {
         this.decoratedToolBar.rect.copy( this.contentRect );
-        this.decoratedToolBar.rect.x += this.appLogo.rect.width;
-        this.decoratedToolBar.rect.width -= this.appLogo.rect.width;
+        this.decoratedToolBar.rect.x = 0;//this.appLogo.rect.width;
+        // this.decoratedToolBar.rect.width -= this.appLogo.rect.width;
         this.decoratedToolBar.rect.height = VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
 
         this.decoratedToolBar.paintWidget( this.canvas );
 
         if ( this.decoratedWidget )
         {
-            this.decoratedWidget.rect.copy( this.decoratedToolBar.rect );
-            this.decoratedWidget.rect.y += VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
+            this.decoratedWidget.rect.x = this.appLogo.rect.width;
+            this.decoratedWidget.rect.y = this.contentRect.y + VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
+            this.decoratedWidget.rect.width = this.contentRect.width - this.appLogo.rect.width;
             this.decoratedWidget.rect.height = this.appLogo.rect.height - VG.UI.stylePool.current.skin.DecoratedToolBar.Height;
 
             if ( this.layout && this.layout.children )
@@ -2014,9 +2015,7 @@ VG.UI.Workspace.prototype.addToolButtonRole=function( toolbar, role )
     button.role=role;
 
     this.modelToolButtonRoles.push( button );
-
-    if ( role !== VG.UI.ActionItemRole.QuickMenu )
-        toolbar.addItem( button );
+    toolbar.addItem( button );
 
     return button;
 };
