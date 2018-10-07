@@ -11,7 +11,6 @@ Main Features:
 * Many different layouts and widgets.
 * Integrated backend for user management, application folders and more.
 * Compile and upload applications to the web using vgmake.js.
-* An integrated nodes system. The node application (source code in apps/nodes) can be viewed [here](https://visualgraphics.tv/apps/nodes)
 * WebGL abstraction classes.
 
 ViralGraphics.io was previously named VisualGraphics.tv. There may stll be references and links to the old name in the documentation.
@@ -23,7 +22,8 @@ The first major application based on ViralGraphics.io is [PaintSupreme 3D](https
 Applications using ViralGraphics.io
 
 1. [PaintSupreme 3D](https://www.paintsupreme3d.com)
-2. [RaySupreme DF](https://www.raysupreme.com) (Under Development)
+2. [Material-Z](https://www.material-z.com)
+3. [RaySupreme DF](https://www.raysupreme.com) (Under Development)
 
 ![Spaceship Screenshot](https://s3-us-west-2.amazonaws.com/braindistrict/Spaceship.jpg "PaintSupreme 3D Screenshot")
 

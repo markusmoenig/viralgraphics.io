@@ -2292,11 +2292,9 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
             }
 
             object.iconName="_quickmenu.png";
-            object.toolTip="Show the application menu.";
+            // object.toolTip="Show the application menu.";
             object.statusTip="Show the application menu.";
 
-            // object.svgName="glyphs.svg";
-            // object.svgGroupName="quickmenu";
             this.quickMenu=object;
         break;
 

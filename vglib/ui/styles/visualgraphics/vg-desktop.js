@@ -482,7 +482,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedQuickMenu=function( widget, can
     this.rect1.width = appLogo.rect.width; this.rect1.height = appLogo.rect.height;
 
     if ( widget.open ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedQuickMenu.ButtonBackgroundSelectedColor );
-    else if ( mousePos.x < appLogo.rect.width && mousePos.y < appLogo.rect.height ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedQuickMenu.ButtonBackgroundHoverColor );
+    else if ( mousePos.x < appLogo.rect.width && mousePos.y < appLogo.rect.height && !VG.context.workspace.windows.length ) canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedQuickMenu.ButtonBackgroundHoverColor );
     else canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedQuickMenu.ButtonBackgroundColor );
 
     this.rect1.x = 0; this.rect1.y = appLogo.rect.height - 1;

@@ -436,34 +436,37 @@ VG.UI.ToolBarButtonGroup.prototype.calcSize=function( canvas )
 
 VG.UI.ToolBarButtonGroup.prototype.addImageButton=function( iconName, toolTip )
 {
-    var button=VG.UI.ToolBarButton();
+    let button = VG.UI.ToolBarButton();
     button.icon=VG.Utils.getImageByName( iconName );
-    button.toolTip=toolTip;
+
+    if ( this.useStatusTips ) button.statusTip = toolTip;
+    else button.toolTip = toolTip;
 
     this.addButton( button );
-
     return button;
 };
 
 VG.UI.ToolBarButtonGroup.prototype.addSVGButton=function( svgName, groupName, toolTip )
 {
-    var button=VG.UI.ToolBarButton();
+    let button = VG.UI.ToolBarButton();
     button.svgName=svgName;
     button.svgGroupName=groupName;
-    button.toolTip=toolTip;
+
+    if ( this.useStatusTips ) button.statusTip = toolTip;
+    else button.toolTip = toolTip;
 
     this.addButton( button );
-
     return button;
 };
 
 VG.UI.ToolBarButtonGroup.prototype.addTextButton=function( text, toolTip )
 {
-    var button=VG.UI.ToolBarButton( text );
-    button.toolTip=toolTip;
+    let button = VG.UI.ToolBarButton( text );
+
+    if ( this.useStatusTips ) button.statusTip = toolTip;
+    else button.toolTip = toolTip;
 
     this.addButton( button );
-
     return button;
 };
 
@@ -677,8 +680,9 @@ VG.UI.DecoratedQuickMenu=function()
     VG.UI.Widget.call( this );
     this.name="DecoratedQuickMenu";
 
-    this.horizontalExpanding=false;
-    this.verticalExpanding=false;
+    this.horizontalExpanding = false;
+    this.verticalExpanding = false;
+    this.supportsAutoFocus = this.supportsFocus = true;
 
     this.minimumSize.set( VG.context.workspace.appLogo.rect.width, VG.context.workspace.appLogo.rect.height );
     this.maximumSize.set( VG.context.workspace.appLogo.rect.width, VG.context.workspace.appLogo.rect.height );

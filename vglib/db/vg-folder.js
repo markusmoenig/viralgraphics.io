@@ -131,7 +131,7 @@ VG.DB.Folder.prototype.addContent=function( name, content, callback )
      */
     var params={ "name" : name, "data" : content };
     VG.sendBackendRequest( "/folder/" + this.id + "/content", JSON.stringify( params ), function( responseText ) {
-        var response=JSON.parse( responseText );
+        let response=JSON.parse( responseText );
 
         if ( response.status === "ok" ) {
             if ( callback ) callback( true );
