@@ -1019,6 +1019,19 @@ VG.UI.ToolSettings.prototype.addItem=function( text, callback )
     return item;
 };
 
+VG.UI.ToolSettings.prototype.close=function( )
+{
+    if ( VG.context.workspace.overlayWidget && VG.context.workspace.overlayWidget === this.widget ) {
+        if ( VG.context.workspace.overlayWidget.parent ) {
+            VG.context.workspace.overlayWidget.parent.open = false;
+            VG.context.workspace.overlayWidget.parent.childWidgets = [];
+        }
+        VG.context.workspace.overlayWidget = undefined;
+    }
+    this.open=false;
+    VG.update();
+};
+
 VG.UI.ToolSettings.prototype.mouseLeave=function( event )
 {
     let closeExisting = () => {

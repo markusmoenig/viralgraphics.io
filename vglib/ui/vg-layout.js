@@ -1598,6 +1598,14 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
         this.contentRect.height-=VG.UI.stylePool.current.skin.TitleBar.Height;
     }
 
+    // --- If single item with empty label make it occupy all of the space
+    if ( this.items.length === 1 && this.items[0].label === "" ) {
+        let widget = this.items[0].widget;
+        widget.rect.copy( this.contentRect.shrink( 2, 2 ) );
+        widget.paintWidget( canvas );
+        return;
+    }
+
     // --- Check for H Scrollbar
     if ( this.allowScrollbars && Math.floor( this.rect.width ) < Math.floor( this.size.width ) ) {
         this.needsHScrollbar=true;
