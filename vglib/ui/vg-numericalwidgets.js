@@ -224,6 +224,16 @@ Object.defineProperty( VG.UI.Vector2Edit.prototype, "toolTip", {
     }
 });
 
+Object.defineProperty( VG.UI.Vector2Edit.prototype, "statusTip", {
+    get: function() {
+        return this.value1Edit.statusTip;
+    },
+    set: function( value ) {
+        this.value1Edit.statusTip=value;
+        this.value2Edit.statusTip=value;
+    }
+});
+
 Object.defineProperty( VG.UI.Vector2Edit.prototype, "disabled", {
     get: function() {
         return this.value1Edit.disabled;
@@ -353,6 +363,17 @@ Object.defineProperty( VG.UI.Vector3Edit.prototype, "toolTip", {
         this.value1Edit.toolTip=value;
         this.value2Edit.toolTip=value;
         this.value3Edit.toolTip=value;
+    }
+});
+
+Object.defineProperty( VG.UI.Vector3Edit.prototype, "statusTip", {
+    get: function() {
+        return this.value1Edit.statusTip;
+    },
+    set: function( value ) {
+        this.value1Edit.statusTip=value;
+        this.value2Edit.statusTip=value;
+        this.value3Edit.statusTip=value;
     }
 });
 

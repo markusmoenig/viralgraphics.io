@@ -494,7 +494,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawDecoratedQuickMenu=function( widget, can
     canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect1, this.skin.DecoratedToolBar.BottomBorderColor );
 
     if ( appLogo.image.isValid() ) {
-        let x = Math.round( ( appLogo.rect.width - appLogo.image.width ) / 2 ), y = Math.round( ( appLogo.rect.height - appLogo.image.height ) / 2 );
+        let x = Math.round( ( appLogo.rect.width - appLogo.image.width ) / 2 ), y = Math.round( ( appLogo.rect.height - appLogo.image.height ) / 2 ) - 1;
         if ( !appLogo.canvasImage ) {
             canvas.drawImage( { x: x, y: y }, appLogo.image );
             VG.Utils.imageToHTML5Image( appLogo.image, ( image ) => {

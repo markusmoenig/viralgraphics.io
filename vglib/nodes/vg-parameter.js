@@ -731,7 +731,7 @@ VG.Nodes.ParamHtml=function( data, name, text, value )
     this.text=text ? text : "Value";
 
     this.data=data;
-    if ( !data[name] ) data[name]=value;
+    data[name]=value;
 };
 
 VG.Nodes.ParamHtml.prototype=VG.Nodes.Param();

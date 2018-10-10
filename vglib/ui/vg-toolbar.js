@@ -932,6 +932,8 @@ VG.UI.ToolSettings=function( label, options )
     VG.UI.Widget.call( this );
     this.name="ToolSettings";
 
+    this.supportsFocus = this.supportsAutoFocus = true;
+
     this.options = options || {};
     this.label = label;
     this.label.textMargin = VG.Core.Size( 12, 12 );
@@ -1054,6 +1056,14 @@ VG.UI.ToolSettings.prototype.mouseLeave=function( event )
             VG.update();
         }
     }
+};
+
+VG.UI.ToolSettings.prototype.mouseMove=function( event )
+{
+    let oldCloseButtonHover = this.closeButtonHover;
+    this.closeButtonHover = this.closeButtonRect.contains( event.pos );
+    if ( this.closeButtonHover !== oldCloseButtonHover )
+        VG.update();
 };
 
 VG.UI.ToolSettings.prototype.mouseDown=function( event )
