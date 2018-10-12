@@ -108,7 +108,7 @@ VG.Utils.getSVGByName=function( name )
             return VG.context.svgPool.svgs[i];
     }
 
-    var prefixName=VG.UI.stylePool.current.skin.prefix + name;
+    let prefixName = VG.UI.stylePool.current.skin.prefix + name;
     for( i=0; i < VG.context.svgPool.svgs.length; ++i ) {
         if ( VG.context.svgPool.svgs[i].name === prefixName )
             return VG.context.svgPool.svgs[i];
@@ -127,7 +127,7 @@ VG.Utils.getSVGByName=function( name )
 
 VG.Utils.getSVGGroupByName=function( name, group )
 {
-    var svg=VG.Utils.getSVGByName( name );
+    let svg = VG.Utils.getSVGByName( name );
 
     if ( svg ) return svg.getGroupByName( group );
     return null;

@@ -2622,7 +2622,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTitleBar=function( canvas, rect, title )
 
 // --- TitleBar
 
-VG.UI.VisualGraphicsStyle.prototype.drawToolSettings = function( widget, canvas )
+VG.UI.VisualGraphicsStyle.prototype.drawToolSettings = function( widget, canvas, svg )
 {
     if ( canvas.twoD )
         canvas.clearGLRect( widget.contentRect );
@@ -2659,9 +2659,14 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolSettings = function( widget, canvas 
             if ( this.rect1.y < 100 ) this.rect1.height = VG.context.workspace.rect.height - this.rect1.y - 20;
             else {
                 // --- If widget has header, just move it up, as it has its own close symbol
-                if ( !widget.options.noHeader ) this.rect1.y -= VG.context.workspace.rect.height - this.rect1.y;
+                if ( !widget.options.noHeader ) {
+                    // this.rect1.y -= VG.context.workspace.rect.height - this.rect1.y;
+                    this.rect1.y -= this.rect1.bottom() - VG.context.workspace.rect.height;
+                }
                 else // Otherwise align it on top of the opening symbol
-                this.rect1.y = widget.parent.rect.y - this.rect1.height;// - widget.contentRect.height;
+                {
+                    this.rect1.y = widget.parent.rect.y - this.rect1.height;// - widget.contentRect.height;
+                }
             }
         }
 
@@ -2710,11 +2715,10 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolSettings = function( widget, canvas 
                 canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, this.skin.ToolSettings.BackColor );
             }
 
-            var svg=VG.Utils.getSVGByName( "glyphs.svg" );
             if ( svg ) {
                 this.rect2.shrink( 7, 7, this.rect2 );
 
-                svgGroup=svg.getGroupByName( "Close" );
+                let svgGroup = svg.getGroupByName( "Close" );
                 canvas.drawSVG( svg, svgGroup, this.rect2, this.skin.Widget.TextColor );
             }
 

@@ -110,6 +110,8 @@ VG.UI.Workspace=function()
     this.autoRedrawInterval=2000;
     this.maxRedrawInterval=0;//1000/60;
 
+    this.overlayWidgets = [];
+
     // --- Current Project Info
 
     this.projectName="Untitled";
@@ -681,14 +683,19 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
 
     // --- Search the overlay layout
 
-    if ( this.overlayWidget )
+    if ( this.overlayWidgets.length )
     {
-        found=this.findLayoutItemAtMousePos( this.overlayWidget.layout, event.pos );
-        if ( found && found.isWidget )
-            widgetUnderMouse=found;
+        for ( let i = this.overlayWidgets.length - 1; i >= 0; --i )
+        {
+            if ( widgetUnderMouse ) break;
 
-        if ( !widgetUnderMouse && this.overlayWidget.rect.contains( event.pos ) ) {
-            widgetUnderMouse = this.overlayWidget;
+            let overlayWidget =  this.overlayWidgets[i];
+            found=this.findLayoutItemAtMousePos( overlayWidget.layout, event.pos );
+            if ( found && found.isWidget )
+                widgetUnderMouse=found;
+
+            if ( !widgetUnderMouse && overlayWidget.rect.contains( event.pos ) )
+                widgetUnderMouse = overlayWidget;
         }
     }
 

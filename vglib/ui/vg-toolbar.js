@@ -948,13 +948,17 @@ VG.UI.ToolSettings=function( label, options )
     this.popupRect=VG.Core.Rect();
     this.closeButtonRect=VG.Core.Rect();
 
-    this.widget = VG.UI.Widget();
+    this.widget = new VG.UI.Widget();
     this.widget.supportsFocus = true;
     this.widget.layout = this.options.layout;
     this.widget.parent = this;
-    this.widget.mouseDown=function( event ) {
+
+    this.svgGroup = VG.Utils.getSVGByName( "glyphs.svg" );
+
+    this.widget.mouseDown = ( event ) => {
         if ( this.open && this.closeButtonRect.contains( event.pos ) ) {
 
+            /*
             if ( VG.context.workspace.overlayWidget.parent ) {
                 VG.context.workspace.overlayWidget.parent.open = false;
                 VG.context.workspace.overlayWidget.parent.childWidgets = [];
@@ -962,45 +966,37 @@ VG.UI.ToolSettings=function( label, options )
 
             this.open = false;
             VG.context.workspace.overlayWidget = undefined;
-        }
-    }.bind( this );
+            */
 
-    this.widget.mouseMove=function( event ) {
+            this.close();
+        }
+    };
+
+    this.widget.mouseMove = ( event ) => {
+
         if ( this.open && !this.widget.rect.contains( event.pos ) ) {
 
+            /*
             if ( VG.context.workspace.overlayWidget.parent ) {
                 VG.context.workspace.overlayWidget.parent.open = false;
                 VG.context.workspace.overlayWidget.parent.childWidgets = [];
             }
 
             this.open = false;
-            VG.context.workspace.overlayWidget = undefined;
+            VG.context.workspace.overlayWidget = undefined;*/
+
+            this.close();
         }
-    }.bind( this );
+    };
 
-    this.widget.mouseLeave=function( event ) {
-
-        let closeExisting = () => {
-            if ( VG.context.workspace.overlayWidget && VG.context.workspace.overlayWidget === this.widget ) {
-                if ( VG.context.workspace.overlayWidget.parent ) {
-                    VG.context.workspace.overlayWidget.parent.open = false;
-                    VG.context.workspace.overlayWidget.parent.childWidgets = [];
-                }
-                VG.context.workspace.overlayWidget = undefined;
-            }
-        };
+    this.widget.mouseLeave = ( event ) => {
 
         if ( this.options.autoClose && this.open )
         {
             if ( !this.rect.contains( event.pos ) && !this.widget.rect.contains( event.pos ) )
-            {
-                closeExisting();
-                this.open=false;
-
-                VG.update();
-            }
+                this.close();
         }
-    }.bind( this );
+    };
 
     this.childWidgets = [];
 };
@@ -1023,38 +1019,19 @@ VG.UI.ToolSettings.prototype.addItem=function( text, callback )
 
 VG.UI.ToolSettings.prototype.close=function( )
 {
-    if ( VG.context.workspace.overlayWidget && VG.context.workspace.overlayWidget === this.widget ) {
-        if ( VG.context.workspace.overlayWidget.parent ) {
-            VG.context.workspace.overlayWidget.parent.open = false;
-            VG.context.workspace.overlayWidget.parent.childWidgets = [];
-        }
-        VG.context.workspace.overlayWidget = undefined;
-    }
-    this.open=false;
+    this.open = false;
+    this.childWidgets = [];
+    this.removeFromOverlays();
+
     VG.update();
 };
 
 VG.UI.ToolSettings.prototype.mouseLeave=function( event )
 {
-    let closeExisting = () => {
-        if ( VG.context.workspace.overlayWidget && VG.context.workspace.overlayWidget === this.widget ) {
-            if ( VG.context.workspace.overlayWidget.parent ) {
-                VG.context.workspace.overlayWidget.parent.open = false;
-                VG.context.workspace.overlayWidget.parent.childWidgets = [];
-            }
-            VG.context.workspace.overlayWidget = undefined;
-        }
-    };
-
     if ( this.options.autoClose && this.open )
     {
         if ( !this.rect.contains( event.pos ) && !this.widget.rect.contains( event.pos ) )
-        {
-            closeExisting();
-            this.open=false;
-
-            VG.update();
-        }
+            this.close();
     }
 };
 
@@ -1068,22 +1045,12 @@ VG.UI.ToolSettings.prototype.mouseMove=function( event )
 
 VG.UI.ToolSettings.prototype.mouseDown=function( event )
 {
-    let oldOpenState=this.open;
-
-    let closeExisting = () => {
-        if ( VG.context.workspace.overlayWidget && VG.context.workspace.overlayWidget !== this.widget ) {
-            if ( VG.context.workspace.overlayWidget.parent ) {
-                VG.context.workspace.overlayWidget.parent.open = false;
-                VG.context.workspace.overlayWidget.parent.childWidgets = [];
-            }
-            VG.context.workspace.overlayWidget = undefined;
-        }
-    };
+    let oldOpenState = this.open;
 
     if ( this.rect.contains( event.pos) )
     {
-        this.mouseIsDown=true;
-        this.open=!this.open;
+        this.mouseIsDown = true;
+        this.open = !this.open;
 
         // if ( this.popupRect.contains( event.pos ) )
             // this.open=false;
@@ -1095,20 +1062,17 @@ VG.UI.ToolSettings.prototype.mouseDown=function( event )
             this.aboutToShow();
 
         if ( this.widget.layout ) {
-            closeExisting();
-            VG.context.workspace.overlayWidget = this.widget;
+            if ( !VG.context.workspace.overlayWidgets.includes( this.widget ) )
+                VG.context.workspace.overlayWidgets.push( this.widget );
             this.setFocus( this.widget );
         }
     }
 
     if ( this.open ) {
-        closeExisting();
-        VG.context.workspace.overlayWidget = this.widget;
+        if ( !VG.context.workspace.overlayWidgets.includes( this.widget ) )
+            VG.context.workspace.overlayWidgets.push( this.widget );
         this.childWidgets = [this.widget];
-    } else {
-        VG.context.workspace.overlayWidget = undefined;
-        this.childWidgets = [];
-    }
+    } else this.close();
 
     VG.update();
 };
@@ -1121,10 +1085,19 @@ VG.UI.ToolSettings.prototype.mouseUp=function( event )
     }
 };
 
+VG.UI.ToolSettings.prototype.removeFromOverlays=function( event )
+{
+    let index = VG.context.workspace.overlayWidgets.indexOf( this.widget );
+    while( index >= 0 ) {
+        VG.context.workspace.overlayWidgets.splice( index, 1 );
+        index = VG.context.workspace.overlayWidgets.indexOf( this.widget );
+    }
+};
+
 VG.UI.ToolSettings.prototype.paintWidget=function( canvas )
 {
     this.contentRect.copy( this.rect );
 
-    if ( this.open && canvas.delayedPaintWidgets.indexOf( this ) === -1 ) canvas.delayedPaintWidgets.unshift( this );
-    else VG.UI.stylePool.current.drawToolSettings( this, canvas );
+    if ( this.open && canvas.delayedPaintWidgets.indexOf( this ) === -1 ) canvas.delayedPaintWidgets.push( this );
+    else VG.UI.stylePool.current.drawToolSettings( this, canvas, this.svgGroup );
 };
