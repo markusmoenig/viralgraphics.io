@@ -1599,12 +1599,15 @@ VG.UI.TabWidget.prototype=VG.UI.Widget();
 
 VG.UI.TabWidget.prototype.addItem=function( text, object )
 {
+    let item = new VG.UI.TabWidgetItem( text, object );
+
     if ( !this.layout.current ) {
         this.layout.current=object;
+        this.currentItem = item;
         if ( this.changed ) this.changed( object );
     }
 
-    this.items.push( new VG.UI.TabWidgetItem( text, object ) );
+    this.items.push( item );
     this.layout.addChild( object );
 
     VG.update();
@@ -1641,6 +1644,7 @@ VG.UI.TabWidget.prototype.mouseDown=function( event )
 
             if ( event.pos.x >= item.rect.x && event.pos.x <= item.rect.x + item.rect.width ) {
                 this.layout.current=item.object;
+                this.currentItem = item;
                 if ( this.changed ) this.changed( item.object, i );
             }
         }
