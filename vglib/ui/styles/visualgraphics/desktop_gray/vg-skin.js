@@ -206,7 +206,7 @@ VG.UI.VisualGraphicsGraySkin=function()
         },
         h2 : {
             Font : VG.Font.Font( "Open Sans Bold", 18 ),
-            Color : VG.Core.Color( 244, 244, 244 ),
+            Color : VG.Core.Color( "#e452ef" ),
 
             Margin : VG.Core.Margin( 10, 5, 10, 5 ),
             ResetLayout : true,
@@ -970,6 +970,8 @@ VG.UI.VisualGraphicsGraySkin.prototype.activate=function()
     VG.loadStyleImage( path, this.prefix + "status_warning.png" );
 
     VG.loadStyleImage( path, "vg_logo.png" );
+    VG.loadStyleImage( path, "vg_text_logo.png" );
+    VG.loadStyleImage( path, "vg_powered_bd.png" );
 };
 
 VG.UI.stylePool.getStyleByName( "Visual Graphics" ).addSkin( new VG.UI.VisualGraphicsGraySkin() );

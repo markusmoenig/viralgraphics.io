@@ -78,23 +78,17 @@ VG.UI.Window.prototype.setFocus=function()
 
 VG.UI.Window.prototype.calcSize=function( canvas )
 {
-    var size=this.preferredSize;
+    let size = this.preferredSize;
 
     if ( this.layout ) {
-        var layoutSize=this.layout.calcSize( canvas );//VG.Core.Size( 0, 0 );
+        let layoutSize = this.layout.calcSize( canvas );//VG.Core.Size( 0, 0 );
+        size.width = layoutSize.width;
 
-        //layoutSize.width+=170;
-        //layoutSize.height+=10;
+        if ( this.rounded ) size.height=VG.UI.stylePool.current.skin.RoundedWindow.HeaderHeight + layoutSize.height;
+        else size.height=VG.UI.stylePool.current.skin.Window.HeaderHeight + layoutSize.height;
 
-        size.width=layoutSize.width;
-
-        if ( this.rounded )
-            size.height=VG.UI.stylePool.current.skin.RoundedWindow.HeaderHeight + layoutSize.height;
-        else
-            size.height=VG.UI.stylePool.current.skin.Window.HeaderHeight + layoutSize.height;
-
-        this.rect.width=size.width;
-        this.rect.height=size.height;
+        this.rect.width = size.width;
+        this.rect.height = size.height;
     }
 
     return size;
@@ -219,16 +213,16 @@ VG.UI.Dialog.prototype.calcSize=function( canvas )
         this.layout.maximumSize.set( this.maximumSize.width, this.maximumSize.height );
     }
 
-    var size=VG.UI.Window.prototype.calcSize.call( this, canvas );
+    let size=VG.UI.Window.prototype.calcSize.call( this, canvas );
 
-    if ( this.buttonLayout.visible )
-        this.buttonLayoutSize.set( this.buttonLayout.calcSize( canvas ) );
-    else this.buttonLayoutSize.set( 0, 0 );
+    if ( this.buttonLayout ) {
+        if ( this.buttonLayout.visible ) this.buttonLayoutSize.set( this.buttonLayout.calcSize( canvas ) );
+        else this.buttonLayoutSize.set( 0, 0 );
 
-    //size.width+=this.buttonLayoutSize.width;
-    size.height+=this.buttonLayoutSize.height;
+        size.height += this.buttonLayoutSize.height;
 
-    if ( this.buttonLayout.minimumSize.width > size.width ) size.width=this.buttonLayout.minimumSize.width;
+        if ( this.buttonLayout.minimumSize.width > size.width ) size.width=this.buttonLayout.minimumSize.width;
+    }
 
     this.checkSizeDimensionsMinMax( size );
 
@@ -309,11 +303,13 @@ VG.UI.Dialog.prototype.paintWidget=function( canvas )
         this.layout.layout( canvas );
     }
 
-    this.buttonLayout.rect.set( this.contentRect );
-    this.buttonLayout.rect.y=this.contentRect.bottom() - this.buttonLayoutSize.height;
-    this.buttonLayout.rect.height=this.buttonLayoutSize.height;
+    if ( this.buttonLayout ) {
+        this.buttonLayout.rect.set( this.contentRect );
+        this.buttonLayout.rect.y=this.contentRect.bottom() - this.buttonLayoutSize.height;
+        this.buttonLayout.rect.height=this.buttonLayoutSize.height;
 
-    this.buttonLayout.layout( canvas );
+        this.buttonLayout.layout( canvas );
+    }
 };
 
 /**Creates an VG.UI.StatusDialog object. VG.UI.StatusDialog inherits from {@link VG.UI.Dialog}.<br>

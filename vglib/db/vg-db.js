@@ -88,14 +88,14 @@ VG.DB.userLogIn=function( userName, password, callback )
     var parameters={username : userName, password : password};
 
 	VG.sendBackendRequest( "/user/login", JSON.stringify( parameters ), function( responseText ) {
-    	var response=JSON.parse( responseText );
+        let response = JSON.parse( responseText );
 
     	if ( callback ) {
 			if ( response.status === "ok" && response.user.username && response.user.username.length )
 			{
-				callback( true, response.user.username, response.user.id, response.user.admin );
+				callback( { success: true, userName: response.user.username, userId: response.user.id, isAppAdmin: response.user.admin } );
 			}
-    		else callback( false );
+    		else callback( { success: false, message: response.message } );
     	}
 
     }, "POST" );

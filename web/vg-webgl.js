@@ -97,12 +97,12 @@ var VG;
             // --- WebGL 1 extensions
             this.supportsFloatTextures = gl.getExtension("OES_texture_float");
             this.supportsFloatLinear = gl.getExtension("OES_texture_float_linear");
-            this.queryExt = VG.WebGL.gl.getExtension('EXT_disjoint_timer_query');
+            this.disjointTimerExt = VG.WebGL.gl.getExtension('EXT_disjoint_timer_query');
         } else {
             // --- WebGL 2 extensions
-            this.queryExt = VG.WebGL.gl.getExtension('EXT_disjoint_timer_query_webgl2');
-            if ( !this.queryExt )
-                this.queryExt = VG.WebGL.gl.getExtension('EXT_disjoint_timer_query');
+            this.disjointTimerExt = VG.WebGL.gl.getExtension('EXT_disjoint_timer_query_webgl2');
+            if ( !this.disjointTimerExt )
+                this.disjointTimerExt = VG.WebGL.gl.getExtension('EXT_disjoint_timer_query');
             this.supportsFloatTextures = gl.getExtension("EXT_color_buffer_float");
             this.supportsFloatLinear = gl.getExtension("OES_texture_float_linear");
         }

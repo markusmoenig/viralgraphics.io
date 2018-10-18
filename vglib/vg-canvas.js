@@ -468,7 +468,7 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
     switch( shape )
     {
         case VG.Canvas.Shape2D.Rectangle:
-            ctx.fillStyle = col1.toCanvasStyle();
+            ctx.fillStyle = col1.canvasStyle;
             ctx.fillRect( rect.x, rect.y, rect.width, rect.height );
         break;
 
@@ -479,8 +479,8 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
         case VG.Canvas.Shape2D.VerticalGradient:
         {
             let lingrad = ctx.createLinearGradient(0,rect.y,0, rect.bottom() );
-            lingrad.addColorStop( 0, col1.toCanvasStyle() );
-            lingrad.addColorStop( 1, col2.toCanvasStyle() );
+            lingrad.addColorStop( 0, col1.canvasStyle );
+            lingrad.addColorStop( 1, col2.canvasStyle );
 
             ctx.fillStyle = lingrad;
             ctx.fillRect( rect.x, rect.y, rect.width, rect.height );
@@ -490,8 +490,8 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
         case VG.Canvas.Shape2D.HorizontalGradient:
         {
             let lingrad = ctx.createLinearGradient(rect.x,0,rect.right(),0);
-            lingrad.addColorStop( 0, col1.toCanvasStyle() );
-            lingrad.addColorStop( 1, col2.toCanvasStyle() );
+            lingrad.addColorStop( 0, col1.canvasStyle );
+            lingrad.addColorStop( 1, col2.canvasStyle );
 
             ctx.fillStyle = lingrad;
             ctx.fillRect( rect.x, rect.y, rect.width, rect.height );
@@ -499,13 +499,13 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
         break;
 
         case VG.Canvas.Shape2D.RectangleOutline:
-            ctx.strokeStyle = col1.toCanvasStyle();
+            ctx.strokeStyle = col1.canvasStyle;
             ctx.lineWidth = 1.0;
             ctx.strokeRect( rect.x + 0.5, rect.y + 0.5, rect.width - 1.0, rect.height - 1.0 );
         break;
 
         case VG.Canvas.Shape2D.RectangleOutlineMin1px:
-            ctx.strokeStyle = col1.toCanvasStyle();
+            ctx.strokeStyle = col1.canvasStyle;
             ctx.lineWidth = 1.0;
 
             ctx.beginPath();
@@ -523,7 +523,7 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
         break;
 
         case VG.Canvas.Shape2D.RectangleOutlineMin2px:
-            ctx.strokeStyle = col1.toCanvasStyle();
+            ctx.strokeStyle = col1.canvasStyle;
             ctx.lineWidth = 1.0;
 
             ctx.beginPath();
@@ -541,13 +541,13 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
         break;
 
         case VG.Canvas.Shape2D.RoundedRectangleOutline1px:
-            ctx.strokeStyle = col1.toCanvasStyle();
+            ctx.strokeStyle = col1.canvasStyle;
             ctx.lineWidth = 1.0;
             ctx.fillRoundedRect( rect.x, rect.y, rect.width, rect.height, 2, false, true );
         break;
 
         case VG.Canvas.Shape2D.RoundedRectangle2px:
-            ctx.fillStyle = col1.toCanvasStyle();
+            ctx.fillStyle = col1.canvasStyle;
             ctx.fillRoundedRect( rect.x, rect.y, rect.width, rect.height, 5 );
         break;
 
@@ -580,7 +580,7 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
 
         case VG.Canvas.Shape2D.Circle:
             ctx.beginPath();
-            ctx.fillStyle = col1.toCanvasStyle();
+            ctx.fillStyle = col1.canvasStyle;
             ctx.arc( rect.x + rect.width/2, rect.y + rect.height/2, Math.min( rect.width, rect.height) / 2, 0, 2 * Math.PI, false);
             ctx.fill();
         break;
@@ -647,7 +647,7 @@ VG.Canvas.prototype.draw2DShape=function( shape, rect, col1, col2, col3 )
 
         case VG.Canvas.Shape2D.CircleOutline:
             ctx.beginPath();
-            ctx.fillStyle = col1.toCanvasStyle();
+            ctx.fillStyle = col1.canvasStyle;
             ctx.lineWidth = 1.0;
             ctx.arc( rect.x + rect.width/2, rect.y + rect.height/2, Math.min( rect.width, rect.height) / 2, 0, 2 * Math.PI, false);
             ctx.stroke();
@@ -1032,6 +1032,11 @@ VG.Canvas.prototype.drawCurveGL=function(x1, y1, x2, y2, x3, y3, x4, y4, thick, 
 
 VG.Canvas.prototype.drawImage=function( pt, image, size )
 {
+    if ( image.canvasImage ) {
+        this.ctx.drawImage( image.canvasImage, pt.x, pt.y );
+        return;
+    }
+
     this.flush();
 
 	var tex = this.renderer.getTexture(image);

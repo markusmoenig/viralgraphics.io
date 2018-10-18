@@ -270,7 +270,7 @@ VG.UI.VisualGraphicsDarkGraySkin=function()
         },
         a : {
             Font : VG.Font.Font( "Open Sans Semibold", 13 ),
-            Color : VG.Core.Color( 126, 197, 243 ),
+            Color : VG.Core.Color( "#e452ef" ),
             Link : true,
 
             Margin : VG.Core.Margin( 0, 0, 0, 0 ),

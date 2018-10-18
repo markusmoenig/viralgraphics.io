@@ -1351,7 +1351,7 @@ VG.UI.Label.prototype.paintWidget=function( canvas )
             rect.y=this.contentRect.y + this.contentRect.height - totalHeight;
         }
 */
-        var textColor=VG.UI.stylePool.current.skin.Widget.TextColor;
+        var textColor = this.customColor ? this.customColor : VG.UI.stylePool.current.skin.Widget.TextColor;
         canvas.drawTextRect( this._text, rect, textColor, this.hAlignment, 1 );
 
         canvas.popFont();

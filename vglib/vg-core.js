@@ -1221,6 +1221,18 @@ VG.Core.Image.prototype.dispose=function()
     this.invalidate();
 };
 
+/**
+ * Converts the image to a canvas image.
+ */
+
+VG.Core.Image.prototype.toCanvasImage=function()
+{
+    VG.Utils.imageToHTML5Image( this, ( image ) => {
+        this.canvasImage = image;
+        var texture=VG.Renderer().getTexture( this );
+        if ( texture ) texture.dispose();
+    } );
+};
 
 /**
  * Gets a pixel color at position x, y.

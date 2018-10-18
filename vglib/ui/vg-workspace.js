@@ -79,11 +79,9 @@ VG.UI.Workspace=function()
 
     this.loginButton=VG.UI.ToolBarButton( "Login" );
     this.signupButton=VG.UI.ToolBarButton( "Signup" );
-    this.loginButton.clicked=this.showLoginDialog.bind( this );
-    this.signupButton.clicked=this.showSignupDialog.bind( this );
+    this.loginButton.clicked=this.showUserDialog.bind( this );
 
     this.loginDialog=null;
-    this.signupDialog=null;
     this.userName="";
     this.userId=undefined;
     this.userIsAdmin=false;
@@ -407,7 +405,6 @@ VG.UI.Workspace.prototype.createDecoratedToolBar=function( { logo, logoRect = { 
     this.decoratedToolBar.addItem( VG.UI.LayoutHSpacer() );
     this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
     this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Login );
-    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Signup );
     this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.UserTool );
 
     return this.decoratedToolBar;
@@ -1724,11 +1721,28 @@ VG.UI.Workspace.prototype.modelSelectAllCallback=function()
         this.focusWidget.selectAll();
 };
 
+VG.UI.Workspace.prototype.logout=function()
+{
+    this.userName="";
+    this.userId=undefined;
+    this.userIsAdmin=false;
+
+    this.modelLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName, this.userId );
+
+    if ( this.callbackForLoggedStateChanged )
+        this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false );
+
+    VG.update();
+    VG.DB.userLogOut( () => {
+
+    } );
+};
+
 VG.UI.Workspace.prototype.modelLoggedStateChanged=function( logged, userName, userId )
 {
-    var userNamePopup=this.getToolButtonOfRole( VG.UI.ActionItemRole.UserTool );
-    var loginButton=this.getToolButtonOfRole( VG.UI.ActionItemRole.Login );
-    var signupButton=this.getToolButtonOfRole( VG.UI.ActionItemRole.Signup );
+    let userNamePopup=this.getToolButtonOfRole( VG.UI.ActionItemRole.UserTool );
+    let loginButton=this.getToolButtonOfRole( VG.UI.ActionItemRole.Login );
+    let signupButton=this.getToolButtonOfRole( VG.UI.ActionItemRole.Signup );
 
     if ( userNamePopup ) userNamePopup.visible=logged;
     if ( loginButton ) loginButton.visible=!logged;
@@ -1739,8 +1753,8 @@ VG.UI.Workspace.prototype.modelLoggedStateChanged=function( logged, userName, us
     if ( userNamePopup )
     {
         userNamePopup.clear();
-        userNamePopup.addItems( userName, "Settings", "Logout" );
-        var size=userNamePopup.calcSize( this.canvas );
+        userNamePopup.addItems( userName, "User Settings", "Logout" );
+        let size = userNamePopup.calcSize( this.canvas );
         userNamePopup.minimumSize.set( size );
         userNamePopup.maximumSize.set( size );
 
@@ -1750,26 +1764,12 @@ VG.UI.Workspace.prototype.modelLoggedStateChanged=function( logged, userName, us
             {
                if ( index === 1 )
                {
-                    this.showUserSettingsDialog();
+                    this.showUserDialog( "User Settings" );
 
-                    var userNamePopup=this.getToolButtonOfRole( VG.UI.ActionItemRole.UserTool );
+                    let userNamePopup = this.getToolButtonOfRole( VG.UI.ActionItemRole.UserTool );
                     if ( userNamePopup ) userNamePopup.index=0;
                 } else
-                if ( index === 2 )
-                {
-                    VG.DB.userLogOut( function() {
-                        this.userName="";
-                        this.userId=undefined;
-                        this.userIsAdmin=false;
-
-                        this.modelLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName, this.userId );
-
-                        if ( this.callbackForLoggedStateChanged )
-                            this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false );
-
-                        VG.update();
-                    }.bind( this ) );
-                }
+                if ( index === 2 ) this.logout();
             }.bind( this );
         }
     }
@@ -2013,7 +2013,7 @@ VG.UI.Workspace.prototype.addToolButtonRole=function( toolbar, role )
     if ( role === VG.UI.ActionItemRole.UserTool ) {
         button=VG.UI.DropDownMenu();
         button.supportsFocus=false;
-        button.addItems( "Settings", "Logout" );
+        button.addItems( "User Settings", "Logout" );
     } else
     if ( role !== VG.UI.ActionItemRole.UserTool )
         button=VG.UI.ToolBarButton( "" );
@@ -2253,31 +2253,11 @@ VG.UI.Workspace.prototype.setupActionItemRole=function( object, role, parent )
             // object.svgGroupName="User";
 
             object.iconName="_user.png";
-            object.toolTip="Login to the application.";
-            object.statusTip="Login to the application.";
+            object.toolTip="Login / User Management.";
+            object.statusTip="Login / User Management.";
 
-            object.clicked=this.showLoginDialog.bind( this );
+            object.clicked=this.showUserDialog.bind( this );
             object.visible=!this.userId;
-        break;
-
-        case VG.UI.ActionItemRole.Signup:
-            object.text="SIGNUP";
-
-            if ( !VG.Utils.getImageByName( "_login.png" ) ) {
-                VG.Utils.svgToImage( { data : VG.Shaders.fs["vgstyle_gray_login.svg"], width : 24, height : 24, callback : function( image ) {
-                    image.name="_login.png";
-                    VG.context.imagePool.addImage( image );
-                }.bind( this ) } );
-            }
-
-            object.iconName="_login.png";
-            object.toolTip="Signup and become a user.";
-            object.statusTip="Signup and become a user.";
-
-            object.clicked=this.showSignupDialog.bind( this );
-            object.visible=!this.userId;
-            // object.svgName="glyphs.svg";
-            // object.svgGroupName="SignUp";
         break;
 
         case VG.UI.ActionItemRole.UserTool:

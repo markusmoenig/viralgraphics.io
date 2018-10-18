@@ -112,7 +112,7 @@ VG.UI.HtmlWidget.prototype.parseHtml=function()
             ignoreFirstTopMargin=false;
         }
 
-        margin.left+=self.adjustToHeight && name === "p" ? 0 : skinObject.Margin.left;
+        margin.left+=(self.adjustToHeight || self.emptyP) && name === "p" ? 0 : skinObject.Margin.left;
         margin.top+=topMargin;
         margin.right+=skinObject.Margin.right;
 
@@ -275,7 +275,7 @@ VG.UI.HtmlWidget.prototype.parseHtml=function()
 
         if ( currEl ) {
 
-            margin.left-=self.adjustToHeight && name === "p" ? 0 : currEl.skinObject.Margin.left;
+            margin.left-=(self.adjustToHeight || self.emptyP) && name === "p" ? 0 : currEl.skinObject.Margin.left;
 
             // margin.left-=currEl.skinObject.Margin.left;
             margin.top-=currEl.skinObject.Margin.top;
