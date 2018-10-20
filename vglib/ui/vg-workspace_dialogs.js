@@ -426,6 +426,15 @@ VG.UI.Workspace.prototype.showUserDialog=function( defaultState = "Login" )
 
                             htmlWidget.html = buildHtml( sub, subscription );
 
+                            let parameters = {};
+                            VG.sendBackendRequest( "/app/subscription/" + VG.context.appId + "/" + sub.id + "/check", JSON.stringify( parameters ), (responseText) => {
+                                let response = JSON.parse( responseText );
+                                if ( response.status === "ok" ) {
+                                    let subscription = { id : response.subscriptionId, endDate: response.user.end };
+                                    htmlWidget.html = buildHtml( sub, subscription );
+                                }
+                            }, "GET" );
+
                             if ( this.callbackForLoggedStateChanged )
                                 this.callbackForLoggedStateChanged( this.userName.length > 0 ? true : false, this.userName, this.userId, this.userIsAppAdmin );
                         }

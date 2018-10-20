@@ -932,7 +932,7 @@ VG.UI.ToolSettings=function( label, options )
     VG.UI.Widget.call( this );
     this.name="ToolSettings";
 
-    this.supportsFocus = this.supportsAutoFocus = true;
+    this.supportsFocus = true;
 
     this.options = options || {};
     this.label = label;
@@ -993,7 +993,7 @@ VG.UI.ToolSettings=function( label, options )
 
         if ( this.options.autoClose && this.open )
         {
-            if ( !this.rect.contains( event.pos ) && !this.widget.rect.contains( event.pos ) )
+            if ( !this.rect.contains( event.pos ) && !this.widget.rect.contains( event.pos ) && Math.ceil( event.pos.y ) !== this.widget.rect.y )
                 this.close();
         }
     };
@@ -1030,7 +1030,7 @@ VG.UI.ToolSettings.prototype.mouseLeave=function( event )
 {
     if ( this.options.autoClose && this.open )
     {
-        if ( !this.rect.contains( event.pos ) && !this.widget.rect.contains( event.pos ) )
+        if ( !this.rect.contains( event.pos ) && !this.widget.rect.contains( event.pos ) && Math.ceil( event.pos.y ) !== this.widget.rect.y )
             this.close();
     }
 };

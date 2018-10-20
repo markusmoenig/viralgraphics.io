@@ -757,6 +757,31 @@ VG.Nodes.ParamDivider=function( data, name, text )
 
 VG.Nodes.ParamDivider.prototype=VG.Nodes.Param();
 
+// ----------------------------------------------------------------- VG.Nodes.ParamToolSettings
+
+VG.Nodes.ParamToolSettings=function( data, name, text, widgetCount, height )
+{
+    /**
+     * Creates a Divider.<br>
+     *
+     * @param {object} data - The object which holds the low level representation of the parameters.
+     * @param {string} name - The name of the new parameter, the name is used to identify parameters inside a container or group and has to be unique.
+     * @param {string} text - The text to display in the user interface for this parameter.
+     * @param {string} widgetCount - The widget count.
+     * @constructor
+    */
+
+    if ( !(this instanceof VG.Nodes.ParamToolSettings ) ) return new VG.Nodes.ParamToolSettings( data, name, text, widgetCount, height );
+
+    this.name=name ? name : "value";
+    this.text=text ? text : "Value";
+    this.data=data;
+    this.widgetCount = widgetCount;
+    this.height = height;
+};
+
+VG.Nodes.ParamToolSettings.prototype=VG.Nodes.Param();
+
 // ----------------------------------------------------------------- VG.Nodes.ParamNumber
 
 VG.Nodes.ParamSlider=function( data, name, text, value, min, max, step, precision, halfWidthValue )

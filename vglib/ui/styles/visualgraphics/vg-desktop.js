@@ -2649,7 +2649,8 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolSettings = function( widget, canvas,
     if ( widget.open )
     {
         this.rect1.x = widget.rect.x;
-        this.rect1.y = widget.parent.rect.bottom();
+        // this.rect1.y = widget.parent.rect.bottom();
+        this.rect1.y = widget.label.rect.bottom() + 1;
         this.rect1.width = widget.options.width || 435;
         this.rect1.height = widget.options.height || 512;
 

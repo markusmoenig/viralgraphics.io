@@ -545,17 +545,42 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
             if ( param instanceof VG.Nodes.ParamDivider )
             {
                 group.layout.addDivider( param.text );
+            } else
+            if ( param instanceof VG.Nodes.ParamToolSettings )
+            {
+                let label = new VG.UI.Label( "Settings" );
+                label.margin = new VG.Core.Size( 20, 15 );
+
+                let toolLayout = VG.UI.LabelLayout();
+                toolLayout.margin.set( 10, 10, 10, 10 );
+                toolLayout.vertical = true;
+
+                param.widget = new VG.UI.ToolSettings( label, { layout : toolLayout, height : param.height, text : param.text + " Settings", autoClose: true } );
+                group.layout.addChild( param.text, param.widget );
+
+                this.preToolLayout = group.layout;
+                group.layout = toolLayout;
+                this.toolLayoutCount = param.widgetCount + 1;
             }
 
-            if ( param && param.widget )
-                param.widget.toolTip=param.toolTip;
+            if ( param && param.widget ) {
+                param.widget.toolTip = param.toolTip;
+                param.widget.statusTip = param.statusTip;
+            }
+
+            if ( this.preToolLayout ) {
+                this.toolLayoutCount--;
+                if ( !this.toolLayoutCount ) {
+                    group.layout = this.preToolLayout;
+                    this.preToolLayout = undefined;
+                }
+            }
 
             if ( param && param.widget && this.container.node && this.container.node.getInput ) {
 
                 var terminal=this.container.node.getInput( param.name );
                 if ( terminal && terminal.isConnected() )
                     param.widget.disabled=true;
-
             }
         }
 
