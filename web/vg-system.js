@@ -76,6 +76,7 @@ VG.sendBackendRequest=function( url, parameters, callback, type, error_callback 
 
                 if ( callback ) callback.call( this, request.responseText );
             } else {
+                if (callback && !error_callback) callback.call( this, request.responseText );
                 if (error_callback) {
                     error_callback(request.responseText);
             }

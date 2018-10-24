@@ -1468,6 +1468,9 @@ VG.UI.LabelLayout.prototype.addChild=function( label, widget )
     this.items.push( item );
     this.children.push( widget );
     widget.parent=this;
+
+    if  ( label === "__EXPANDING__" )
+        item.isExpanding = true;
 };
 
 /**
@@ -1672,6 +1675,8 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
     for( i=0; i < this.children.length; ++i ) {
         child=this.children[i];
 
+        if ( this.items[i].isDivider ) availableSpace -= 11;
+        else
         if ( child.isWidget && child.visible ) {
             if ( child.verticalExpanding === false ) {
                 availableSpace-=child.calcSize( canvas ).height;
@@ -1695,7 +1700,7 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
         for( i=0; i < this.items.length; ++i ) {
             child=this.items[i];
 
-            if ( child.isDivider )
+            if ( child.isDivider || child.isExpanding )
                 continue;
 
             canvas.getTextSize( child.label, textSize );
@@ -1759,6 +1764,10 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
 
         if ( arguments.length === 1 ) {
 
+            if ( child.isExpanding )
+            {
+
+            } else
             if ( child.isDivider )
             {
                 canvas.getTextSize( child.label, textSize );
@@ -1800,6 +1809,15 @@ VG.UI.LabelLayout.prototype.layout=function( canvas, dontDraw )
         } else
         {
             widget.rect.x=widgetRect.x;
+
+            if ( child.isExpanding ) {
+
+                widgetRect.width = rectWidth;
+
+                widgetRect.x = rect.x + this.margin.left;
+                widget.rect.x = rect.x + this.margin.left;
+            }
+
 
             if ( widgetRect.width > widget.maximumSize.width )
             {

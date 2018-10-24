@@ -932,6 +932,8 @@ VG.UI.CheckBox=function( checked )
     this.supportsFocus=true;
 
     this.checked=checked;
+    this.preferredSize.copy( this.minimumSize );
+    this.preferredSize.height += 4;
 };
 
 VG.UI.CheckBox.prototype=VG.UI.Widget();

@@ -70,7 +70,7 @@ VG.UI.Workspace.prototype.showUserDialog=function( defaultState = "Login" )
             if ( !widget.bdLogo.canvasImage ) widget.bdLogo.toCanvasImage();
 
             widget.html = new VG.UI.HtmlWidget();
-            widget.html.supportsAutoFocus = widget.html.supportsFocus = true;
+            /*widget.html.supportsAutoFocus =*/ widget.html.supportsFocus = true;
             widget.html.linkCallback = ( link ) => VG.gotoUrl( link );
             widget.html.html = `<html><p>Sign up to <a href="http://www.viralgraphics.io">ViralGraphics.io</a> and sign in to all the applications using next generation app technology.</p></html>`;
 
@@ -168,9 +168,37 @@ VG.UI.Workspace.prototype.showUserDialog=function( defaultState = "Login" )
             };
 
             let buttonLayout = new VG.UI.Layout( createAccountButton, VG.UI.LayoutHSpacer(), loginButton );
-            buttonLayout.margin.set( 36, 0, 36, 0 );
+            buttonLayout.margin.set( 36, 0, 36, 10 );
 
-            let layout = new VG.UI.Layout( loginLayout, buttonLayout );
+            // --- Forgot Password Widget
+
+            let widget = new VG.UI.Widget();
+            widget.supportsFocus = true;
+
+            widget.setFixedSize( 365, 17 );
+            widget.mouseDown = () => {
+                setState( "Forgot Password" );
+            };
+            widget.paintWidget = ( canvas ) => {
+
+                let rect = widget.contentRect;
+                rect.copy( widget.rect );
+
+                if ( !widget.textSize ) widget.textSize = canvas.getTextSize( "Forgot Password" );
+                canvas.drawTextRect( "Forgot Password", widget.rect, VG.Core.Color.White, 2, 1 );
+
+                if ( rect.contains ( VG.context.workspace.mousePos ) ) {
+                    rect.y += 16;
+                    rect.x += 365 - widget.textSize.width;
+                    rect.width = widget.textSize.width;
+                    rect.height = 1;
+                    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, rect, VG.Core.Color.White );
+                }
+            };
+
+            // ---
+
+            let layout = new VG.UI.Layout( loginLayout, buttonLayout );//, widget );
             layout.vertical = true;
             layout.spacing = 0;
             layout.margin.clear();
@@ -178,12 +206,12 @@ VG.UI.Workspace.prototype.showUserDialog=function( defaultState = "Login" )
             addFooter( layout );
 
             layout.calcSize = ( canvas ) => {
-                return VG.Core.Size( 440, 360 );
+                return VG.Core.Size( 440, 380 );
             };
 
             dialog.layout = layout;
             dialog.calcSize();
-            userNameEdit.setFocus();
+            return userNameEdit;
         } else
         if ( state === "Signup" )
         {
@@ -275,8 +303,127 @@ VG.UI.Workspace.prototype.showUserDialog=function( defaultState = "Login" )
 
             dialog.layout = layout;
             dialog.calcSize();
-            userNameEdit.setFocus();
+            return userNameEdit;
         } else
+        if ( state === "Forgot Password" )
+        {
+            dialog.text = "Forgot Password";
+
+            let userLabel = new VG.UI.Label( VG.context.workspace.userName );
+            // let eMailLabel = new VG.UI.Label( VG.context.workspace.userEmail );
+            let userEdit = new VG.UI.TextLineEdit( "" );
+            let tokenEdit = new VG.UI.TextLineEdit( "" );
+            let passwordEdit = new VG.UI.TextLineEdit( "" );
+            let repeatPasswordEdit = new VG.UI.TextLineEdit( "" );
+            let messageLabel = new VG.UI.Label( "" );
+
+            userEdit.maximumSize.width = 200;
+            tokenEdit.maximumSize.width = 200;
+            passwordEdit.maximumSize.width = 200;
+            repeatPasswordEdit.maximumSize.width = 200;
+            messageLabel.customColor = redColor;
+            messageLabel.hAlignment = VG.UI.HAlignment.Left;
+
+            passwordEdit.password = true;
+            repeatPasswordEdit.password = true;
+            messageLabel.visible = false;
+
+            let loginLayout = VG.UI.LabelLayout();
+            loginLayout.margin.set( 0, 10, 0, 10 );
+            loginLayout.labelSpacing = 60;
+            loginLayout.labelAlignment = VG.UI.HAlignment.Left;
+
+            loginLayout.addChild( "Username", userEdit );
+            loginLayout.addChild( "Token", tokenEdit );
+            loginLayout.addChild( "Password", passwordEdit );
+            loginLayout.addChild( "Repeat Password", repeatPasswordEdit );
+            loginLayout.addChild( "", messageLabel );
+
+            let changeButton = new VG.UI.Button( "Change Password" );
+            changeButton.clicked = () => {
+
+                if ( !userEdit.text )
+                {
+                    messageLabel.customColor = redColor;
+                    messageLabel.visible = true;
+                    messageLabel.text = "Please enter username.";
+                } else
+                if ( !tokenEdit.text )
+                {
+                    messageLabel.customColor = redColor;
+                    messageLabel.visible = true;
+                    messageLabel.text = "Please enter valid token.";
+                } else
+                if ( !passwordEdit.text || passwordEdit.text !== repeatPasswordEdit.text )
+                {
+                    messageLabel.customColor = redColor;
+                    messageLabel.visible = true;
+                    messageLabel.text = "Passwords do not match";
+                } else
+                {
+                    VG.DB.userChangePassword( passwordEdit.text, ( success ) => {
+                        if ( success ) {
+                            dialog.close( dialog );
+                        } else {
+                            messageLabel.visible = true;
+                            messageLabel.text = "Password change failed.";
+                        }
+                    } );
+                }
+            };
+
+            let requestTokenButton = new VG.UI.Button( "Request Token" );
+            requestTokenButton.clicked = () => {
+
+                if ( !userEdit.text )
+                {
+                    messageLabel.customColor = redColor;
+                    messageLabel.visible = true;
+                    messageLabel.text = "Please enter username.";
+                } else
+                {
+                    // VG.sendBackendRequest( "/user/" + userEdit.text + "/password", JSON.stringify( {} ), (responseText) => {
+                        // console.log( responseText );
+                        /*
+                        let response = JSON.parse( responseText );
+                        if ( response.status === "ok" ) {
+                            let subscription = { id : response.subscriptionId, endDate: response.user.end };
+                            htmlWidget.html = buildHtml( sub, subscription );
+                        }*/
+                    // }, "GET" );
+
+
+                    console.log( "/user/find?name=" + userEdit.text );
+
+                    VG.sendBackendRequest( "/user/find?name=" + userEdit.text,
+                        JSON.stringify( {} ), (responseText) => {
+                        console.log( responseText );
+                    }, "GET" );
+
+                }
+            };
+
+            let buttonLayout = new VG.UI.Layout( VG.UI.LayoutHSpacer(), requestTokenButton, changeButton );
+            buttonLayout.margin.set( 0, 0, 0, 0 );
+
+            let layout = new VG.UI.Layout();
+            layout.margin.set( 36, 32, 36, 20 );
+
+            addHeader( layout, "Change Password with Token" );
+            layout.addChild( loginLayout );
+            layout.addChild( buttonLayout );
+
+            layout.vertical = true;
+            layout.spacing = 0;
+
+            layout.calcSize = ( canvas ) => {
+                return VG.Core.Size( 540, 400 );
+            };
+
+            dialog.layout = layout;
+            dialog.calcSize();
+            return passwordEdit;
+        }
         if ( state === "User Settings" )
         {
             dialog.text = "User Settings";
@@ -468,7 +615,7 @@ VG.UI.Workspace.prototype.showUserDialog=function( defaultState = "Login" )
 
             dialog.layout = layout;
             dialog.calcSize();
-            passwordEdit.setFocus();
+            return passwordEdit;
         }
     };
 
@@ -477,8 +624,9 @@ VG.UI.Workspace.prototype.showUserDialog=function( defaultState = "Login" )
         this.userDialog.buttonLayout = undefined;
     }
 
-    setState( state );
+    let focusWidget = setState( state );
     this.showWindow( this.userDialog );
+    if ( focusWidget ) focusWidget.setFocus();
 };
 
 // ----------------------------------------------------------------------------------- Contact Us
