@@ -168,6 +168,10 @@ VG.Nodes.ParamContainer.prototype.getAdjustedParamString=function( name, adjustC
                 if ( param.type === "vec3" )
                 {
                     value = `vec3(${value.x},${value.y},${value.z})`;
+                } else
+                if ( param.type === "vec4" )
+                {
+                    value = `vec4(${value.x},${value.y},${value.z},${value.w})`;
                 }
 
                 return value;
@@ -228,6 +232,7 @@ VG.Nodes.ParamContainer.prototype.resetParams=function()
             {
                 let value = param.data[param.name];
                 value.r=param.defaultValue.r; value.g=param.defaultValue.g; value.b=param.defaultValue.b; value.a=param.defaultValue.a;
+                value.x=param.defaultValue.r; value.y=param.defaultValue.g; value.z=param.defaultValue.b; value.w=param.defaultValue.a;
             }
             else {
                 param.data[param.name] = param.defaultValue;
@@ -250,6 +255,7 @@ VG.Nodes.ParamContainer.prototype.setParamColor=function( name, r, g, b, a )
     var value=param.data[param.name];
 
     value.r=r; value.g=g; value.b=b; value.a=a;
+    value.x=r; value.y=g; value.z=b; value.w=a;
 };
 
 VG.Nodes.ParamContainer.prototype.setParamNumber=function( name, value )
@@ -1123,6 +1129,18 @@ VG.Nodes.ParamColor=function( data, name, text, value, alpha )
         data[name].g=value.g;
         data[name].b=value.b;
         data[name].a=value.a;
+
+        data[name].x=value.r;
+        data[name].y=value.g;
+        data[name].z=value.b;
+        data[name].w=value.a;
+    } else {
+        if ( data[name].x === undefined ) {
+            data[name].x=data[name].r;
+            data[name].y=data[name].g;
+            data[name].z=data[name].b;
+            data[name].w=data[name].a;
+        }
     }
 
     this.data=data;

@@ -115,7 +115,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
                     // --- Update the graph
                     if (  this.container.node && this.container.node.graph  )
                         this.container.node.graph.update();
-                    if ( callback ) callback();
+                    if ( callback ) callback( false, param );
                 }.bind( this );
 
                 group.layout.addChild( param.text, param.widget );
@@ -173,7 +173,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
                         if (  this.container.node && this.container.node.graph  )
                             this.container.node.graph.update();
                     }
-                    if ( callback ) callback( continuous );
+                    if ( callback ) callback( continuous, param );
                 }.bind( this );
 
                 param.widget.disabled=param.disabled;
@@ -203,7 +203,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
                         if (  this.container.node && this.container.node.graph  )
                             this.container.node.graph.update();
                     }
-                    if ( callback ) callback();
+                    if ( callback ) callback( false, param );
                 }.bind( this );
 
                 param.widget.disabled=param.disabled;
@@ -239,7 +239,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
                     if (  this.container.node && this.container.node.graph  )
                         this.container.node.graph.update();
 
-                    if ( callback ) callback();
+                    if ( callback ) callback( false, param );
                 }.bind( this );
 
                 group.layout.addChild( param.text, param.widget );
@@ -272,7 +272,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
                             this.container.node.graph.update();
                     }
 
-                    if ( callback ) callback();
+                    if ( callback ) callback( false, param );
                 }.bind( this );
 
                 group.layout.addChild( param.text, param.widget );
@@ -309,7 +309,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
 
                     if (  this.container.node && this.container.node.graph  )
                         this.container.node.graph.update();
-                    if ( callback ) callback();
+                    if ( callback ) callback( false, param );
                 }.bind( this );
 
                 let addButton=VG.UI.ToolBarButton();
@@ -323,7 +323,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
 
                     if (  this.container.node && this.container.node.graph  )
                         this.container.node.graph.update();
-                    if ( callback ) callback();
+                    if ( callback ) callback( false, param );
                 }.bind( this );
 
                 let removeButton=VG.UI.ToolBarButton();
@@ -335,7 +335,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
 
                     if (  this.container.node && this.container.node.graph  )
                         this.container.node.graph.update();
-                    if ( callback ) callback();
+                    if ( callback ) callback( false, param );
                 }.bind( this );
 
                 param.widget.addToolWidget( addButton );
@@ -382,7 +382,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
                     if (  this.container.node && this.container.node.graph  )
                         this.container.node.graph.update();
 
-                    if ( callback ) callback();
+                    if ( callback ) callback( false, param );
                 }.bind( this );
 
                 param.widget.disabled=param.disabled;
@@ -414,7 +414,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
                     if (  this.container.node && this.container.node.graph  )
                         this.container.node.graph.update();
 
-                    if ( callback ) callback();
+                    if ( callback ) callback( false, param );
                 }.bind( this );
 
                 param.widget.disabled=param.disabled;
@@ -450,12 +450,17 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
                         param.data[param.name].b=value.b;
                         param.data[param.name].a=value.a;
 
+                        param.data[param.name].x=value.r;
+                        param.data[param.name].y=value.g;
+                        param.data[param.name].z=value.b;
+                        param.data[param.name].w=value.a;
+
                         if (  this.container.node && this.container.node.graph && this.container.node.graph.update )
                             this.container.node.graph.update();
 
                         VG.update();
                     }
-                    if ( callback ) callback();
+                    if ( callback ) callback( false, param );
                 }.bind( this );
 
                 param.widget.disabled=param.disabled;
@@ -507,7 +512,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
                         this.container.node.graph.update();
 
                     VG.update();
-                    if ( callback ) callback();
+                    if ( callback ) callback( false, param );
                 }.bind( this );
 
                 group.layout.addChild( param.text, param.widget );
