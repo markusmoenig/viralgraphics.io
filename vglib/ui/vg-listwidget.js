@@ -139,6 +139,7 @@ Object.defineProperty( VG.UI.ListWidget.prototype, "itemHeight",
 VG.UI.ListWidget.prototype.addToolWidget=function( widget )
 {
     widget.supportsFocus=false;
+    widget.panelButton = true;
     this.toolLayout.addChild( widget );
 };
 

@@ -198,7 +198,7 @@ VG.UI.Workspace.prototype.showUserDialog=function( defaultState = "Login" )
 
             // ---
 
-            let layout = new VG.UI.Layout( loginLayout, buttonLayout );//, widget );
+            let layout = new VG.UI.Layout( loginLayout, buttonLayout, widget );
             layout.vertical = true;
             layout.spacing = 0;
             layout.margin.clear();
@@ -361,14 +361,21 @@ VG.UI.Workspace.prototype.showUserDialog=function( defaultState = "Login" )
                     messageLabel.text = "Passwords do not match";
                 } else
                 {
-                    VG.DB.userChangePassword( passwordEdit.text, ( success ) => {
-                        if ( success ) {
-                            dialog.close( dialog );
-                        } else {
+                    VG.sendBackendRequest( "/user/password/" + tokenEdit.text, JSON.stringify( { password: passwordEdit.text } ), (responseText) => {
+                        let response = JSON.parse( responseText );
+                        if ( response.status === "error" ) {
                             messageLabel.visible = true;
-                            messageLabel.text = "Password change failed.";
+                            if ( response.message === "Wrong password recovery key" )
+                                response.message = "Wrong password recovery token";
+                            messageLabel.text = response.message;
+                        } else
+                        if ( response.status === "ok" ) {
+                            messageLabel.customColor = undefined;
+                            messageLabel.visible = true;
+                            messageLabel.text = "Password changed.";
                         }
-                    } );
+
+                    }, "POST" );
                 }
             };
 
@@ -382,24 +389,18 @@ VG.UI.Workspace.prototype.showUserDialog=function( defaultState = "Login" )
                     messageLabel.text = "Please enter username.";
                 } else
                 {
-                    // VG.sendBackendRequest( "/user/" + userEdit.text + "/password", JSON.stringify( {} ), (responseText) => {
-                        // console.log( responseText );
-                        /*
+                    VG.sendBackendRequest( "/user/" + userEdit.text + "/password", JSON.stringify( {} ), (responseText) => {
                         let response = JSON.parse( responseText );
+                        if ( response.status === "error" ) {
+                            messageLabel.visible = true;
+                            messageLabel.text = response.message;
+                        } else
                         if ( response.status === "ok" ) {
-                            let subscription = { id : response.subscriptionId, endDate: response.user.end };
-                            htmlWidget.html = buildHtml( sub, subscription );
-                        }*/
-                    // }, "GET" );
-
-
-                    console.log( "/user/find?name=" + userEdit.text );
-
-                    VG.sendBackendRequest( "/user/find?name=" + userEdit.text,
-                        JSON.stringify( {} ), (responseText) => {
-                        console.log( responseText );
+                            messageLabel.customColor = undefined;
+                            messageLabel.visible = true;
+                            messageLabel.text = "Please see eMail we send you";
+                        }
                     }, "GET" );
-
                 }
             };
 
@@ -417,7 +418,7 @@ VG.UI.Workspace.prototype.showUserDialog=function( defaultState = "Login" )
             layout.spacing = 0;
 
             layout.calcSize = ( canvas ) => {
-                return VG.Core.Size( 540, 400 );
+                return VG.Core.Size( 540, 300 );
             };
 
             dialog.layout = layout;

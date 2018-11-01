@@ -483,8 +483,13 @@ function keyDownRelay( event ) {
 
     if ( event.keyCode === VG.Events.KeyCodes.Backspace || event.keyCode === VG.Events.KeyCodes.Tab ||
          event.keyCode === VG.Events.KeyCodes.ArrowUp || event.keyCode === VG.Events.KeyCodes.ArrowDown || event.keyCode === VG.Events.KeyCodes.ArrowRight ||
-         event.keyCode === VG.Events.KeyCodes.ArrowLeft || event.keyCode === VG.Events.KeyCodes.Esc )
-        event.preventDefault();
+         event.keyCode === VG.Events.KeyCodes.ArrowLeft || event.keyCode === VG.Events.KeyCodes.Esc ) {
+
+        let workspace = VG.context.workspace, domWidget;
+        if ( workspace.focusWidget && workspace.focusWidget.domWidget ) domWidget = true;
+
+        if ( !domWidget ) event.preventDefault();
+    }
 }
 
 function getMouseButton(e)

@@ -45,6 +45,9 @@ VG.UI.DockWidget=function( text )
     this.dragOpStart=VG.Core.Point();
     this.dragOpPos=VG.Core.Point();
 
+    for( let i = 1; i < arguments.length; ++i )
+        this.addChild( arguments[i] );
+
     this.dragOp=false;
 };
 

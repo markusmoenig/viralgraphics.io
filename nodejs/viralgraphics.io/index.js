@@ -263,7 +263,7 @@ buildDocs( docDir, out );
 outFile="VG.App=" + JSON.stringify( out );
 
 var videPath=path.join( dir, path.basename( vgPath ).slice(0, -2) + "vide" );
-fs.writeFile( videPath, outFile );
+fs.writeFileSync( videPath, outFile );
 
 console.log( "Compiled vide file written to " + videPath );
 

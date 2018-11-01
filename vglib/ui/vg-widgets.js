@@ -495,7 +495,7 @@ VG.UI.Image.prototype.mouseUp=function( event )
 VG.UI.Image.prototype.paintWidget=function( canvas )
 {
     VG.UI.Frame.prototype.paintWidget.call( this, canvas );
-    var image;
+    let image;
 
     if ( !this._image.isValid() )
     {
@@ -521,8 +521,8 @@ VG.UI.Image.prototype.paintWidget=function( canvas )
     if ( this.rect.width >= image.width && this.rect.height >= image.height )
     {
         if ( !this.upScaling ) {
-            var x=this.contentRect.x + (this.contentRect.width - image.width) / 2;
-            var y=this.contentRect.y + (this.contentRect.height - image.height) / 2;
+            let x=this.contentRect.x + (this.contentRect.width - image.width) / 2;
+            let y=this.contentRect.y + (this.contentRect.height - image.height) / 2;
             canvas.drawImage( VG.Core.Point( x, y ), image );
         } else canvas.drawImage( this.contentRect.pos(), image, this.contentRect.size() );
     } else canvas.drawScaledImage( this.contentRect, image );

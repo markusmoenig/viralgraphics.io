@@ -146,6 +146,7 @@ VG.UI.TreeWidget.prototype.addColumn=function( column )
 VG.UI.TreeWidget.prototype.addToolWidget=function( widget )
 {
     widget.supportsFocus=false;
+    widget.panelButton = true;
     this.toolLayout.addChild( widget );
 };
 

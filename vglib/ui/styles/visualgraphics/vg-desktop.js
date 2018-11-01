@@ -2770,7 +2770,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolBarButton=function( widget, canvas )
         widget.contentRect.shrink( 1, 1, widget.contentRect);
         canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, widget.contentRect, this.skin.ToolBarButton.HoverBackColor );
     } else {
-        if ( widget.parent && !widget.parent.decorated )
+        if ( widget.parent && !widget.parent.decorated && !widget.panelButton )
         {
             canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, widget.contentRect, this.skin.ToolBarButton.BorderColor );
             widget.contentRect.shrink( 1, 1, widget.contentRect);
@@ -3065,7 +3065,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
     // --- Header
 
     let headerHeight = skin.Header.Height;
-    if ( widget.columns.length ) {
+    if ( widget.columns.length && headerHeight ) {
 
         this.rect3.copy( widget.rect );
         this.rect3.height = headerHeight;
@@ -3210,7 +3210,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
     {
         let column = widget.columns[i];
 
-        if ( offset > paintRect.width )
+        if ( offset > paintRect.width || !headerHeight )
             break;
 
         let width = column.pixelWidth;
@@ -3225,8 +3225,11 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
             this.rect3.width -= 7;
         }
 
-        if ( !widget.paintHeaderCallback )
+        if ( !widget.paintHeaderCallback ) {
+            canvas.pushFont( skin.Font );
             canvas.drawTextRect( column.name, this.rect3, skin.Header.TextColor, column.hAlign, 1 );
+            canvas.popFont();
+        }
 
         if ( i > 0 ) {
             this.rect3.x = paintRect.x + offset;

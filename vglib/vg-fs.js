@@ -13,6 +13,8 @@ VG.FS.readFile = function( path, encoding = "utf8" )
 {
     if ( !VG.context.workspace.isElectron() ) return;
 
+    if ( encoding === "raw" ) encoding = undefined;
+
     const ipc = require('electron').ipcRenderer;
     let rc = ipc.sendSync( 'fs-readFile', { path: path, encoding: encoding } );
     return rc;
@@ -21,6 +23,8 @@ VG.FS.readFile = function( path, encoding = "utf8" )
 VG.FS.writeFile = function( path, data, encoding = "utf8" )
 {
     if ( !VG.context.workspace.isElectron() ) return;
+
+    if ( encoding === "raw" ) encoding = undefined;
 
     const ipc = require('electron').ipcRenderer;
     ipc.sendSync( 'fs-writeFile', { path: path, data: data, encoding: encoding } );
@@ -132,4 +136,28 @@ VG.FS.relativePath = function( from, to )
 
     const ipc = require('electron').ipcRenderer;
     return ipc.sendSync( 'fs-relativePath', { from: from, to: to } );
+};
+
+VG.FS.isAbsolutePath = function( path )
+{
+    if ( !VG.context.workspace.isElectron() ) return;
+
+    const ipc = require('electron').ipcRenderer;
+    return ipc.sendSync( 'fs-isAbsolutePath', { path: path } );
+};
+
+VG.FS.rename = function( oldPath, newPath )
+{
+    if ( !VG.context.workspace.isElectron() ) return;
+
+    const ipc = require('electron').ipcRenderer;
+    return ipc.sendSync( 'fs-rename', { old: oldPath, new: newPath } );
+};
+
+VG.FS.getMimeType = function( data )
+{
+    if ( !VG.context.workspace.isElectron() ) return;
+
+    const ipc = require('electron').ipcRenderer;
+    return ipc.sendSync( 'fs-getmimetype', { data: data } );
 };

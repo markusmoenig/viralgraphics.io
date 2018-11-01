@@ -379,7 +379,7 @@ VG.UI.Workspace.prototype.addMenuBar=function( menubar )
  * Adds a decorated ToolBar (VG.UI.DecoratedToolBar) to the application.
  */
 
-VG.UI.Workspace.prototype.createDecoratedToolBar=function( { logo, logoRect = { width: 83, height: 83 } } = {} )
+VG.UI.Workspace.prototype.createDecoratedToolBar=function( { logo, logoRect = { width: 83, height: 83 }, noUndo, noFileOp } = {} )
 {
     if ( !logo )
         logo = VG.Utils.getImageByName( "vg_logo.png" );
@@ -393,13 +393,18 @@ VG.UI.Workspace.prototype.createDecoratedToolBar=function( { logo, logoRect = { 
 
     this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.QuickMenu );
 
-    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Undo );
-    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Redo );
-    this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
-    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.New );
-    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Open );
-    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Save );
-    this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.SaveAs );
+    if ( !noUndo ) {
+        this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Undo );
+        this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Redo );
+        this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
+    }
+
+    if ( !noFileOp ) {
+        this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.New );
+        this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Open );
+        this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.Save );
+        this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.SaveAs );
+    }
     // this.decoratedToolBar.addItem( VG.UI.DecoratedToolSeparator() );
     // this.addToolButtonRole( this.decoratedToolBar, VG.UI.ActionItemRole.SkinCycle );
     this.decoratedToolBar.addItem( VG.UI.LayoutHSpacer() );

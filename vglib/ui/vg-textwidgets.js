@@ -2610,7 +2610,16 @@ VG.UI.CodeEdit.prototype.newSession=function( code )
     let session = new EditSession( code );
     session.setUndoManager(new ace.UndoManager());
 
+    session.on( 'change', ( delta ) => {
+        if ( this.textChanged ) this.textChanged();
+    });
+
     return session;
+};
+
+VG.UI.CodeEdit.prototype.getSession=function()
+{
+    return this.editor.getSession();
 };
 
 VG.UI.CodeEdit.prototype.setSession=function( session )

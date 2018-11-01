@@ -37,6 +37,7 @@
 ../vglib/ui/ace/vg-ace_theme_monokai.js
 ../vglib/ui/ace/vg-ace_mode_javascript.js
 ../vglib/ui/ace/vg-ace_mode_glsl.js
+../vglib/ui/ace/vg-ace_ext_searchbox.js
 ../vglib/ui/vg-widgets.js
 ../vglib/ui/vg-menu.js
 ../vglib/ui/vg-listwidget.js
