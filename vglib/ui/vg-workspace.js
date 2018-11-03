@@ -552,11 +552,11 @@ VG.UI.Workspace.prototype.paintWidget=function()
 
     if ( this.canvas.delayedPaintWidgets.length )
     {
-        for( i=0; i < this.canvas.delayedPaintWidgets.length; ++i ) {
+        for( let i = 0; i < this.canvas.delayedPaintWidgets.length; ++i ) {
             let widget = this.canvas.delayedPaintWidgets[i];
             widget.paintWidget( this.canvas );
         }
-        this.canvas.delayedPaintWidgets=[];
+        this.canvas.delayedPaintWidgets = [];
     }
 
     // --- Check if we have an active context Menu

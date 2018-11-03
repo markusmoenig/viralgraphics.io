@@ -2700,27 +2700,30 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolSettings = function( widget, canvas,
 
             // --- Close Button
 
-            this.rect2.x=this.rect1.right() - 10 - 37;
-            this.rect2.y=this.rect1.y + 10;
-            this.rect2.width=this.rect2.height=37;
+            if ( !widget.options.noCloseButton ) {
 
-            widget.closeButtonRect.copy( this.rect2 );
+                this.rect2.x=this.rect1.right() - 10 - 37;
+                this.rect2.y=this.rect1.y + 10;
+                this.rect2.width=this.rect2.height=37;
 
-            if ( this.rect2.contains( VG.context.workspace.mousePos ) ) {
-                canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect2, this.skin.ToolSettings.HoverBorderColor );
-                this.rect2.shrink( 1, 1, this.rect2 );
-                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, this.skin.ToolSettings.HoverBackColor );
-            } else {
-                canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect2, this.skin.ToolSettings.BorderColor );
-                this.rect2.shrink( 1, 1, this.rect2 );
-                canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, this.skin.ToolSettings.BackColor );
-            }
+                widget.closeButtonRect.copy( this.rect2 );
 
-            if ( svg ) {
-                this.rect2.shrink( 7, 7, this.rect2 );
+                if ( this.rect2.contains( VG.context.workspace.mousePos ) ) {
+                    canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect2, this.skin.ToolSettings.HoverBorderColor );
+                    this.rect2.shrink( 1, 1, this.rect2 );
+                    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, this.skin.ToolSettings.HoverBackColor );
+                } else {
+                    canvas.draw2DShape( VG.Canvas.Shape2D.RectangleOutlineMin1px, this.rect2, this.skin.ToolSettings.BorderColor );
+                    this.rect2.shrink( 1, 1, this.rect2 );
+                    canvas.draw2DShape( VG.Canvas.Shape2D.Rectangle, this.rect2, this.skin.ToolSettings.BackColor );
+                }
 
-                let svgGroup = svg.getGroupByName( "Close" );
-                canvas.drawSVG( svg, svgGroup, this.rect2, this.skin.Widget.TextColor );
+                if ( svg ) {
+                    this.rect2.shrink( 7, 7, this.rect2 );
+
+                    let svgGroup = svg.getGroupByName( "Close" );
+                    canvas.drawSVG( svg, svgGroup, this.rect2, this.skin.Widget.TextColor );
+                }
             }
 
             // ---

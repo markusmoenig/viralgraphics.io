@@ -560,7 +560,7 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
                 toolLayout.margin.set( 10, 10, 10, 10 );
                 toolLayout.vertical = true;
 
-                param.widget = new VG.UI.ToolSettings( label, { layout : toolLayout, height : param.height, text : param.text + " Settings", autoClose: true } );
+                param.widget = new VG.UI.ToolSettings( label, { layout : toolLayout, height : param.height, text : param.text + " Settings", autoClose: true, noCloseButton: true } );
                 group.layout.addChild( param.text, param.widget );
 
                 this.preToolLayout = group.layout;
