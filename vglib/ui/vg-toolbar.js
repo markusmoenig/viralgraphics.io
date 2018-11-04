@@ -930,7 +930,7 @@ VG.UI.ToolSettings=function( label, options )
     if ( !(this instanceof VG.UI.ToolSettings) ) return new VG.UI.ToolSettings( label, options );
 
     VG.UI.Widget.call( this );
-    this.name="ToolSettings";
+    this.name = "ToolSettings";
 
     this.supportsFocus = true;
 
@@ -944,9 +944,9 @@ VG.UI.ToolSettings=function( label, options )
     this.label.minimumSize.set( VG.UI.stylePool.current.skin.ToolSettings.Size.width, VG.UI.stylePool.current.skin.ToolSettings.Size.height );
     this.label.maximumSize.set( VG.UI.stylePool.current.skin.ToolSettings.Size.width, VG.UI.stylePool.current.skin.ToolSettings.Size.height );
 
-    this.open=false;
-    this.popupRect=VG.Core.Rect();
-    this.closeButtonRect=VG.Core.Rect();
+    this.open = false;
+    this.popupRect = new VG.Core.Rect();
+    this.closeButtonRect = new VG.Core.Rect();
 
     this.widget = new VG.UI.Widget();
     this.widget.supportsFocus = true;
@@ -954,50 +954,6 @@ VG.UI.ToolSettings=function( label, options )
     this.widget.parent = this;
 
     this.svgGroup = VG.Utils.getSVGByName( "glyphs.svg" );
-
-    this.widget.mouseDown = ( event ) => {
-        if ( this.open && this.closeButtonRect.contains( event.pos ) ) {
-
-            /*
-            if ( VG.context.workspace.overlayWidget.parent ) {
-                VG.context.workspace.overlayWidget.parent.open = false;
-                VG.context.workspace.overlayWidget.parent.childWidgets = [];
-            }
-
-            this.open = false;
-            VG.context.workspace.overlayWidget = undefined;
-            */
-
-            this.close();
-        }
-    };
-
-    this.widget.mouseMove = ( event ) => {
-
-        if ( this.open && !this.widget.rect.contains( event.pos ) ) {
-
-            /*
-            if ( VG.context.workspace.overlayWidget.parent ) {
-                VG.context.workspace.overlayWidget.parent.open = false;
-                VG.context.workspace.overlayWidget.parent.childWidgets = [];
-            }
-
-            this.open = false;
-            VG.context.workspace.overlayWidget = undefined;*/
-
-            this.close();
-        }
-    };
-
-    this.widget.mouseLeave = ( event ) => {
-
-        if ( this.options.autoClose && this.open )
-        {
-            if ( !this.rect.contains( event.pos ) && !this.widget.rect.contains( event.pos ) && Math.ceil( event.pos.y ) !== this.widget.rect.y )
-                this.close();
-        }
-    };
-
     this.childWidgets = [];
 };
 
@@ -1022,17 +978,9 @@ VG.UI.ToolSettings.prototype.close=function( )
     this.open = false;
     this.childWidgets = [];
     this.removeFromOverlays();
+    VG.context.workspace.removeEventHandler( this );
 
     VG.update();
-};
-
-VG.UI.ToolSettings.prototype.mouseLeave=function( event )
-{
-    if ( this.options.autoClose && this.open )
-    {
-        if ( !this.rect.contains( event.pos ) && !this.widget.rect.contains( event.pos ) && Math.ceil( event.pos.y ) !== this.widget.rect.y )
-            this.close();
-    }
 };
 
 VG.UI.ToolSettings.prototype.mouseMove=function( event )
@@ -1047,15 +995,17 @@ VG.UI.ToolSettings.prototype.mouseDown=function( event )
 {
     let oldOpenState = this.open;
 
-    if ( this.rect.contains( event.pos) )
-    {
+    // --- Click on button
+    if ( !this.open && this.rect.contains( event.pos) ) {
         this.mouseIsDown = true;
         this.open = !this.open;
-
-        // if ( this.popupRect.contains( event.pos ) )
-            // this.open=false;
     }
 
+    // --- Close it when click outside widget rect
+    if ( this.open && oldOpenState && ( !this.widget.rect.contains( event.pos ) || this.closeButtonRect.contains( event.pos ) ) )
+       this.close();
+
+    // --- Open it when pressed on button
     if ( this.open && !oldOpenState )
     {
         if ( this.aboutToShow )
@@ -1066,23 +1016,22 @@ VG.UI.ToolSettings.prototype.mouseDown=function( event )
                 VG.context.workspace.overlayWidgets.push( this.widget );
             this.setFocus( this.widget );
         }
-    }
 
-    if ( this.open ) {
-        if ( !VG.context.workspace.overlayWidgets.includes( this.widget ) )
-            VG.context.workspace.overlayWidgets.push( this.widget );
-        this.childWidgets = [this.widget];
-    } else this.close();
+        VG.context.workspace.addEventHandler( this );
+    }
 
     VG.update();
 };
 
 VG.UI.ToolSettings.prototype.mouseUp=function( event )
 {
-    // if ( this.rect.contains( event.pos) )
-    {
-        this.mouseIsDown=false;
-    }
+    this.mouseIsDown=false;
+};
+
+VG.UI.ToolSettings.prototype.keyDown = function( keyCode )
+{
+    if ( this.open && keyCode === VG.Events.KeyCodes.Esc )
+        this.close();
 };
 
 VG.UI.ToolSettings.prototype.removeFromOverlays=function( event )

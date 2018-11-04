@@ -109,6 +109,7 @@ VG.UI.Workspace=function()
     this.maxRedrawInterval=0;//1000/60;
 
     this.overlayWidgets = [];
+    this.eventHandlers = [];
 
     // --- Current Project Info
 
@@ -594,6 +595,12 @@ VG.UI.Workspace.prototype.mouseMove=function( x, y )
         return;
     }
 
+    // --- Event Handlers
+
+    this.eventHandlers.forEach( ( handler ) => {
+        if ( handler.mouseMove ) handler.mouseMove( event );
+    } );
+
     // ---
 
     let windowUnderMouse = 0;
@@ -867,6 +874,12 @@ VG.UI.Workspace.prototype.mouseDown=function( button )
         return;
     }
 
+    // --- Event Handlers
+
+    this.eventHandlers.forEach( ( handler ) => {
+        if ( handler.mouseDown ) handler.mouseDown( event );
+    } );
+
     // --- An active context menu has priority
 
     if ( this.contextMenu ) {
@@ -935,6 +948,12 @@ VG.UI.Workspace.prototype.mouseUp=function( button )
         this.lastMouseMove=-1;
         return;
     }
+
+    // --- Event Handlers
+
+    this.eventHandlers.forEach( ( handler ) => {
+        if ( handler.mouseUp ) handler.mouseUp( event );
+    } );
 
     if ( this.layoutUnderMouse && this.layoutUnderMouse.mouseUp )
         this.layoutUnderMouse.mouseUp( event );
@@ -1077,6 +1096,12 @@ VG.UI.Workspace.prototype.keyDown=function( keyCode )
     {
         if ( this.focusWidget && this.focusWidget.keyDown )
             this.focusWidget.keyDown( keyCode, this.keysDown );
+
+        // --- Event Handlers
+
+        this.eventHandlers.forEach( ( handler ) => {
+            if ( handler.keyDown ) handler.keyDown( keyCode, this.keysDown );
+        } );
     }
 };
 
@@ -2507,4 +2532,20 @@ VG.UI.Workspace.prototype.isElectron=function()
     if (typeof process !== 'undefined' && process.versions && !!process.versions.electron)
         return true;
     return false;
+};
+
+VG.UI.Workspace.prototype.addEventHandler = function( handler )
+{
+    let index = this.eventHandlers.indexOf( handler );
+    if ( index === -1 ) this.eventHandlers.push( handler );
+
+    // console.log( "addEventHandler", handler, this.eventHandlers.length );
+};
+
+VG.UI.Workspace.prototype.removeEventHandler = function( handler )
+{
+    let index = this.eventHandlers.indexOf( handler );
+    if ( index !== -1 ) this.eventHandlers.splice( index, 1 );
+
+    // console.log( "removeEventHandler", handler, this.eventHandlers.length );
 };
