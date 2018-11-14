@@ -921,6 +921,31 @@ VG.Nodes.ParamList=function( data, name, text, value, array, callback )
 
 VG.Nodes.ParamList.prototype=VG.Nodes.Param();
 
+// ----------------------------------------------------------------- VG.Nodes.ParamButton
+
+VG.Nodes.ParamButton=function( data, name, text, callback )
+{
+    /**
+     * Creates a List Parameter.<br>
+     *
+     * @param {object} data - The object which holds the low level representation of the parameters.
+     * @param {string} name - The name of the new parameter, the name is used to identify parameters inside a container or group and has to be unique.
+     * @param {string} text - The text to display in the user interface for this parameter.
+     * @constructor
+    */
+
+    if ( !(this instanceof VG.Nodes.ParamButton ) ) return new VG.Nodes.ParamButton( data, name, text, callback );
+
+    this.name = name ? name : "value";
+    this.text = text ? text : "Value";
+    this.type = "";
+
+    this.callback = callback;
+    this.data=data;
+};
+
+VG.Nodes.ParamButton.prototype = VG.Nodes.Param();
+
 // ----------------------------------------------------------------- VG.Nodes.ParamVector2
 
 VG.Nodes.ParamVector2=function( data, name, text, x, y, min, max, precision )

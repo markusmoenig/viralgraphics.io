@@ -1066,7 +1066,7 @@ var VG;
             this.aTexCoord = this.getAttrib("aTexCoord");
         }
 
-        run( rt, rect, { setUniforms } = {} )
+        run( rt, rect, { setUniforms, blendType = VG.Shader.Blend.Alpha } = {} )
         {
             rt.bind();
             rt.setViewportEx( 0, 0, rt.width, rt.height );
@@ -1074,7 +1074,7 @@ var VG;
             let b = this.buffer;
             let stride = b.getStride();
 
-            this.blendType = VG.Shader.Blend.Alpha;
+            this.blendType = blendType;
             this.blendEquation = VG.Shader.BlendEquation.Add;
 
             this.bind();
@@ -1209,11 +1209,22 @@ var VG;
                 magFilter = gl.LINEAR;
                 break;
         }
+
+        let image = this.images[0];
+
+        if ( image.linearInterpolation ) {
+            minFilter = gl.LINEAR;
+            magFilter = gl.LINEAR;
+
+            wrapS = gl.REPEAT;
+            wrapT = gl.REPEAT;
+        }
+
         gl.texParameteri(this.target, gl.TEXTURE_MIN_FILTER, minFilter);
         gl.texParameteri(this.target, gl.TEXTURE_MAG_FILTER, magFilter);
         gl.texParameteri(this.target, gl.TEXTURE_WRAP_S, wrapS);
         gl.texParameteri(this.target, gl.TEXTURE_WRAP_T, wrapT);
-        var image = this.images[0];
+
         this.initialRealWidth = image.getRealWidth();
         this.initialRealHeight = image.getRealHeight();
         this.initialWidth = image.getWidth();

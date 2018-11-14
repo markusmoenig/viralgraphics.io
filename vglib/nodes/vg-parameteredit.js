@@ -244,6 +244,17 @@ VG.Nodes.ParamContainerEdit=function( container, { tabs = false, noContainer = f
 
                 group.layout.addChild( param.text, param.widget );
             } else
+            if ( param instanceof VG.Nodes.ParamButton )
+            {
+                param.widget = new VG.UI.Button( param.text );
+                param.widget.name=param.name;
+
+                param.widget.clicked = function() {
+                    if ( param.callback ) param.callback();
+                }.bind( this );
+
+                group.layout.addChild( "", param.widget );
+            } else
             if ( param instanceof VG.Nodes.ParamVector2 )
             {
                 param.widget=VG.UI.Vector2Edit( param.data[param.name].x, param.data[param.name].y, param.min, param.max, param.precision );
