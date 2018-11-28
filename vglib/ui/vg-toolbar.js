@@ -207,7 +207,7 @@ VG.UI.ToolBarButton.prototype.mouseUp=function( event )
                 var undo;
 
                 if ( this.collection && this.path )
-                    undo=this.collection.storeDataForPath( this.path, this.checked, false, true, this.undoText );
+                    undo=this.collection.storeDataForPath( { path: this.path, value: this.checked, undoText: this.undoText } );
 
                 for ( var i=0; i < this.exclusions.length; ++i )
                 {
@@ -228,7 +228,7 @@ VG.UI.ToolBarButton.prototype.mouseUp=function( event )
                 this.checked=!this.checked;
 
                 if ( this.collection && this.path )
-                    this.collection.storeDataForPath( this.path, this.checked, undefined, undefined, this.undoText  );
+                    this.collection.storeDataForPath( { path: this.path, value: this.checked, undoText: this.undoText } );
 
                 if ( this.changed ) this.changed( this.checked, true, this );
             }
@@ -345,7 +345,7 @@ VG.UI.ToolButton.prototype.mouseUp=function( event )
                 var undo;
 
                 if ( this.collection && this.path )
-                    undo=this.collection.storeDataForPath( this.path, this.checked, false, true, this.undoText );
+                    undo=this.collection.storeDataForPath( { path: this.path, value: this.checked, undoText: this.undoText } );
 
                 for ( var i=0; i < this.exclusions.length; ++i )
                 {
@@ -366,7 +366,7 @@ VG.UI.ToolButton.prototype.mouseUp=function( event )
                 this.checked=!this.checked;
 
                 if ( this.collection && this.path )
-                    this.collection.storeDataForPath( this.path, this.checked, undefined, undefined, this.undoText );
+                    this.collection.storeDataForPath( { path: this.path, value: this.checked, undoText: this.undoText } );
 
                 if ( this.changed ) this.changed( this.checked, true, this );
             }
