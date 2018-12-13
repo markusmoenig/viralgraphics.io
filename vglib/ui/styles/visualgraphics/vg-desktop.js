@@ -2889,7 +2889,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawToolSeparator=function( widget, canvas )
 
 VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
 {
-    let itemHeight=widget.itemHeight;
+    let itemHeight = widget.itemHeight;
     let skin = widget.customSkin ? widget.customSkin : this.skin.TreeWidget;
 
     // --- drawItemChildren
@@ -2939,7 +2939,6 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
         // --- Create the properly indented rectangle and set it to rect4
 
         style.rect3.copy( rect );
-
 
         if ( item.children )
         {
@@ -3130,24 +3129,24 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
     widget.items=[];
     widget._itemsCount=-1;
 
-    var selBackgroundRect=this.rect1; this.rect1.copy( widget.contentRect );
+    let selBackgroundRect=this.rect1; this.rect1.copy( widget.contentRect );
     if ( widget.needsVScrollbar ) selBackgroundRect.width-=this.skin.ScrollBar.Size;
 
     // ---
 
-    var paintRect=this.rect2; this.rect2.copy( widget.contentRect );
-    paintRect.height=itemHeight;
+    let paintRect = new VG.Core.Rect( widget.contentRect );
+    paintRect.height = itemHeight;
 
     if ( widget.needsVScrollbar ) paintRect.width-=this.skin.ScrollBar.Size;
 
-    var oldWidth=paintRect.width;
+    let oldWidth=paintRect.width;
     paintRect.y=widget.contentRect.y - widget.offset;
 
     // --- Check if top level items should be indented as there are other items with childs
 
-    var indentTop=false;
+    let indentTop=false;
 
-    for ( var i=0; i < widget.controller.length; ++i )
+    for ( let i=0; i < widget.controller.length; ++i )
     {
         // --- Iterate and Draw the Top Level Items
 
@@ -3184,7 +3183,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
     {
         // --- Iterate and Draw the Top Level Items
 
-        item=widget.controller.at( i ) ;
+        item = widget.controller.at( i ) ;
         ++widget._itemsCount;
 
         if ( 1 )//paintRect.y + this.itemHeight <= this.contentRect.bottom() )
@@ -3194,13 +3193,13 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
                 widget.items.push( VG.UI.TreeWidgetItem( item, paintRect ) );
                 drawItem( this, item, widget.controller.isSelected( item ), paintRect, selBackgroundRect, indentTop );
 
-                paintRect.y+=itemHeight + widget.spacing;
+                paintRect.y += itemHeight + widget.spacing;
             }
 
             if ( item.children && item.open ) drawItemChildren( this, paintRect, item, selBackgroundRect );
 
-            paintRect.x=widget.contentRect.x;
-            paintRect.width=oldWidth;
+            paintRect.x = widget.contentRect.x;
+            paintRect.width = oldWidth;
         } else break;
     }
 

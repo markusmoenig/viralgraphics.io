@@ -92,7 +92,6 @@ VG.Canvas=function()
 
     //font rendering
     var FONT_VSHADER_SOURCE = [
-
         '#version 100',
 
         'attribute vec2 vPos;',
@@ -167,7 +166,7 @@ VG.Canvas=function()
     }
 
     // --- Check for Firefox. Needed for correcting text aligning on the 2D canvas
-    if ( navigator && navigator.userAgent.indexOf("Firefox") > 0 )
+    // if ( navigator && navigator.userAgent.indexOf("Firefox") > 0 )
         this.fireFox = true;
 };
 

@@ -70,6 +70,7 @@ VG.sendBackendRequest=function( url, parameters, callback, type, error_callback 
     request.withCredentials = true;
 
     request.onreadystatechange = function() {
+
         if (request.readyState == 4) {
             if ( request.status == 200 || window.location.href.indexOf("http") ==-1 ) {
                 //VG.log( parameters, request.responseText );
@@ -86,7 +87,7 @@ VG.sendBackendRequest=function( url, parameters, callback, type, error_callback 
 
     var serverUrl="";
 
-    if ( VG.localVGLibPrefix ) serverUrl="https://viralgraphics.io";
+    if ( VG.localVGLibPrefix !== undefined ) serverUrl="https://viralgraphics.io";
     var requestType="POST";
 
     if ( type ) requestType=type;
@@ -319,106 +320,28 @@ VG.compressImage=function( image, format, quality )
     else return ctx.canvas.toDataURL( "image/png", quality );
 };
 
-VG.loadStyleSVG=function( style, svgName, callback )
-{
-    var request = new VG.ajaxRequest();
-
-    request.withCredentials = true;
-
-    request.onreadystatechange = function() {
-        if (request.readyState == 4)
-        {
-            if ( request.status == 200 || window.location.href.indexOf("http") ==-1 ) {
-                VG.Core.SVG( svgName, request.responseText, 20 );
-            }
-        }
-    };
-
-    var path;
-
-    if ( VG.localVGLibPrefix ) path=VG.localVGLibPrefix + "vglib/ui/styles/" + style + "/svg/" + svgName;
-    else path="/vglib/ui/styles/" + style + "/svg/" + svgName;
-
-    request.open( "GET", path, true );
-    request.setRequestHeader( "Content-type", "application/json;charset=UTF-8" );
-    request.send();// parameters );
-};
-
-VG.loadStyleHtml=function( style, svgName, callback )
-{
-    var request = new VG.ajaxRequest();
-
-    request.withCredentials = true;
-
-    request.onreadystatechange = function() {
-        if (request.readyState == 4)
-        {
-            if ( request.status == 200 || window.location.href.indexOf("http") ==-1 ) {
-                VG.Shaders.fs[svgName]=request.responseText;
-            }
-        }
-    };
-
-    var path;
-
-    if ( VG.localVGLibPrefix ) path=VG.localVGLibPrefix + "vglib/ui/styles/" + style + "/svg/" + svgName;
-    else path="/vglib/ui/styles/" + style + "/svg/" + svgName;
-
-    request.open( "GET", path, true );
-    request.setRequestHeader( "Content-type", "application/json;charset=UTF-8" );
-    request.send();// parameters );
-};
-
-
-VG.loadShader=function( shaderName )
-{
-    var request = new VG.ajaxRequest();
-
-    request.withCredentials = true;
-
-    request.onreadystatechange = function() {
-        if (request.readyState == 4)
-        {
-            if ( request.status == 200 || window.location.href.indexOf("http") ==-1 ) {
-                VG.Shaders.fs[shaderName]=request.responseText;
-            }
-        }
-    };
-
-    var path;
-
-    if ( VG.localVGLibPrefix ) path=VG.localVGLibPrefix + "vglib/shaders/" + shaderName;
-    else path="/vglib/shaders/" + shaderName;
-
-    request.open( "GET", path, true );
-    request.setRequestHeader( "Content-type", "application/json;charset=UTF-8" );
-    request.send();// parameters );
-};
-
 VG.loadStyleImage=function( style, imageName, callback )
 {
-    var image=new Image();
+    let image = new Image();
     image.onload=function()
     {
-        var im=VG.Core.Image( image.width, image.height );
-        im.name=image.name;
+        let im = VG.Core.Image( image.width, image.height );
+        im.name = image.name;
 
-        var textureCanvas=document.getElementById( 'textureCanvas' );
-        var ctx=textureCanvas.getContext('2d');
+        let textureCanvas=document.getElementById( 'textureCanvas' );
+        let ctx = textureCanvas.getContext('2d');
 
         ctx.canvas.width=image.width;
         ctx.canvas.height=image.height;
 
         ctx.drawImage(image, 0, 0, image.width, image.height);
+        let pixelData = ctx.getImageData( 0, 0, image.width, image.height ).data;
 
-        //getImageData is somehow very expensive to call
-        var pixelData=ctx.getImageData( 0, 0, image.width, image.height ).data;
-
-        for ( var h=0; h < image.height; ++h )
+        for ( let h=0; h < image.height; ++h )
         {
-            for ( var w=0; w < image.width; ++w )
+            for ( let w=0; w < image.width; ++w )
             {
-                var offset=h * image.width * 4 + w * 4;
+                let offset=h * image.width * 4 + w * 4;
 
                 im.setPixelRGBA( w, h,
                     pixelData[offset],
@@ -430,17 +353,17 @@ VG.loadStyleImage=function( style, imageName, callback )
         }
 
         VG.context.imagePool.addImage( im );
-        image=null;
+        im.canvasImage = image;
         VG.update();
 
-        if (callback) callback(im);
+        if ( callback ) callback( im );
      };
 
-    if ( VG.localVGLibPrefix ) image.src=VG.localVGLibPrefix + "vglib/ui/styles/" + style + "/icons/" + imageName;
-    else image.src="/vglib/ui/styles/" + style + "/icons/" + imageName;
+    if ( VG.localVGLibPrefix ) image.src = VG.localVGLibPrefix + "vglib/ui/styles/" + style + "/icons/" + imageName;
+    else image.src = "/vglib/ui/styles/" + style + "/icons/" + imageName;
 
-    image.name=imageName;
-    image.stylePath=style;
+    image.name = imageName;
+    image.stylePath = style;
 };
 
 VG.copyToClipboard=function( type, data )

@@ -80,6 +80,4 @@
 ../vglib/render/vg-light.js
 ../vglib/render/vg-import.js
 
-../vglib/shaders/vg-renderortho.js
-
 ../web/vg-dialogs.js

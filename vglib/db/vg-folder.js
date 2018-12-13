@@ -83,11 +83,11 @@ VG.DB.Folder=function( id, callback )
 
 VG.DB.Folder.prototype.getIndex=function( callback )
 {
-    VG.sendBackendRequest( "/folder/" + this.id + "/content/index", "", function( responseText ) {
+    VG.sendBackendRequest( "/folder/" + this.id + "/content/index", "", ( responseText ) => {
         if ( !responseText ) return;
-        var response=JSON.parse( responseText );
-        if ( callback ) callback( response );
-    }.bind( this ), "GET" );
+        let response = JSON.parse( responseText );
+        if ( callback ) callback( response.index );
+    }, "GET" );
 };
 
 VG.DB.Folder.prototype.getAllContent=function( callback )
