@@ -591,6 +591,38 @@ VG.Nodes.ParamContainer.prototype.containsKeyFrames=function( data, list )
     return false;
 };
 
+VG.Nodes.ParamContainer.prototype.fromArray=function( data, array )
+{
+    let group;
+    for ( let i = 0; i < array.length; ++i )
+    {
+        let param = array[i];
+        let type = param.type;
+        let name = param.name;
+        let text = param.text;
+
+        let p;
+
+        if ( type === "ParamGroup" ) {
+            group = new VG.Nodes.ParamGroup( name, text, true );
+            this.addGroup( group );
+        } else
+        if ( type === "ParamDivider" ) {
+            let p = new VG.Nodes.ParamDivider( data, name, text );
+            group.addParam( p );
+        } else
+        if ( type === "ParamNumber" ) {
+            p = new VG.Nodes.ParamNumber( data, name, text, param.value, param.min, param.max, param.precision );
+            group.addParam( p );
+        }
+
+        if ( p ) {
+            p.toolTip = param.toolTip;
+            p.statusTip = param.statusTip;
+        }
+    }
+};
+
 // ----------------------------------------------------------------- VG.Nodes.ParamGroup
 
 VG.Nodes.ParamGroup=function( name, text, open )

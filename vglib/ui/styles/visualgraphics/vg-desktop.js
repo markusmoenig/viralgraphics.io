@@ -3179,7 +3179,7 @@ VG.UI.VisualGraphicsStyle.prototype.drawTreeWidget=function( widget, canvas )
 
     // ---
 
-    for ( i=0; i < widget.controller.length; ++i )
+    for ( let i = 0; i < widget.controller.length; ++i )
     {
         // --- Iterate and Draw the Top Level Items
 
