@@ -1473,6 +1473,19 @@ VG.UI.LabelLayout.prototype.addChild=function( label, widget )
         item.isExpanding = true;
 };
 
+VG.UI.LabelLayout.prototype.insertChildAt=function( index, label, widget )
+{
+    let item = VG.UI.LabelLayoutItem( label, widget );
+
+    this.items.splice( index, 0, item );
+    this.children.splice( index, 0, widget );
+
+    widget.parent=this;
+
+    if  ( label === "__EXPANDING__" )
+        item.isExpanding = true;
+};
+
 /**
  * Adds a child object to the end of this layout.
  * @param {string} label - The text label of the child object to add.
